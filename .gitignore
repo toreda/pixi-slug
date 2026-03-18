@@ -1,0 +1,10 @@
+node_modules/
+coverage/
+*.lcov
+*.pid
+*.seed
+*.log
+.npm
+dist/
+test-report.xml
+.webpack/
