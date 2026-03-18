@@ -1,0 +1,106 @@
+{
+	"name": "pixi-slug",
+	"version": "0.0.1",
+	"description": "Render fonts in pixi.js using bezier curves with the slug algorithm.",
+	"main": "./dist/v8/index.js",
+	"types": "./dist/v8/index.d.ts",
+	"exports": {
+		".": {
+			"require": "./dist/v8/index.js",
+			"types": "./dist/v8/index.d.ts"
+		},
+		"./v7": {
+			"require": "./dist/v7/index.js",
+			"types": "./dist/v7/index.d.ts"
+		},
+		"./v6": {
+			"require": "./dist/v6/index.js",
+			"types": "./dist/v6/index.d.ts"
+		}
+	},
+	"scripts": {
+		"build:v6:dev": "webpack --env version=v6 --env target=dev && tsc -p tsconfig.v6.json --emitDeclarationOnly",
+		"build:v6:prod": "webpack --env version=v6 --env target=prod && tsc -p tsconfig.v6.json --emitDeclarationOnly",
+		"build:v7:dev": "webpack --env version=v7 --env target=dev && tsc -p tsconfig.v7.json --emitDeclarationOnly",
+		"build:v7:prod": "webpack --env version=v7 --env target=prod && tsc -p tsconfig.v7.json --emitDeclarationOnly",
+		"build:v8:dev": "webpack --env version=v8 --env target=dev && tsc -p tsconfig.v8.json --emitDeclarationOnly",
+		"build:v8:prod": "webpack --env version=v8 --env target=prod && tsc -p tsconfig.v8.json --emitDeclarationOnly",
+		"build:all:dev": "webpack --env version=all --env target=dev && pnpm run build:types",
+		"build:all:prod": "webpack --env version=all --env target=prod && pnpm run build:types",
+		"build:v6": "pnpm run build:v6:prod",
+		"build:v7": "pnpm run build:v7:prod",
+		"build:v8": "pnpm run build:v8:prod",
+		"build:all": "pnpm run build:all:prod",
+		"build:types": "tsc -p tsconfig.v8.json --emitDeclarationOnly && tsc -p tsconfig.v7.json --emitDeclarationOnly && tsc -p tsconfig.v6.json --emitDeclarationOnly",
+		"test": "jest --coverage",
+		"test:ci": "jest --ci --coverage --forceExit --maxWorkers=50% --reporters=default --reporters=jest-junit",
+		"test:fast": "jest --bail --no-coverage"
+	},
+	"keywords": [
+		"slug",
+		"slug-algorithm",
+		"slug-library",
+		"pixijs",
+		"pixi",
+		"pixi-plugin",
+		"font-rendering",
+		"text-rendering",
+		"vector-text",
+		"vector-fonts",
+		"glyph-rendering",
+		"glyph",
+		"outline-fonts",
+		"scalable-text",
+		"resolution-independent",
+		"bezier",
+		"bezier-curves",
+		"quadratic-bezier",
+		"sdf",
+		"msdf",
+		"gpu-text",
+		"shader-text",
+		"webgl",
+		"webgl2"
+	],
+	"author": "Toreda, Inc.",
+	"license": "MIT",
+	"packageManager": "pnpm@10.11.1",
+	"prettier": "@toreda/prettier-config",
+	"peerDependencies": {
+		"pixi.js": "^6.0.0 || ^7.0.0 || ^8.0.0"
+	},
+	"peerDependenciesMeta": {
+		"pixi.js": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@pixi/core": "^7.4.3",
+		"@pixi/display": "^7.4.3",
+		"@pixi/mesh": "^7.4.3",
+		"@shaderfrog/glsl-parser": "^7.0.1",
+		"@swc/core": "^1.15.18",
+		"@swc/jest": "^0.2.39",
+		"@toreda/eslint-config": "^2.2.0",
+		"@toreda/prettier-config": "^1.0.1",
+		"@types/jest": "^30.0.0",
+		"@types/opentype.js": "^1.3.9",
+		"@types/webpack": "^5.28.5",
+		"eslint": "^10.0.3",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-prettier-config": "^1.0.1",
+		"jest": "^30.3.0",
+		"jest-junit": "^16.0.0",
+		"pixi.js": "^8.0.0",
+		"prettier": "^3.8.1",
+		"terser-webpack-plugin": "^5.4.0",
+		"ts-loader": "^9.5.4",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.3",
+		"webpack": "^5.105.4",
+		"webpack-cli": "^7.0.2"
+	},
+	"dependencies": {
+		"opentype.js": "^1.3.4"
+	}
+}

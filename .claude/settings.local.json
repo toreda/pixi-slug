@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pixijs.com)",
+      "WebFetch(domain:pixijs.download)",
+      "WebFetch(domain:jcgt.org)",
+      "WebFetch(domain:terathon.com)",
+      "WebFetch(domain:api.npmjs.org)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run:*)"
+    ]
+  }
+}
