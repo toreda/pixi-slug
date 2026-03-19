@@ -1,8 +1,9 @@
 #version 300 es
 // ===================================================
 // Slug algorithm fragment shader — GLSL ES 3.00 port.
-// Original HLSL reference shader by Eric Lengyel.
-// Copyright 2017, MIT License.
+// Root eligibility and solver math from the reference GLSL shader
+// by Eric Lengyel (Lengyel2017FontRendering-GlyphShader.glsl).
+// Coverage combination adapted for single-direction rays (no band split).
 // ===================================================
 precision highp float;
 precision highp int;
@@ -10,6 +11,7 @@ precision highp sampler2D;
 
 #define kLogBandTextureWidth 12
 #define kMaxCurvesPerBand 512
+#define kQuadraticEpsilon 0.0001
 
 in vec4 vColor;
 in vec2 vTexcoord;
@@ -17,91 +19,13 @@ flat in vec4 vBanding;
 flat in ivec4 vGlyph;
 
 uniform sampler2D uCurveTexture;
-uniform sampler2D uBandTexture; // Float32 texture storing uint values as exact floats; read via fetchBand().
+uniform sampler2D uBandTexture;
 
 // Fetch two uint32 values from the band texture at the given texel coordinate.
-// Uses +0.5 rounding before truncation to guard against float32 representation
-// error (e.g. a value of 6 stored as 5.9999999 would truncate to 5 without it).
 uvec2 fetchBand(ivec2 coord)
 {
 	vec2 raw = texelFetch(uBandTexture, coord, 0).xy;
 	return uvec2(uint(raw.x + 0.5), uint(raw.y + 0.5));
-}
-
-out vec4 fragColor;
-
-uint CalcRootCode(float y1, float y2, float y3)
-{
-	uint i1 = floatBitsToUint(y1) >> 31u;
-	uint i2 = floatBitsToUint(y2) >> 30u;
-	uint i3 = floatBitsToUint(y3) >> 29u;
-
-	uint shift = (i2 & 2u) | (i1 & ~2u);
-	shift = (i3 & 4u) | (shift & ~4u);
-
-	return ((0x2E74u >> shift) & 0x0101u);
-}
-
-// Near-zero threshold used to detect degenerate quadratics and avoid
-// undefined division-by-zero in GLSL ES (see port_risks.md GLSL-3).
-#define kNearZero (1.0 / 65536.0)
-
-vec2 SolveHorizPoly(vec4 p12, vec2 p3)
-{
-	vec2 a = p12.xy - p12.zw * 2.0 + p3;
-	vec2 b = p12.xy - p12.zw;
-
-	float t1, t2;
-
-	if (abs(a.y) < kNearZero)
-	{
-		// Linear case: a ≈ 0, solve c/2b. Guard b.y to avoid undefined div-by-zero.
-		float rb = 0.5 / (abs(b.y) < kNearZero ? 1.0 : b.y);
-		t1 = p12.y * rb;
-		t2 = t1;
-	}
-	else
-	{
-		// Quadratic case: safe to divide by a.y.
-		float ra = 1.0 / a.y;
-		float d = sqrt(max(b.y * b.y - a.y * p12.y, 0.0));
-		t1 = (b.y - d) * ra;
-		t2 = (b.y + d) * ra;
-	}
-
-	t1 = clamp(t1, 0.0, 1.0);
-	t2 = clamp(t2, 0.0, 1.0);
-
-	return vec2((a.x * t1 - b.x * 2.0) * t1 + p12.x, (a.x * t2 - b.x * 2.0) * t2 + p12.x);
-}
-
-vec2 SolveVertPoly(vec4 p12, vec2 p3)
-{
-	vec2 a = p12.xy - p12.zw * 2.0 + p3;
-	vec2 b = p12.xy - p12.zw;
-
-	float t1, t2;
-
-	if (abs(a.x) < kNearZero)
-	{
-		// Linear case: a ≈ 0, solve c/2b. Guard b.x to avoid undefined div-by-zero.
-		float rb = 0.5 / (abs(b.x) < kNearZero ? 1.0 : b.x);
-		t1 = p12.x * rb;
-		t2 = t1;
-	}
-	else
-	{
-		// Quadratic case: safe to divide by a.x.
-		float ra = 1.0 / a.x;
-		float d = sqrt(max(b.x * b.x - a.x * p12.x, 0.0));
-		t1 = (b.x - d) * ra;
-		t2 = (b.x + d) * ra;
-	}
-
-	t1 = clamp(t1, 0.0, 1.0);
-	t2 = clamp(t2, 0.0, 1.0);
-
-	return vec2((a.y * t1 - b.y * 2.0) * t1 + p12.y, (a.y * t2 - b.y * 2.0) * t2 + p12.y);
 }
 
 ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
@@ -112,44 +36,67 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 	return bandLoc;
 }
 
-// Combine horizontal and vertical coverage into a single alpha value.
-// Uses the patent's recommended simple average of the two axes
-// (Patent col. 7, lines 55–60: "the simplest example is an average
-// of two coverage values").
-float CalcCoverage(float xcov, float ycov)
+// Coverage combination for single-direction rays (no band-split optimization).
+//
+// Without band-split, interior pixels far from both edges on one axis get
+// xcov ≈ +1 - 1 = 0 (the entering and exiting crossings both saturate and cancel).
+// The weight tracks how close the nearest intersection is to the pixel center.
+// Near edges (high weight): the weighted average provides antialiasing.
+// In the interior (low weight): we fall back to max(abs(xcov), abs(ycov)) which
+// correctly reads ~1.0 for pixels where at least one axis has an uncanceled crossing.
+//
+// Note: the reference shader uses a single accumulator with sqrt(abs(sum)*0.5),
+// which works with band-split but produces dim interiors (~0.7) without it.
+float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 {
-	float coverage = (abs(xcov) + abs(ycov)) * 0.5;
+	// Interior fallback: at least one axis should read ~1.0 inside the glyph.
+	// This is the ground truth for whether the pixel is inside or outside.
+	float interior = max(abs(xcov), abs(ycov));
 
-	coverage = clamp(coverage, 0.0, 1.0);
+	// Weighted blend for antialiased edges. The weighted average can
+	// over-estimate coverage at diagonal edges where both axes have partial
+	// contributions. Clamp it to never exceed the interior reading — the
+	// edge AA should only soften transitions, not add brightness.
+	float wsum = xwgt + ywgt;
+	float weighted = abs(xcov * xwgt + ycov * ywgt) / max(wsum, 1.0 / 65536.0);
+	weighted = min(weighted, interior);
 
-	return coverage;
+	// Blend: near edges (high weight) use the AA'd value, interior uses fallback.
+	float edgeness = clamp(wsum, 0.0, 1.0);
+	float coverage = mix(interior, weighted, edgeness);
+
+	return clamp(coverage, 0.0, 1.0);
 }
+
+out vec4 fragColor;
+
+// Debug globals — set by SlugRender for diagnostic visualization.
+float slug_debug_xcov = 0.0;
+float slug_debug_ycov = 0.0;
 
 float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 {
-	int curveIndex;
-
-	vec2 emsPerPixel = vec2(abs(dFdx(renderCoord.x)), abs(dFdy(renderCoord.y)));
-	vec2 pixelsPerEm = 1.0 / max(emsPerPixel, vec2(kNearZero));
+	vec2 pixelsPerEm = vec2(1.0 / max(abs(dFdx(renderCoord.x)), 1.0 / 65536.0),
+	                        1.0 / max(abs(dFdy(renderCoord.y)), 1.0 / 65536.0));
 
 	ivec2 bandMax = glyphData.zw;
-	// Mask to low 8 bits — upper bits of glyphData.w are reserved for flags
-	// (e.g. SLUG_EVENODD). CPU must not pack hBandCount > 256.
 	bandMax.y &= 0x00FF;
 
 	ivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);
 	ivec2 glyphLoc = glyphData.xy;
 
+	// ---------------------------------------------------------------
+	// Horizontal ray (+X direction)
+	// ---------------------------------------------------------------
+
 	float xcov = 0.0;
+	float xwgt = 0.0;
 
 	uvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));
 	ivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);
 
-	// INVARIANT: curves in this band are sorted by descending max-x (see bands.ts).
-	// The early-out break below relies on this — once a curve's max-x is more than
-	// 0.5 pixels left of the pixel center, all subsequent curves are also too far.
 	int hcount = min(int(hbandData.x), kMaxCurvesPerBand);
-	for (curveIndex = 0; curveIndex < hcount; curveIndex++)
+	for (int curveIndex = 0; curveIndex < hcount; curveIndex++)
 	{
 		ivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));
 		vec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);
@@ -157,31 +104,57 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 		if (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < -0.5) break;
 
-		uint code = CalcRootCode(p12.y, p12.w, p3.y);
+		// Root eligibility from y-coordinate signs (reference convention).
+		uint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +
+		        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;
+
 		if (code != 0u)
 		{
-			vec2 r = SolveHorizPoly(p12, p3) * pixelsPerEm.x;
+			float ax = p12.x - p12.z * 2.0 + p3.x;
+			float ay = p12.y - p12.w * 2.0 + p3.y;
+			float bx = p12.x - p12.z;
+			float by = p12.y - p12.w;
+			float ra = 1.0 / ay;
+
+			float d = sqrt(max(by * by - ay * p12.y, 0.0));
+			float t1 = (by - d) * ra;
+			float t2 = (by + d) * ra;
+
+			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.y * 0.5 / (abs(by) < kQuadraticEpsilon ? 1.0 : by); t2 = t1; }
+
+			float x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;
+			float x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;
+			x1 = x1 * pixelsPerEm.x;
+			x2 = x2 * pixelsPerEm.x;
 
 			if ((code & 1u) != 0u)
 			{
-				xcov += clamp(r.x + 0.5, 0.0, 1.0);
+				xcov += clamp(x1 + 0.5, 0.0, 1.0);
+				xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0));
 			}
 
 			if (code > 1u)
 			{
-				xcov -= clamp(r.y + 0.5, 0.0, 1.0);
+				xcov -= clamp(x2 + 0.5, 0.0, 1.0);
+				xwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0));
 			}
 		}
 	}
 
+	// ---------------------------------------------------------------
+	// Vertical ray (+Y direction)
+	// Uses the rotated polynomial from the reference — note the PLUS
+	// on p2's y-component (ax) and the swapped x↔y roles.
+	// ---------------------------------------------------------------
+
 	float ycov = 0.0;
+	float ywgt = 0.0;
 
 	uvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));
 	ivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);
 
-	// INVARIANT: curves in this band are sorted by descending max-y (see bands.ts).
 	int vcount = min(int(vbandData.x), kMaxCurvesPerBand);
-	for (curveIndex = 0; curveIndex < vcount; curveIndex++)
+	for (int curveIndex = 0; curveIndex < vcount; curveIndex++)
 	{
 		ivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));
 		vec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);
@@ -189,28 +162,58 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 		if (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < -0.5) break;
 
-		uint code = CalcRootCode(p12.x, p12.z, p3.x);
+		// Root eligibility from x-coordinate signs (rotated ray).
+		uint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +
+		        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;
+
 		if (code != 0u)
 		{
-			vec2 r = SolveVertPoly(p12, p3) * pixelsPerEm.y;
+			// Rotated polynomial: ax uses PLUS on p2 term.
+			float ax = p12.y + p12.w * 2.0 + p3.y;
+			float ay = p12.x - p12.z * 2.0 + p3.x;
+			float bx = p12.y - p12.w;
+			float by = p12.x - p12.z;
+			float ra = 1.0 / ay;
+
+			float d = sqrt(max(by * by - ay * p12.x, 0.0));
+			float t1 = (by - d) * ra;
+			float t2 = (by + d) * ra;
+
+			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.x * 0.5 / (abs(by) < kQuadraticEpsilon ? 1.0 : by); t2 = t1; }
+
+			float y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;
+			float y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;
+			y1 = y1 * pixelsPerEm.y;
+			y2 = y2 * pixelsPerEm.y;
 
 			if ((code & 1u) != 0u)
 			{
-				ycov -= clamp(r.x + 0.5, 0.0, 1.0);
+				ycov += clamp(y1 + 0.5, 0.0, 1.0);
+				ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0));
 			}
 
 			if (code > 1u)
 			{
-				ycov += clamp(r.y + 0.5, 0.0, 1.0);
+				ycov -= clamp(y2 + 0.5, 0.0, 1.0);
+				ywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0));
 			}
 		}
 	}
 
-	return CalcCoverage(xcov, ycov);
+	slug_debug_xcov = xcov;
+	slug_debug_ycov = ycov;
+
+	return CalcCoverage(xcov, ycov, xwgt, ywgt);
 }
 
 void main()
 {
 	float coverage = SlugRender(vTexcoord, vBanding, vGlyph);
+
+	// Uncomment ONE of the following for diagnostics:
+	// fragColor = vec4(abs(slug_debug_xcov), abs(slug_debug_ycov), 0.0, 1.0);  // red=xcov green=ycov
+	// fragColor = vec4(vec3(abs(slug_debug_xcov)), 1.0);  // xcov only (grayscale)
+	// fragColor = vec4(vec3(abs(slug_debug_ycov)), 1.0);  // ycov only (grayscale)
+	// fragColor = vec4(vec3(coverage), 1.0);               // final coverage (grayscale)
 	fragColor = vColor * coverage;
 }

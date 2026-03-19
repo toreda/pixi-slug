@@ -16,34 +16,51 @@ export interface SlugGlyphBands {
 /**
  * Compute the axis-aligned bounding box of a quadratic Bezier curve.
  * Returns [minX, minY, maxX, maxY].
+ *
+ * Uses float32-truncated coordinates to match what the GPU sees in the curve
+ * texture (see port_risks.md JS-1). Without this, a curve whose float64 bounds
+ * barely reach into band N might not reach it in float32, causing the shader
+ * to miss the curve at that band boundary → horizontal/vertical line artifacts.
  */
+const _boundsF32 = new Float32Array(6);
 function curveBounds(curve: SlugGlyphCurve): [number, number, number, number] {
+	// Truncate to float32 to match the precision stored in the curve texture.
+	_boundsF32[0] = curve.p1x;
+	_boundsF32[1] = curve.p1y;
+	_boundsF32[2] = curve.p2x;
+	_boundsF32[3] = curve.p2y;
+	_boundsF32[4] = curve.p3x;
+	_boundsF32[5] = curve.p3y;
+	const p1x = _boundsF32[0], p1y = _boundsF32[1];
+	const p2x = _boundsF32[2], p2y = _boundsF32[3];
+	const p3x = _boundsF32[4], p3y = _boundsF32[5];
+
 	// For a quadratic Bezier B(t) = (1-t)^2*p1 + 2(1-t)t*p2 + t^2*p3,
 	// the extrema occur at t = (p1 - p2) / (p1 - 2*p2 + p3) for each axis.
-	let minX = Math.min(curve.p1x, curve.p3x);
-	let maxX = Math.max(curve.p1x, curve.p3x);
-	let minY = Math.min(curve.p1y, curve.p3y);
-	let maxY = Math.max(curve.p1y, curve.p3y);
+	let minX = Math.min(p1x, p3x);
+	let maxX = Math.max(p1x, p3x);
+	let minY = Math.min(p1y, p3y);
+	let maxY = Math.max(p1y, p3y);
 
 	// Check x-axis extremum
-	const denomX = curve.p1x - 2 * curve.p2x + curve.p3x;
+	const denomX = p1x - 2 * p2x + p3x;
 	if (Math.abs(denomX) > 1e-10) {
-		const tx = (curve.p1x - curve.p2x) / denomX;
+		const tx = (p1x - p2x) / denomX;
 		if (tx > 0 && tx < 1) {
 			const oneMinusT = 1 - tx;
-			const ex = oneMinusT * oneMinusT * curve.p1x + 2 * oneMinusT * tx * curve.p2x + tx * tx * curve.p3x;
+			const ex = oneMinusT * oneMinusT * p1x + 2 * oneMinusT * tx * p2x + tx * tx * p3x;
 			minX = Math.min(minX, ex);
 			maxX = Math.max(maxX, ex);
 		}
 	}
 
 	// Check y-axis extremum
-	const denomY = curve.p1y - 2 * curve.p2y + curve.p3y;
+	const denomY = p1y - 2 * p2y + p3y;
 	if (Math.abs(denomY) > 1e-10) {
-		const ty = (curve.p1y - curve.p2y) / denomY;
+		const ty = (p1y - p2y) / denomY;
 		if (ty > 0 && ty < 1) {
 			const oneMinusT = 1 - ty;
-			const ey = oneMinusT * oneMinusT * curve.p1y + 2 * oneMinusT * ty * curve.p2y + ty * ty * curve.p3y;
+			const ey = oneMinusT * oneMinusT * p1y + 2 * oneMinusT * ty * p2y + ty * ty * p3y;
 			minY = Math.min(minY, ey);
 			maxY = Math.max(maxY, ey);
 		}
@@ -111,15 +128,19 @@ export function slugGlyphBands(
 		const [cMinX, cMinY, cMaxX, cMaxY] = curveBounds(curves[i]);
 
 		// Compute band range using the same float32 arithmetic the shader uses.
-		// Extend by 1 on each side as a safety margin for interpolation imprecision.
-		const hStart = Math.max(0, Math.floor(cMinY * hBandScale + hBandOffset));
-		const hEnd = Math.min(hBandCount - 1, Math.floor(cMaxY * hBandScale + hBandOffset));
+		// Extend by 1 band on each side as a safety margin: the shader's float32
+		// band-index calculation may round differently than the CPU's, placing a
+		// pixel in an adjacent band. Without this margin, curves at band boundaries
+		// are missing from one side, producing horizontal/vertical line artifacts
+		// that shift with the text's screen position.
+		const hStart = Math.max(0, Math.floor(cMinY * hBandScale + hBandOffset) - 1);
+		const hEnd = Math.min(hBandCount - 1, Math.floor(cMaxY * hBandScale + hBandOffset) + 1);
 		for (let b = hStart; b <= hEnd; b++) {
 			hBands[b].push(i);
 		}
 
-		const vStart = Math.max(0, Math.floor(cMinX * vBandScale + vBandOffset));
-		const vEnd = Math.min(vBandCount - 1, Math.floor(cMaxX * vBandScale + vBandOffset));
+		const vStart = Math.max(0, Math.floor(cMinX * vBandScale + vBandOffset) - 1);
+		const vEnd = Math.min(vBandCount - 1, Math.floor(cMaxX * vBandScale + vBandOffset) + 1);
 		for (let b = vStart; b <= vEnd; b++) {
 			vBands[b].push(i);
 		}

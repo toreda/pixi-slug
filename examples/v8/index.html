@@ -42,7 +42,13 @@
 				width: 800,
 				height: 400,
 				backgroundColor: 0x16213e,
-				preferWebGLVersion: 2
+				preferWebGLVersion: 2,
+				antialias: false,
+				// Keep resolution at 1 — Slug vertex positions are in CSS pixels and
+				// dFdx/dFdy must match that coordinate space. Setting devicePixelRatio
+				// here would scale the pixel grid without scaling vertex positions,
+				// breaking the pixelsPerEm calculation in the fragment shader.
+				resolution: 1,
 			});
 			window.__PIXI_APP__ = app;
 
@@ -80,7 +86,7 @@
 			var font = new pixiSlug.SlugFont(4096);
 			await font.load(fontData);
 
-			var slugText = new pixiSlug.SlugText('X | , . J v V R r', font, 90);
+			var slugText = new pixiSlug.SlugText('X | , . J v V R r', font, 130);
 			slugText.position.set(0, 0);
 			app.stage.addChild(slugText);
 		})();
