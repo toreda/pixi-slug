@@ -9,8 +9,6 @@ uniform sampler2D uSlugData;
 
 // Row offset where band data starts in the combined texture
 uniform float uBandRowOffset;
-// TEMP HARDCODE for debugging - Roboto with 1024 width has 65 curve rows
-const int BAND_ROW_OFFSET = 65; // curveData.length / 4 / 1024
 
 // Texture width as log2 (e.g. 10 for 1024).
 uniform int uLogTextureWidth;
@@ -34,7 +32,7 @@ out vec4 fragColor;
  */
 uvec4 fetchBand(int index, int baseY) {
 	int x = index & TEXTURE_MASK;
-	int y = BAND_ROW_OFFSET + baseY + (index >> LOG_TEX_W);
+	int y = int(uBandRowOffset) + baseY + (index >> LOG_TEX_W);
 	vec4 raw = texelFetch(uSlugData, ivec2(x, y), 0);
 	return uvec4(uint(raw.x), uint(raw.y), uint(raw.z), uint(raw.w));
 }
@@ -190,24 +188,16 @@ float slugRender(vec2 renderCoord) {
 	float ax = abs(coverageX);
 	float ay = abs(coverageY);
 
-	// If only one direction has data, use it directly
+	// If one direction's band has no curves (near-zero coverage), fall back
+	// to the other direction exclusively. This happens at band boundaries or
+	// pixels outside the glyph where one ray sees nothing.
 	if (ax < 0.01) return clamp(ay, 0.0, 1.0);
 	if (ay < 0.01) return clamp(ax, 0.0, 1.0);
 
-	// Both directions have data.
-	// For counters: if one says outside (<0.5) and other says inside (>0.5),
-	// trust the lower value — it's likely detecting a hole.
-	// For solid fill: both agree on inside, use the higher for smoother edges.
-	bool xInside = ax > 0.5;
-	bool yInside = ay > 0.5;
-
-	if (xInside != yInside) {
-		// Disagree: one sees a hole — use minimum (trust the hole detector)
-		return clamp(min(ax, ay), 0.0, 1.0);
-	}
-
-	// Agree: use max for better fill quality
-	return clamp(max(ax, ay), 0.0, 1.0);
+	// Both directions have meaningful coverage: average them.
+	// Averaging reduces noise at edges and handles curves that only face
+	// one direction well (e.g. near-horizontal edges seen by the V ray).
+	return clamp((ax + ay) * 0.5, 0.0, 1.0);
 }
 
 void main() {

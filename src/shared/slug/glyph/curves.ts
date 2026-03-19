@@ -81,12 +81,16 @@ export function slugGlyphCurves(commands: PathCommand[]): SlugGlyphCurve[] {
 	const curves: SlugGlyphCurve[] = [];
 	let curX = 0;
 	let curY = 0;
+	let subpathStartX = 0;
+	let subpathStartY = 0;
 
 	for (const cmd of commands) {
 		switch (cmd.type) {
 			case 'M':
 				curX = cmd.x;
 				curY = cmd.y;
+				subpathStartX = cmd.x;
+				subpathStartY = cmd.y;
 				break;
 
 			case 'L':
@@ -115,7 +119,12 @@ export function slugGlyphCurves(commands: PathCommand[]): SlugGlyphCurve[] {
 				break;
 
 			case 'Z':
-				// Close path — no curve needed
+				// Close path: add closing line if the current position is not already at the subpath start.
+				if (Math.abs(curX - subpathStartX) > 1e-6 || Math.abs(curY - subpathStartY) > 1e-6) {
+					curves.push(lineToQuadratic(curX, curY, subpathStartX, subpathStartY));
+				}
+				curX = subpathStartX;
+				curY = subpathStartY;
 				break;
 		}
 	}

@@ -27,15 +27,13 @@ flat out vec4 vBanding;
 flat out ivec4 vGlyph;
 
 /**
- * Expand glyph quad outward along vertex normals so boundary pixels
- * are not clipped. Dilation distance is half a pixel in em-space.
+ * No dilation applied. fwidth()-based AA in the fragment shader handles
+ * edge smoothing for rendered pixels. Dilation causes inter-glyph overlap
+ * (adjacent quads extend into each other's advance width) which produces
+ * grey coverage artifacts in glyph gaps and at stroke terminals.
  */
 vec2 slugDilate(vec2 position, vec2 normal) {
-	// Compute pixel size in the coordinate space of the position
-	vec2 pixelSize = 2.0 / uSlugViewport;
-	float dilateDistance = max(pixelSize.x, pixelSize.y) * 0.5;
-
-	return position + normal * dilateDistance;
+	return position;
 }
 
 /**
