@@ -18,6 +18,8 @@ export class SlugFont {
 	public readonly textureWidth: number;
 	/** Preprocessed glyph data indexed by Unicode code point. */
 	public readonly glyphs: Map<number, SlugGlyphData>;
+	/** Advance widths for ALL glyphs (including empty ones like space), indexed by char code. */
+	public readonly advances: Map<number, number>;
 	/** Font units per em (used to normalize coordinates). */
 	public unitsPerEm: number;
 
@@ -30,6 +32,7 @@ export class SlugFont {
 		this.curveData = new Float32Array(0);
 		this.bandData = new Uint32Array(0);
 		this.glyphs = new Map();
+		this.advances = new Map();
 		this.unitsPerEm = 0;
 	}
 
@@ -48,11 +51,17 @@ export class SlugFont {
 
 		for (let i = 0; i < font.glyphs.length; i++) {
 			const glyph = font.glyphs.get(i);
+			const charCode = glyph.unicode;
+
+			// Store advance width for all glyphs (including space/empty)
+			if (charCode !== undefined && glyph.advanceWidth) {
+				this.advances.set(charCode, glyph.advanceWidth);
+			}
+
 			if (!glyph.path || glyph.path.commands.length === 0) {
 				continue;
 			}
 
-			const charCode = glyph.unicode;
 			if (charCode === undefined) {
 				continue;
 			}

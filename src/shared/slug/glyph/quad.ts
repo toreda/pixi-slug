@@ -58,6 +58,7 @@ function packBandMax(hBandMax: number, vBandMax: number): number {
  *
  * @param text			Text string to build quads for.
  * @param glyphs		Glyph data map from SlugFont (keyed by char code).
+ * @param advances		Advance width map for all glyphs (including empty ones like space).
  * @param unitsPerEm	Font units per em for coordinate normalization.
  * @param fontSize		Desired font size in pixels.
  * @param textureWidth	Width of the curve/band textures (must match font).
@@ -66,6 +67,7 @@ function packBandMax(hBandMax: number, vBandMax: number): number {
 export function slugGlyphQuads(
 	text: string,
 	glyphs: Map<number, SlugGlyphData>,
+	advances: Map<number, number>,
 	unitsPerEm: number,
 	fontSize: number,
 	textureWidth: number,
@@ -91,18 +93,27 @@ export function slugGlyphQuads(
 		const charCode = text.charCodeAt(i);
 		const glyph = glyphs.get(charCode);
 		if (!glyph) {
+			// No curves for this char (e.g. space) — advance cursor using advance width
+			const adv = advances.get(charCode);
+			if (adv) {
+				cursorX += adv * scale;
+			}
 			continue;
 		}
 
 		const { bounds, hBandCount, vBandCount, bandOffset, curveOffset } = glyph;
 
-		// Glyph quad corners in pixel space
+		// Glyph quad corners in pixel space.
+		// Font Y is up (ascenders positive), screen Y is down.
+		// Negate Y so ascenders go upward on screen. Position will be offset
+		// by the container's y position to place the baseline.
 		const x0 = cursorX + bounds.minX * scale;
-		const y0 = bounds.minY * scale;
+		const y0 = -bounds.maxY * scale;
 		const x1 = cursorX + bounds.maxX * scale;
-		const y1 = bounds.maxY * scale;
+		const y1 = -bounds.minY * scale;
 
-		// Em-space texcoords (used by fragment shader for curve evaluation)
+		// Em-space texcoords (used by fragment shader for curve evaluation).
+		// These stay in font coordinate space (Y-up).
 		const u0 = bounds.minX;
 		const v0 = bounds.minY;
 		const u1 = bounds.maxX;
@@ -124,13 +135,14 @@ export function slugGlyphQuads(
 		// Pack band max + flags
 		const packedBands = packBandMax(hBandCount - 1, vBandCount - 1);
 
-		// Quad corners: bottom-left, bottom-right, top-right, top-left
-		// Each corner has outward-facing normals for dilation
+		// Quad corners with screen-space positions and font-space texcoords.
+		// Screen: y0 = top (font maxY), y1 = bottom (font minY).
+		// Font: v0 = minY (bottom), v1 = maxY (top).
 		const corners = [
-			{ px: x0, py: y0, nx: -1, ny: -1, eu: u0, ev: v0 },
-			{ px: x1, py: y0, nx: 1, ny: -1, eu: u1, ev: v0 },
-			{ px: x1, py: y1, nx: 1, ny: 1, eu: u1, ev: v1 },
-			{ px: x0, py: y1, nx: -1, ny: 1, eu: u0, ev: v1 }
+			{ px: x0, py: y0, nx: -1, ny: -1, eu: u0, ev: v1 },  // screen top-left = font (minX, maxY)
+			{ px: x1, py: y0, nx: 1, ny: -1, eu: u1, ev: v1 },   // screen top-right = font (maxX, maxY)
+			{ px: x1, py: y1, nx: 1, ny: 1, eu: u1, ev: v0 },    // screen bottom-right = font (maxX, minY)
+			{ px: x0, py: y1, nx: -1, ny: 1, eu: u0, ev: v0 }
 		];
 
 		const baseVertex = quadIdx * VERTICES_PER_QUAD;

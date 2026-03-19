@@ -101,6 +101,7 @@ export class SlugText extends Container {
 		const quads = slugGlyphQuads(
 			this._text,
 			this._font.glyphs,
+			this._font.advances,
 			this._font.unitsPerEm,
 			this._fontSize,
 			this._font.textureWidth,

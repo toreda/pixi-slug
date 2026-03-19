@@ -5,6 +5,9 @@ precision highp float;
 // Viewport dimensions in pixels (for pixel-to-clip-space conversion)
 uniform vec2 uSlugViewport;
 
+// PixiJS transform matrix (injected by MeshPipe)
+uniform mat3 uTransformMatrix;
+
 // Vertex attributes (5 total, matching Slug HLSL attrib[0..4])
 // attrib[0]: xy = position, zw = normal (for dilation)
 in vec4 aPositionNormal;
@@ -55,8 +58,11 @@ void main() {
 	// Dilate vertex position along normal
 	vec2 dilatedPos = slugDilate(aPositionNormal.xy, aPositionNormal.zw);
 
+	// Apply PixiJS transform (includes container position, scale, rotation)
+	vec3 transformed = uTransformMatrix * vec3(dilatedPos, 1.0);
+
 	// Convert pixel coordinates to clip space (-1 to 1), flip Y
-	vec2 clipPos = (dilatedPos / uSlugViewport) * 2.0 - 1.0;
+	vec2 clipPos = (transformed.xy / uSlugViewport) * 2.0 - 1.0;
 	clipPos.y = -clipPos.y;
 	gl_Position = vec4(clipPos, 0.0, 1.0);
 

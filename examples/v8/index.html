@@ -297,18 +297,15 @@
 					}
 				}
 			}
-			slugText.anchor = { x: 0.5, y: 0.5 };
-			slugText.position.set(centerX, centerY - lineHeight);
+			slugText.position.set(20, 60);
 			app.stage.addChild(slugText);
 
 			var slugText2 = new pixiSlug.SlugText('GPU Bezier Text Rendering', font, 32);
-			slugText2.anchor = { x: 0.5, y: 0.5 };
-			slugText2.position.set(centerX, centerY);
+			slugText2.position.set(20, 120);
 			app.stage.addChild(slugText2);
 
 			var slugText3 = new pixiSlug.SlugText('pixi-slug + PixiJS v8', font, 24);
-			slugText3.anchor = { x: 0.5, y: 0.5 };
-			slugText3.position.set(centerX, centerY + lineHeight);
+			slugText3.position.set(20, 180);
 		})();
 	</script>
 </body>

@@ -184,11 +184,18 @@ float slugRender(vec2 renderCoord) {
 		}
 	}
 
-	// Average horizontal and vertical coverage
-	return clamp((abs(coverageX) + abs(coverageY)) * 0.5, 0.0, 1.0);
+	// Sluggish approach: average signed coverages, then abs.
+	// This preserves counter subtraction — inner contours produce
+	// negative coverage that cancels the outer contour's positive.
+	return clamp(abs(coverageX + coverageY) * 0.5, 0.0, 1.0);
 }
 
 void main() {
 	float coverage = slugRender(vTexcoord);
+
+	// Debug heatmap: blue = negative coverage, red = positive, green = near 0.5
+	// Use this to visualize coverage quality
+	// fragColor = vec4(max(coverage, 0.0), abs(coverage - 0.5) < 0.1 ? 1.0 : 0.0, max(-coverage, 0.0), 1.0);
+
 	fragColor = vColor * coverage;
 }
