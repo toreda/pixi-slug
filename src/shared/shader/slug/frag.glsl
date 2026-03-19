@@ -101,6 +101,13 @@ float traceRayCurveH(vec2 p1, vec2 p2, vec2 p3, float pixelsPerEm) {
 		return 0.0;
 	}
 
+	// Clamp t values to [0,1] for robustness. The sign-table should guarantee
+	// in-range roots, but numerical imprecision at near-degenerate corners
+	// (sharp tips, nearly-horizontal curves) can push t slightly out of range,
+	// producing a bogus crossing x-position far from the actual curve.
+	t1 = clamp(t1, 0.0, 1.0);
+	t2 = clamp(t2, 0.0, 1.0);
+
 	float coverage = 0.0;
 
 	if ((code & 1u) != 0u) {
@@ -148,10 +155,12 @@ float slugRender(vec2 renderCoord) {
 
 	// --- Horizontal ray ---
 	float coverageX = 0.0;
+	int hCount = 0;
 	{
 		uvec4 hdr = fetchBand(glyphBandOffset + bandY, 0);
 		int count = int(hdr.x);
 		int offset = int(hdr.y);
+		hCount = count;
 
 		for (int i = 0; i < count && i < 64; i++) {
 			uvec4 ref = fetchBand(offset + i, 0);
@@ -166,6 +175,7 @@ float slugRender(vec2 renderCoord) {
 
 	// --- Vertical ray ---
 	float coverageY = 0.0;
+	int vCount = 0;
 	{
 		// Vertical band headers start after hBandCount horizontal headers.
 		// vGlyph.z = hBandCount - 1, so hBandCount = vGlyph.z + 1
@@ -173,6 +183,7 @@ float slugRender(vec2 renderCoord) {
 		uvec4 hdr = fetchBand(glyphBandOffset + hBandCount + bandX, 0);
 		int count = int(hdr.x);
 		int offset = int(hdr.y);
+		vCount = count;
 
 		for (int i = 0; i < count && i < 64; i++) {
 			uvec4 ref = fetchBand(offset + i, 0);
@@ -188,15 +199,16 @@ float slugRender(vec2 renderCoord) {
 	float ax = abs(coverageX);
 	float ay = abs(coverageY);
 
-	// If one direction's band has no curves (near-zero coverage), fall back
-	// to the other direction exclusively. This happens at band boundaries or
-	// pixels outside the glyph where one ray sees nothing.
-	if (ax < 0.01) return clamp(ay, 0.0, 1.0);
-	if (ay < 0.01) return clamp(ax, 0.0, 1.0);
+	// Fall back to the other direction ONLY when a band is genuinely empty
+	// (zero curves assigned to it). Do NOT fall back based on near-zero
+	// accumulated coverage — a band with curves that cancel to ~0 means the
+	// fragment is legitimately outside the glyph in that direction, and using
+	// the other direction's coverage alone would produce false fill (e.g. the
+	// concave notches of 'x' where one winding sum correctly cancels to zero).
+	if (hCount == 0) return clamp(ay, 0.0, 1.0);
+	if (vCount == 0) return clamp(ax, 0.0, 1.0);
 
-	// Both directions have meaningful coverage: average them.
-	// Averaging reduces noise at edges and handles curves that only face
-	// one direction well (e.g. near-horizontal edges seen by the V ray).
+	// Both directions have curves: average their absolute coverages.
 	return clamp((ax + ay) * 0.5, 0.0, 1.0);
 }
 
