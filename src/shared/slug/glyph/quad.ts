@@ -137,17 +137,22 @@ export function slugGlyphQuads(
 		// Use a Float32Array round-trip to match GPU float32 precision exactly —
 		// the shader receives these as float32 vertex attributes, so the band
 		// boundary arithmetic must agree with the CPU-side band assignment in bands.ts.
+		//
+		// Single shared scale for both axes (square band grid), matching the
+		// reference. The scale uses the larger dimension so both axes fit.
 		const glyphWidth = bounds.maxX - bounds.minX;
 		const glyphHeight = bounds.maxY - bounds.minY;
+		const maxDim = Math.max(glyphWidth, glyphHeight);
+		const bandCount = Math.max(hBandCount, vBandCount);
 		const _f32 = new Float32Array(4);
-		_f32[0] = glyphWidth > 0 ? vBandCount / glyphWidth : 0;
-		_f32[1] = glyphHeight > 0 ? hBandCount / glyphHeight : 0;
-		_f32[2] = -bounds.minX * _f32[0];
-		_f32[3] = -bounds.minY * _f32[1];
-		const bandScaleX  = _f32[0];
-		const bandScaleY  = _f32[1];
-		const bandOffsetX = _f32[2];
-		const bandOffsetY = _f32[3];
+		_f32[0] = maxDim > 0 ? bandCount / maxDim : 0;  // shared scale
+		const bandScale = _f32[0];
+		_f32[1] = -bounds.minX * bandScale;              // vBandOffset (X → vertical band)
+		_f32[2] = -bounds.minY * bandScale;              // hBandOffset (Y → horizontal band)
+		const bandScaleX  = bandScale;
+		const bandScaleY  = bandScale;
+		const bandOffsetX = _f32[1];
+		const bandOffsetY = _f32[2];
 
 		// Pack glyph band texture location (band offset x/y as 16-bit pair)
 		const glyphLocX = bandOffset % textureWidth;

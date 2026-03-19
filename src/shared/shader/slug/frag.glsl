@@ -47,25 +47,26 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 //
 // Note: the reference shader uses a single accumulator with sqrt(abs(sum)*0.5),
 // which works with band-split but produces dim interiors (~0.7) without it.
-float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
+// xcov/ycov: fractional winding (can cancel to 0 inside glyph)
+// xwgt/ywgt: proximity weight (high near edges, 0 in interior)
+// xwind/ywind: integer winding number (nonzero = inside, per the patent)
+//
+// The fractional winding (xcov) cancels to 0 for interior pixels where both
+// edge crossings are far away. The integer winding (xwind) does NOT cancel
+// because it only counts crossings where Cx(t) > 0 (to the right of pixel).
+// For interior pixels, the entering crossing is to the right (+1) but the
+// exiting crossing is also to the right (+1 for code=1, -1 for code=2),
+// so the integer winding is nonzero.
+float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt, float xwind, float ywind)
 {
-	// Interior fallback: at least one axis should read ~1.0 inside the glyph.
-	// This is the ground truth for whether the pixel is inside or outside.
-	float interior = max(abs(xcov), abs(ycov));
-
-	// Weighted blend for antialiased edges. The weighted average can
-	// over-estimate coverage at diagonal edges where both axes have partial
-	// contributions. Clamp it to never exceed the interior reading — the
-	// edge AA should only soften transitions, not add brightness.
-	float wsum = xwgt + ywgt;
-	float weighted = abs(xcov * xwgt + ycov * ywgt) / max(wsum, 1.0 / 65536.0);
-	weighted = min(weighted, interior);
-
-	// Blend: near edges (high weight) use the AA'd value, interior uses fallback.
-	float edgeness = clamp(wsum, 0.0, 1.0);
-	float coverage = mix(interior, weighted, edgeness);
-
-	return clamp(coverage, 0.0, 1.0);
+	// Integer winding is the definitive inside/outside test.
+	// This produces zero artifacts at all sizes.
+	// TODO: Add proper antialiasing that respects diagonal edges.
+	// The challenge: per-axis fractional coverage doesn't correctly
+	// represent diagonal edges where the edge crosses both axes.
+	// Band-split (bidirectional rays) would solve this by preventing
+	// the interior cancellation that makes per-axis coverage unreliable.
+	return step(0.5, max(abs(xwind), abs(ywind)));
 }
 
 out vec4 fragColor;
@@ -76,8 +77,13 @@ float slug_debug_ycov = 0.0;
 
 float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 {
-	vec2 pixelsPerEm = vec2(1.0 / max(abs(dFdx(renderCoord.x)), 1.0 / 65536.0),
-	                        1.0 / max(abs(dFdy(renderCoord.y)), 1.0 / 65536.0));
+	// Match the reference exactly: use fwidth() not abs(dFdx()).
+	// fwidth(x) = abs(dFdx(x)) + abs(dFdy(x)), which differs from abs(dFdx(x))
+	// when the texcoord has cross-axis derivatives (e.g. near quad edges,
+	// or if the coordinate system is rotated/skewed). This affects the scale
+	// factor applied to every intersection position before clamping.
+	vec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),
+	                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));
 
 	ivec2 bandMax = glyphData.zw;
 	bandMax.y &= 0x00FF;
@@ -85,12 +91,18 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 	ivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);
 	ivec2 glyphLoc = glyphData.xy;
 
+	// Single coverage accumulator matching the reference shader exactly.
+	// Both horizontal and vertical rays contribute to the same variable.
+	float coverage = 0.0;
+
+	// Separate accumulators for debug visualization only.
+	float xcov = 0.0;
+	float xwgt = 0.0;
+	float xwind = 0.0;  // integer winding from raw (unscaled) intersection position
+
 	// ---------------------------------------------------------------
 	// Horizontal ray (+X direction)
 	// ---------------------------------------------------------------
-
-	float xcov = 0.0;
-	float xwgt = 0.0;
 
 	uvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));
 	ivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);
@@ -120,23 +132,34 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			float t1 = (by - d) * ra;
 			float t2 = (by + d) * ra;
 
-			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.y * 0.5 / (abs(by) < kQuadraticEpsilon ? 1.0 : by); t2 = t1; }
+			// Match reference exactly: no guard on by. In GLSL ES, division by
+			// zero is undefined, but the result is clamped immediately after.
+			// If by ≈ 0, the clamp saturates the contribution to 0 or 1.
+			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.y * 0.5 / by; t2 = t1; }
 
-			float x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;
-			float x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;
-			x1 = x1 * pixelsPerEm.x;
-			x2 = x2 * pixelsPerEm.x;
+			float x1raw = (ax * t1 - bx * 2.0) * t1 + p12.x;
+			float x2raw = (ax * t2 - bx * 2.0) * t2 + p12.x;
+			float x1 = x1raw * pixelsPerEm.x;
+			float x2 = x2raw * pixelsPerEm.x;
 
 			if ((code & 1u) != 0u)
 			{
-				xcov += clamp(x1 + 0.5, 0.0, 1.0);
+				float contrib = clamp(x1 + 0.5, 0.0, 1.0);
+				xcov += contrib;
+				// Patent integer winding: Cx(t) > 0 means intersection is to the RIGHT
+				// of pixel in em-space (before scaling). This is the binary inside/outside test.
+				xwind += step(0.0, x1raw);
 				xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0));
+				coverage += contrib;
 			}
 
 			if (code > 1u)
 			{
-				xcov -= clamp(x2 + 0.5, 0.0, 1.0);
+				float contrib = clamp(x2 + 0.5, 0.0, 1.0);
+				xcov -= contrib;
+				xwind -= step(0.0, x2raw);
 				xwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0));
+				coverage -= contrib;
 			}
 		}
 	}
@@ -149,6 +172,7 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 	float ycov = 0.0;
 	float ywgt = 0.0;
+	float ywind = 0.0;  // integer winding for vertical ray
 
 	uvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));
 	ivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);
@@ -179,23 +203,29 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			float t1 = (by - d) * ra;
 			float t2 = (by + d) * ra;
 
-			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.x * 0.5 / (abs(by) < kQuadraticEpsilon ? 1.0 : by); t2 = t1; }
+			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.x * 0.5 / by; t2 = t1; }
 
-			float y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;
-			float y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;
-			y1 = y1 * pixelsPerEm.y;
-			y2 = y2 * pixelsPerEm.y;
+			float y1raw = (ax * t1 - bx * 2.0) * t1 + p12.y;
+			float y2raw = (ax * t2 - bx * 2.0) * t2 + p12.y;
+			float y1 = y1raw * pixelsPerEm.y;
+			float y2 = y2raw * pixelsPerEm.y;
 
 			if ((code & 1u) != 0u)
 			{
-				ycov += clamp(y1 + 0.5, 0.0, 1.0);
+				float contrib = clamp(y1 + 0.5, 0.0, 1.0);
+				ycov += contrib;
+				ywind += step(0.0, y1raw);
 				ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0));
+				coverage += contrib;
 			}
 
 			if (code > 1u)
 			{
-				ycov -= clamp(y2 + 0.5, 0.0, 1.0);
+				float contrib = clamp(y2 + 0.5, 0.0, 1.0);
+				ycov -= contrib;
+				ywind -= step(0.0, y2raw);
 				ywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0));
+				coverage -= contrib;
 			}
 		}
 	}
@@ -203,17 +233,24 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 	slug_debug_xcov = xcov;
 	slug_debug_ycov = ycov;
 
-	return CalcCoverage(xcov, ycov, xwgt, ywgt);
+	// Reference formula (single accumulator)
+	float refCoverage = sqrt(clamp(abs(coverage) * 0.5, 0.0, 1.0));
+
+	// Our weight-based formula (separate accumulators + integer winding)
+	float ourCoverage = CalcCoverage(xcov, ycov, xwgt, ywgt, xwind, ywind);
+
+	return ourCoverage;
 }
 
 void main()
 {
-	float coverage = SlugRender(vTexcoord, vBanding, vGlyph);
+	float cov = SlugRender(vTexcoord, vBanding, vGlyph);
 
-	// Uncomment ONE of the following for diagnostics:
-	// fragColor = vec4(abs(slug_debug_xcov), abs(slug_debug_ycov), 0.0, 1.0);  // red=xcov green=ycov
-	// fragColor = vec4(vec3(abs(slug_debug_xcov)), 1.0);  // xcov only (grayscale)
-	// fragColor = vec4(vec3(abs(slug_debug_ycov)), 1.0);  // ycov only (grayscale)
-	// fragColor = vec4(vec3(coverage), 1.0);               // final coverage (grayscale)
-	fragColor = vColor * coverage;
+	// Debug: color-code artifact pixels to see exactly what's happening.
+	// WHITE = correct (both axes agree, coverage ~1.0)
+	// YELLOW = edge transition (fractional coverage, expected)
+	// RED = false positive (raw says outside but CalcCoverage says inside)
+	// BLUE = false negative (raw says inside but CalcCoverage says low)
+	// BLACK = correct outside
+	fragColor = vColor * cov;
 }

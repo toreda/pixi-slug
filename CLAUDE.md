@@ -23,6 +23,9 @@ This file serves as a quick reference to project knowledge and documentation. Fo
 - **[_docs/webgl-requirements.md](_docs/webgl-requirements.md)** - WebGL/PixiJS/TypeScript platform requirements
   *HLSL→GLSL translation audit, every typed array analyzed for precision drift, band texture uint32-as-float32 problem, packed attribute bit-pattern fidelity, WebGL2 feature requirements, identified risks with mitigations, invariant checklist.*
 
+- **[_docs/artifact_investigation.md](_docs/artifact_investigation.md)** - Sharp-angle vertex artifact investigation
+  *Root cause analysis, all 8 fix attempts with results, debug data from V glyph, what we haven't tried (band-split, supersampling, negative rays). Remaining artifacts at V apex, X crossing, R leg — all at shared curve endpoints with acute angles.*
+
 - **[_docs/port_risks.md](_docs/port_risks.md)** - Port risks: HLSL→GLSL and C++→JavaScript
   *21 risks across two sections. "Port from HLSL to GLSL" (14 risks): matrix order, negative zero sign bit, div-by-zero undefined, RGBA16→32 format change, missing usampler2D, saturate(), flat provoking vertex, dFdx/dFdy spec, texelFetch OOB, integer precision, #version, precision qualifiers, ternary logic, loop limits. "Port to JavaScript" (7 risks): band float64/float32 mismatch, uint32-as-float32, NaN packing, cubic approximation, alpha premultiply, WebGL2, mobile derivatives.*
 

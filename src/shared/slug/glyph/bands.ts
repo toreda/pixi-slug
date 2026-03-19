@@ -114,15 +114,21 @@ export function slugGlyphBands(
 	//   bandIndex = int(renderCoord * bandScale + bandOffset)
 	// where renderCoord is also float32. Using float64 here would assign curves to
 	// bands that the shader never selects, causing missing-curve artifacts.
+	//
+	// Use a SINGLE shared scale for both axes (square band grid), matching the
+	// reference implementation. The scale is based on the larger dimension so both
+	// axes fit within the band count. The narrower axis won't span all bands.
+	const maxDim = Math.max(width, height);
+	const clampedBandCount = Math.max(hBandCount, vBandCount); // always equal, but be explicit
 	const _f32 = new Float32Array(4);
-	_f32[0] = hBandCount / height;  // hBandScale
-	_f32[1] = -boundsMinY * _f32[0]; // hBandOffset
-	_f32[2] = vBandCount / width;   // vBandScale
-	_f32[3] = -boundsMinX * _f32[2]; // vBandOffset
-	const hBandScale  = _f32[0];
+	_f32[0] = clampedBandCount / maxDim;  // shared bandScale (float32)
+	const bandScale = _f32[0];
+	_f32[1] = -boundsMinY * bandScale;   // hBandOffset
+	_f32[2] = -boundsMinX * bandScale;   // vBandOffset
+	const hBandScale  = bandScale;
 	const hBandOffset = _f32[1];
-	const vBandScale  = _f32[2];
-	const vBandOffset = _f32[3];
+	const vBandScale  = bandScale;
+	const vBandOffset = _f32[2];
 
 	for (let i = 0; i < curves.length; i++) {
 		const [cMinX, cMinY, cMaxX, cMaxY] = curveBounds(curves[i]);

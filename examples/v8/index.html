@@ -89,6 +89,331 @@
 			var slugText = new pixiSlug.SlugText('X | , . J v V R r', font, 130);
 			slugText.position.set(0, 0);
 			app.stage.addChild(slugText);
+
+			var slugText2 = new pixiSlug.SlugText('The quick brown fox jumps over the lazy dog', font, 24);
+			slugText2.position.set(10, 160);
+			app.stage.addChild(slugText2);
+
+			var slugText3 = new pixiSlug.SlugText('ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789', font, 32);
+			slugText3.position.set(10, 200);
+			app.stage.addChild(slugText3);
+
+			var slugText4 = new pixiSlug.SlugText('abcdefghijklmnopqrstuvwxyz !@#$%^&*()', font, 32);
+			slugText4.position.set(10, 250);
+			app.stage.addChild(slugText4);
+
+			// --- Debug: dump X glyph curves ---
+			var xGlyph = font.glyphs.get('X'.charCodeAt(0));
+			if (xGlyph) {
+				console.group('Glyph X');
+				console.log('bounds:', JSON.stringify(xGlyph.bounds), 'curves:', xGlyph.curves.length);
+				for (var ci = 0; ci < xGlyph.curves.length; ci++) {
+					var c = xGlyph.curves[ci];
+					console.log('  [' + ci + '] (' + c.p1x + ',' + c.p1y + ') → (' + c.p2x + ',' + c.p2y + ') → (' + c.p3x + ',' + c.p3y + ')');
+				}
+				console.groupEnd();
+			}
+
+			// --- Debug: scan across the V's left diagonal edge (band-aware) ---
+			var vGlyph = font.glyphs.get('V'.charCodeAt(0));
+			if (vGlyph) {
+				var scale = 130 / font.unitsPerEm;
+				// pixelsPerEm in the shader = 1.0 / fwidth(renderCoord) = 1.0 / (1.0/scale) = scale.
+				// NOT 1/scale. The previous CPU simulation was inverted!
+				var pxPerEm = scale;
+				console.group('V diagonal edge scan');
+				console.log('scale:', scale, 'pixelsPerEm (shader):', pxPerEm);
+
+				// The left diagonal of V runs from (238,1456) down to (663,221).
+				// curve[6]: (238,1456) → ctrl(450.5,838.5) → (663,221)
+				// At Y=728 (midpoint), the edge X is roughly at (238+663)/2 ≈ 450.
+				// Scan horizontally across the edge at a fixed Y to see xcov transition.
+				var scanY = 728;
+				var scanXstart = 350;
+				var scanXend = 550;
+				var scanStep = 2; // ~2 em-units ≈ 0.13 pixels
+
+				function simCoverageDetailed(emX, emY) {
+					var xcov = 0, ycov = 0;
+					var details = [];
+
+					for (var ci = 0; ci < vGlyph.curves.length; ci++) {
+						var c = vGlyph.curves[ci];
+						var p1x = c.p1x - emX, p1y = c.p1y - emY;
+						var p2x = c.p2x - emX, p2y = c.p2y - emY;
+						var p3x = c.p3x - emX, p3y = c.p3y - emY;
+
+						// Horizontal ray
+						var shift = ((p1y > 0) ? 2 : 0) + ((p2y > 0) ? 4 : 0) + ((p3y > 0) ? 8 : 0);
+						var code = (0x2E74 >> shift) & 3;
+						if (code !== 0) {
+							var ax = p1x - 2*p2x + p3x;
+							var ay = p1y - 2*p2y + p3y;
+							var bx = p1x - p2x;
+							var by = p1y - p2y;
+							var t1, t2;
+							if (Math.abs(ay) < 0.0001) {
+								t1 = t2 = p1y * 0.5 / by;
+							} else {
+								var d = Math.sqrt(Math.max(by*by - ay*p1y, 0));
+								t1 = (by - d) / ay;
+								t2 = (by + d) / ay;
+							}
+							var x1 = ((ax*t1 - bx*2)*t1 + p1x) * pxPerEm;
+							var x2 = ((ax*t2 - bx*2)*t2 + p1x) * pxPerEm;
+
+							var c1 = Math.min(Math.max(x1 + 0.5, 0), 1);
+							var c2 = Math.min(Math.max(x2 + 0.5, 0), 1);
+
+							if ((code & 1) !== 0) { xcov += c1; details.push('h[' + ci + '] t1: x=' + x1.toFixed(3) + ' c=+' + c1.toFixed(3)); }
+							if (code > 1)         { xcov -= c2; details.push('h[' + ci + '] t2: x=' + x2.toFixed(3) + ' c=-' + c2.toFixed(3)); }
+						}
+					}
+
+					for (var ci = 0; ci < vGlyph.curves.length; ci++) {
+						var c = vGlyph.curves[ci];
+						var p1x = c.p1x - emX, p1y = c.p1y - emY;
+						var p2x = c.p2x - emX, p2y = c.p2y - emY;
+						var p3x = c.p3x - emX, p3y = c.p3y - emY;
+
+						// Vertical ray
+						var shift = ((p1x > 0) ? 2 : 0) + ((p2x > 0) ? 4 : 0) + ((p3x > 0) ? 8 : 0);
+						var code = (0x2E74 >> shift) & 3;
+						if (code !== 0) {
+							var ax = p1y + 2*p2y + p3y;
+							var ay = p1x - 2*p2x + p3x;
+							var bx = p1y - p2y;
+							var by = p1x - p2x;
+							var t1, t2;
+							if (Math.abs(ay) < 0.0001) {
+								t1 = t2 = p1x * 0.5 / by;
+							} else {
+								var d = Math.sqrt(Math.max(by*by - ay*p1x, 0));
+								t1 = (by - d) / ay;
+								t2 = (by + d) / ay;
+							}
+							var y1 = ((ax*t1 - bx*2)*t1 + p1y) * pxPerEm;
+							var y2 = ((ax*t2 - bx*2)*t2 + p1y) * pxPerEm;
+
+							var c1 = Math.min(Math.max(y1 + 0.5, 0), 1);
+							var c2 = Math.min(Math.max(y2 + 0.5, 0), 1);
+
+							if ((code & 1) !== 0) { ycov += c1; details.push('v[' + ci + '] t1: y=' + y1.toFixed(3) + ' c=+' + c1.toFixed(3)); }
+							if (code > 1)         { ycov -= c2; details.push('v[' + ci + '] t2: y=' + y2.toFixed(3) + ' c=-' + c2.toFixed(3)); }
+						}
+					}
+
+					return { xcov: xcov, ycov: ycov, details: details };
+				}
+
+				// Also do a band-aware simulation: only test curves the shader would see.
+				var TW = 4096;
+				var maxDim = Math.max(vGlyph.bounds.maxX - vGlyph.bounds.minX, vGlyph.bounds.maxY - vGlyph.bounds.minY);
+				var bandCount = Math.max(vGlyph.hBandCount, vGlyph.vBandCount);
+				var bandScaleF32 = new Float32Array(1);
+				bandScaleF32[0] = bandCount / maxDim;
+				var bandScale = bandScaleF32[0];
+				var hOffsetF32 = new Float32Array(1);
+				hOffsetF32[0] = -vGlyph.bounds.minY * bandScale;
+				var vOffsetF32 = new Float32Array(1);
+				vOffsetF32[0] = -vGlyph.bounds.minX * bandScale;
+				var hBandOffset = hOffsetF32[0];
+				var vBandOffset = vOffsetF32[0];
+
+				console.log('Band config: bandCount=' + bandCount + ' bandScale=' + bandScale
+					+ ' hOffset=' + hBandOffset.toFixed(4) + ' vOffset=' + vBandOffset.toFixed(4));
+
+				// Scan at per-pixel Y intervals to find where coverage breaks.
+				// 1 pixel = 1/scale ≈ 15.75 em-units. Test at a fixed X inside
+				// the V (X=450, well inside at most Y values) across many Y rows.
+				var emPerPixel = 1.0 / scale;
+				var fixedX = 450; // inside the V at Y=728
+				console.log('--- Per-pixel Y scan at X=' + fixedX + ' (1px = ' + emPerPixel.toFixed(2) + ' em-units) ---');
+				for (var py = 0; py < 60; py++) {
+					var emY = py * emPerPixel; // em-space Y for pixel row py
+					var r = simCoverageDetailed(fixedX, emY);
+					var ax = Math.abs(r.xcov), ay = Math.abs(r.ycov);
+					var cov = Math.max(ax, ay);
+					var marker = '';
+					if (cov < 0.9) marker = ' *** LOW COVERAGE ***';
+					if (cov < 0.5) marker = ' *** ARTIFACT ***';
+					console.log('  py=' + py.toString().padStart(3)
+						+ ' emY=' + emY.toFixed(2).padStart(8)
+						+ ' xcov=' + r.xcov.toFixed(4)
+						+ ' ycov=' + r.ycov.toFixed(4)
+						+ ' cov=' + cov.toFixed(4) + marker);
+					if (marker) {
+						for (var d of r.details) console.log('    ' + d);
+					}
+				}
+
+				// Verify packed texture data: for each band, check that the texel
+				// coordinates in the band texture actually point to the correct
+				// curve data in the curve texture.
+				console.log('--- Packed texture verification ---');
+				var TW2 = 4096;
+				var bo = vGlyph.bandOffset;
+				for (var bi = 0; bi < vGlyph.hBandCount; bi++) {
+					var hdrTexel = bo + bi;
+					var curveCount = font.bandData[hdrTexel * 4];
+					var relOffset = font.bandData[hdrTexel * 4 + 1];
+					var listTexel = bo + relOffset;
+					var bandCurveIndices = vGlyph.hBands[bi];
+
+					if (curveCount !== bandCurveIndices.length) {
+						console.log('  hBand[' + bi + '] COUNT MISMATCH: packed=' + curveCount + ' expected=' + bandCurveIndices.length);
+					}
+
+					for (var ci2 = 0; ci2 < curveCount; ci2++) {
+						var refTexel = listTexel + ci2;
+						var texX = font.bandData[refTexel * 4];
+						var texY = font.bandData[refTexel * 4 + 1];
+
+						// Read what the shader would get from the curve texture at (texX, texY)
+						var texIdx = (texY * TW2 + texX) * 4;
+						var gpuP1x = font.curveData[texIdx];
+						var gpuP1y = font.curveData[texIdx + 1];
+						var gpuP2x = font.curveData[texIdx + 2];
+						var gpuP2y = font.curveData[texIdx + 3];
+						var gpuP3x = font.curveData[(texY * TW2 + texX + 1) * 4];
+						var gpuP3y = font.curveData[(texY * TW2 + texX + 1) * 4 + 1];
+
+						// Compare to original curve data
+						var origIdx = bandCurveIndices[ci2];
+						var orig = vGlyph.curves[origIdx];
+
+						var match = (gpuP1x === orig.p1x && gpuP1y === orig.p1y
+							&& gpuP2x === orig.p2x && gpuP2y === orig.p2y
+							&& gpuP3x === orig.p3x && gpuP3y === orig.p3y);
+
+						if (!match) {
+							console.log('  hBand[' + bi + '] curve[' + ci2 + '] (idx=' + origIdx + ') DATA MISMATCH:');
+							console.log('    packed tex=(' + texX + ',' + texY + ')');
+							console.log('    GPU reads: p1=(' + gpuP1x + ',' + gpuP1y + ') p2=(' + gpuP2x + ',' + gpuP2y + ') p3=(' + gpuP3x + ',' + gpuP3y + ')');
+							console.log('    Expected:  p1=(' + orig.p1x + ',' + orig.p1y + ') p2=(' + orig.p2x + ',' + orig.p2y + ') p3=(' + orig.p3x + ',' + orig.p3y + ')');
+						}
+					}
+				}
+
+				// Same for vertical bands
+				for (var bi = 0; bi < vGlyph.vBandCount; bi++) {
+					var hdrTexel = bo + vGlyph.hBandCount + bi;
+					var curveCount = font.bandData[hdrTexel * 4];
+					var relOffset = font.bandData[hdrTexel * 4 + 1];
+					var listTexel = bo + relOffset;
+					var bandCurveIndices = vGlyph.vBands[bi];
+
+					if (curveCount !== bandCurveIndices.length) {
+						console.log('  vBand[' + bi + '] COUNT MISMATCH: packed=' + curveCount + ' expected=' + bandCurveIndices.length);
+					}
+
+					for (var ci2 = 0; ci2 < curveCount; ci2++) {
+						var refTexel = listTexel + ci2;
+						var texX = font.bandData[refTexel * 4];
+						var texY = font.bandData[refTexel * 4 + 1];
+						var texIdx = (texY * TW2 + texX) * 4;
+						var gpuP1x = font.curveData[texIdx];
+						var gpuP1y = font.curveData[texIdx + 1];
+						var gpuP2x = font.curveData[texIdx + 2];
+						var gpuP2y = font.curveData[texIdx + 3];
+						var gpuP3x = font.curveData[(texY * TW2 + texX + 1) * 4];
+						var gpuP3y = font.curveData[(texY * TW2 + texX + 1) * 4 + 1];
+
+						var origIdx = bandCurveIndices[ci2];
+						var orig = vGlyph.curves[origIdx];
+
+						var match = (gpuP1x === orig.p1x && gpuP1y === orig.p1y
+							&& gpuP2x === orig.p2x && gpuP2y === orig.p2y
+							&& gpuP3x === orig.p3x && gpuP3y === orig.p3y);
+
+						if (!match) {
+							console.log('  vBand[' + bi + '] curve[' + ci2 + '] (idx=' + origIdx + ') DATA MISMATCH:');
+							console.log('    packed tex=(' + texX + ',' + texY + ')');
+							console.log('    GPU reads: p1=(' + gpuP1x + ',' + gpuP1y + ') p2=(' + gpuP2x + ',' + gpuP2y + ') p3=(' + gpuP3x + ',' + gpuP3y + ')');
+							console.log('    Expected:  p1=(' + orig.p1x + ',' + orig.p1y + ') p2=(' + orig.p2x + ',' + orig.p2y + ') p3=(' + orig.p3x + ',' + orig.p3y + ')');
+						}
+					}
+				}
+				console.log('(Only mismatches shown. No output = all curve data verified.)');
+
+				console.log('--- Band coverage mismatch check ---');
+				for (var emX = scanXstart; emX <= scanXend; emX += scanStep) {
+					// Compute which bands this pixel falls in
+					var hBandIdx = Math.max(0, Math.min(vGlyph.hBandCount - 1, Math.floor(scanY * bandScale + hBandOffset)));
+					var vBandIdx = Math.max(0, Math.min(vGlyph.vBandCount - 1, Math.floor(emX * bandScale + vBandOffset)));
+
+					// Get curve indices from bands
+					var hCurves = vGlyph.hBands[hBandIdx] || [];
+					var vCurves = vGlyph.vBands[vBandIdx] || [];
+
+					// All-curves simulation
+					var rAll = simCoverageDetailed(emX, scanY);
+
+					// Band-only simulation
+					var xcovBand = 0, ycovBand = 0;
+					var bandDetails = [];
+
+					// Horizontal ray using only h-band curves
+					for (var hi = 0; hi < hCurves.length; hi++) {
+						var ci = hCurves[hi];
+						var c = vGlyph.curves[ci];
+						var p1x = c.p1x - emX, p1y = c.p1y - scanY;
+						var p2x = c.p2x - emX, p2y = c.p2y - scanY;
+						var p3x = c.p3x - emX, p3y = c.p3y - scanY;
+						var shift = ((p1y > 0) ? 2 : 0) + ((p2y > 0) ? 4 : 0) + ((p3y > 0) ? 8 : 0);
+						var code = (0x2E74 >> shift) & 3;
+						if (code !== 0) {
+							var aax = p1x - 2*p2x + p3x, aay = p1y - 2*p2y + p3y;
+							var bbx = p1x - p2x, bby = p1y - p2y;
+							var t1, t2;
+							if (Math.abs(aay) < 0.0001) { t1 = t2 = p1y * 0.5 / bby; }
+							else { var dd = Math.sqrt(Math.max(bby*bby - aay*p1y, 0)); t1 = (bby-dd)/aay; t2 = (bby+dd)/aay; }
+							var xx1 = ((aax*t1-bbx*2)*t1+p1x)*pxPerEm;
+							var xx2 = ((aax*t2-bbx*2)*t2+p1x)*pxPerEm;
+							if ((code&1)!==0) { xcovBand += Math.min(Math.max(xx1+0.5,0),1); }
+							if (code>1)       { xcovBand -= Math.min(Math.max(xx2+0.5,0),1); }
+						}
+					}
+
+					// Vertical ray using only v-band curves
+					for (var vi = 0; vi < vCurves.length; vi++) {
+						var ci = vCurves[vi];
+						var c = vGlyph.curves[ci];
+						var p1x = c.p1x - emX, p1y = c.p1y - scanY;
+						var p2x = c.p2x - emX, p2y = c.p2y - scanY;
+						var p3x = c.p3x - emX, p3y = c.p3y - scanY;
+						var shift = ((p1x > 0) ? 2 : 0) + ((p2x > 0) ? 4 : 0) + ((p3x > 0) ? 8 : 0);
+						var code = (0x2E74 >> shift) & 3;
+						if (code !== 0) {
+							var aax = p1y + 2*p2y + p3y, aay = p1x - 2*p2x + p3x;
+							var bbx = p1y - p2y, bby = p1x - p2x;
+							var t1, t2;
+							if (Math.abs(aay) < 0.0001) { t1 = t2 = p1x * 0.5 / bby; }
+							else { var dd = Math.sqrt(Math.max(bby*bby - aay*p1x, 0)); t1 = (bby-dd)/aay; t2 = (bby+dd)/aay; }
+							var yy1 = ((aax*t1-bbx*2)*t1+p1y)*pxPerEm;
+							var yy2 = ((aax*t2-bbx*2)*t2+p1y)*pxPerEm;
+							if ((code&1)!==0) { ycovBand += Math.min(Math.max(yy1+0.5,0),1); }
+							if (code>1)       { ycovBand -= Math.min(Math.max(yy2+0.5,0),1); }
+						}
+					}
+
+					var allCov = Math.max(Math.abs(rAll.xcov), Math.abs(rAll.ycov));
+					var bandCov = Math.max(Math.abs(xcovBand), Math.abs(ycovBand));
+					var differs = (Math.abs(rAll.xcov - xcovBand) > 0.001 || Math.abs(rAll.ycov - ycovBand) > 0.001);
+
+					if (differs) {
+						console.log('  x=' + emX.toString().padStart(4)
+							+ ' ALL: xcov=' + rAll.xcov.toFixed(4) + ' ycov=' + rAll.ycov.toFixed(4)
+							+ ' | BAND: xcov=' + xcovBand.toFixed(4) + ' ycov=' + ycovBand.toFixed(4)
+							+ ' hBand=' + hBandIdx + '(' + hCurves.length + ' curves)'
+							+ ' vBand=' + vBandIdx + '(' + vCurves.length + ' curves)'
+							+ ' *** MISMATCH');
+					}
+				}
+
+				console.log('(Only mismatches shown. No output = all-curves matches band-only.)');
+				console.groupEnd();
+			}
 		})();
 	</script>
 </body>
