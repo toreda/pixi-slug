@@ -93,8 +93,10 @@ function buildConfig(version: PixiVersion, target: BuildTarget): Configuration {
 			path: path.resolve(__dirname, 'dist', version),
 			filename: 'index.js',
 			library: {
-				type: 'commonjs2'
+				name: 'pixiSlug',
+				type: 'umd'
 			},
+			globalObject: 'this',
 		},
 		plugins: [
 			new CleanOutputPlugin()

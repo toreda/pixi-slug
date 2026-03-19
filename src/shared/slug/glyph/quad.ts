@@ -60,6 +60,7 @@ function packBandMax(hBandMax: number, vBandMax: number): number {
  * @param glyphs		Glyph data map from SlugFont (keyed by char code).
  * @param unitsPerEm	Font units per em for coordinate normalization.
  * @param fontSize		Desired font size in pixels.
+ * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
  */
 export function slugGlyphQuads(
@@ -67,6 +68,7 @@ export function slugGlyphQuads(
 	glyphs: Map<number, SlugGlyphData>,
 	unitsPerEm: number,
 	fontSize: number,
+	textureWidth: number,
 	color: [number, number, number, number] = [1, 1, 1, 1]
 ): SlugGlyphQuads {
 	const scale = fontSize / unitsPerEm;
@@ -114,10 +116,9 @@ export function slugGlyphQuads(
 		const bandOffsetX = -bounds.minX * bandScaleX;
 		const bandOffsetY = -bounds.minY * bandScaleY;
 
-		// Pack glyph texture location (curve offset x/y as 16-bit pair)
-		const textureWidth = 4096; // Matches shader texture width
-		const glyphLocX = curveOffset % textureWidth;
-		const glyphLocY = Math.floor(curveOffset / textureWidth);
+		// Pack glyph band texture location (band offset x/y as 16-bit pair)
+		const glyphLocX = bandOffset % textureWidth;
+		const glyphLocY = Math.floor(bandOffset / textureWidth);
 		const packedLocation = packUint16Pair(glyphLocX, glyphLocY);
 
 		// Pack band max + flags

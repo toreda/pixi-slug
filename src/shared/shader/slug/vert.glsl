@@ -2,9 +2,7 @@
 
 precision highp float;
 
-// MVP matrix
-uniform mat4 uSlugMatrix;
-// Viewport dimensions in pixels
+// Viewport dimensions in pixels (for pixel-to-clip-space conversion)
 uniform vec2 uSlugViewport;
 
 // Vertex attributes (5 total, matching Slug HLSL attrib[0..4])
@@ -27,12 +25,12 @@ flat out ivec4 vGlyph;
 
 /**
  * Expand glyph quad outward along vertex normals so boundary pixels
- * are not clipped. Distance is derived from MVP + viewport size.
+ * are not clipped. Dilation distance is half a pixel in em-space.
  */
-vec2 slugDilate(vec2 position, vec2 normal, vec4 jacobian) {
-	vec2 ndcScale = vec2(uSlugMatrix[0][0], uSlugMatrix[1][1]) * uSlugViewport * 0.5;
-	float pixelSize = 1.0 / min(abs(ndcScale.x), abs(ndcScale.y));
-	float dilateDistance = pixelSize * 0.5;
+vec2 slugDilate(vec2 position, vec2 normal) {
+	// Compute pixel size in the coordinate space of the position
+	vec2 pixelSize = 2.0 / uSlugViewport;
+	float dilateDistance = max(pixelSize.x, pixelSize.y) * 0.5;
 
 	return position + normal * dilateDistance;
 }
@@ -55,10 +53,12 @@ ivec4 slugUnpack(vec4 texcoord) {
 
 void main() {
 	// Dilate vertex position along normal
-	vec2 dilatedPos = slugDilate(aPositionNormal.xy, aPositionNormal.zw, aJacobian);
+	vec2 dilatedPos = slugDilate(aPositionNormal.xy, aPositionNormal.zw);
 
-	// Apply MVP transform
-	gl_Position = uSlugMatrix * vec4(dilatedPos, 0.0, 1.0);
+	// Convert pixel coordinates to clip space (-1 to 1), flip Y
+	vec2 clipPos = (dilatedPos / uSlugViewport) * 2.0 - 1.0;
+	clipPos.y = -clipPos.y;
+	gl_Position = vec4(clipPos, 0.0, 1.0);
 
 	// Pass through color and texcoords
 	vColor = aColor;

@@ -10,7 +10,13 @@
       "WebFetch(domain:api.npmjs.org)",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(pnpm add:*)",
-      "Bash(pnpm run:*)"
+      "Bash(pnpm run:*)",
+      "WebFetch(domain:data.jsdelivr.com)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "Bash(curl -L -o inter.ttf \"https://raw.githubusercontent.com/google/fonts/main/ofl/inter/static/Inter-Regular.ttf\")",
+      "Bash(curl -L -o roboto.ttf \"https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto%5Bwdth%2Cwght%5D.ttf\")",
+      "WebFetch(domain:api.github.com)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/examples/v8/font.ttf)"
     ]
   }
 }

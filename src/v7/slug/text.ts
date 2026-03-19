@@ -103,6 +103,7 @@ export class SlugText extends Container {
 			this._font.glyphs,
 			this._font.unitsPerEm,
 			this._fontSize,
+			this._font.textureWidth,
 			this._color
 		);
 

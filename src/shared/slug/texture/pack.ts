@@ -88,6 +88,13 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 		const headerCount = glyph.hBandCount + glyph.vBandCount;
 		bandTexelIdx += headerCount;
 
+		// The glyph's curves start at this texel index in the curve texture.
+		// Each curve occupies 2 texels, so local curve index i maps to
+		// absolute texel index: glyph.curveOffset + i * 2.
+		// We store the absolute texel index (divided by 2) so the shader
+		// can use fetchCurve(absIdx, 0, 0, ...) directly.
+		const curveTexelBase = glyph.curveOffset;
+
 		// Pack horizontal band headers + curve lists
 		for (let b = 0; b < glyph.hBandCount; b++) {
 			const band = glyph.hBands[b];
@@ -99,7 +106,9 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
-				bandData[refBase] = curveIdx;
+				// Store absolute curve index: curveTexelBase is in texels,
+				// each curve is 2 texels, so absolute curve index = base/2 + local
+				bandData[refBase] = (curveTexelBase / 2) + curveIdx;
 				bandData[refBase + 1] = 0;
 				bandData[refBase + 2] = 0;
 				bandData[refBase + 3] = 0;
@@ -118,7 +127,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
-				bandData[refBase] = curveIdx;
+				bandData[refBase] = (curveTexelBase / 2) + curveIdx;
 				bandData[refBase + 1] = 0;
 				bandData[refBase + 2] = 0;
 				bandData[refBase + 3] = 0;

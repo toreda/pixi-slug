@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pixi-slug — PixiJS v8 Example</title>
+	<style>
+		body {
+			margin: 0;
+			background: #1a1a2e;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			font-family: sans-serif;
+			color: #eee;
+		}
+		h1 {
+			margin-bottom: 16px;
+			font-size: 1.4rem;
+		}
+		canvas {
+			border: 1px solid #333;
+		}
+	</style>
+</head>
+<body>
+	<h1>pixi-slug — PixiJS v8</h1>
+	<div id="app"></div>
+
+	<!-- PixiJS v8 via CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+
+	<!-- pixi-slug v8 bundle (build with: pnpm run build:v8) -->
+	<script src="../../dist/v8/index.js"></script>
+
+	<script>
+		(async function () {
+			var app = new PIXI.Application();
+			await app.init({
+				width: 800,
+				height: 400,
+				backgroundColor: 0x16213e,
+				preferWebGLVersion: 2
+			});
+			window.__PIXI__ = app;
+			document.getElementById('app').appendChild(app.canvas);
+			var appGl = app.renderer.gl;
+			console.log('WebGL version:', appGl ? appGl.getParameter(appGl.VERSION) : 'no GL context');
+			console.log('Renderer:', appGl ? appGl.getParameter(appGl.RENDERER) : 'unknown');
+			
+			// Load font as raw binary via fetch (not PIXI.Assets which treats .ttf as CSS font)
+			var fontResponse = await fetch('/examples/v8/font.ttf');
+			if (!fontResponse.ok) {
+				console.warn('No font.ttf found in examples/v8/. Place a .ttf file there to see rendered text.');
+				var info = new PIXI.Text({
+					text: 'Place a font.ttf file in examples/v8/ to see Slug rendering.',
+					style: { fill: '#ffffff', fontSize: 18 }
+				});
+				info.anchor = { x: 0.5, y: 0.5 };
+				info.x = app.screen.width / 2;
+				info.y = app.screen.height / 2;
+				app.stage.addChild(info);
+				return;
+			}
+
+			var fontData = await fontResponse.arrayBuffer();
+			// Verify we got binary data, not HTML/text
+			var firstBytes = new Uint8Array(fontData.slice(0, 4));
+			console.log('Font first 4 bytes:', firstBytes[0], firstBytes[1], firstBytes[2], firstBytes[3]);
+			// TTF starts with 0x00 0x01 0x00 0x00, OTF with 0x4F 0x54 0x54 0x4F ("OTTO")
+			// Roboto (variable) should start with 0x00 0x01 0x00 0x00
+			console.log('Font data size:', fontData.byteLength);
+			var font = new pixiSlug.SlugFont(1024);
+			await font.load(fontData);
+			console.log('Glyphs loaded:', font.glyphs.size);
+			console.log('Curve data length:', font.curveData.length);
+			console.log('Band data length:', font.bandData.length);
+			console.log('Curve data first 16:', Array.from(font.curveData.slice(0, 16)));
+			console.log('Band data first 16:', Array.from(font.bandData.slice(0, 16)));
+			console.log('Band data type:', font.bandData.constructor.name);
+			console.log('Curve data type:', font.curveData.constructor.name);
+			// Test: manually convert band values to float and check
+			var testFloat = new Float32Array(4);
+			testFloat[0] = font.bandData[0]; // should be 11
+			testFloat[1] = font.bandData[1]; // should be 16
+			console.log('Band->Float32 conversion test:', testFloat[0], testFloat[1]);
+
+			// Trace the first glyph's data path
+			var firstGlyph = null;
+			var charH = 'H'.charCodeAt(0);
+			var charE = 'e'.charCodeAt(0);
+			var charL = 'l'.charCodeAt(0);
+			for (var cc of [charH, charE, charL]) {
+				var g = font.glyphs.get(cc);
+				if (g) {
+					console.log('--- Glyph "' + String.fromCharCode(cc) + '" (charCode ' + cc + ') ---');
+					console.log('  bounds:', g.bounds);
+					console.log('  curves:', g.curves.length);
+					console.log('  hBandCount:', g.hBandCount, 'vBandCount:', g.vBandCount);
+					console.log('  curveOffset:', g.curveOffset, 'bandOffset:', g.bandOffset);
+					console.log('  hBands[0] curve indices:', g.hBands[0]);
+
+					// Read band header from bandData at bandOffset
+					var bo = g.bandOffset;
+					console.log('  bandData[bandOffset*4..+4]:', Array.from(font.bandData.slice(bo * 4, bo * 4 + 4)));
+
+					// Read first curve reference
+					// Log ALL bands
+				for (var bi = 0; bi < g.hBandCount; bi++) {
+					console.log('  hBand[' + bi + ']:', g.hBands[bi]);
+				}
+
+				if (g.hBands[0] && g.hBands[0].length > 0) {
+						var hdr0 = font.bandData[bo * 4]; // curve count
+						var hdr1 = font.bandData[bo * 4 + 1]; // curve list offset
+						console.log('  band header: curveCount=' + hdr0 + ', curveListOffset=' + hdr1);
+
+						// Read curve ref at curveListOffset
+						var refIdx = font.bandData[hdr1 * 4]; // absolute curve index
+						console.log('  first curve ref (abs index):', refIdx);
+
+						// Read curve data at refIdx * 2 texels
+						var cti = refIdx * 2;
+						console.log('  curveTexture at texel ' + cti + ':', Array.from(font.curveData.slice(cti * 4, cti * 4 + 8)));
+
+						// Show what vTexcoord would be for center of glyph
+						var centerU = (g.bounds.minX + g.bounds.maxX) / 2;
+						var centerV = (g.bounds.minY + g.bounds.maxY) / 2;
+						console.log('  glyph center em-space:', centerU, centerV);
+					}
+				// Log all curve coordinates for H
+				if (cc === charH) {
+					for (var ci = 0; ci < g.curves.length; ci++) {
+						var c = g.curves[ci];
+						console.log('  curve[' + ci + ']: (' + c.p1x + ',' + c.p1y + ') (' + c.p2x + ',' + c.p2y + ') (' + c.p3x + ',' + c.p3y + ')');
+					}
+				}
+					if (!firstGlyph) firstGlyph = g;
+				}
+			}
+
+			// Check float texture support
+			var testCanvas = document.createElement('canvas');
+			var gl = testCanvas.getContext('webgl2');
+			if (gl) {
+				var ext = gl.getExtension('EXT_color_buffer_float');
+				console.log('EXT_color_buffer_float:', ext ? 'supported' : 'NOT supported');
+				console.log('OES_texture_float_linear:', gl.getExtension('OES_texture_float_linear') ? 'supported' : 'NOT supported');
+
+				// Test actual float texture upload
+				var tex = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, tex);
+				var testData = new Float32Array([1.0, 2.0, 3.0, 4.0]);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 1, 1, 0, gl.RGBA, gl.FLOAT, testData);
+				var err = gl.getError();
+				console.log('Float texture upload error:', err === 0 ? 'none' : 'ERROR ' + err);
+				gl.deleteTexture(tex);
+				testCanvas.remove();
+			}
+
+			var centerX = app.screen.width / 2;
+			var centerY = app.screen.height / 2;
+			var lineHeight = 60;
+
+			// Test: manually create a float16 texture and read it back
+			var testGl = app.renderer.gl;
+			if (testGl) {
+				var testTex = testGl.createTexture();
+				testGl.bindTexture(testGl.TEXTURE_2D, testTex);
+
+				// Try Float32Array with RGBA32F first
+				var testData32 = new Float32Array([6.0, 16.0, 0.0, 0.0]);
+				testGl.texImage2D(testGl.TEXTURE_2D, 0, testGl.RGBA32F, 1, 1, 0, testGl.RGBA, testGl.FLOAT, testData32);
+				var err32 = testGl.getError();
+				console.log('RGBA32F upload:', err32 === 0 ? 'OK' : 'ERROR ' + err32);
+
+				// Read it back
+				var fb = testGl.createFramebuffer();
+				testGl.bindFramebuffer(testGl.FRAMEBUFFER, fb);
+				testGl.framebufferTexture2D(testGl.FRAMEBUFFER, testGl.COLOR_ATTACHMENT0, testGl.TEXTURE_2D, testTex, 0);
+				var readback = new Float32Array(4);
+				testGl.readPixels(0, 0, 1, 1, testGl.RGBA, testGl.FLOAT, readback);
+				console.log('RGBA32F readback:', Array.from(readback));
+
+				testGl.deleteFramebuffer(fb);
+				testGl.deleteTexture(testTex);
+			}
+
+			// Monkey-patch texImage2D to catch float texture uploads
+			var gl2 = app.renderer.gl;
+			if (gl2) {
+				console.log('MAX_TEXTURE_SIZE:', gl2.getParameter(gl2.MAX_TEXTURE_SIZE));
+				var origTexImage2D = gl2.texImage2D.bind(gl2);
+				var texUploadCount = 0;
+				gl2.texImage2D = function() {
+					var activeTexUnit = gl2.getParameter(gl2.ACTIVE_TEXTURE) - gl2.TEXTURE0;
+					var boundTex = gl2.getParameter(gl2.TEXTURE_BINDING_2D);
+					origTexImage2D.apply(this, arguments);
+					var err = gl2.getError();
+					if (arguments[7] === gl2.FLOAT || arguments[7] === gl2.HALF_FLOAT) {
+						texUploadCount++;
+						var dataArg = arguments[8];
+						var dataInfo = dataArg ? (dataArg.constructor.name + '(' + dataArg.length + ')') : 'null';
+						console.log('texImage2D #' + texUploadCount + ' - unit:', activeTexUnit, 'glTex:', boundTex, 'w:', arguments[3], 'h:', arguments[4], 'data:', dataInfo, 'err:', err);
+					}
+				};
+			}
+
+			// After first render, inspect the shader's uniform bind map
+			app.render();
+			console.log('--- Post-render shader inspection ---');
+
+			// Test: use raw WebGL to verify small float values in rgba32float texture
+			var tgl = app.renderer.gl;
+			if (tgl) {
+				var ttex = tgl.createTexture();
+				tgl.bindTexture(tgl.TEXTURE_2D, ttex);
+				tgl.texParameteri(tgl.TEXTURE_2D, tgl.TEXTURE_MIN_FILTER, tgl.NEAREST);
+				tgl.texParameteri(tgl.TEXTURE_2D, tgl.TEXTURE_MAG_FILTER, tgl.NEAREST);
+				var smallData = new Float32Array([11.0, 16.0, 0.0, 0.0,  167.0, 1456.0, 0.0, 0.0]);
+				tgl.texImage2D(tgl.TEXTURE_2D, 0, tgl.RGBA32F, 2, 1, 0, tgl.RGBA, tgl.FLOAT, smallData);
+				var tErr = tgl.getError();
+				console.log('Small float texture upload err:', tErr);
+
+				// Read back via framebuffer
+				tgl.getExtension('EXT_color_buffer_float');
+				var tfb = tgl.createFramebuffer();
+				tgl.bindFramebuffer(tgl.FRAMEBUFFER, tfb);
+				tgl.framebufferTexture2D(tgl.FRAMEBUFFER, tgl.COLOR_ATTACHMENT0, tgl.TEXTURE_2D, ttex, 0);
+				var tread = new Float32Array(8);
+				tgl.readPixels(0, 0, 2, 1, tgl.RGBA, tgl.FLOAT, tread);
+				console.log('Small float readback:', Array.from(tread));
+				tgl.bindFramebuffer(tgl.FRAMEBUFFER, null);
+				tgl.deleteFramebuffer(tfb);
+				tgl.deleteTexture(ttex);
+			}
+
+			console.log('Creating SlugText...');
+			var slugText = new pixiSlug.SlugText('Hello, Slug!', font, 48);
+			console.log('SlugText created');
+			// Check the combined texture
+			if (slugText._combinedTexture) {
+				var src = slugText._combinedTexture.source;
+				console.log('Combined texture: uid:', src.uid, 'w:', src.width, 'h:', src.height);
+				console.log('Combined texture resource length:', src.resource ? src.resource.length : 'no resource');
+
+				// Verify band data is at the right offset in the combined array
+				var tw = font.textureWidth;
+				var curveRows = Math.ceil(font.curveData.length / 4 / tw);
+				var bandStart = curveRows * tw * 4;
+				console.log('curveRows:', curveRows, 'bandRows:', Math.ceil(font.bandData.length / 4 / tw));
+				console.log('Combined data at [0] (should be curve):', Array.from(src.resource.slice(0, 8)));
+				var bandStartIdx = curveRows * tw * 4;
+				console.log('Combined data at [' + bandStartIdx + '] (should be band):', Array.from(src.resource.slice(bandStartIdx, bandStartIdx + 8)));
+			} else {
+				console.log('No combined texture on SlugText');
+			}
+			// Check uniform group values
+			if (slugText._mesh && slugText._mesh.shader) {
+				var uniforms = slugText._mesh.shader.resources.slugUniforms;
+				if (uniforms) {
+					console.log('UniformGroup uniforms:', uniforms.uniforms);
+					console.log('  uBandRowOffset:', uniforms.uniforms.uBandRowOffset);
+					console.log('  uSlugViewport:', uniforms.uniforms.uSlugViewport);
+				}
+			}
+			// Inspect the mesh's shader resources
+			if (slugText._mesh && slugText._mesh.shader) {
+				var shader = slugText._mesh.shader;
+				console.log('Shader resources:', Object.keys(shader.resources));
+				console.log('Shader _uniformBindMap:', JSON.stringify(shader._uniformBindMap));
+				console.log('Shader groups:', shader.groups);
+				if (shader.groups && shader.groups[99]) {
+					console.log('Group 99 resources:', shader.groups[99].resources);
+					for (var k in shader.groups[99].resources) {
+						var r = shader.groups[99].resources[k];
+						console.log('  group99[' + k + ']:', r.constructor.name, 'uid:', r.uid);
+					}
+				}
+				if (shader.glProgram) {
+					console.log('GlProgram key:', shader.glProgram._key);
+					// Need to trigger program compilation first
+					app.render();
+					var programData = app.renderer.shader._getProgramData(shader.glProgram);
+					if (programData) {
+						console.log('uniformData keys:', Object.keys(programData.uniformData));
+						for (var uname in programData.uniformData) {
+							console.log('  uniform "' + uname + '":', programData.uniformData[uname]);
+						}
+					}
+					// Capture the generated sync function source
+					var syncFns = app.renderer.shader._shaderSyncFunctions;
+					for (var key in syncFns) {
+						console.log('Sync function for key ' + key + ':', syncFns[key].toString());
+					}
+				}
+			}
+			slugText.anchor = { x: 0.5, y: 0.5 };
+			slugText.position.set(centerX, centerY - lineHeight);
+			app.stage.addChild(slugText);
+
+			var slugText2 = new pixiSlug.SlugText('GPU Bezier Text Rendering', font, 32);
+			slugText2.anchor = { x: 0.5, y: 0.5 };
+			slugText2.position.set(centerX, centerY);
+			app.stage.addChild(slugText2);
+
+			var slugText3 = new pixiSlug.SlugText('pixi-slug + PixiJS v8', font, 24);
+			slugText3.anchor = { x: 0.5, y: 0.5 };
+			slugText3.position.set(centerX, centerY + lineHeight);
+		})();
+	</script>
+</body>
+</html>

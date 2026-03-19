@@ -5,7 +5,7 @@
 
  [![license](https://img.shields.io/github/license/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/blob/master/LICENSE)
 
-# pixi-slug
+# [`pixi-slug`](https://www.npmjs.com/package/pixi-slug)
 GPU-based font rendering for [pixi.js](https://pixijs.com/) using Bézier curves.
 
 Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
@@ -47,7 +47,7 @@ const { SlugText } = require('pixi-slug/v6');   // v6
 Eric Lengyel created the patented slug algorithm in 2016. He graciously released it into the public domain for free in 2026. [`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is a TypeScript port of his work to add gpu-based font rendering to [pixi.js](https://pixijs.com/).
 
  
-`pixi-slug` is not affiliated with, or endorsed by Eric Lengyel.
+[`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is not affiliated with, or endorsed by Eric Lengyel.
 
 ## License
 [MIT](LICENSE) &copy; Toreda, Inc.
@@ -59,3 +59,17 @@ Copyright &copy; 2026 Toreda, Inc. All Rights Reserved.
 
 ## Website
 Toreda's website can be found at [toreda.com](https://www.toreda.com)
+
+Explore other open source packages by [toreda.com](https://www.toreda.com) designed to support generics and no runtime dependencies:
+
+| Package | npm | Description |
+|---|---|---|
+| [`@toreda/build-tools`](https://github.com/toreda/build-tools) | [@toreda/build-tools](https://www.npmjs.com/package/@toreda/build-tools) | Reusable helpers to simplify webpack and esbuild build pipelines. |
+| [`@toreda/cache`](https://github.com/toreda/cache) | [@toreda/cache](https://www.npmjs.com/package/@toreda/cache) | Generic TTL-based object caching. |
+| [`@toreda/fate`](https://github.com/toreda/fate) | [@toreda/fate](https://www.npmjs.com/package/@toreda/fate) | Typed result wrapper with built-in success, failure, and status context |
+| [`@toreda/lifecycle`](https://github.com/toreda/lifecycle) | [@toreda/lifecycle](https://www.npmjs.com/package/@toreda/lifecycle) | Phased async hooks for multi-step object flows |
+| [`@toreda/log`](https://github.com/toreda/log) | [@toreda/log](https://www.npmjs.com/package/@toreda/log) | Zero-dependency logger for browser, Node, and Web Workers with pluggable transports and granular filtering. |
+| [`@toreda/strong-types`](https://github.com/toreda/strong-types) | [@toreda/strong-types](https://www.npmjs.com/package/@toreda/strong-types) | Self-validating types that eliminate boilerplate validation code |
+| [`@toreda/time`](https://github.com/toreda/time) | [@toreda/time](https://www.npmjs.com/package/@toreda/time) | Type-safe time units with built-in conversion, math operations, and input validation. |
+| [`@toreda/types`](https://github.com/toreda/types) | [@toreda/types](https://www.npmjs.com/package/@toreda/types) | Expressive aliases & helpers that clarify code intent. |
+| [`@toreda/verify`](https://github.com/toreda/verify) | [@toreda/verify](https://www.npmjs.com/package/@toreda/verify) | Runtime schema and type validation with recursive definitions, custom types, and detailed validation output. |

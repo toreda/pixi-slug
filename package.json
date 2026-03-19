@@ -34,7 +34,9 @@
 		"build:types": "tsc -p tsconfig.v8.json --emitDeclarationOnly && tsc -p tsconfig.v7.json --emitDeclarationOnly && tsc -p tsconfig.v6.json --emitDeclarationOnly",
 		"test": "jest --coverage",
 		"test:ci": "jest --ci --coverage --forceExit --maxWorkers=50% --reporters=default --reporters=jest-junit",
-		"test:fast": "jest --bail --no-coverage"
+		"test:fast": "jest --bail --no-coverage",
+		"examples": "serve . -l 3000 --cors --no-clipboard",
+		"examples:watch": "webpack --watch --env version=all --env target=dev & serve . -l 3000 --cors --no-clipboard"
 	},
 	"keywords": [
 		"slug",
@@ -93,6 +95,7 @@
 		"jest-junit": "^16.0.0",
 		"pixi.js": "^8.0.0",
 		"prettier": "^3.8.1",
+		"serve": "^14.2.6",
 		"terser-webpack-plugin": "^5.4.0",
 		"ts-loader": "^9.5.4",
 		"ts-node": "^10.9.2",
