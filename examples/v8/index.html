@@ -92,7 +92,8 @@
 			var charH = 'H'.charCodeAt(0);
 			var charE = 'e'.charCodeAt(0);
 			var charL = 'l'.charCodeAt(0);
-			for (var cc of [charH, charE, charL]) {
+			var charP = 'P'.charCodeAt(0);
+			for (var cc of [charH, charP]) {
 				var g = font.glyphs.get(cc);
 				if (g) {
 					console.log('--- Glyph "' + String.fromCharCode(cc) + '" (charCode ' + cc + ') ---');
@@ -130,8 +131,8 @@
 						var centerV = (g.bounds.minY + g.bounds.maxY) / 2;
 						console.log('  glyph center em-space:', centerU, centerV);
 					}
-				// Log all curve coordinates for H
-				if (cc === charH) {
+				// Log all curve coordinates
+				if (cc === charH || cc === charP) {
 					for (var ci = 0; ci < g.curves.length; ci++) {
 						var c = g.curves[ci];
 						console.log('  curve[' + ci + ']: (' + c.p1x + ',' + c.p1y + ') (' + c.p2x + ',' + c.p2y + ') (' + c.p3x + ',' + c.p3y + ')');
@@ -238,7 +239,7 @@
 			}
 
 			console.log('Creating SlugText...');
-			var slugText = new pixiSlug.SlugText('Hello, Slug!', font, 48);
+			var slugText = new pixiSlug.SlugText('HPBR aeiou', font, 48);
 			console.log('SlugText created');
 			// Check the combined texture
 			if (slugText._combinedTexture) {

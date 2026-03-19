@@ -48,8 +48,8 @@ ivec4 slugUnpack(vec4 texcoord) {
 
 	int glyphX = int(packedLocation & 0xFFFFu);
 	int glyphY = int(packedLocation >> 16u);
-	int bandMaxX = int(packedBands & 0xFFu);
-	int bandMaxY = int((packedBands >> 8u) & 0xFFu);
+	int bandMaxX = int(packedBands & 0xFFFFu);
+	int bandMaxY = int((packedBands >> 16u) & 0xFFFFu);
 
 	return ivec4(glyphX, glyphY, bandMaxX, bandMaxY);
 }

@@ -40,16 +40,16 @@ function cubicToQuadratics(
 		{
 			p1x: x0,
 			p1y: y0,
-			p2x: mx01,
-			p2y: my01,
+			p2x: mx012,
+			p2y: my012,
 			p3x: midX,
 			p3y: midY
 		},
 		{
 			p1x: midX,
 			p1y: midY,
-			p2x: mx23,
-			p2y: my23,
+			p2x: mx123,
+			p2y: my123,
 			p3x: x3,
 			p3y: y3
 		}

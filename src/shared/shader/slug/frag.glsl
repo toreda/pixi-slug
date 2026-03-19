@@ -94,10 +94,13 @@ float traceRayCurveH(vec2 p1, vec2 p2, vec2 p3, float pixelsPerEm) {
 		float d = sqrt(max(b.y * b.y - a.y * c, 0.0));
 		t1 = (b.y - d) / a.y;
 		t2 = (b.y + d) / a.y;
-	} else {
+	} else if (abs(b.y) > 1e-6) {
 		// Linear fallback
 		t1 = c / (2.0 * b.y);
 		t2 = t1;
+	} else {
+		// Perfectly horizontal curve — no crossing
+		return 0.0;
 	}
 
 	float coverage = 0.0;
@@ -184,10 +187,27 @@ float slugRender(vec2 renderCoord) {
 		}
 	}
 
-	// Sluggish approach: average signed coverages, then abs.
-	// This preserves counter subtraction — inner contours produce
-	// negative coverage that cancels the outer contour's positive.
-	return clamp(abs(coverageX + coverageY) * 0.5, 0.0, 1.0);
+	float ax = abs(coverageX);
+	float ay = abs(coverageY);
+
+	// If only one direction has data, use it directly
+	if (ax < 0.01) return clamp(ay, 0.0, 1.0);
+	if (ay < 0.01) return clamp(ax, 0.0, 1.0);
+
+	// Both directions have data.
+	// For counters: if one says outside (<0.5) and other says inside (>0.5),
+	// trust the lower value — it's likely detecting a hole.
+	// For solid fill: both agree on inside, use the higher for smoother edges.
+	bool xInside = ax > 0.5;
+	bool yInside = ay > 0.5;
+
+	if (xInside != yInside) {
+		// Disagree: one sees a hole — use minimum (trust the hole detector)
+		return clamp(min(ax, ay), 0.0, 1.0);
+	}
+
+	// Agree: use max for better fill quality
+	return clamp(max(ax, ay), 0.0, 1.0);
 }
 
 void main() {
