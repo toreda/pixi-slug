@@ -4,7 +4,8 @@ import type { SlugGlyphCurve } from './data';
 /**
  * Convert a cubic Bezier curve to two quadratic Bezier approximations.
  * This is an approximation — a single cubic can't be exactly represented
- * by one quadratic, so we split at t=0.5 and fit two quadratics.
+ * by one quadratic, so we split at t=0.5 and fit each half with the
+ * best-fit quadratic control point: (3*(p1+p2) - p0 - p3) / 4.
  */
 function cubicToQuadratics(
 	x0: number,
@@ -16,40 +17,48 @@ function cubicToQuadratics(
 	x3: number,
 	y3: number
 ): SlugGlyphCurve[] {
-	// Split cubic at t=0.5 using de Casteljau
-	const mx01 = (x0 + x1) * 0.5;
-	const my01 = (y0 + y1) * 0.5;
-	const mx12 = (x1 + x2) * 0.5;
-	const my12 = (y1 + y2) * 0.5;
-	const mx23 = (x2 + x3) * 0.5;
-	const my23 = (y2 + y3) * 0.5;
+	// Split cubic [x0,x1,x2,x3] at t=0.5 using de Casteljau to get
+	// two cubic halves: [x0, q0, r0, mid] and [mid, r1, q2, x3].
+	const q0x = (x0 + x1) * 0.5;
+	const q0y = (y0 + y1) * 0.5;
+	const mx  = (x1 + x2) * 0.5;
+	const my  = (y1 + y2) * 0.5;
+	const q2x = (x2 + x3) * 0.5;
+	const q2y = (y2 + y3) * 0.5;
 
-	const mx012 = (mx01 + mx12) * 0.5;
-	const my012 = (my01 + my12) * 0.5;
-	const mx123 = (mx12 + mx23) * 0.5;
-	const my123 = (my12 + my23) * 0.5;
+	const r0x = (q0x + mx) * 0.5;
+	const r0y = (q0y + my) * 0.5;
+	const r1x = (mx + q2x) * 0.5;
+	const r1y = (my + q2y) * 0.5;
 
-	const midX = (mx012 + mx123) * 0.5;
-	const midY = (my012 + my123) * 0.5;
+	const midX = (r0x + r1x) * 0.5;
+	const midY = (r0y + r1y) * 0.5;
 
-	// Approximate each cubic half as a quadratic.
-	// For a cubic [p0, p1, p2, p3], the best quadratic control point is
-	// roughly at (3*(p1+p2) - p0 - p3) / 4, but after splitting we use
-	// the midpoints of the cubic control polygon as the quadratic control points.
+	// Approximate each cubic half as a quadratic using the best-fit formula.
+	// For a cubic [a, b, c, d], the optimal quadratic control point is:
+	//   q = (3*(b + c) - a - d) / 4
+	// First half cubic: [x0, q0, r0, mid]
+	const cp1x = (3 * (q0x + r0x) - x0 - midX) * 0.25;
+	const cp1y = (3 * (q0y + r0y) - y0 - midY) * 0.25;
+
+	// Second half cubic: [mid, r1, q2, x3]
+	const cp2x = (3 * (r1x + q2x) - midX - x3) * 0.25;
+	const cp2y = (3 * (r1y + q2y) - midY - y3) * 0.25;
+
 	return [
 		{
 			p1x: x0,
 			p1y: y0,
-			p2x: mx012,
-			p2y: my012,
+			p2x: cp1x,
+			p2y: cp1y,
 			p3x: midX,
 			p3y: midY
 		},
 		{
 			p1x: midX,
 			p1y: midY,
-			p2x: mx123,
-			p2y: my123,
+			p2x: cp2x,
+			p2y: cp2y,
 			p3x: x3,
 			p3y: y3
 		}

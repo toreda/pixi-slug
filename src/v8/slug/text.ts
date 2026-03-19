@@ -158,8 +158,12 @@ export class SlugText extends Container {
 			})
 		});
 
-		// Band texture: uploaded as rgba32float with the Uint32 bytes reinterpreted as Float32
-		// (same bit pattern, no value conversion). The shader recovers uint values via floatBitsToUint().
+		// Band texture: Uint32 integer values converted to Float32 float values and uploaded
+		// as rgba32float. The shader recovers uint values via float-to-uint cast: uint(raw.x).
+		// This is a VALUE conversion (6 → 6.0), NOT a bit-pattern reinterpretation.
+		// Safe for all values < 2^24 (see port_risks.md JS-2).
+		// DO NOT change to bit-pattern reinterpretation without also changing fetchBand()
+		// in frag.glsl from uint() to floatBitsToUint().
 		const bandRows = Math.ceil(this._font.bandData.length / 4 / textureWidth) || 1;
 		this._bandTexture = new Texture({
 			source: new BufferImageSource({

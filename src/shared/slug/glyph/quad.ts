@@ -39,10 +39,12 @@ function packUint16Pair(low: number, high: number): number {
 }
 
 /**
- * Pack band max indices and flags into a single float via uint32 reinterpretation.
+ * Pack band max indices into a single float via uint32 reinterpretation.
+ * low16 becomes glyphData.z (bandMax.x) in the shader → clamps vertical bandIndex.x.
+ * high16 becomes glyphData.w (bandMax.y) in the shader → clamps horizontal bandIndex.y.
  */
-function packBandMax(hBandMax: number, vBandMax: number): number {
-	return packUint16Pair(hBandMax, vBandMax);
+function packBandMax(low16_vBandMax: number, high16_hBandMax: number): number {
+	return packUint16Pair(low16_vBandMax, high16_hBandMax);
 }
 
 /**
