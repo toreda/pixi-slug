@@ -80,17 +80,9 @@
 			var font = new pixiSlug.SlugFont(4096);
 			await font.load(fontData);
 
-			var slugText = new pixiSlug.SlugText('HPBR aeiou', font, 48);
-			slugText.position.set(0, 60);
+			var slugText = new pixiSlug.SlugText('X | , . J v V R r', font, 90);
+			slugText.position.set(0, 0);
 			app.stage.addChild(slugText);
-
-			var slugText2 = new pixiSlug.SlugText('GPU Bezier Text Rendering', font, 32);
-			slugText2.position.set(20, 120);
-			app.stage.addChild(slugText2);
-
-			var slugText3 = new pixiSlug.SlugText('pixi-slug + PixiJS v8', font, 24);
-			slugText3.position.set(20, 180);
-			app.stage.addChild(slugText3);
 		})();
 	</script>
 </body>

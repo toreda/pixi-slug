@@ -22,6 +22,8 @@ export class SlugFont {
 	public readonly advances: Map<number, number>;
 	/** Font units per em (used to normalize coordinates). */
 	public unitsPerEm: number;
+	/** Font ascender in em-space units (distance from baseline to top of tallest glyph). */
+	public ascender: number;
 
 	constructor(textureWidth: number = Defaults.TEXTURE_SIZE) {
 		if (textureWidth <= 0 || (textureWidth & (textureWidth - 1)) !== 0) {
@@ -34,6 +36,7 @@ export class SlugFont {
 		this.glyphs = new Map();
 		this.advances = new Map();
 		this.unitsPerEm = 0;
+		this.ascender = 0;
 	}
 
 	/**
@@ -46,6 +49,7 @@ export class SlugFont {
 	public async load(fontData: ArrayBuffer): Promise<void> {
 		const font = opentype.parse(fontData);
 		this.unitsPerEm = font.unitsPerEm;
+		this.ascender = font.ascender;
 
 		const glyphList: SlugGlyphData[] = [];
 

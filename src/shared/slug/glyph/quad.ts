@@ -62,6 +62,7 @@ function packBandMax(low16_vBandMax: number, high16_hBandMax: number): number {
  * @param glyphs		Glyph data map from SlugFont (keyed by char code).
  * @param advances		Advance width map for all glyphs (including empty ones like space).
  * @param unitsPerEm	Font units per em for coordinate normalization.
+ * @param ascender		Font ascender in em-space units (baseline to top of ascender line).
  * @param fontSize		Desired font size in pixels.
  * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
@@ -71,19 +72,30 @@ export function slugGlyphQuads(
 	glyphs: Map<number, SlugGlyphData>,
 	advances: Map<number, number>,
 	unitsPerEm: number,
+	ascender: number,
 	fontSize: number,
 	textureWidth: number,
 	color: [number, number, number, number] = [1, 1, 1, 1]
 ): SlugGlyphQuads {
 	const scale = fontSize / unitsPerEm;
 
-	// Count renderable glyphs
+	// Count renderable glyphs and find the tallest glyph's top in em-space.
+	// We use the actual max bounds.maxY (not the font's typographic ascender)
+	// so that position(0,0) aligns the top of the tallest rendered glyph to y=0,
+	// matching PixiJS Text behavior. The typographic ascender from the OS/2 table
+	// includes extra line-gap space that would produce a visible offset.
 	let quadCount = 0;
+	let maxGlyphTop = 0;
 	for (let i = 0; i < text.length; i++) {
-		if (glyphs.has(text.charCodeAt(i))) {
+		const g = glyphs.get(text.charCodeAt(i));
+		if (g) {
 			quadCount++;
+			if (g.bounds.maxY > maxGlyphTop) {
+				maxGlyphTop = g.bounds.maxY;
+			}
 		}
 	}
+	const baselineY = maxGlyphTop * scale;
 
 	const vertices = new Float32Array(quadCount * VERTICES_PER_QUAD * FLOATS_PER_VERTEX);
 	const indices = new Uint32Array(quadCount * INDICES_PER_QUAD);
@@ -107,12 +119,12 @@ export function slugGlyphQuads(
 
 		// Glyph quad corners in pixel space.
 		// Font Y is up (ascenders positive), screen Y is down.
-		// Negate Y so ascenders go upward on screen. Position will be offset
-		// by the container's y position to place the baseline.
+		// Negate Y to flip, then add baselineY so that position(0,0)
+		// places the ascender line at screen y=0.
 		const x0 = cursorX + bounds.minX * scale;
-		const y0 = -bounds.maxY * scale;
+		const y0 = -bounds.maxY * scale + baselineY;
 		const x1 = cursorX + bounds.maxX * scale;
-		const y1 = -bounds.minY * scale;
+		const y1 = -bounds.minY * scale + baselineY;
 
 		// Em-space texcoords (used by fragment shader for curve evaluation).
 		// These stay in font coordinate space (Y-up).
