@@ -1,9 +1,9 @@
 import opentype from 'opentype.js';
-import { Defaults } from '../../defaults';
-import type { SlugGlyphData } from './glyph/data';
-import { slugGlyphCurves } from './glyph/curves';
-import { slugGlyphBands } from './glyph/bands';
-import { slugTexturePack } from './texture/pack';
+import {Defaults} from '../../defaults';
+import type {SlugGlyphData} from './glyph/data';
+import {slugGlyphCurves} from './glyph/curves';
+import {slugGlyphBands} from './glyph/bands';
+import {slugTexturePack} from './texture/pack';
 
 /**
  * Preprocesses font glyph outlines into GPU-ready curve and band textures
@@ -76,13 +76,7 @@ export class SlugFont {
 			const bounds = glyph.getBoundingBox();
 
 			// Compute band assignments
-			const bandResult = slugGlyphBands(
-				curves,
-				bounds.x1,
-				bounds.y1,
-				bounds.x2,
-				bounds.y2
-			);
+			const bandResult = slugGlyphBands(curves, bounds.x1, bounds.y1, bounds.x2, bounds.y2);
 
 			const glyphData: SlugGlyphData = {
 				charCode,

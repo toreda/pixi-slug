@@ -92,25 +92,56 @@ export function slugGlyphBands(
 		vBands.push([]);
 	}
 
-	const hBandSize = height / hBandCount;
-	const vBandSize = width / vBandCount;
+	// Compute bandScale and bandOffset using float32 round-trip to match GPU precision.
+	// The shader receives these as float32 vertex attributes and computes:
+	//   bandIndex = int(renderCoord * bandScale + bandOffset)
+	// where renderCoord is also float32. Using float64 here would assign curves to
+	// bands that the shader never selects, causing missing-curve artifacts.
+	const _f32 = new Float32Array(4);
+	_f32[0] = hBandCount / height;  // hBandScale
+	_f32[1] = -boundsMinY * _f32[0]; // hBandOffset
+	_f32[2] = vBandCount / width;   // vBandScale
+	_f32[3] = -boundsMinX * _f32[2]; // vBandOffset
+	const hBandScale  = _f32[0];
+	const hBandOffset = _f32[1];
+	const vBandScale  = _f32[2];
+	const vBandOffset = _f32[3];
 
 	for (let i = 0; i < curves.length; i++) {
 		const [cMinX, cMinY, cMaxX, cMaxY] = curveBounds(curves[i]);
 
-		// Horizontal bands: curve's y-range determines which bands it belongs to
-		const hStart = Math.max(0, Math.floor((cMinY - boundsMinY) / hBandSize));
-		const hEnd = Math.min(hBandCount - 1, Math.floor((cMaxY - boundsMinY) / hBandSize));
+		// Compute band range using the same float32 arithmetic the shader uses.
+		// Extend by 1 on each side as a safety margin for interpolation imprecision.
+		const hStart = Math.max(0, Math.floor(cMinY * hBandScale + hBandOffset));
+		const hEnd = Math.min(hBandCount - 1, Math.floor(cMaxY * hBandScale + hBandOffset));
 		for (let b = hStart; b <= hEnd; b++) {
 			hBands[b].push(i);
 		}
 
-		// Vertical bands: curve's x-range determines which bands it belongs to
-		const vStart = Math.max(0, Math.floor((cMinX - boundsMinX) / vBandSize));
-		const vEnd = Math.min(vBandCount - 1, Math.floor((cMaxX - boundsMinX) / vBandSize));
+		const vStart = Math.max(0, Math.floor(cMinX * vBandScale + vBandOffset));
+		const vEnd = Math.min(vBandCount - 1, Math.floor(cMaxX * vBandScale + vBandOffset));
 		for (let b = vStart; b <= vEnd; b++) {
 			vBands[b].push(i);
 		}
+	}
+
+	// Sort each band's curve list in descending order of max coordinate.
+	// frag.glsl breaks early once max coord drops below the pixel threshold,
+	// so the sort order must be descending for the early-exit to be correct.
+	for (let b = 0; b < hBandCount; b++) {
+		hBands[b].sort((a, b) => {
+			const maxXa = Math.max(curves[a].p1x, curves[a].p2x, curves[a].p3x);
+			const maxXb = Math.max(curves[b].p1x, curves[b].p2x, curves[b].p3x);
+			return maxXb - maxXa;
+		});
+	}
+
+	for (let b = 0; b < vBandCount; b++) {
+		vBands[b].sort((a, b) => {
+			const maxYa = Math.max(curves[a].p1y, curves[a].p2y, curves[a].p3y);
+			const maxYb = Math.max(curves[b].p1y, curves[b].p2y, curves[b].p3y);
+			return maxYb - maxYa;
+		});
 	}
 
 	return { hBandCount, vBandCount, hBands, vBands };

@@ -1,4 +1,4 @@
-import { Buffer, BufferImageSource, BufferUsage, Container, Geometry, Mesh, Shader, Texture } from 'pixi.js';
+import { Buffer, BufferImageSource, BufferUsage, Container, Geometry, Mesh, Rectangle, Shader, Texture } from 'pixi.js';
 import { Defaults } from '../../defaults';
 import { SlugFont } from '../../shared/slug/font';
 import { slugGlyphQuads } from '../../shared/slug/glyph/quad';
@@ -14,7 +14,8 @@ export class SlugText extends Container {
 	private _fontSize: number;
 	private _color: [number, number, number, number];
 	private _mesh: Mesh<Geometry, Shader> | null;
-	private _combinedTexture: Texture | null;
+	private _curveTexture: Texture | null;
+	private _bandTexture: Texture | null;
 
 	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
 		super();
@@ -23,7 +24,8 @@ export class SlugText extends Container {
 		this._fontSize = fontSize;
 		this._color = [1, 1, 1, 1];
 		this._mesh = null;
-		this._combinedTexture = null;
+		this._curveTexture = null;
+		this._bandTexture = null;
 
 		this.rebuild();
 	}
@@ -74,17 +76,19 @@ export class SlugText extends Container {
 	/**
 	 * Build mesh geometry and shader for current text + font.
 	 * Creates per-glyph quads with the 5 vertex attributes required by the Slug shaders,
-	 * creates a combined GPU texture from the font's curve and band data, and assembles a Mesh.
+	 * creates separate curve and band GPU textures from the font data, and assembles a Mesh.
 	 */
 	private rebuild(): void {
-		// Clean up previous mesh and texture
+		// Clean up previous mesh and textures
 		if (this._mesh) {
 			this.removeChild(this._mesh);
 			this._mesh.destroy();
 			this._mesh = null;
 		}
-		this._combinedTexture?.destroy();
-		this._combinedTexture = null;
+		this._curveTexture?.destroy();
+		this._curveTexture = null;
+		this._bandTexture?.destroy();
+		this._bandTexture = null;
 
 		if (this._text.length === 0 || this._font.glyphs.size === 0) {
 			return;
@@ -116,40 +120,37 @@ export class SlugText extends Container {
 		const geometry = new Geometry({
 			attributes: {
 				aPositionNormal: { buffer: vertexBuffer, format: 'float32x4', stride, offset: 0 },
-				aTexcoord: { buffer: vertexBuffer, format: 'float32x4', stride, offset: 4 * 4 },
-				aJacobian: { buffer: vertexBuffer, format: 'float32x4', stride, offset: 8 * 4 },
-				aBanding: { buffer: vertexBuffer, format: 'float32x4', stride, offset: 12 * 4 },
-				aColor: { buffer: vertexBuffer, format: 'float32x4', stride, offset: 16 * 4 }
+				aTexcoord:       { buffer: vertexBuffer, format: 'float32x4', stride, offset: 4 * 4 },
+				aJacobian:       { buffer: vertexBuffer, format: 'float32x4', stride, offset: 8 * 4 },
+				aBanding:        { buffer: vertexBuffer, format: 'float32x4', stride, offset: 12 * 4 },
+				aColor:          { buffer: vertexBuffer, format: 'float32x4', stride, offset: 16 * 4 }
 			},
 			indexBuffer: quads.indices
 		});
 
-		// Create a single combined texture with curve data in top rows
-		// and band data in bottom rows. This avoids PixiJS v8's issues
-		// with binding multiple TextureSource resources to a single shader.
-		const textureWidth = this._font.textureWidth;
-		const curveRows = Math.ceil(this._font.curveData.length / 4 / textureWidth) || 1;
-		const bandRows = Math.ceil(this._font.bandData.length / 4 / textureWidth) || 1;
-		const totalRows = curveRows + bandRows;
-		const totalTexels = textureWidth * totalRows * 4;
-
-		// Convert band data (Uint32Array) to Float32Array
-		const bandAsFloat = new Float32Array(this._font.bandData.length);
-		for (let i = 0; i < this._font.bandData.length; i++) {
-			bandAsFloat[i] = this._font.bandData[i];
+		// Compute local bounding box from vertex positions and set boundsArea so
+		// PixiJS v8 can cull/inspect this container without needing an aPosition attribute.
+		const floatsPerVertex = 20;
+		let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+		for (let i = 0; i < quads.vertices.length; i += floatsPerVertex) {
+			const vx = quads.vertices[i];
+			const vy = quads.vertices[i + 1];
+			if (vx < minX) minX = vx;
+			if (vx > maxX) maxX = vx;
+			if (vy < minY) minY = vy;
+			if (vy > maxY) maxY = vy;
 		}
+		this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 
-		const combinedData = new Float32Array(totalTexels);
-		// Curve data goes in top rows (starting at row 0)
-		combinedData.set(this._font.curveData);
-		// Band data goes below (starting at row curveRows)
-		combinedData.set(bandAsFloat, curveRows * textureWidth * 4);
+		const textureWidth = this._font.textureWidth;
 
-		this._combinedTexture = new Texture({
+		// Curve texture: RGBA float32, one texel per 2 control points
+		const curveRows = Math.ceil(this._font.curveData.length / 4 / textureWidth) || 1;
+		this._curveTexture = new Texture({
 			source: new BufferImageSource({
-				resource: combinedData,
+				resource: this._font.curveData,
 				width: textureWidth,
-				height: totalRows,
+				height: curveRows,
 				format: 'rgba32float',
 				autoGenerateMipmaps: false,
 				scaleMode: 'nearest',
@@ -157,9 +158,22 @@ export class SlugText extends Container {
 			})
 		});
 
-		// Create shader and mesh
-		// Curve data at row 0, band data at row curveRows
-		const shader = slugShader(this._font, this._combinedTexture, curveRows);
+		// Band texture: uploaded as rgba32float with the Uint32 bytes reinterpreted as Float32
+		// (same bit pattern, no value conversion). The shader recovers uint values via floatBitsToUint().
+		const bandRows = Math.ceil(this._font.bandData.length / 4 / textureWidth) || 1;
+		this._bandTexture = new Texture({
+			source: new BufferImageSource({
+				resource: (() => { const f = new Float32Array(this._font.bandData.length); for (let i = 0; i < this._font.bandData.length; i++) f[i] = this._font.bandData[i]; return f; })(),
+				width: textureWidth,
+				height: bandRows,
+				format: 'rgba32float',
+				autoGenerateMipmaps: false,
+				scaleMode: 'nearest',
+				alphaMode: 'no-premultiply-alpha'
+			})
+		});
+
+		const shader = slugShader(this._curveTexture, this._bandTexture);
 		const mesh = new Mesh({ geometry, shader });
 		this._mesh = mesh;
 		this.addChild(mesh);
@@ -167,7 +181,8 @@ export class SlugText extends Container {
 
 	public override destroy(): void {
 		this._mesh?.destroy();
-		this._combinedTexture?.destroy();
+		this._curveTexture?.destroy();
+		this._bandTexture?.destroy();
 		super.destroy();
 	}
 }

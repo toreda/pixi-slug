@@ -16,7 +16,14 @@
       "Bash(curl -L -o inter.ttf \"https://raw.githubusercontent.com/google/fonts/main/ofl/inter/static/Inter-Regular.ttf\")",
       "Bash(curl -L -o roboto.ttf \"https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto%5Bwdth%2Cwght%5D.ttf\")",
       "WebFetch(domain:api.github.com)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/examples/v8/font.ttf)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/examples/v8/font.ttf)",
+      "Bash(sed -i 's/\\\\t\\\\t\\\\t\\\\txcov += clamp\\(r\\\\.x + 0\\\\.5, 0\\\\.0, 1\\\\.0\\);/\\\\t\\\\t\\\\t\\\\txcov -= clamp\\(r.x + 0.5, 0.0, 1.0\\);/' \"g:/Projects/Toreda/pixi-slug/src/shared/shader/slug/frag.glsl\")",
+      "Bash(sed -i 's/\\\\t\\\\t\\\\t\\\\txcov -= clamp\\(r\\\\.y + 0\\\\.5, 0\\\\.0, 1\\\\.0\\);/\\\\t\\\\t\\\\t\\\\txcov += clamp\\(r.y + 0.5, 0.0, 1.0\\);/' \"g:/Projects/Toreda/pixi-slug/src/shared/shader/slug/frag.glsl\")",
+      "Bash(pdftotext \"A Decade of Slug - Eric Lengyel.pdf\" /tmp/a_decade.txt)",
+      "Read(//tmp/**)",
+      "Bash(pdftotext \"Dynamic Glyph Dilation - Eric Lengyel.pdf\" /tmp/dilation.txt)",
+      "Bash(pdftotext \"Lengyel2017FontRendering.pdf\" /tmp/lengyel2017.txt)",
+      "Bash(pdftotext -layout \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_US10373352.pdf\" \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_text.txt\")"
     ]
   }
 }

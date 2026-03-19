@@ -1,13 +1,14 @@
-import { GlProgram, Shader, Texture, UniformGroup } from 'pixi.js';
-import { SlugFont } from '../../shared/slug/font';
+import { GlProgram, Shader, Texture } from 'pixi.js';
 
 import vertSource from '../../shared/shader/slug/vert.glsl';
 import fragSource from '../../shared/shader/slug/frag.glsl';
 
 /**
  * Creates a PixiJS v8 Shader configured for the Slug rendering algorithm.
+ * Matrix and viewport uniforms (uProjectionMatrix, uWorldTransformMatrix, uResolution)
+ * are auto-populated each frame by PixiJS v8's global uniform system.
  */
-export function slugShader(font: SlugFont, combinedTexture: Texture, bandRowOffset: number): Shader {
+export function slugShader(curveTexture: Texture, bandTexture: Texture): Shader {
 	const glProgram = GlProgram.from({
 		vertex: vertSource,
 		fragment: fragSource
@@ -16,12 +17,8 @@ export function slugShader(font: SlugFont, combinedTexture: Texture, bandRowOffs
 	return new Shader({
 		glProgram,
 		resources: {
-			slugUniforms: new UniformGroup({
-				uSlugViewport: { value: new Float32Array([800, 400]), type: 'vec2<f32>' },
-				uLogTextureWidth: { value: Math.log2(font.textureWidth), type: 'i32' },
-				uBandRowOffset: { value: bandRowOffset, type: 'f32' }
-			}),
-			uSlugData: combinedTexture.source
+			uCurveTexture: curveTexture.source,
+			uBandTexture: bandTexture.source
 		}
 	});
 }

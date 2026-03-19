@@ -44,7 +44,8 @@
 				backgroundColor: 0x16213e,
 				preferWebGLVersion: 2
 			});
-			window.__PIXI__ = app;
+			window.__PIXI_APP__ = app;
+
 			document.getElementById('app').appendChild(app.canvas);
 			var appGl = app.renderer.gl;
 			console.log('WebGL version:', appGl ? appGl.getParameter(appGl.VERSION) : 'no GL context');
@@ -59,8 +60,8 @@
 					style: { fill: '#ffffff', fontSize: 18 }
 				});
 				info.anchor = { x: 0.5, y: 0.5 };
-				info.x = app.screen.width / 2;
-				info.y = app.screen.height / 2;
+				info.x = Math.floor(app.screen.width / 2);
+				info.y = Math.floor(app.screen.height / 2);
 				app.stage.addChild(info);
 				return;
 			}
@@ -72,7 +73,7 @@
 			// TTF starts with 0x00 0x01 0x00 0x00, OTF with 0x4F 0x54 0x54 0x4F ("OTTO")
 			// Roboto (variable) should start with 0x00 0x01 0x00 0x00
 			console.log('Font data size:', fontData.byteLength);
-			var font = new pixiSlug.SlugFont(1024);
+			var font = new pixiSlug.SlugFont(4096);
 			await font.load(fontData);
 			console.log('Glyphs loaded:', font.glyphs.size);
 			console.log('Curve data length:', font.curveData.length);
@@ -93,7 +94,9 @@
 			var charE = 'e'.charCodeAt(0);
 			var charL = 'l'.charCodeAt(0);
 			var charP = 'P'.charCodeAt(0);
-			for (var cc of [charH, charP]) {
+			var charR = 'R'.charCodeAt(0);
+			var charX = 'x'.charCodeAt(0);
+			for (var cc of [charH, charP, charR, charX]) {
 				var g = font.glyphs.get(cc);
 				if (g) {
 					console.log('--- Glyph "' + String.fromCharCode(cc) + '" (charCode ' + cc + ') ---');
@@ -113,26 +116,31 @@
 					console.log('  hBand[' + bi + ']:', g.hBands[bi]);
 				}
 
-				if (g.hBands[0] && g.hBands[0].length > 0) {
-						var hdr0 = font.bandData[bo * 4]; // curve count
-						var hdr1 = font.bandData[bo * 4 + 1]; // curve list offset
-						console.log('  band header: curveCount=' + hdr0 + ', curveListOffset=' + hdr1);
-
-						// Read curve ref at curveListOffset
-						var refIdx = font.bandData[hdr1 * 4]; // absolute curve index
-						console.log('  first curve ref (abs index):', refIdx);
-
-						// Read curve data at refIdx * 2 texels
-						var cti = refIdx * 2;
-						console.log('  curveTexture at texel ' + cti + ':', Array.from(font.curveData.slice(cti * 4, cti * 4 + 8)));
-
-						// Show what vTexcoord would be for center of glyph
-						var centerU = (g.bounds.minX + g.bounds.maxX) / 2;
-						var centerV = (g.bounds.minY + g.bounds.maxY) / 2;
-						console.log('  glyph center em-space:', centerU, centerV);
+				// Validate packed band texture using the same addressing as the shader.
+				var TW = 4096;
+				var glyphLocX = bo % TW;
+				var glyphLocY = Math.floor(bo / TW);
+				console.log('  glyphLoc:', glyphLocX, glyphLocY);
+				for (var bi = 0; bi < g.hBandCount; bi++) {
+					var hdrTexel = bo + bi;
+					var curveCount = font.bandData[hdrTexel * 4];
+					var relOffset  = font.bandData[hdrTexel * 4 + 1];
+					var listTexel  = bo + relOffset;
+					var refs = [];
+					for (var ci2 = 0; ci2 < curveCount; ci2++) {
+						var refAbs = listTexel + ci2;
+						var cx = font.bandData[refAbs * 4];
+						var cy = font.bandData[refAbs * 4 + 1];
+						var p1x = font.curveData[(cy * TW + cx) * 4];
+						var p1y = font.curveData[(cy * TW + cx) * 4 + 1];
+						var p3x = font.curveData[(cy * TW + cx + 1) * 4];
+						var p3y = font.curveData[(cy * TW + cx + 1) * 4 + 1];
+						refs.push('(' + p1x.toFixed(0) + ',' + p1y.toFixed(0) + ')->(' + p3x.toFixed(0) + ',' + p3y.toFixed(0) + ')');
 					}
+					console.log('  hBand[' + bi + '] packed count=' + curveCount + ' refs:', refs);
+				}
 				// Log all curve coordinates
-				if (cc === charH || cc === charP) {
+				if (cc === charH || cc === charP || cc === charR || cc === charX) {
 					for (var ci = 0; ci < g.curves.length; ci++) {
 						var c = g.curves[ci];
 						console.log('  curve[' + ci + ']: (' + c.p1x + ',' + c.p1y + ') (' + c.p2x + ',' + c.p2y + ') (' + c.p3x + ',' + c.p3y + ')');
@@ -213,57 +221,28 @@
 			app.render();
 			console.log('--- Post-render shader inspection ---');
 
-			// Test: use raw WebGL to verify small float values in rgba32float texture
-			var tgl = app.renderer.gl;
-			if (tgl) {
-				var ttex = tgl.createTexture();
-				tgl.bindTexture(tgl.TEXTURE_2D, ttex);
-				tgl.texParameteri(tgl.TEXTURE_2D, tgl.TEXTURE_MIN_FILTER, tgl.NEAREST);
-				tgl.texParameteri(tgl.TEXTURE_2D, tgl.TEXTURE_MAG_FILTER, tgl.NEAREST);
-				var smallData = new Float32Array([11.0, 16.0, 0.0, 0.0,  167.0, 1456.0, 0.0, 0.0]);
-				tgl.texImage2D(tgl.TEXTURE_2D, 0, tgl.RGBA32F, 2, 1, 0, tgl.RGBA, tgl.FLOAT, smallData);
-				var tErr = tgl.getError();
-				console.log('Small float texture upload err:', tErr);
-
-				// Read back via framebuffer
-				tgl.getExtension('EXT_color_buffer_float');
-				var tfb = tgl.createFramebuffer();
-				tgl.bindFramebuffer(tgl.FRAMEBUFFER, tfb);
-				tgl.framebufferTexture2D(tgl.FRAMEBUFFER, tgl.COLOR_ATTACHMENT0, tgl.TEXTURE_2D, ttex, 0);
-				var tread = new Float32Array(8);
-				tgl.readPixels(0, 0, 2, 1, tgl.RGBA, tgl.FLOAT, tread);
-				console.log('Small float readback:', Array.from(tread));
-				tgl.bindFramebuffer(tgl.FRAMEBUFFER, null);
-				tgl.deleteFramebuffer(tfb);
-				tgl.deleteTexture(ttex);
-			}
-
 			console.log('Creating SlugText...');
 			var slugText = new pixiSlug.SlugText('HPBR aeiou', font, 48);
 			console.log('SlugText created');
-			// Check the combined texture
-			if (slugText._combinedTexture) {
-				var src = slugText._combinedTexture.source;
-				console.log('Combined texture: uid:', src.uid, 'w:', src.width, 'h:', src.height);
-				console.log('Combined texture resource length:', src.resource ? src.resource.length : 'no resource');
-
-				// Verify band data is at the right offset in the combined array
-				var tw = font.textureWidth;
-				var curveRows = Math.ceil(font.curveData.length / 4 / tw);
-				var bandStart = curveRows * tw * 4;
-				console.log('curveRows:', curveRows, 'bandRows:', Math.ceil(font.bandData.length / 4 / tw));
-				console.log('Combined data at [0] (should be curve):', Array.from(src.resource.slice(0, 8)));
-				var bandStartIdx = curveRows * tw * 4;
-				console.log('Combined data at [' + bandStartIdx + '] (should be band):', Array.from(src.resource.slice(bandStartIdx, bandStartIdx + 8)));
+			// Inspect the two separate textures
+			if (slugText._curveTexture) {
+				var csrc = slugText._curveTexture.source;
+				console.log('Curve texture: uid:', csrc.uid, 'w:', csrc.width, 'h:', csrc.height);
 			} else {
-				console.log('No combined texture on SlugText');
+				console.log('No curve texture on SlugText');
+			}
+			if (slugText._bandTexture) {
+				var bsrc = slugText._bandTexture.source;
+				console.log('Band texture: uid:', bsrc.uid, 'w:', bsrc.width, 'h:', bsrc.height);
+			} else {
+				console.log('No band texture on SlugText');
 			}
 			// Check uniform group values
 			if (slugText._mesh && slugText._mesh.shader) {
 				var uniforms = slugText._mesh.shader.resources.slugUniforms;
 				if (uniforms) {
 					console.log('UniformGroup uniforms:', uniforms.uniforms);
-					console.log('  uBandRowOffset:', uniforms.uniforms.uBandRowOffset);
+					console.log('  uSlugMatrix:', uniforms.uniforms.uSlugMatrix);
 					console.log('  uSlugViewport:', uniforms.uniforms.uSlugViewport);
 				}
 			}
@@ -298,7 +277,7 @@
 					}
 				}
 			}
-			slugText.position.set(20, 60);
+			slugText.position.set(0, 60);
 			app.stage.addChild(slugText);
 
 			var slugText2 = new pixiSlug.SlugText('GPU Bezier Text Rendering', font, 32);
@@ -307,6 +286,7 @@
 
 			var slugText3 = new pixiSlug.SlugText('pixi-slug + PixiJS v8', font, 24);
 			slugText3.position.set(20, 180);
+			app.stage.addChild(slugText3);
 		})();
 	</script>
 </body>

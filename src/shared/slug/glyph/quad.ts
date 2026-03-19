@@ -119,21 +119,30 @@ export function slugGlyphQuads(
 		const u1 = bounds.maxX;
 		const v1 = bounds.maxY;
 
-		// Band transform: maps em-space coord to band index
+		// Band transform: maps em-space coord to band index.
+		// Use a Float32Array round-trip to match GPU float32 precision exactly —
+		// the shader receives these as float32 vertex attributes, so the band
+		// boundary arithmetic must agree with the CPU-side band assignment in bands.ts.
 		const glyphWidth = bounds.maxX - bounds.minX;
 		const glyphHeight = bounds.maxY - bounds.minY;
-		const bandScaleX = glyphWidth > 0 ? vBandCount / glyphWidth : 0;
-		const bandScaleY = glyphHeight > 0 ? hBandCount / glyphHeight : 0;
-		const bandOffsetX = -bounds.minX * bandScaleX;
-		const bandOffsetY = -bounds.minY * bandScaleY;
+		const _f32 = new Float32Array(4);
+		_f32[0] = glyphWidth > 0 ? vBandCount / glyphWidth : 0;
+		_f32[1] = glyphHeight > 0 ? hBandCount / glyphHeight : 0;
+		_f32[2] = -bounds.minX * _f32[0];
+		_f32[3] = -bounds.minY * _f32[1];
+		const bandScaleX  = _f32[0];
+		const bandScaleY  = _f32[1];
+		const bandOffsetX = _f32[2];
+		const bandOffsetY = _f32[3];
 
 		// Pack glyph band texture location (band offset x/y as 16-bit pair)
 		const glyphLocX = bandOffset % textureWidth;
 		const glyphLocY = Math.floor(bandOffset / textureWidth);
 		const packedLocation = packUint16Pair(glyphLocX, glyphLocY);
 
-		// Pack band max + flags
-		const packedBands = packBandMax(hBandCount - 1, vBandCount - 1);
+		// Pack band max: frag.glsl reads low-16 as bandMax.x (clamps vertical bandIndex.x → needs vBandMax)
+		// and high-16 as bandMax.y (clamps horizontal bandIndex.y + header offset → needs hBandMax).
+		const packedBands = packBandMax(vBandCount - 1, hBandCount - 1);
 
 		// Quad corners with screen-space positions and font-space texcoords.
 		// Screen: y0 = top (font maxY), y1 = bottom (font minY).
@@ -163,11 +172,13 @@ export function slugGlyphQuads(
 			vertices[offset + 6] = packedLocation;
 			vertices[offset + 7] = packedBands;
 
-			// aJacobian (vec4): inverse Jacobian (identity for axis-aligned rendering)
-			vertices[offset + 8] = 1 / scale;
-			vertices[offset + 9] = 0;
-			vertices[offset + 10] = 0;
-			vertices[offset + 11] = 1 / scale;
+			// aJacobian (vec4): inverse Jacobian mapping screen-space dilation back to em-space.
+			// Screen coords: x = fontX * scale, y = -fontY * scale (Y-flipped).
+			// So: d_emX = d_screenX / scale, d_emY = -d_screenY / scale.
+			vertices[offset + 8] = 1 / scale;   // jac.x: d(emX)/d(screenX)
+			vertices[offset + 9] = 0;            // jac.y: d(emX)/d(screenY)
+			vertices[offset + 10] = 0;           // jac.z: d(emY)/d(screenX)
+			vertices[offset + 11] = -1 / scale;  // jac.w: d(emY)/d(screenY) — negative due to Y-flip
 
 			// aBanding (vec4): band scale xy + band offset xy
 			vertices[offset + 12] = bandScaleX;

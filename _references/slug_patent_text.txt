@@ -1,0 +1,753 @@
+                                                                                                       US010373352B1
+
+(12)United States Patent                                               (10) PatentNo.: US 10,373,352 B1
+   Lengyel                                                             (45) Date of Patent: Aug. 6, 2019
+
+(54) METHOD FOR RENDERING                                       (56 )                                  References Cited
+     RESOLUTION - INDEPENDENT SHAPES
+     DIRECTLY FROM OUTLINE CONTROL                                                                     U .S. PATENT DOCUMENTS
+
+      POINTS                                                              7,564,459 B2 7/2009 Loop
+
+(71) Applicant: Eric Lengyel, Lincoln, CA (US)                         2007/0097123 A1 * 5/2007 Loop ... . ..... GO6T 11/203
+
+(72) Inventor: Eric Lengyel, Lincoln, CA (US)                                                                      345/442
+                                                                       2009/0070075 A1* 3/2009 Funk .................. GO6T 1/0028
+(73) Assignee: Terathon Software LLC , Lincoln , CA
+                                                                                                                          703 / 1
+             (US)
+                                                                                                       OTHER PUBLICATIONS
+(* ) Notice: Subject to any disclaimer, the term of this
+               patent is extended or adjusted under 35          Green, " Improved Alpha - Tested Magnification for Vector Textures
+              U .S.C . 154 (b) by 0 days.
+                                                                and Special Effects" , ACM SIGGRAPH 2007 Courses, United
+(21) Appl. No.: 15/885,820
+                                                                States, pp. 9-18.
+(22) Filed: Feb. 1, 2018
+                                                                Loop and Blinn , "Resolution Independent Curve Rendering Using
+
+                                                                Programmable Graphics Hardware " , Proceedings of ACM SIG
+                                                                GRAPH 2005, United States, pp . 1000 -1009.
+                                                                Wallace, " Easy Scalable Text Rendering on the GPU ", 2016 .
+                                                                https://medium .com / @ evanwallace/easy-scalable-text-rendering -on
+                                                                the -gpu -c3f4d782c5ac.
+
+                                                                Dobbie, "GPU text rendering with vector textures", 2016 . http ://
+
+                                                                wdobbie.com /post/gpu-text-rendering-with -vector-textures/.
+
+                                                                * cited by examiner
+
+(51) Int. CI.                                                   Primary Examiner -- Ke Xiao
+
+G06T 11/20     (2006 .01)                                       Assistant Examiner ­ Kim Thanh T Tran
+
+G06K 9/46      (2006 .01)                                       (57)                                   ABSTRACT
+                                                                A method for rendering a shape partially defined by qua
+U .S. CI.                                                       dratic Bézier curves computes the winding number with
+CPC .......... G06T 11/203 (2013.01); G06K 9 /4604
+               (2013.01); G06T 2200/28 (2013.01); G06T          respectto one ormore closed contours to determine whether
+                                     2210/21 (2013.01)
+                                                                a sample position is colored. Numerical robustness is
+(58) Field of Classification Search                             achieved by classifying the controls points of each Bézier
+CPC ........... GO9G 5/346 ; GO9G 2340 /0464; GO9G              curve in order to partition the set of all possible Bézier
+               2360 /18; G06T 3/20; G06T 2200 /28;              curves into eight equivalence classes that can each be
+
+                                                                processed in the samemanner. A small table of binary values
+
+               GO6T 11/203; G06T 2210 /21;G06K                  specifies whether the roots of a classified Bézier curve are
+                                             9/4604
+                                                                eligible to modify the winding number at a particular pixel
+
+USPC                                 ................. 345/442  location .
+
+See application file for complete search history.                                                      9 Claims, 9 Drawing Sheets
+
+                                                                Begin
+
+                                     300 --         Initialize winding
+
+                                                    number to zero
+
+                                     301           For each Bézier curve
+                                                    composing shape
+
+                                     302 --           Translate quadratic
+                                                   Bézier curve control points
+
+                                     203 - Conservesasstaringatorgin 303 Constructraystartingatorigin
+
+                                     304 -         Classify translated control
+
+                                                   points with respect to ray
+
+                                     305 --        Convert 3-bit classification
+                                                   state into 2-bit root eligibility
+
+                                                   Compute parametric roots
+
+                                     306 -         of Bézier curve with
+                                                   respect to ray intersection
+
+                                     307 -         Compute pointswhere ray
+                                                    intersects Bézier curve
+
+                                     308           Modify winding number
+
+                                     309 --         Next Bézier curve
+
+                                                                End
+U .S . Patent Aug. 6 , 2019 Sheet 1 of 9                                                        US 10,373,352 B1
+
+     100
+
+         Central           Graphics                                                             Display         105
+     + Processing
+                           Processing                                                           Device (s)
+       Unit (CPU)
+                           Unit (GPU )
+
+102                Memory                                                                        Input      w   -- 106
+                                                                                                Device(s)
+
+          103 Program instructions w
+
+     104           Control Point Data                                                           Storage     ww  107
+
+                                                                                                Media
+
+                                                                                             w
+
+     wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+
+                           FIG . 1
+U .S . Patent Aug. 6 , 2019 Sheet 2 of 9                                                                                                           US 10,373,352 B1
+
+200  Clockwise winding
+
+                     ?????????
+
+                                                                                                                                           .
+
+     Counterclockwise winding H
+
+     201                                                                                                                                           Darbo
+
+                                          - 203
+
+          202                                                                                                                                 204
+
+     FIG . 2
+U .S . Patent Aug. 6 , 2019 Sheet 3 of 9                                                          US 10,373,352 B1
+
+       Begin
+
+       Initialize winding
+
+       number to zero
+
+       For each Bézier curve
+301 -  composing shape
+
+302 -      Translate quadratic
+       Bézier curve control points
+
+303 Construct ray starting at origin
+
+304 -  Classify translated control
+
+       points with respect to ray
+
+305    Convert 3-bit classification
+
+       state into 2 -bit root eligibility
+
+              w
+
+                                                                                  WEEKKKKKKKKKKK
+
+       Compute parametric roots
+
+306 -  of Bézier curve with
+
+       respect to ray intersection
+
+307 -  Computepointswhere ray Compute points where ray
+       intersects Bézier curve
+
+308        Modify winding number
+309
+       wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww w wwwwwwwwwwwwwwwwwww
+
+             NextBézier curve
+
+       ( End )
+                   wwwwww
+        FIG . 3
+U .S . Patent Aug. 6 , 2019 Sheet 4 of 9         US 10,373,352 B1
+
+    Begin
+
+    Root 1 eligible ? A 400
+
+    Yes
+
+    Intersection                          - 401
+    coordinate 1
+
+     positive ?
+
+                Yes
+
+    Increment winding number 402
+
+    Root 2 eligible ?                     - 403
+
+    Yes
+
+No  Intersection                          - 404
+
+    coordinate 2
+    positive ?
+
+               Yes
+    Decrementwinding number 405
+
+                                                                                w
+
+    End
+
+    FIG . 4
+U .S . Patent Aug. 6, 2019 Sheet 5 of 9      US 10,373,352 B1
+
+                      p2
+
+(0,0)                         x (0,0),
+
+                          ?,             ??  p3
+
+(0,0) |                   p3?? (0, 0)   | Pi P2 P3
+
+                  ?.
+
+( 0, 0 ) |                    (0,0) | ?
+
+                                         ??
+
+                              FIG . 5A
+U .S . Patent Aug. 6 , 2019 Sheet 6 of 9  US 10,373,352 B1
+
+                  P3                      P3
+
+        -- --- -
+
+(0, 0)                (0,0 )
+
+        P2
+
+                      (0,0)               P3
+
+                  px
+
+                      FIG . 5B
+U .S . Patent Aug. 6 , 2019 Sheet 7 of 9  US 10,373,352 B1
+
+500                                       501
+
+     x (0,0)| P.
+
+                                          P2
+
+     P3 (0,0)| P2                              P3
+
+     FIG . 5C
+U .S . Patent Aug. 6 , 2019 Sheet 8 of 9      US 10,373,352 B1
+
+HL (0,0)|                  ?x (0, 0)
+
+                 - --  p2                 pi
+
+Pi
+
+                           FIG . 5D
+
+             Pi            HAP2
+                                          (0,0 )
+(0, 0 )                                                                              ?X
+                                            pi
+#(0,0)
+              p2                 (0,0 )| Pi
+
+                           X
+
+                           FIG . 5E
+atent Aug. 6, 2019 Sheet 9 of 9                         US 10,373,352 B1
+
+ma p2   ( 0, 0 )
+
+P1  p3
+
+                  p__                                   502 p3
+
+        FIG . 5F
+
+        (0,0)/ 1
+                                                          X
+
+    p3                           p2
+
+        FIG . 5G
+
+    (0, 0 )
+                                                    ?x
+
+                                              p3
+
+             FIG . 5H
+                                               US 10 ,373,352 B1
+
+METHOD FOR RENDERING                                            SDFs and, to a much larger degree, multiple -channel SDFs
+
+RESOLUTION -INDEPENDENT SHAPES                                  require a complicated analysis step in the preparation of the
+
+DIRECTLY FROM OUTLINE CONTROL                                   texture atlas, and due to their resolution dependence , are
+
+                    POINTS                                    often unable to properly capture fine details in complex
+
+                                                            5 glyphs.
+                                                                Resolution -independentmethods aim to draw glyphs at
+CROSS -REFERENCE TO RELATED                                     any scale without the artifacts associated with image data or
+                                                                signed distance field data stored in a prerendered texture
+                    APPLICATION
+
+This application claims priority from provisional appli- atlas. These methods work by rendering glyphs directly from
+
+cation No.62/476 ,873 , filed Mar. 27, 2017 , the disclosure of 10 themathematicalcurves that define their shapes,avoiding an
+which is incorporated herein by reference for all purposes. intrinsic resolution dependence because the exact positions
+
+BACKGROUND OF THE INVENTION                                     of each outline's control points are utilized throughout the
+
+                                                                rendering process without any prior per-pixel sampling.
+                                                                One method , described in " Resolution Independent Curve
+                                                            15 Rendering Using Programmable Graphics Hardware", C .
+                    1. Field of the Invention
+                                                                Loop and J. Blinn , Proceedings ofACM SIGGRAPH 2005 ,
+The present invention relates to the field of 3D computer pp. 1000- 1009, renders a glyph by constructing a triangle
+graphics and more specifically to the rendering of shapes mesh that incorporates its outline control points as vertex
+                                                                positions. Each triangle corresponds to atmost one Bézier
+defined by quadratic Bézier curves.                         20 curve, and a short calculation in a pixel shader determines
+
+2. Description ofRelated Art                                  whether each pixel covered by the triangle is inside or
+
+                                                  outside the boundary with respect to that one curve. This
+With the use ofmodern digital fonts, text is composed of method effectively renders precise glyph shapes atall scales,
+a series ofindividual glyphs thatdetermine the shape of each but it requires a complicated triangulation step in which the
+
+letter, number, or symbol. The outline of each glyph is 25 number of vertices is proportional to the number of control
+defined by a set of Bézier curves, having either quadratic or points defining each glyph , a significant divergence from the
+
+cubic degree, connected to each other in such a way thatthey constant four vertices required per glyph for the previously
+form one or more closed contours. Real-time rendering described methods. The variable and font-dependent num
+
+applications often have a need to display text inside a 3D bers of vertices per glyph make it more difficult to perform
+scene, and any particular string of text can be applied to a 30 text layout in general, especially if the text needs to be
+
+geometric surface, orit can be shown as a free-floating label. clipped or applied to a curved surface. Furthermore, this
+
+Because the camera position from which scenes are rendered method tends to require small, thin triangles that prevent
+is almost always moving through space or rotating in some optimalperformance on the graphics processing unit (GPU ).
+
+way, the glyphs that compose text in the scene are drawn A different method renders a glyph by using only two
+with continuously changing transforms. Thus, the size of the 35 triangles to cover a glyph 's bounding box, and a program ,
+
+glyphs in the viewport are almost never the same from one typically a pixel shader executed on the GPU , accesses a
+frame to the next. Furthermore, the glyphs are often drawn subset of all the Bézier curves defining the glyph's outline
+with perspective distortion because the camera isn 't neces- to determine whether each pixel location is inside or outside
+sarily pointed straight at the surface to which text is applied . the entire boundary ofthe shape. Thismethod requires a way
+
+These conditions create a demand for the ability to dynami- 40 of dynamically calculating either a signed distance value or
+cally render glyphs with high quality under arbitrary affine a winding number at each pixel location , but in the process
+
+and projective transforms.                                      ofcomputing this information, it is difficult to avoid numeri
+
+The simplestmethod for rendering text in a 3D environ - cal precision problems involving floating-point round-off
+
+ment involves rasterizing the glyphs belonging to a font at errors that produce a variety of rendering artifacts. These
+one or more specific sizes and storing the results in a pixel 45 artifacts often appear upon modest magnification and mani
+
+image known as a texture atlas. Text is rendered in a 3D fest themselves as isolated pixels and linear clusters of
+scene by drawing one quad, usually comprising two tri pixels that are incorrectly drawn due to round -off errors
+angles, per glyph and assigning texture coordinates thatmap causing themisclassification of pixel locations with respect
+a prerendered glyph in the texture atlas to the area covered to a glyph's outline.
+
+by the quad . Thismethod hasbeen popular due to its ease of 50
+implementation and its excellent performance, but the out       BRIEF SUMMARY OF THE INVENTION
+put quality is extremely limited primarily due to blurring
+caused by bilinear interpolation when the displayed sizes of The present invention renders filled shapes having out
+the glyphs exceed the resolution at which they are stored in lines defined by one or more closed contours composed of
+                                                            55 quadratic Bézier curves by calculating the winding number
+the texture atlas.
+A more advanced method calculates a signed distance for each pixel inside a rectangular boundary enclosing the
+field (SDF) for each glyph , as described in " Improved entire shape. The winding number is calculated by consid
+
+Alpha- TestedMagnification for Vector Textures and Special ering rays that begin at the pixel location and extend to
+Effects" , C . Green, SIGGRAPH 2007 Courses, pp. 9 -18. infinity in directions parallel to the x and y axes. Each
+
+This technique is able to produce crisp glyph outlines at 60 intersection of such a ray with a clockwise-wound contour
+
+widely varying scales by storing per-pixel distances to the increments the winding number, and each intersection of
+
+glyph boundaries in the texture atlas instead of storing the such a ray with a counterclockwise -wound contour decre
+
+final appearance of each glyph at a specific size. However, ments the winding number.
+
+this method rounds off sharp corners and thus does not In the various embodiments of the present invention ,
+preserve the true outlinesof the glyphs, a problem addressed 65 numerical robustness is guaranteed by classifying the con
+in an enhancement of the method that calculates multiple trol points of each Bézier curve with respect to each ray in
+
+channels of distance data for each glyph. Single-channel order to reduce the problem space to a set of eight possible
+                                                  US 10 ,373,352 B1
+
+states. The number and types of ray intersection are prede- point 204, between the two on-curve control points. A
+termined for each state , and the manner of processing cases particular pixel location is considered to be in the interior
+belonging to each possible state is dictated by a small table 205 ofthe shape outline if the total winding number,equal
+of constant data. This technique avoids all visible artifacts to the sum of the winding numbers specific to each of the
+associated with floating-point round-off errors.                      shape's contours, is nonzero . The winding number specific
+
+                                                                      to each contour is an integer that reflects the number of
+BRIEF DESCRIPTION OF THE DRAWINGS                                     complete loops the contourmakes around a point. A positive
+
+                                                                      number is assigned to one winding direction , clockwise or
+
+FIG . 1 is a block diagram showing an example of a typical counterclockwise, and a negative number is assigned to the
+
+computer system on which an embodimentof the invention 10 opposite winding direction.
+may be implemented .                                                  The total winding number for a particular pixel location is
+FIG . 2 is an example of a shape having an outline defined typically calculated through the process shown in FIG . 3 ,
+
+by a set of closed contours composed of quadratic Bézier which illustrates one possible implementation of the present
+
+curves .                                                              invention . The total winding number is initialized to zero at
+
+FIG . 3 is a flowchart illustrating an example ofthe major 15 block 300. Between blocks 301 and 309, the implementation
+
+steps of the total winding number computation for a par considers each of the quadratic Bézier curves composing the
+                                                                      complete shape. The control points of a particular Bézier
+ticular pixel location .
+FIG . 4 is a flowchart illustrating an example of the major curve are translated in block 302 such that the pixel location
+steps of the modification to the winding number performed coincides with the origin of the coordinate system . In block
+
+for each Bézier curve.                                         20 303 , a ray is constructed beginning at this origin and
+FIGS. 5A -5H are graphs illustrating example member extending to infinity in an arbitrary direction. The goal is to
+curves of the eight equivalence classes into which all accurately discover all of the intersections the ray makes
+quadratic Bézier curves are classified with respect to a ray. with the set of Bézier curves defining the shape. In a
+It is to be noted that the appended drawings illustrate only particular embodiment, it is convenient to choose ray direc
+
+typical embodiments of this invention and are therefore not 25 tions thatareparallel to the coordinate axes, and the descrip
+to be considered limiting of its scope, for the inventionmay tion below uses a ray parallel to the x axis as an example. It
+                                                                      should be noted that the same description applies to rays
+admit to other equally effective embodiments.
+                                                                      aligned to other directions and that the mathematical for
+          DETAILED DESCRIPTION OF THE
+                                                                      mulae are equally valid after an appropriate coordinate
+
+                          INVENTION                            30 rotation. When a contour crosses the ray from left to right,
+
+                                                                      one is added to the total winding number, and when a
+The present invention renders shapes having outlines that contour crosses the ray from right to left, one is subtracted
+are defined by a set of quadratic Bézier curves forming one from the totalwinding number. The choice as to whether one
+
+or more closed contours. Such shapes may correspond to is added or subtracted for a particular crossing direction may
+glyphs belonging to a font, but the invention applies more 35 be reversed as long as the choice is applied consistently. If,
+
+generally to shapes similarly defined for other purposes. after considering the complete set of contours, the total
+
+Referring to FIG . 1 , a typical embodiment runs on a com - winding number is nonzero , then the pixel location lies
+
+puter system having a CPU 100 and a memory 102 where within the interior of the shape 's outline. Otherwise, in the
+program instructions 103 implementing the method of the case that the total winding number is zero , the pixel location
+
+present invention are stored . The computer system may 40 lies in the exterior.
+
+include a GPU 101, and the program instructions may be A single component of a contour is defined by the
+executed on either the CPU or the GPU , if present. The parametric function
+highly parallel nature of the method, specifically that pro
+gram instructionsmay be executed independently for each               C(t)=(1-1) P2+2t(1­t)p2+ p3,  (1)
+
+member of an array ofpixels covering a shape,makesGPU 45 which constitutes a quadratic Bézier curve having the 2D
+execution the preferred embodiment. The computer system control points p ,, p2,and pz. The parameter t varies over the
+
+may also include one or more display devices 105 , one or range [0 , 1]. For a ray pointing in the direction ofthe positive
+
+more input devices 106 , storage media 107, or additional x axis in a coordinate system in which the location of the
+components not shown. For each execution of the program pixel being rendered has been translated to the origin , the
+
+instructions, the inputs consist of a pixel location and the 50 values oft at which C ,, (t)= 0 are determined by finding the
+control point data 104 corresponding to the set of quadratic roots of the polynomial
+Bézier curves defining the outline of the shape being ren
+dered. In a basic embodiment of the invention, the output is (1-2y2+y3)22-2691-92)i+y?,
+                                                                                                    - (2)
+
+a Boolean value indicating whether the pixel location lies where aly . V The parametric roots tand t are then
+
+within the interior of the shape or not. In a more sophisti- 55 given by
+cated embodiment, the output is a fractional numericalvalue
+approximating the portion of the pixel that is covered by the
+interior of the shape .
+  FIG . 2 illustrates one example of a shape corresponding            1. b -v62 ­ ac . 6 + 62 - ac  (3)
+                                                                      t=­        and 12 = - a ,
+to the capital letter " P" in the Arial font. The shapeis defined 60
+by a set of closed contours that are each composed of a
+
+continuous piecewise sequence of quadratic Bézier curves. where a = y, - 2y2+ yz, b = y , -y , and c = y . In the case that a is
+
+In this example, the shape is defined by two contours 200 near zero, we instead compute c/2b and assign it to both
+and 201, and they are wound in opposite directions. Each roots t, and t . As shown in FIG . 3 , thevalues oft, and t, are
+
+Bézier curve comprises two on -curve control points shown 65 calculated in block 306 , and the points C (t ) and C (t ) are
+as filled circles, such as points 202 and 203, and one calculated in block 307 . From a purely mathematical per
+off-curve control point shown as an open circle, such as spective, any values of t, in the range [0, 1) such that Cx
+                                           US 10 ,373,352 B1
+
+(t:)> 0 correspond to a valid intersection between theray and and Cx (t2)>0 are satisfied,respectively, and an entry having
+the Bézier curve. However, this calculation is prone to the value 0 indicates that the root is not eligible to make a
+numerical precision errors whenever y , or yz is very small in contribution .
+
+absolute value. The problem is that the finite number ofbits                                    TABLE 1
+
+in a floating-point value are incapable of producing the 5
+
+exactness needed in calculating t? and t , where either could                                   Class Y3 Y2Y1T2 T1
+
+be close to zero or one. The result is that a ray passing too
+close to the point where two Bézier curves are connected
+may unintentionally cause two intersections to be counted or                                             OFER
+
+both curves to be missed altogether, leading to the appear
+ance of rendering artifacts. The errors are especially prob
+lematic in cases where the Bézier curve is tangent to the ray
+
+at its first or last control point.
+
+The present invention achieves unconditional numerical 15
+robustness over the entire space of finite inputs by ignoring
+the values of t; insomuch as whether they satisfy t; E [0, 1)                               20   FIGS. 5A-5H illustrate example curves representative of
+and instead calculating winding numbers based solely on a
+binary classification of the values y1, Y2,and y3, specifically                                 the equivalence classes listed in rows A -H of Table 1,
+whether each is negative or not negative. This classification
+                                                                                                respectively. The representative curves include all 27 cases
+is preferred over the equally valid classification based on
+whether the values are positive or not positive because it is                                   in which y;<0, y = 0, and y;>0 to make it clear whathappens
+convenient in practice to extract sign bits from the standard                                   in the important instances in which a ray passes directly
+IEEE 754 floating-point representations of the values. In
+                                                                                                through a control point. The winding number may be
+
+                                                                                                modified whenever the curve transitions from negative to
+                                                                                                not negative or vice - versa . A circle containing a plus sym
+
+FIG . 3. the classification is performed in block 304 Embodi. 25 bol, such as circle 500 in FIG . 5C , corresponds to a change
+                                                                                                of positive one occurring when the curve transitions from
+ments in which they coordinates are assigned a trinary
+                                                                                                notnegative to negative at the root t?. A circle containing a
+classification derived from whether their values are positive,
+negative, or zero are also possible,butsomeof the resulting                                     minus symbol, such as circle 501 in FIG . 5C , corresponds to
+
+states would beredundant.   Faortharebei-nbairtystcaltaesstihfaitcarteidoun c, eesvetrhyee  30  a change of negative one occurring when the curve transi
+                                                                                            35
+quadratic Bézier curve has                                                                      tions from negative to not negative at the root tz.
+problem domain to exactly eight distinct equivalence
+                                                                                                  In the equivalence classes associated with rows A and H
+classes. A table lookup or logic calculation in block 305
+converts the three-bit state into a two-bit code indicating                                     in Table 1, no transitions between negative and not negative
+whether  each root is eligible  to make a  bceonltornigbiuntgioonntottooeattchhhee
+winding  number. For all of     the cases                                                       ever occur, and thus no modification ismade to the winding
+equivalence class , modifications to the winding number
+                                                                                                number. In each of the remaining six equivalence classes,
+
+                                                                                                the potential for a modification to the winding number
+                                                                                                exists. The difficult case in which a contour is tangent to the
+
+                                                                                                ray at an endpoint shared by two consecutive curves is
+arising from contributions of the two roots at t? and t2 are handled without explicit detection or special code. Equiva
+
+processed in exactly the samemanner in block 308, having lence class A includes all cases for which a contour is
+the implementation shown in FIG . 4 .
+                                                                                            40 tangent to the ray at an endpoint but is otherwise positive ,
+
+The derivative of equation ( 2 ) is given by Zat - 2b , and ensuring that the winding number is unmodified . In the
+substituting t, for t always results in a negative number or similar case thata contour is tangentto the ray atan endpoint
+zero . Referring to FIG . 4 , whenever the root at t, is deter- but is otherwise negative, two equal and opposite modifi
+
+mined eligible in block 400 and the condition Cx (t?)> O is cations are always made to the winding number, and they
+satisfied in block 401, the winding number is incremented by 45 cancel each other out exactly. This is exemplified by the
+
+one in block 402 because the curvemust cross the ray from many combinations of tangent curves shown in FIGS.
+left to right. Similarly, substituting t, for t in the derivative 5A -5H in which a circle containing a plus symbol and a
+
+always results in a positive number or zero, so whenever the circle containing a minus symbolwould coincide when the
+
+root att, is determined eligible in block 403 and the curves are connected to each other. (Note that there is no
+
+condition C , (t ) >0 is satisfied in block 404, the winding 50 requirement that the curves have a continuous derivative at
+
+number is decremented by one in block 405 because the the endpoint where they are joined .) In equivalence classes
+
+curve must cross the ray from right to left. (Asmentioned C and F, there is a special case in which y , and yz have the
+above, the reverse convention, interchanging the increment same state but y, has the opposite state, and it is possible that
+
+and decrement operations, is also valid as long as it is Cy(t)hasno real roots. In order to handle this condition with
+applied consistently.) The ordering ofthe values Cx (t,) and 55 uniformity, any negative values of b² -ac are replaced by
+C / (t2)does notaffectthe potentialcontributionsmadeby the zero, which has the effect of setting t;=tz=b/a. If one root
+roots at t, and tz.                                                                             makes a contribution , then the other root does as well in this
+
+  Table 1 below lists the eight possible three-bit states for case because Cx (t1) =Cx (t2), so they cancel each other out.
+a quadratic Bézier curve and the associated two-bit root An example ofsuch a combination ofa positive and negative
+eligibility codes. In each of the columns Y1, Y2, and Y3, an 60 modification to the windingnumber is indicated by the circle
+
+entry having the value 1 corresponds to the states y, < 0, 502 shown in FIG . 5F.
+y2<0, and y;<0, respectively, and an entry having the value The values in columns T1 and T2ofTable 1 form a 16-bit
+O corresponds to the states y , 20 , y220 , and y320 , respec lookup table that can be expressed as the hexadecimal
+tively. In each of the columns T1 and T2, an entry having the number 2E74, where the first two digits are a concatenation
+
+value 1 indicates that the root associated with the parameter 65 of the bits in column T2 , and the last two digits are a
+
+values t, and ty, respectively , is eligible to make a contri- concatenation of the bits in column T1. For a particular
+
+bution to the winding number when the conditions Cr (t )> 0 equivalence class, the values in columns Y1, Y2, and Y3
+                                              US 10 ,373,352 B1
+
+form a shift code such that when the number 2E74 is where m is the number of pixels in one unit of distance in
+logically shifted right by the shift code, the eligibility state the shape's coordinate system , and " sat" is the saturate
+
+for the root at t, appears in the least significant bit of the function that clamps its input value to the range [0 , 1].
+result, and the eligibility state for the root at t, appears in the
+                                                                      55  Adding and subtracting these fractions from the total wind
+ninth least significant bit of the result. The shift code is              ing number for each eligible roothas the effect of antialias
+effectively an index used to look up data from the appro                  ing in the direction of therays. Thefractionalcoverage value
+priate bit positions in the table expressed as the number
+2E74. For control point coordinates y?, Y2, and yz corre                  can be calculated for rays parallel to both the x and y axes
+sponding to an arbitrary quadratic Bézier curve thathas been
+                                                                          and combined to produce a rendered image with antialiasing
+
+translated so that thepixel location coincideswith the origin , 10 applied in all directions.While manymethods of combining
+the shift code is given by                                                the coverage values could be employed , the simplest
+
+                                                                          example is an average of two coverage values.
+
+                                                                          The set of quadratic Bézier curves considered for any
+0, if y?20 .00, if y220 .00, if y320 (1) particular pixel location may be reduced in size by parti
+[{1, if y?<0 )1++ {{2, if y2< 0)+{{4, if y3< 0)
+                                                                          tioning the area containing a shape into several bands that
+
+                                                                          are aligned parallel to the directions of the rays used for
+
+After the shift code is used to logically shift right the number          intersection testing. In a preprocessing step , a list of curves
+
+2E74 , if the least significant bit of the result is set and Cx           intersecting each band is determined and stored alongside
+(t,)> 0, then one is added to the windingnumber. If the ninth
+                                                                          the control point data defining the shape . The list of curves
+
+least significantbit ofthe result is setand C . (t.)> 0 . then one 20 for each band excludes every curve having control points
+                                                                          that all lie in the same exterior side of theband because these
+is subtracted from the winding number.
+  The 16 -bit lookup table and shift code calculation may be              curves correspond to equivalence classes A and H in Table
+
+replaced by an equivalent sequence of logic operations, and               1 for every pixel inside the band and thus cannot make a
+
+doing so may achieve higherperformance in an embodiment                   contribution to the total winding number for such pixel
+
+that executes instructions on a processor featuring a ternary         25  locIat is to be understood that the above described embodi
+logic instruction . Suppose that the values of y , y , and yz             ments are merely illustrative of numerous and varied other
+are stored as 32-bit IEEE 754 floating-point numbers, and let
+kj, k2, and kz be 32-bit signed integers having the same                  embodiments which may constitute applications of the prin
+
+underlying bit patterns as Y?, yz, and y3, respectively. The              ciples of the invention. Such other embodiments may be
+
+most significantbit of the value given by (ok . & (kk )) (~ k , 30 readily devised by those skilled in the art withoutdeparting
+
+& kq) is equal to the eligibility state for the root att ,and the from the spirit or scope ofthis invention, and it is our intent
+
+most significant bitofthe value given by k , & ( kink )|(k that they be deemed within the scope of our invention .
+
+& ~ k?) is equal to the eligibility state for the root at tz. (Here,
+the symbol~ means unary logical NOT, the symbol & means The invention claimed is :
+binary logical AND , and the symbol |means binary logical 35 1. A method performed by a computer system for render
+
+OR .) Because the most significant bit of a signed integer ing a shape defined at least in part by one or more closed
+
+determines whether the value is negative, the results of the contours composed at least in part of one or more quadratic
+logic operations can be tested for a negative sign to deter- curves by calculating an associated winding number at a
+mine whether each root is eligible to make a contribution to plurality of fixed sample positions corresponding to pixel
+the winding number.                                                   40 locations, the method comprising:
+Due to the fact thatprecision -sensitive range tests for the identifying Bezier control points for each said quadratic
+
+values of t and t, are not utilized, it is not possible to                curve ;
+miscount the number of intersections that a ray makes with classifying each said Bezier control point based on its
+a contour. The shift codes or logic operations used to                    position with respect to at least one ray;
+
+determine the values in columns T1 and T2 of Table 1 are 45 selecting at least one root of each said quadratic curve
+                                                                          with respect to said ray,wherein said selection is based
+produced by exact calculations based on the translated y
+
+coordinates of the input control points, which are invariant on a result of said classification;
+along any horizontal ray. The quadratic and linear terms of computing at least one root of each said quadratic curve
+
+Cz(t) are also invariant, leaving only the constantterm equal with respect to said ray;
+to the translated x coordinate of the control point p? as the 50 computing at least one intersection point on each said
+quantity that changes as the ray origin is moved left or right.           quadratic curve , where said intersection point is com
+
+This guarantees that there exists a value x , such that for all           puted at a parameter value corresponding to said root;
+                                                                          and
+XSXo, a particular contour intersection is counted, and for all           choosing a color determined by a spatial relationship
+x >xo, the same intersection is not counted.
+Instead of calculating an integral winding number that 55 between said intersection point and at least one said
+outputs only a binary inside or outside state for each pixel              sample position.
+location with respect to a shape's outline, an embodiment 2 . Themethod of claim 1, wherein said classification of
+may accumulate fractional coverage values by considering said Bezier control point is binary such that each said Bezier
+
+how close each ray intersection is to the location of the pixel control point may be classified as being in one of two
+
+being rendered . The fraction f of a pixel crossed by a ray 60 distinct states.
+from left to right before an intersection occurs is given by 3 . The method of claim 1 , wherein said classification of
+                                                                          said Bezier controlpoint is trinary such that each said Bezier
+
+                                                                          control pointmay be classified as being in one of three
+                                                 (5) distinct states.
+$=sau[mc;(6)+ )                                     65 4 . The method of claim 1 , wherein said selection of said
+                                                                          root is accomplished by using a table of values indexed by
+
+                                                                          said result of said classification .
+                                       US 10 ,373,352 B1
+
+                                                                                      10
+
+5. Themethod ofclaim 1, wherein said selection of said wherein said selection is based on a result of said
+root is accomplished by applying a plurality of logic opera         classification ;
+                                                                    computer program code for computing at least one rootof
+tions to said result of said classification .
+                                                                      each said quadratic curve with respect to said axis ;
+  6. The method of claim 1, further comprising a step of
+calculating a fractional pixel coverage value.                      computer program code for computing at least one inter
+
+  7. One ormore non -statutory computer-readable storage              section point on each said quadratic curve, where said
+
+media containing program instructions describing a method             intersection point is computed at a parameter value
+
+for causing a computer to render a shape defined at least in         corresponding to said root; and
+
+                                                                    computer program code for choosing a color determined
+part by one or more closed contours composed at least in by a spatial relationship between said intersection point
+part of one ormore quadratic curves, comprising:                    and at least one said sample position .
+
+computer program code for identifying Bezier control 8 . The non -statutory computer-readable storage media of
+
+points for each said quadratic curve;                               claim 7 , wherein the program instructions are executed by a
+
+computer program code for classifying each said Bezier central processing unit.
+                                                                      9. The non -statutory computer-readable storagemedia of
+  control point based on its position with respect to at      1155  claim 7, wherein theprogram instructions are executed by a
+  least one axis ;
+computer program code for selecting at least one root of            graphics processing unit.
+
+each said quadratic curve with respect to said axis ,
+

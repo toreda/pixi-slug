@@ -60,7 +60,7 @@
 			}
 
 			var fontData = await fontResponse.arrayBuffer();
-			var font = new pixiSlug.SlugFont(1024);
+			var font = new pixiSlug.SlugFont(4096);
 			await font.load(fontData);
 
 			var slugText = new pixiSlug.SlugText('Hello, Slug!', font, 48);

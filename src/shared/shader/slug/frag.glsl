@@ -1,223 +1,216 @@
 #version 300 es
-
+// ===================================================
+// Slug algorithm fragment shader — GLSL ES 3.00 port.
+// Original HLSL reference shader by Eric Lengyel.
+// Copyright 2017, MIT License.
+// ===================================================
 precision highp float;
 precision highp int;
-// Combined texture: float RGBA, contains both curve and band data.
-// Curve data occupies the top rows, band data follows below.
-// uBandRowOffset indicates where band data starts (row index).
-uniform sampler2D uSlugData;
+precision highp sampler2D;
 
-// Row offset where band data starts in the combined texture
-uniform float uBandRowOffset;
-
-// Texture width as log2 (e.g. 10 for 1024).
-uniform int uLogTextureWidth;
-
-// TEMP HARDCODE: use constant 10 (= 1024) for debugging.
-// TODO: restore to uLogTextureWidth once uniform delivery is confirmed.
-const int LOG_TEX_W = 10; // 1024 width
-#define TEXTURE_WIDTH (1 << LOG_TEX_W)
-#define TEXTURE_MASK (TEXTURE_WIDTH - 1)
+#define kLogBandTextureWidth 12
+#define kMaxCurvesPerBand 512
 
 in vec4 vColor;
 in vec2 vTexcoord;
 flat in vec4 vBanding;
 flat in ivec4 vGlyph;
 
+uniform sampler2D uCurveTexture;
+uniform sampler2D uBandTexture; // Float32 texture storing uint values as exact floats; read via fetchBand().
+
+// Fetch two uint32 values from the band texture at the given texel coordinate.
+// Uses +0.5 rounding before truncation to guard against float32 representation
+// error (e.g. a value of 6 stored as 5.9999999 would truncate to 5 without it).
+uvec2 fetchBand(ivec2 coord)
+{
+	vec2 raw = texelFetch(uBandTexture, coord, 0).xy;
+	return uvec2(uint(raw.x + 0.5), uint(raw.y + 0.5));
+}
+
 out vec4 fragColor;
 
-/**
- * Fetch a texel from the band region of the combined texture by linear index.
- * Band data starts at row uBandRowOffset.
- */
-uvec4 fetchBand(int index, int baseY) {
-	int x = index & TEXTURE_MASK;
-	int y = int(uBandRowOffset) + baseY + (index >> LOG_TEX_W);
-	vec4 raw = texelFetch(uSlugData, ivec2(x, y), 0);
-	return uvec4(uint(raw.x), uint(raw.y), uint(raw.z), uint(raw.w));
+uint CalcRootCode(float y1, float y2, float y3)
+{
+	uint i1 = floatBitsToUint(y1) >> 31u;
+	uint i2 = floatBitsToUint(y2) >> 30u;
+	uint i3 = floatBitsToUint(y3) >> 29u;
+
+	uint shift = (i2 & 2u) | (i1 & ~2u);
+	shift = (i3 & 4u) | (shift & ~4u);
+
+	return ((0x2E74u >> shift) & 0x0101u);
 }
 
-/**
- * Fetch curve control points from the curve region of the combined texture.
- * Curve data starts at row 0. Each curve occupies 2 consecutive texels.
- */
-void fetchCurve(int curveIndex, int baseX, int baseY, out vec2 p1, out vec2 p2, out vec2 p3) {
-	int idx0 = baseX + curveIndex * 2;
-	int idx1 = idx0 + 1;
+// Near-zero threshold used to detect degenerate quadratics and avoid
+// undefined division-by-zero in GLSL ES (see port_risks.md GLSL-3).
+#define kNearZero (1.0 / 65536.0)
 
-	vec4 t0 = texelFetch(uSlugData, ivec2(idx0 & TEXTURE_MASK, baseY + (idx0 >> LOG_TEX_W)), 0);
-	vec4 t1 = texelFetch(uSlugData, ivec2(idx1 & TEXTURE_MASK, baseY + (idx1 >> LOG_TEX_W)), 0);
-
-	p1 = t0.xy;
-	p2 = t0.zw;
-	p3 = t1.xy;
-}
-
-/**
- * Determine root eligibility from sign bits of control point y-coords.
- * Branchless: uses sign-bit extraction to build a 3-bit code.
- */
-int calcRootCode(float y1, float y2, float y3) {
-	uint s1 = floatBitsToUint(y1) >> 31u;
-	uint s2 = floatBitsToUint(y2) >> 31u;
-	uint s3 = floatBitsToUint(y3) >> 31u;
-	return int(s1 | (s2 << 1u) | (s3 << 2u));
-}
-
-/**
- * Trace a horizontal ray from the fragment against a single quadratic Bezier curve.
- * Returns the signed coverage contribution for the nonzero winding rule.
- * Uses the Sluggish classification approach with magic constant 0x2E74.
- *
- * @param p1, p2, p3  Control points relative to fragment position
- * @param pixelsPerEm Reciprocal of pixel size in em-space for AA
- */
-float traceRayCurveH(vec2 p1, vec2 p2, vec2 p3, float pixelsPerEm) {
-	// Classification: which roots contribute to winding, based on sign pattern of y-coords.
-	// Magic constant 0x2E74 encodes a 2-bit lookup table:
-	//   index = (p1.y>0 ? 2 : 0) + (p2.y>0 ? 4 : 0) + (p3.y>0 ? 8 : 0)
-	//   code = (0x2E74 >> index) & 3
-	//   code==0: no crossing, code&1: add t1 coverage, code>1: subtract t2 coverage
-	uint idx = ((p1.y > 0.0) ? 2u : 0u) + ((p2.y > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u);
-	uint code = (0x2E74u >> idx) & 3u;
-	if (code == 0u) return 0.0;
-
-	// Quadratic solve: a*t^2 - 2*b*t + c = 0
-	vec2 a = p1 - p2 * 2.0 + p3;
-	vec2 b = p1 - p2;
-	float c = p1.y;
+vec2 SolveHorizPoly(vec4 p12, vec2 p3)
+{
+	vec2 a = p12.xy - p12.zw * 2.0 + p3;
+	vec2 b = p12.xy - p12.zw;
 
 	float t1, t2;
-	if (abs(a.y) > 1e-6) {
-		float d = sqrt(max(b.y * b.y - a.y * c, 0.0));
-		t1 = (b.y - d) / a.y;
-		t2 = (b.y + d) / a.y;
-	} else if (abs(b.y) > 1e-6) {
-		// Linear fallback
-		t1 = c / (2.0 * b.y);
+
+	if (abs(a.y) < kNearZero)
+	{
+		// Linear case: a ≈ 0, solve c/2b. Guard b.y to avoid undefined div-by-zero.
+		float rb = 0.5 / (abs(b.y) < kNearZero ? 1.0 : b.y);
+		t1 = p12.y * rb;
 		t2 = t1;
-	} else {
-		// Perfectly horizontal curve — no crossing
-		return 0.0;
+	}
+	else
+	{
+		// Quadratic case: safe to divide by a.y.
+		float ra = 1.0 / a.y;
+		float d = sqrt(max(b.y * b.y - a.y * p12.y, 0.0));
+		t1 = (b.y - d) * ra;
+		t2 = (b.y + d) * ra;
 	}
 
-	// Clamp t values to [0,1] for robustness. The sign-table should guarantee
-	// in-range roots, but numerical imprecision at near-degenerate corners
-	// (sharp tips, nearly-horizontal curves) can push t slightly out of range,
-	// producing a bogus crossing x-position far from the actual curve.
 	t1 = clamp(t1, 0.0, 1.0);
 	t2 = clamp(t2, 0.0, 1.0);
 
-	float coverage = 0.0;
+	return vec2((a.x * t1 - b.x * 2.0) * t1 + p12.x, (a.x * t2 - b.x * 2.0) * t2 + p12.x);
+}
 
-	if ((code & 1u) != 0u) {
-		// Add coverage from root t1
-		float x = (a.x * t1 - b.x * 2.0) * t1 + p1.x;
-		coverage += clamp(x * pixelsPerEm + 0.5, 0.0, 1.0);
+vec2 SolveVertPoly(vec4 p12, vec2 p3)
+{
+	vec2 a = p12.xy - p12.zw * 2.0 + p3;
+	vec2 b = p12.xy - p12.zw;
+
+	float t1, t2;
+
+	if (abs(a.x) < kNearZero)
+	{
+		// Linear case: a ≈ 0, solve c/2b. Guard b.x to avoid undefined div-by-zero.
+		float rb = 0.5 / (abs(b.x) < kNearZero ? 1.0 : b.x);
+		t1 = p12.x * rb;
+		t2 = t1;
+	}
+	else
+	{
+		// Quadratic case: safe to divide by a.x.
+		float ra = 1.0 / a.x;
+		float d = sqrt(max(b.x * b.x - a.x * p12.x, 0.0));
+		t1 = (b.x - d) * ra;
+		t2 = (b.x + d) * ra;
 	}
 
-	if (code > 1u) {
-		// Subtract coverage from root t2
-		float x = (a.x * t2 - b.x * 2.0) * t2 + p1.x;
-		coverage -= clamp(x * pixelsPerEm + 0.5, 0.0, 1.0);
-	}
+	t1 = clamp(t1, 0.0, 1.0);
+	t2 = clamp(t2, 0.0, 1.0);
+
+	return vec2((a.y * t1 - b.y * 2.0) * t1 + p12.y, (a.y * t2 - b.y * 2.0) * t2 + p12.y);
+}
+
+ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
+{
+	ivec2 bandLoc = ivec2(glyphLoc.x + int(offset), glyphLoc.y);
+	bandLoc.y += bandLoc.x >> kLogBandTextureWidth;
+	bandLoc.x &= (1 << kLogBandTextureWidth) - 1;
+	return bandLoc;
+}
+
+// Combine horizontal and vertical coverage into a single alpha value.
+// Uses the patent's recommended simple average of the two axes
+// (Patent col. 7, lines 55–60: "the simplest example is an average
+// of two coverage values").
+float CalcCoverage(float xcov, float ycov)
+{
+	float coverage = (abs(xcov) + abs(ycov)) * 0.5;
+
+	coverage = clamp(coverage, 0.0, 1.0);
 
 	return coverage;
 }
 
-/**
- * Trace a vertical ray — same as horizontal but with coordinates swizzled.
- */
-float traceRayCurveV(vec2 p1, vec2 p2, vec2 p3, float pixelsPerEm) {
-	return traceRayCurveH(p1.yx, p2.yx, p3.yx, pixelsPerEm);
-}
+float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
+{
+	int curveIndex;
 
-/**
- * Main Slug rendering function.
- * Casts horizontal and vertical rays, accumulates winding-based coverage,
- * and averages both directions for the final alpha.
- * Based on the Sluggish reference implementation.
- */
-float slugRender(vec2 renderCoord) {
-	// Pixels per em for anti-aliasing
-	vec2 pxScale = fwidth(renderCoord);
-	float pixelsPerEmH = 1.0 / max(pxScale.x, 1e-6);
-	float pixelsPerEmV = 1.0 / max(pxScale.y, 1e-6);
+	vec2 emsPerPixel = vec2(abs(dFdx(renderCoord.x)), abs(dFdy(renderCoord.y)));
+	vec2 pixelsPerEm = 1.0 / max(emsPerPixel, vec2(kNearZero));
 
-	// Band transform: map em-space coord to band indices
-	vec2 bandCoord = renderCoord * vBanding.xy + vBanding.zw;
-	// vGlyph.z = hBandCount - 1, vGlyph.w = vBandCount - 1
-	// bandY indexes horizontal bands (y-axis), bandX indexes vertical bands (x-axis)
-	int bandY = clamp(int(bandCoord.y), 0, vGlyph.z);
-	int bandX = clamp(int(bandCoord.x), 0, vGlyph.w);
+	ivec2 bandMax = glyphData.zw;
+	// Mask to low 8 bits — upper bits of glyphData.w are reserved for flags
+	// (e.g. SLUG_EVENODD). CPU must not pack hBandCount > 256.
+	bandMax.y &= 0x00FF;
 
-	int glyphBandOffset = vGlyph.x + (vGlyph.y << LOG_TEX_W);
+	ivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);
+	ivec2 glyphLoc = glyphData.xy;
 
-	// --- Horizontal ray ---
-	float coverageX = 0.0;
-	int hCount = 0;
+	float xcov = 0.0;
+
+	uvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));
+	ivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);
+
+	// INVARIANT: curves in this band are sorted by descending max-x (see bands.ts).
+	// The early-out break below relies on this — once a curve's max-x is more than
+	// 0.5 pixels left of the pixel center, all subsequent curves are also too far.
+	int hcount = min(int(hbandData.x), kMaxCurvesPerBand);
+	for (curveIndex = 0; curveIndex < hcount; curveIndex++)
 	{
-		uvec4 hdr = fetchBand(glyphBandOffset + bandY, 0);
-		int count = int(hdr.x);
-		int offset = int(hdr.y);
-		hCount = count;
+		ivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));
+		vec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);
+		vec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;
 
-		for (int i = 0; i < count && i < 64; i++) {
-			uvec4 ref = fetchBand(offset + i, 0);
-			int ci = int(ref.x);
+		if (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < -0.5) break;
 
-			vec2 p1, p2, p3;
-			fetchCurve(ci, 0, 0, p1, p2, p3);
+		uint code = CalcRootCode(p12.y, p12.w, p3.y);
+		if (code != 0u)
+		{
+			vec2 r = SolveHorizPoly(p12, p3) * pixelsPerEm.x;
 
-			coverageX += traceRayCurveH(p1 - renderCoord, p2 - renderCoord, p3 - renderCoord, pixelsPerEmH);
+			if ((code & 1u) != 0u)
+			{
+				xcov += clamp(r.x + 0.5, 0.0, 1.0);
+			}
+
+			if (code > 1u)
+			{
+				xcov -= clamp(r.y + 0.5, 0.0, 1.0);
+			}
 		}
 	}
 
-	// --- Vertical ray ---
-	float coverageY = 0.0;
-	int vCount = 0;
+	float ycov = 0.0;
+
+	uvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));
+	ivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);
+
+	// INVARIANT: curves in this band are sorted by descending max-y (see bands.ts).
+	int vcount = min(int(vbandData.x), kMaxCurvesPerBand);
+	for (curveIndex = 0; curveIndex < vcount; curveIndex++)
 	{
-		// Vertical band headers start after hBandCount horizontal headers.
-		// vGlyph.z = hBandCount - 1, so hBandCount = vGlyph.z + 1
-		int hBandCount = vGlyph.z + 1;
-		uvec4 hdr = fetchBand(glyphBandOffset + hBandCount + bandX, 0);
-		int count = int(hdr.x);
-		int offset = int(hdr.y);
-		vCount = count;
+		ivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));
+		vec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);
+		vec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;
 
-		for (int i = 0; i < count && i < 64; i++) {
-			uvec4 ref = fetchBand(offset + i, 0);
-			int ci = int(ref.x);
+		if (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < -0.5) break;
 
-			vec2 p1, p2, p3;
-			fetchCurve(ci, 0, 0, p1, p2, p3);
+		uint code = CalcRootCode(p12.x, p12.z, p3.x);
+		if (code != 0u)
+		{
+			vec2 r = SolveVertPoly(p12, p3) * pixelsPerEm.y;
 
-			coverageY += traceRayCurveV(p1 - renderCoord, p2 - renderCoord, p3 - renderCoord, pixelsPerEmV);
+			if ((code & 1u) != 0u)
+			{
+				ycov -= clamp(r.x + 0.5, 0.0, 1.0);
+			}
+
+			if (code > 1u)
+			{
+				ycov += clamp(r.y + 0.5, 0.0, 1.0);
+			}
 		}
 	}
 
-	float ax = abs(coverageX);
-	float ay = abs(coverageY);
-
-	// Fall back to the other direction ONLY when a band is genuinely empty
-	// (zero curves assigned to it). Do NOT fall back based on near-zero
-	// accumulated coverage — a band with curves that cancel to ~0 means the
-	// fragment is legitimately outside the glyph in that direction, and using
-	// the other direction's coverage alone would produce false fill (e.g. the
-	// concave notches of 'x' where one winding sum correctly cancels to zero).
-	if (hCount == 0) return clamp(ay, 0.0, 1.0);
-	if (vCount == 0) return clamp(ax, 0.0, 1.0);
-
-	// Both directions have curves: average their absolute coverages.
-	return clamp((ax + ay) * 0.5, 0.0, 1.0);
+	return CalcCoverage(xcov, ycov);
 }
 
-void main() {
-	float coverage = slugRender(vTexcoord);
-
-	// Debug heatmap: blue = negative coverage, red = positive, green = near 0.5
-	// Use this to visualize coverage quality
-	// fragColor = vec4(max(coverage, 0.0), abs(coverage - 0.5) < 0.1 ? 1.0 : 0.0, max(-coverage, 0.0), 1.0);
-
+void main()
+{
+	float coverage = SlugRender(vTexcoord, vBanding, vGlyph);
 	fragColor = vColor * coverage;
 }

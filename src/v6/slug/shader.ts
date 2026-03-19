@@ -1,5 +1,5 @@
-import { Program, Shader, Texture } from '@pixi/core';
-import { SlugFont } from '../../shared/slug/font';
+import {Program, Shader, Texture} from '@pixi/core';
+import {SlugFont} from '../../shared/slug/font';
 
 import vertSource from '../../shared/shader/slug/vert.glsl';
 import fragSource from '../../shared/shader/slug/frag.glsl';

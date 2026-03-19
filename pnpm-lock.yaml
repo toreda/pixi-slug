@@ -78,6 +78,9 @@ importers:
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@swc/core@1.15.18)(@types/node@25.5.0)(typescript@5.9.3)
+      typed-glsl:
+        specifier: ^0.11.2
+        version: 0.11.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2541,6 +2544,9 @@ packages:
   type-fest@2.19.0:
     resolution: {integrity: sha512-RAH822pAdBgcNMAfWnCBU3CFZcfZ/i1eZjwFU/dsLKumyuuP3niueg2UAukXYF0E2AAoc82ZSSf9J0WQBinzHA==}
     engines: {node: '>=12.20'}
+
+  typed-glsl@0.11.2:
+    resolution: {integrity: sha512-E2NzPuROUYEYtS36YqF5HlxpqsaT764kjOJH34Kzi71xNlZlaKH46yJ+/x22TfqCGNXtTM273/d3teuxe9Y7uw==}
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -5424,6 +5430,8 @@ snapshots:
   type-fest@0.8.1: {}
 
   type-fest@2.19.0: {}
+
+  typed-glsl@0.11.2: {}
 
   typescript@5.9.3: {}
 
