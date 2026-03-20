@@ -36,37 +36,19 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 	return bandLoc;
 }
 
-// Coverage combination for single-direction rays (no band-split optimization).
-//
-// Without band-split, interior pixels far from both edges on one axis get
-// xcov ≈ +1 - 1 = 0 (the entering and exiting crossings both saturate and cancel).
-// The weight tracks how close the nearest intersection is to the pixel center.
-// Near edges (high weight): the weighted average provides antialiasing.
-// In the interior (low weight): we fall back to max(abs(xcov), abs(ycov)) which
-// correctly reads ~1.0 for pixels where at least one axis has an uncanceled crossing.
-//
-// Note: the reference shader uses a single accumulator with sqrt(abs(sum)*0.5),
-// which works with band-split but produces dim interiors (~0.7) without it.
-// xcov/ycov: fractional winding (can cancel to 0 inside glyph)
-// xwgt/ywgt: proximity weight (high near edges, 0 in interior)
-// xwind/ywind: integer winding number (nonzero = inside, per the patent)
-//
-// The fractional winding (xcov) cancels to 0 for interior pixels where both
-// edge crossings are far away. The integer winding (xwind) does NOT cancel
-// because it only counts crossings where Cx(t) > 0 (to the right of pixel).
-// For interior pixels, the entering crossing is to the right (+1) but the
-// exiting crossing is also to the right (+1 for code=1, -1 for code=2),
-// so the integer winding is nonzero.
-float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt, float xwind, float ywind)
+// CalcCoverage from the latest Slug reference shader (GitHub, March 2026).
+// Near edges (high weight): weighted average provides smooth antialiasing.
+// Interior (low weight): min(abs(xcov), abs(ycov)) provides solid fill.
+// Interior pixels have xcov ≈ ±1.0 and ycov ≈ ±1.0 because the entering
+// edge saturates to 1.0 and the exiting edge is far away (saturates to 0).
+float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 {
-	// Integer winding is the definitive inside/outside test.
-	// This produces zero artifacts at all sizes.
-	// TODO: Add proper antialiasing that respects diagonal edges.
-	// The challenge: per-axis fractional coverage doesn't correctly
-	// represent diagonal edges where the edge crosses both axes.
-	// Band-split (bidirectional rays) would solve this by preventing
-	// the interior cancellation that makes per-axis coverage unreliable.
-	return step(0.5, max(abs(xwind), abs(ywind)));
+	float coverage = max(
+		abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),
+		min(abs(xcov), abs(ycov))
+	);
+
+	return clamp(coverage, 0.0, 1.0);
 }
 
 out vec4 fragColor;
@@ -91,14 +73,8 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 	ivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);
 	ivec2 glyphLoc = glyphData.xy;
 
-	// Single coverage accumulator matching the reference shader exactly.
-	// Both horizontal and vertical rays contribute to the same variable.
-	float coverage = 0.0;
-
-	// Separate accumulators for debug visualization only.
 	float xcov = 0.0;
 	float xwgt = 0.0;
-	float xwind = 0.0;  // integer winding from raw (unscaled) intersection position
 
 	// ---------------------------------------------------------------
 	// Horizontal ray (+X direction)
@@ -137,42 +113,32 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			// If by ≈ 0, the clamp saturates the contribution to 0 or 1.
 			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.y * 0.5 / by; t2 = t1; }
 
-			float x1raw = (ax * t1 - bx * 2.0) * t1 + p12.x;
-			float x2raw = (ax * t2 - bx * 2.0) * t2 + p12.x;
-			float x1 = x1raw * pixelsPerEm.x;
-			float x2 = x2raw * pixelsPerEm.x;
+			float x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;
+			float x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;
+			x1 *= pixelsPerEm.x;
+			x2 *= pixelsPerEm.x;
 
 			if ((code & 1u) != 0u)
 			{
-				float contrib = clamp(x1 + 0.5, 0.0, 1.0);
-				xcov += contrib;
-				// Patent integer winding: Cx(t) > 0 means intersection is to the RIGHT
-				// of pixel in em-space (before scaling). This is the binary inside/outside test.
-				xwind += step(0.0, x1raw);
+				xcov += clamp(x1 + 0.5, 0.0, 1.0);
 				xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0));
-				coverage += contrib;
 			}
 
 			if (code > 1u)
 			{
-				float contrib = clamp(x2 + 0.5, 0.0, 1.0);
-				xcov -= contrib;
-				xwind -= step(0.0, x2raw);
+				xcov -= clamp(x2 + 0.5, 0.0, 1.0);
 				xwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0));
-				coverage -= contrib;
 			}
 		}
 	}
 
 	// ---------------------------------------------------------------
 	// Vertical ray (+Y direction)
-	// Uses the rotated polynomial from the reference — note the PLUS
-	// on p2's y-component (ax) and the swapped x↔y roles.
+	// Same solver as horizontal with x↔y roles swapped.
 	// ---------------------------------------------------------------
 
 	float ycov = 0.0;
 	float ywgt = 0.0;
-	float ywind = 0.0;  // integer winding for vertical ray
 
 	uvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));
 	ivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);
@@ -186,14 +152,12 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 		if (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < -0.5) break;
 
-		// Root eligibility from x-coordinate signs (rotated ray).
 		uint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +
 		        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;
 
 		if (code != 0u)
 		{
-			// Rotated polynomial: ax uses PLUS on p2 term.
-			float ax = p12.y + p12.w * 2.0 + p3.y;
+			float ax = p12.y - p12.w * 2.0 + p3.y;
 			float ay = p12.x - p12.z * 2.0 + p3.x;
 			float bx = p12.y - p12.w;
 			float by = p12.x - p12.z;
@@ -205,27 +169,21 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.x * 0.5 / by; t2 = t1; }
 
-			float y1raw = (ax * t1 - bx * 2.0) * t1 + p12.y;
-			float y2raw = (ax * t2 - bx * 2.0) * t2 + p12.y;
-			float y1 = y1raw * pixelsPerEm.y;
-			float y2 = y2raw * pixelsPerEm.y;
+			float y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;
+			float y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;
+			y1 *= pixelsPerEm.y;
+			y2 *= pixelsPerEm.y;
 
 			if ((code & 1u) != 0u)
 			{
-				float contrib = clamp(y1 + 0.5, 0.0, 1.0);
-				ycov += contrib;
-				ywind += step(0.0, y1raw);
+				ycov += clamp(y1 + 0.5, 0.0, 1.0);
 				ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0));
-				coverage += contrib;
 			}
 
 			if (code > 1u)
 			{
-				float contrib = clamp(y2 + 0.5, 0.0, 1.0);
-				ycov -= contrib;
-				ywind -= step(0.0, y2raw);
+				ycov -= clamp(y2 + 0.5, 0.0, 1.0);
 				ywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0));
-				coverage -= contrib;
 			}
 		}
 	}
@@ -233,13 +191,7 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 	slug_debug_xcov = xcov;
 	slug_debug_ycov = ycov;
 
-	// Reference formula (single accumulator)
-	float refCoverage = sqrt(clamp(abs(coverage) * 0.5, 0.0, 1.0));
-
-	// Our weight-based formula (separate accumulators + integer winding)
-	float ourCoverage = CalcCoverage(xcov, ycov, xwgt, ywgt, xwind, ywind);
-
-	return ourCoverage;
+	return CalcCoverage(xcov, ycov, xwgt, ywgt);
 }
 
 void main()

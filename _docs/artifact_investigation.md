@@ -125,6 +125,28 @@ Render with integer winding (no artifacts), then apply a screen-space edge smoot
 **Option D: Dilation-based AA**
 The dynamic dilation already expands the quad by 0.5 pixels. At the dilated boundary pixels, use the distance from the original quad edge as coverage. This doesn't involve ray coverage at all.
 
+### Why per-axis AA fails on diagonals (detailed analysis)
+
+For a pixel outside the glyph but near a diagonal edge, the horizontal ray nearly parallels the edge. The ray intersection is very close to the pixel center in em-space (e.g., `x = -0.235`), but the pixel is perpendicular-distance-wise further from the edge. The ray-axis distance ≠ perpendicular distance when the edge is diagonal.
+
+Example from V glyph at pixel (450, 850) — just outside the left diagonal:
+- Curve[6] (Class B, `t1=1`): intersection at `x = -0.235` em-units
+- `clamp(-0.235 * 0.0635 + 0.5) = 0.485` — fractional coverage
+- Integer winding correctly says outside (`step(0, -0.235) = 0`)
+- But any AA formula that uses this fractional value produces visible coverage for an outside pixel
+
+The same pixel's vertical ray has no nearby intersections (`ynear = 999`). So `min(abs(xnear), abs(ynear))` picks the misleading horizontal distance.
+
+This is not a bug — it's a fundamental geometric mismatch between axis-aligned ray distances and perpendicular edge distances on diagonal edges. Band-split would fix this by measuring distance from the NEAREST edge (firing toward it), not from a ray that nearly parallels the edge.
+
+### Additional AA attempts that failed
+
+| # | Approach | Why it failed |
+|---|---------|---------------|
+| 13 | `xnear`/`ynear` minimum distance with signed-distance AA | On diagonals, the near-parallel ray produces small `xnear` for outside pixels |
+| 14 | `min(abs(xnear), abs(ynear))` as edge distance | Same issue — picks the misleading axis |
+| 15 | Per-axis coverage gated by per-axis integer winding | `xwind=0` gates out the H-axis, but then only Y-axis AA remains — produces wrong edge shapes on diagonals |
+
 ---
 
 ## Architecture Notes for Resuming
