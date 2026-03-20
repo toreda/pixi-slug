@@ -76,6 +76,13 @@
 		<button id="btnReset">Reset</button>
 		<span>|</span>
 		<button id="btnSupersampling">Supersampling: Off</button>
+		<label for="supersampleCount">Samples:</label>
+		<select id="supersampleCount">
+			<option value="2">2</option>
+			<option value="4" selected>4</option>
+			<option value="8">8</option>
+			<option value="16">16</option>
+		</select>
 		<span>|</span>
 		<label for="fpsLimit">FPS Limit:</label>
 		<select id="fpsLimit">
@@ -445,6 +452,13 @@
 				}
 				this.textContent = 'Supersampling: ' + (supersampling ? 'On' : 'Off');
 				this.classList.toggle('active', supersampling);
+			};
+
+			document.getElementById('supersampleCount').onchange = function () {
+				var count = parseInt(this.value, 10);
+				for (var i = 0; i < slugTexts.length; i++) {
+					slugTexts[i].supersampleCount = count;
+				}
 			};
 
 			document.getElementById('fpsLimit').onchange = function () {

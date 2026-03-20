@@ -189,8 +189,9 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 void main()
 {
 	float coverage;
+	int sampleCount = min(uSupersampleCount, 16);
 
-	if (uSupersampleCount <= 1)
+	if (sampleCount <= 1)
 	{
 		coverage = SlugRender(vTexcoord, vBanding, vGlyph);
 	}
@@ -202,14 +203,14 @@ void main()
 		vec2 dx = dFdx(vTexcoord) * 0.5;
 		vec2 dy = dFdy(vTexcoord) * 0.5;
 
-		if (uSupersampleCount <= 2)
+		if (sampleCount <= 2)
 		{
 			// 2-sample: diagonal pair
 			float c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph);
 			float c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph);
 			coverage = (c0 + c1) * 0.5;
 		}
-		else if (uSupersampleCount <= 4)
+		else if (sampleCount <= 4)
 		{
 			// 4-sample rotated-grid supersampling (RGSS pattern).
 			float c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph);
@@ -218,7 +219,7 @@ void main()
 			float c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph);
 			coverage = (c0 + c1 + c2 + c3) * 0.25;
 		}
-		else if (uSupersampleCount <= 8)
+		else if (sampleCount <= 8)
 		{
 			// 8-sample: 8-queens pattern (good spatial distribution)
 			float c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph);

@@ -104,10 +104,11 @@ export class SlugText extends Container {
 	}
 
 	public set supersampleCount(value: number) {
-		if (this._supersampleCount === value) return;
-		this._supersampleCount = value;
+		const clamped = Math.min(Math.max(value, 1), Defaults.MAX_SUPERSAMPLE_COUNT);
+		if (this._supersampleCount === clamped) return;
+		this._supersampleCount = clamped;
 		if (this._uniforms && this._supersampling) {
-			this._uniforms.uniforms.uSupersampleCount = value;
+			this._uniforms.uniforms.uSupersampleCount = clamped;
 		}
 	}
 
