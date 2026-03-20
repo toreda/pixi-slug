@@ -6,5 +6,6 @@ coverage/
 *.log
 .npm
 dist/
+!docs/dist/
 test-report.xml
 .webpack/
