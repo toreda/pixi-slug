@@ -108,10 +108,15 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			float t1 = (by - d) * ra;
 			float t2 = (by + d) * ra;
 
-			// Match reference exactly: no guard on by. In GLSL ES, division by
-			// zero is undefined, but the result is clamped immediately after.
-			// If by ≈ 0, the clamp saturates the contribution to 0 or 1.
-			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.y * 0.5 / by; t2 = t1; }
+			if (abs(ay) < kQuadraticEpsilon)
+			{
+				// Linear or degenerate case. If by is also near zero, the curve
+				// is nearly horizontal (parallel to ray) — skip it entirely.
+				// A curve parallel to the ray cannot meaningfully cross it.
+				if (abs(by) < kQuadraticEpsilon) continue;
+				t1 = p12.y * 0.5 / by;
+				t2 = t1;
+			}
 
 			float x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;
 			float x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;
@@ -167,7 +172,12 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			float t1 = (by - d) * ra;
 			float t2 = (by + d) * ra;
 
-			if (abs(ay) < kQuadraticEpsilon) { t1 = p12.x * 0.5 / by; t2 = t1; }
+			if (abs(ay) < kQuadraticEpsilon)
+			{
+				if (abs(by) < kQuadraticEpsilon) continue;
+				t1 = p12.x * 0.5 / by;
+				t2 = t1;
+			}
 
 			float y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;
 			float y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;
@@ -204,5 +214,6 @@ void main()
 	// RED = false positive (raw says outside but CalcCoverage says inside)
 	// BLUE = false negative (raw says inside but CalcCoverage says low)
 	// BLACK = correct outside
-	fragColor = vColor * cov;
+	fragColor = vec4(vec3(abs(slug_debug_ycov)), 1.0);  // ycov only
+	// fragColor = vColor * cov;
 }

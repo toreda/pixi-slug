@@ -86,11 +86,11 @@
 			var font = new pixiSlug.SlugFont(4096);
 			await font.load(fontData);
 
-			var slugText = new pixiSlug.SlugText('X | , . J v V R r', font, 130);
+			var slugText = new pixiSlug.SlugText('XxvVR', font, 280);
 			slugText.position.set(0, 0);
 			app.stage.addChild(slugText);
 
-			var slugText2 = new pixiSlug.SlugText('The quick brown fox jumps over the lazy dog', font, 24);
+/* 			var slugText2 = new pixiSlug.SlugText('The quick brown fox jumps over the lazy dog', font, 24);
 			slugText2.position.set(10, 160);
 			app.stage.addChild(slugText2);
 
@@ -100,7 +100,7 @@
 
 			var slugText4 = new pixiSlug.SlugText('abcdefghijklmnopqrstuvwxyz !@#$%^&*()', font, 32);
 			slugText4.position.set(10, 250);
-			app.stage.addChild(slugText4);
+			app.stage.addChild(slugText4); */
 
 			// --- Debug: dump X glyph curves ---
 			var xGlyph = font.glyphs.get('X'.charCodeAt(0));
