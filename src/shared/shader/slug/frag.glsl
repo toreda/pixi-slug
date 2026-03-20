@@ -1,9 +1,7 @@
 #version 300 es
 // ===================================================
 // Slug algorithm fragment shader — GLSL ES 3.00 port.
-// Root eligibility and solver math from the reference GLSL shader
-// by Eric Lengyel (Lengyel2017FontRendering-GlyphShader.glsl).
-// Coverage combination adapted for single-direction rays (no band split).
+// Based on the reference Slug shader by Eric Lengyel.
 // ===================================================
 precision highp float;
 precision highp int;
@@ -21,7 +19,6 @@ flat in ivec4 vGlyph;
 uniform sampler2D uCurveTexture;
 uniform sampler2D uBandTexture;
 
-// Fetch two uint32 values from the band texture at the given texel coordinate.
 uvec2 fetchBand(ivec2 coord)
 {
 	vec2 raw = texelFetch(uBandTexture, coord, 0).xy;
@@ -36,16 +33,16 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 	return bandLoc;
 }
 
-// CalcCoverage from the latest Slug reference shader (GitHub, March 2026).
+// Combine horizontal and vertical fractional winding into coverage.
 // Near edges (high weight): weighted average provides smooth antialiasing.
-// Interior (low weight): min(abs(xcov), abs(ycov)) provides solid fill.
-// Interior pixels have xcov ≈ ±1.0 and ycov ≈ ±1.0 because the entering
-// edge saturates to 1.0 and the exiting edge is far away (saturates to 0).
+// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.
+// max() is used instead of min() to handle glyphs with oppositely-wound
+// contours where one axis cancels to ~0 while the other reads ~1.
 float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 {
 	float coverage = max(
 		abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),
-		min(abs(xcov), abs(ycov))
+		max(abs(xcov), abs(ycov))
 	);
 
 	return clamp(coverage, 0.0, 1.0);
@@ -53,17 +50,8 @@ float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 
 out vec4 fragColor;
 
-// Debug globals — set by SlugRender for diagnostic visualization.
-float slug_debug_xcov = 0.0;
-float slug_debug_ycov = 0.0;
-
 float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 {
-	// Match the reference exactly: use fwidth() not abs(dFdx()).
-	// fwidth(x) = abs(dFdx(x)) + abs(dFdy(x)), which differs from abs(dFdx(x))
-	// when the texcoord has cross-axis derivatives (e.g. near quad edges,
-	// or if the coordinate system is rotated/skewed). This affects the scale
-	// factor applied to every intersection position before clamping.
 	vec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),
 	                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));
 
@@ -92,7 +80,6 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 		if (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < -0.5) break;
 
-		// Root eligibility from y-coordinate signs (reference convention).
 		uint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +
 		        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;
 
@@ -110,9 +97,6 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 			if (abs(ay) < kQuadraticEpsilon)
 			{
-				// Linear or degenerate case. If by is also near zero, the curve
-				// is nearly horizontal (parallel to ray) — skip it entirely.
-				// A curve parallel to the ray cannot meaningfully cross it.
 				if (abs(by) < kQuadraticEpsilon) continue;
 				t1 = p12.y * 0.5 / by;
 				t2 = t1;
@@ -198,22 +182,11 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 		}
 	}
 
-	slug_debug_xcov = xcov;
-	slug_debug_ycov = ycov;
-
 	return CalcCoverage(xcov, ycov, xwgt, ywgt);
 }
 
 void main()
 {
-	float cov = SlugRender(vTexcoord, vBanding, vGlyph);
-
-	// Debug: color-code artifact pixels to see exactly what's happening.
-	// WHITE = correct (both axes agree, coverage ~1.0)
-	// YELLOW = edge transition (fractional coverage, expected)
-	// RED = false positive (raw says outside but CalcCoverage says inside)
-	// BLUE = false negative (raw says inside but CalcCoverage says low)
-	// BLACK = correct outside
-	fragColor = vec4(vec3(abs(slug_debug_ycov)), 1.0);  // ycov only
-	// fragColor = vColor * cov;
+	float coverage = SlugRender(vTexcoord, vBanding, vGlyph);
+	fragColor = vColor * coverage;
 }

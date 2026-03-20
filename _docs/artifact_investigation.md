@@ -6,169 +6,146 @@
 
 2. **No "good enough."** There is no acceptable middle ground. The rendering is either correct or incorrect. Partially-correct rendering that works at some sizes but not others defeats the purpose of the algorithm.
 
-## Current Status
+## RESOLVED — 2026-03-19
 
-**As of 2026-03-19**: Integer winding (binary inside/outside) produces **zero artifacts at all sizes**. This is the current committed baseline. Antialiasing is disabled — edges are aliased/jagged but correct. The next step is adding antialiasing back without reintroducing artifacts.
+**Status**: All artifacts eliminated. Rendering is correct with antialiasing at all font sizes (tested 24px, 32px, 130px, 280px). No bright lines, dark bands, notches, or stray pixels on any character including V, X, x, v, R, r, W, w, and all other diagonal-stroke glyphs.
 
-**Current CalcCoverage**:
+---
+
+## Root Cause & Solution
+
+### Two bugs were found and fixed
+
+**Bug 1: Vertical solver polynomial sign (PRIMARY CAUSE)**
+
+The vertical ray solver used `p12.y + p12.w * 2.0 + p3.y` (PLUS on the p2 term) for computing the cross-axis intersection position. This came from the 2017 JCGT reference shader (`Lengyel2017FontRendering-GlyphShader.glsl`). The latest 2026 reference shader from the Slug GitHub repository uses `p12.y - p12.w * 2.0 + p3.y` (MINUS) — the same `a = p1 - 2*p2 + p3` formula used for both axes.
+
+The wrong sign produced incorrect vertical ray intersection positions, which caused:
+- False positive coverage on diagonal edges (bright line artifacts extending from V, X, R diagonals)
+- Incorrect ycov values that failed to complement xcov for proper interior coverage
+
+**Fix**: Changed line in vertical loop from:
 ```glsl
-return step(0.5, max(abs(xwind), abs(ywind)));
+float ax = p12.y + p12.w * 2.0 + p3.y;  // WRONG (2017 reference)
+```
+to:
+```glsl
+float ax = p12.y - p12.w * 2.0 + p3.y;  // CORRECT (2026 reference)
 ```
 
----
+**Bug 2: CalcCoverage used `min` instead of `max` for interior fallback**
 
-## Key Discoveries
+The CalcCoverage formula used `min(abs(xcov), abs(ycov))` as the interior fallback. This fails for glyphs with **oppositely-wound contours** (e.g., the V glyph has two contours wound in opposite directions). With opposite winding, the horizontal ray's contributions cancel (`xcov ≈ 0`) while the vertical ray correctly reads `ycov ≈ 1`. Using `min(0, 1) = 0` produces a dark interior.
 
-### 1. Integer winding produces zero artifacts
+**Fix**: Changed from `min` to `max`:
+```glsl
+// WRONG: min picks the canceled axis → dark interior
+min(abs(xcov), abs(ycov))
 
-**Verified visually at 24px, 32px, and 130px.** Pure `step(0.5, max(abs(xwind), abs(ywind)))` — no fractional coverage, no antialiasing — renders every glyph correctly with solid interiors and no bright lines, dark notches, or stray pixels at any font size. This proves the root eligibility, root solving, and curve data are all correct.
+// CORRECT: max picks the axis with valid winding → solid interior
+max(abs(xcov), abs(ycov))
+```
 
-### 2. The reference shader's single-accumulator formula fails without band-split
+### Why `max` works and `min` doesn't
 
-**Verified via CPU simulation.** The V glyph has two closed contours that produce `xcov = +2.0` and `ycov = -2.0` at interior pixels. The single-accumulator reference formula gives `sqrt(abs(2 + (-2)) * 0.5) = 0` — black interior. The reference avoids this with band-split (bidirectional rays). Without band-split, a single accumulator cannot work.
+- `min(abs(xcov), abs(ycov))`: Both axes must agree for the pixel to be "inside." Fails when one axis cancels due to opposite contour winding.
+- `max(abs(xcov), abs(ycov))`: Either axis detecting "inside" is sufficient. Works correctly because a pixel inside the glyph will always have at least one axis with nonzero winding, regardless of contour winding direction.
 
-### 3. Per-axis fractional coverage produces false positives on diagonal edges
-
-**Root cause of all visible artifacts.** For a pixel OUTSIDE the glyph but near a diagonal edge, the horizontal ray produces a fractional `xcov ≈ 0.3` (the ray grazes the diagonal curve). The vertical ray correctly produces `ycov = 0` (no crossings). Any CalcCoverage formula that picks up the fractional `xcov` value — `max(abs(xcov), abs(ycov))`, weighted average, similarity blend — produces nonzero coverage for an outside pixel.
-
-This is fundamental to single-direction rays without band-split: on diagonal edges, the ray that's nearly parallel to the edge produces fractional values over a wide region, not just the 1-pixel AA transition zone.
-
-### 4. The `fwidth` vs `abs(dFdx)` difference doesn't matter
-
-Tested by switching to `fwidth()` matching the reference. No visible change.
-
-### 5. Square vs rectangular band grid doesn't matter
-
-Tested by switching to single shared band scale matching the reference. No visible change.
-
-### 6. The `by ≈ 0` linear fallback guard doesn't matter
-
-Tested by removing the guard to match the reference's unguarded division. No visible change.
-
-### 7. Band data and curve data are correct
-
-Verified by CPU-side validation: every band's curve references point to the correct curve data in the texture. No mismatches.
-
-### 8. CPU simulation matches GPU for all tested positions
-
-No mismatches between all-curves and band-only simulation. The band system correctly assigns all curves.
+The concern with `max` was that it might produce false positives on diagonal edges (outside pixels with fractional xcov). This concern was valid when the vertical solver was wrong (bug 1) — the incorrect ycov values couldn't gate the false xcov values. With the corrected vertical solver, ycov correctly reads ~0 for outside pixels, so `max(fractional, 0) = fractional` which is the correct antialiasing transition.
 
 ---
 
-## What Has Been Tried (Complete List)
+## Symptoms That Led to Discovery
 
-### Fixes that corrected real bugs ✅
+### Initial symptoms (before any fixes)
+- Severe horizontal bright streaks extending rightward from all diagonal strokes
+- Streaks changed position with Y offset, repeated cyclically every few pixels
+- X position had no effect
+- Affected: X, x, v, V, R, r, W, w — all characters with diagonal strokes
+- Not affected: |, comma, period, I, l — characters with only horizontal/vertical strokes
 
-| # | Fix | Impact |
-|---|-----|--------|
-| 1 | Float32 round-trip in `curveBounds()` | Correct precision matching |
-| 2 | ±1 band extension | Correct band boundary coverage |
-| 3 | CalcRootCode: sign-bit → `y > 0.0` convention | Fixed wrong equivalence classes — eliminated severe horizontal streaks |
-| 4 | Vertical solver: minus → plus on p2 term | Fixed wrong intersection positions — eliminated vertical streaks |
+### After fixing CalcRootCode convention (early fix)
+- Severe horizontal streaks eliminated
+- Thin bright lines remained at sharp-angle vertices (V apex, X crossing, R leg)
 
-### Coverage formulas tried ❌ (all produced artifacts)
+### After fixing vertical solver sign (bug 1)
+- Most thin lines eliminated
+- V still had horizontal banding at the apex
+
+### After switching `min` to `max` (bug 2)
+- All artifacts eliminated
+- Clean rendering at all sizes
+
+---
+
+## Investigative Process That Found the Solution
+
+### Key insight: isolate axes with debug colors
+
+Using `fragColor = vec4(abs(xcov), abs(ycov), 0.0, 1.0)` (red = xcov, green = ycov) revealed:
+- **Yellow** (both axes ≈ 1) = correct interior
+- **Green only** (ycov ≈ 1, xcov ≈ 0) = horizontal ray canceling but vertical correct
+- **Red only** (xcov ≈ 1, ycov ≈ 0) = vertical ray canceling but horizontal correct
+
+This showed the two contours of the V glyph cancel on one axis but not the other.
+
+### Key insight: test each axis independently
+
+Using `fragColor = vec4(vec3(abs(slug_debug_xcov)), 1.0)` showed xcov was **completely black** in the lower half of the V (horizontal cancellation). Switching to ycov showed it was **completely white** (vertical ray correct). The banding appeared only in the combined CalcCoverage output.
+
+### Key insight: latest reference shader from GitHub
+
+An agent search found the latest Slug reference shader published on GitHub in March 2026 (`SlugPixelShader.hlsl`). Comparing against this revealed the vertical solver sign difference (`+` vs `-`). The 2017 JCGT supplemental shader had `+`; the 2026 version has `-`. This was the primary bug.
+
+### Key insight: CPU simulation of integer winding
+
+The integer winding (`step(0.5, max(abs(xwind), abs(ywind)))`) produced **zero artifacts** at all sizes, proving the root eligibility and curve data were correct. This isolated the problem to the fractional coverage / CalcCoverage layer.
+
+---
+
+## Complete List of All Fixes Applied
+
+### Kept (correct fixes)
+
+| # | Fix | File | Impact |
+|---|-----|------|--------|
+| 1 | Float32 round-trip in `curveBounds()` | bands.ts | Correct precision matching |
+| 2 | ±1 band extension | bands.ts | Band boundary safety margin |
+| 3 | CalcRootCode: `y > 0.0` convention with `& 3u` | frag.glsl | Fixed wrong equivalence classes |
+| 4 | Vertical solver: `- p12.w * 2.0` not `+` | frag.glsl | **Primary artifact fix** |
+| 5 | CalcCoverage: `max` not `min` for interior fallback | frag.glsl | **Secondary artifact fix** |
+| 6 | Square band grid (single shared scale) | bands.ts, quad.ts | Match reference convention |
+| 7 | Degenerate curve skip (`continue` when both ay and by near zero) | frag.glsl | Skip ray-parallel curves |
+| 8 | Cubic-to-quadratic: correct control point formula | curves.ts | Accurate OTF curve conversion |
+| 9 | WebGL2 availability check | index.html | User-facing error |
+| 10 | Band texture comment correction | text.ts | Accurate documentation |
+| 11 | `packBandMax` parameter naming | quad.ts | Clearer code |
+
+### CalcCoverage formulas tried and abandoned
 
 | # | Formula | Result |
 |---|---------|--------|
-| 5 | `(abs(xcov) + abs(ycov)) * 0.5` | Semi-transparent interiors |
-| 6 | `sqrt(abs(xcov + ycov) * 0.5)` (reference single accumulator) | Black interiors (cancellation) |
-| 7 | `max(abs(xcov), abs(ycov))` with weight-based edge blend | Solid interiors, bright line artifacts on diagonals |
-| 8 | Similarity-based interior blend | Reduced but didn't eliminate artifacts |
-| 9 | `xsum`/`ysum` total-magnitude detection | False positives — outside pixels also have high xsum |
-| 10 | Integer winding gating + fractional AA | Artifacts returned through the AA path |
-| 11 | Per-axis coverage gated by per-axis integer winding | Incorrect diagonal edge shapes |
+| A | `(abs(xcov) + abs(ycov)) * 0.5` | Semi-transparent interiors |
+| B | `sqrt(abs(xcov + ycov) * 0.5)` (reference single accumulator) | Black interiors (cancellation) |
+| C | `max(abs(xcov), abs(ycov))` with similarity blend | Reduced but didn't eliminate |
+| D | `step(0.5, max(abs(xwind), abs(ywind)))` (integer winding only) | Zero artifacts, no AA |
+| E | Integer winding + fractional AA | Artifacts returned through AA path |
+| F | Per-axis coverage gated by per-axis integer winding | Wrong diagonal edge shapes |
+| G | `xnear`/`ynear` minimum distance with signed-distance AA | Misleading on diagonals |
+| H | `xsum`/`ysum` total-magnitude detection | False positives outside glyph |
 
-### The working solution ✅
+### The working formula
 
-| # | Formula | Result |
-|---|---------|--------|
-| 12 | `step(0.5, max(abs(xwind), abs(ywind)))` — pure integer winding | **Zero artifacts.** No antialiasing (aliased edges). |
-
-### Tests that showed no change
-
-| # | Change | Result |
-|---|--------|--------|
-| A | `fwidth()` instead of `abs(dFdx())` | No change |
-| B | Square band grid (single shared scale) | No change |
-| C | Removed `by ≈ 0` linear fallback guard | No change |
-
----
-
-## Root Cause Summary
-
-The artifacts stem from a **fundamental limitation of single-direction rays without band-split**: fractional coverage values on diagonal edges extend over a wide pixel region, producing false positive coverage for outside pixels. Every CalcCoverage formula that uses per-axis fractional values inherits this problem.
-
-The integer winding number (patent Equation 4: count crossings where `Cx(t) > 0`) is immune because it's a binary test — the crossing is either to the right of the pixel or it isn't. No fractional values, no cancellation, no false positives.
-
----
-
-## Next Steps
-
-### Adding antialiasing without artifacts
-
-The challenge: the integer winding produces zero artifacts but aliased edges. Adding AA requires fractional coverage at edge pixels, but the per-axis fractional values produce false positives on diagonals.
-
-**Option A: Band-split (bidirectional rays)**
-The reference's solution. Fire rays in both +X and -X from a split point. Prevents interior cancellation AND produces correct per-pixel fractional coverage because each ray only reaches the nearest edge. Requires:
-- Dual-sorted curve lists per band (ascending and descending by max coordinate)
-- Band split point calculation during preprocessing (median of curve positions)
-- 4-channel band header (currently 2)
-- More complex fragment shader loop
-- Significant preprocessing changes in `bands.ts` and `pack.ts`
-
-**Option B: Compute AA from the integer winding transition**
-Instead of using fractional ray coverage, detect where the integer winding changes from 1→0 across adjacent pixels and compute AA from the transition location. This is essentially distance-to-edge computation.
-
-**Option C: Screen-space post-processing**
-Render with integer winding (no artifacts), then apply a screen-space edge smoothing pass (e.g., FXAA-style). Separate from the Slug algorithm but would produce smooth edges.
-
-**Option D: Dilation-based AA**
-The dynamic dilation already expands the quad by 0.5 pixels. At the dilated boundary pixels, use the distance from the original quad edge as coverage. This doesn't involve ray coverage at all.
-
-### Why per-axis AA fails on diagonals (detailed analysis)
-
-For a pixel outside the glyph but near a diagonal edge, the horizontal ray nearly parallels the edge. The ray intersection is very close to the pixel center in em-space (e.g., `x = -0.235`), but the pixel is perpendicular-distance-wise further from the edge. The ray-axis distance ≠ perpendicular distance when the edge is diagonal.
-
-Example from V glyph at pixel (450, 850) — just outside the left diagonal:
-- Curve[6] (Class B, `t1=1`): intersection at `x = -0.235` em-units
-- `clamp(-0.235 * 0.0635 + 0.5) = 0.485` — fractional coverage
-- Integer winding correctly says outside (`step(0, -0.235) = 0`)
-- But any AA formula that uses this fractional value produces visible coverage for an outside pixel
-
-The same pixel's vertical ray has no nearby intersections (`ynear = 999`). So `min(abs(xnear), abs(ynear))` picks the misleading horizontal distance.
-
-This is not a bug — it's a fundamental geometric mismatch between axis-aligned ray distances and perpendicular edge distances on diagonal edges. Band-split would fix this by measuring distance from the NEAREST edge (firing toward it), not from a ray that nearly parallels the edge.
-
-### Additional AA attempts that failed
-
-| # | Approach | Why it failed |
-|---|---------|---------------|
-| 13 | `xnear`/`ynear` minimum distance with signed-distance AA | On diagonals, the near-parallel ray produces small `xnear` for outside pixels |
-| 14 | `min(abs(xnear), abs(ynear))` as edge distance | Same issue — picks the misleading axis |
-| 15 | Per-axis coverage gated by per-axis integer winding | `xwind=0` gates out the H-axis, but then only Y-axis AA remains — produces wrong edge shapes on diagonals |
-
----
-
-## Architecture Notes for Resuming
-
-### Current shader structure
-- Integer winding tracked via `xwind`/`ywind` using `step(0.0, x1raw)` on unscaled intersection positions
-- Fractional coverage tracked via `xcov`/`ycov` (computed but unused in current CalcCoverage)
-- Weight tracking via `xwgt`/`ywgt` (computed but unused)
-- Single accumulator `coverage` maintained for reference formula comparison (unused)
-- Debug globals `slug_debug_xcov`/`slug_debug_ycov` available for visualization
-
-### Key data for V glyph
-- Two contours, 10 curves total
-- Interior: `xcov = +2.0`, `ycov = -2.0` (opposite signs, cancel in single accumulator)
-- Interior: `xwind = +2.0`, `ywind = -2.0` (same magnitude, `max(abs) = 2` → inside)
-- Bottom region (y=0): multiple curve endpoints converge
-- `pixelsPerEm ≈ scale ≈ 0.0635` at fontSize=130
-
-### Key data for X glyph
-- Single contour, 12 curves
-- Crossing point at (644, 735) / (529-759, 735)
-- Self-intersecting contour path
+```glsl
+float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
+{
+    float coverage = max(
+        abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),
+        max(abs(xcov), abs(ycov))
+    );
+    return clamp(coverage, 0.0, 1.0);
+}
+```
 
 ---
 
@@ -176,11 +153,9 @@ This is not a bug — it's a fundamental geometric mismatch between axis-aligned
 
 | File | Role |
 |------|------|
-| [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) | Fragment shader — CalcCoverage, ray loops, integer winding |
+| [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) | Fragment shader — CalcCoverage, ray loops |
 | [src/shared/shader/slug/vert.glsl](../src/shared/shader/slug/vert.glsl) | Vertex shader — dilation, MVP, unpack |
 | [src/shared/slug/glyph/bands.ts](../src/shared/slug/glyph/bands.ts) | Band assignment, square grid, float32 bounds |
 | [src/shared/slug/glyph/curves.ts](../src/shared/slug/glyph/curves.ts) | Curve extraction, cubic→quadratic conversion |
-| [src/shared/slug/glyph/quad.ts](../src/shared/slug/glyph/quad.ts) | Quad building, vertex attributes, square band scale |
-| [src/shared/slug/texture/pack.ts](../src/shared/slug/texture/pack.ts) | Curve + band texture packing |
-| [src/v8/slug/text.ts](../src/v8/slug/text.ts) | PixiJS v8 integration, texture upload |
-| [_references/Lengyel2017FontRendering-GlyphShader.glsl](../_references/Lengyel2017FontRendering-GlyphShader.glsl) | Original reference GLSL shader |
+| [src/shared/slug/glyph/quad.ts](../src/shared/slug/glyph/quad.ts) | Quad building, vertex attributes |
+| [_references/Lengyel2017FontRendering-GlyphShader.glsl](../_references/Lengyel2017FontRendering-GlyphShader.glsl) | 2017 reference (has the `+` bug in vertical solver) |
