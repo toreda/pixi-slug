@@ -4,7 +4,7 @@
 
 'use strict';
 
-const { execSync } = require('child_process');
+const {execSync} = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -13,11 +13,11 @@ const ROOT = path.resolve(__dirname, '..');
 
 function run(cmd) {
 	console.log('> ' + cmd);
-	execSync(cmd, { stdio: 'inherit', cwd: ROOT });
+	execSync(cmd, {stdio: 'inherit', cwd: ROOT});
 }
 
 function mkdirp(dir) {
-	fs.mkdirSync(path.join(ROOT, dir), { recursive: true });
+	fs.mkdirSync(path.join(ROOT, dir), {recursive: true});
 }
 
 function cp(src, dest) {
@@ -36,51 +36,65 @@ function sedReplace(file, from, to) {
 }
 
 try {
-// ----- Build -----
-console.log('Building all versions...');
-run('pnpm exec webpack --config webpack.config.ts --env version=v6 --env target=prod');
-run('pnpm exec webpack --config webpack.config.ts --env version=v7 --env target=prod');
-run('pnpm exec webpack --config webpack.config.ts --env version=v8 --env target=prod');
+	// ----- Build -----
+	console.log('Building all versions...');
+	run('pnpm exec webpack --config webpack.config.ts --env version=v6 --env target=prod');
+	run('pnpm exec webpack --config webpack.config.ts --env version=v7 --env target=prod');
+	run('pnpm exec webpack --config webpack.config.ts --env version=v8 --env target=prod');
 
-// ----- Clean & create dirs -----
-console.log('Cleaning docs/...');
-fs.rmSync(path.join(ROOT, 'docs'), { recursive: true, force: true });
-for (const dir of ['docs/dist/v6', 'docs/dist/v7', 'docs/dist/v8', 'docs/v6', 'docs/v7', 'docs/v8', 'docs/comparison']) {
-	mkdirp(dir);
-}
+	// ----- Clean & create dirs -----
+	console.log('Cleaning docs/...');
+	fs.rmSync(path.join(ROOT, 'docs'), {recursive: true, force: true});
+	for (const dir of [
+		'docs/dist/v6',
+		'docs/dist/v7',
+		'docs/dist/v8',
+		'docs/v6',
+		'docs/v7',
+		'docs/v8',
+		'docs/comparison',
+		'docs/benchmark'
+	]) {
+		mkdirp(dir);
+	}
 
-// ----- Copy bundles -----
-console.log('Copying bundles...');
-cp('dist/v6/index.js', 'docs/dist/v6/index.js');
-cp('dist/v7/index.js', 'docs/dist/v7/index.js');
-cp('dist/v8/index.js', 'docs/dist/v8/index.js');
+	// ----- Copy bundles -----
+	console.log('Copying bundles...');
+	cp('dist/v6/index.js', 'docs/dist/v6/index.js');
+	cp('dist/v7/index.js', 'docs/dist/v7/index.js');
+	cp('dist/v8/index.js', 'docs/dist/v8/index.js');
 
-// ----- Copy examples -----
-console.log('Copying examples...');
-cp('examples/v6/index.html', 'docs/v6/index.html');
-cp('examples/v6/font.ttf',   'docs/v6/font.ttf');
-cp('examples/v7/index.html', 'docs/v7/index.html');
-cp('examples/v7/font.ttf',   'docs/v7/font.ttf');
-cp('examples/v8/index.html', 'docs/v8/index.html');
-cp('examples/v8/font.ttf',   'docs/v8/font.ttf');
-cp('examples/comparison/index.html', 'docs/comparison/index.html');
-cp('examples/comparison/font.ttf',   'docs/comparison/font.ttf');
+	// ----- Copy examples -----
+	console.log('Copying examples...');
+	cp('examples/v6/index.html', 'docs/v6/index.html');
+	cp('examples/v6/font.ttf', 'docs/v6/font.ttf');
+	cp('examples/v7/index.html', 'docs/v7/index.html');
+	cp('examples/v7/font.ttf', 'docs/v7/font.ttf');
+	cp('examples/v8/index.html', 'docs/v8/index.html');
+	cp('examples/v8/font.ttf', 'docs/v8/font.ttf');
+	cp('examples/comparison/index.html', 'docs/comparison/index.html');
+	cp('examples/comparison/font.ttf', 'docs/comparison/font.ttf');
+	cp('examples/benchmark/index.html', 'docs/benchmark/index.html');
 
-// ----- Fix paths -----
-console.log('Fixing paths in docs/...');
-sedReplace('docs/v6/index.html',         "fetch('/examples/v6/font.ttf')",         "fetch('./font.ttf')");
-sedReplace('docs/v7/index.html',         "fetch('/examples/v7/font.ttf')",         "fetch('./font.ttf')");
-sedReplace('docs/v8/index.html',         "fetch('/examples/v8/font.ttf')",         "fetch('./font.ttf')");
-sedReplace('docs/comparison/index.html', "fetch('/examples/comparison/font.ttf')", "fetch('./font.ttf')");
+	// ----- Fix paths -----
+	console.log('Fixing paths in docs/...');
+	sedReplace('docs/v6/index.html', "fetch('/examples/v6/font.ttf')", "fetch('./font.ttf')");
+	sedReplace('docs/v7/index.html', "fetch('/examples/v7/font.ttf')", "fetch('./font.ttf')");
+	sedReplace('docs/v8/index.html', "fetch('/examples/v8/font.ttf')", "fetch('./font.ttf')");
+	sedReplace('docs/comparison/index.html', "fetch('/examples/comparison/font.ttf')", "fetch('./font.ttf')");
+	sedReplace('docs/benchmark/index.html', "fetch('/examples/comparison/font.ttf')", "fetch('./font.ttf')");
 
-sedReplace('docs/v6/index.html',         '../../dist/v6/index.js', '../dist/v6/index.js');
-sedReplace('docs/v7/index.html',         '../../dist/v7/index.js', '../dist/v7/index.js');
-sedReplace('docs/v8/index.html',         '../../dist/v8/index.js', '../dist/v8/index.js');
-sedReplace('docs/comparison/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
+	sedReplace('docs/v6/index.html', '../../dist/v6/index.js', '../dist/v6/index.js');
+	sedReplace('docs/v7/index.html', '../../dist/v7/index.js', '../dist/v7/index.js');
+	sedReplace('docs/v8/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
+	sedReplace('docs/comparison/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
+	sedReplace('docs/benchmark/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
 
-// ----- Write docs/index.html -----
-console.log('Creating docs/index.html...');
-fs.writeFileSync(path.join(ROOT, 'docs/index.html'), `<!DOCTYPE html>
+	// ----- Write docs/index.html -----
+	console.log('Creating docs/index.html...');
+	fs.writeFileSync(
+		path.join(ROOT, 'docs/index.html'),
+		`<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -104,10 +118,12 @@ fs.writeFileSync(path.join(ROOT, 'docs/index.html'), `<!DOCTYPE html>
 	<a href="v6/">PixiJS v6 Example</a>
 </body>
 </html>
-`, 'utf8');
+`,
+		'utf8'
+	);
 
-console.log('Done. docs/ is ready for GitHub Pages.');
-console.log('Configure GitHub Pages to serve from /docs on the main branch.');
+	console.log('Done. docs/ is ready for GitHub Pages.');
+	console.log('Configure GitHub Pages to serve from /docs on the main branch.');
 } catch (e) {
 	console.error('build-docs failed:', e.message);
 	process.exit(1);

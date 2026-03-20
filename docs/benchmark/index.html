@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pixi-slug — Benchmark</title>
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			background: #0a0a1a;
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+			color: #eee;
+		}
+		#nav {
+			display: flex;
+			gap: 0;
+			background: #0d1117;
+			width: 100%;
+		}
+		#nav a {
+			padding: 8px 18px;
+			color: #8b949e;
+			text-decoration: none;
+			font-size: 13px;
+			border-bottom: 2px solid transparent;
+		}
+		#nav a:hover { color: #eee; background: #161b22; }
+		#nav a.active { color: #eee; border-bottom-color: #4a6aae; }
+		h1 {
+			text-align: center;
+			padding: 12px;
+			font-size: 1.2rem;
+			background: #16213e;
+		}
+
+		/* ===== Settings Panel ===== */
+		#settingsPanel {
+			max-width: 900px;
+			margin: 20px auto;
+			padding: 0 20px;
+		}
+		.settings-group {
+			background: #111122;
+			border: 1px solid #2a2a4e;
+			border-radius: 6px;
+			margin-bottom: 14px;
+			overflow: hidden;
+		}
+		.settings-group-header {
+			background: #16213e;
+			padding: 8px 14px;
+			font-size: 13px;
+			font-weight: 600;
+			color: #aac;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			transition: background 0.2s;
+		}
+		.settings-group-header.disabled { background: #3a2a10; }
+		.settings-group-header .disabled-tag {
+			display: none;
+			font-size: 11px;
+			font-weight: 700;
+			color: #cc8833;
+			margin-left: 6px;
+			letter-spacing: 0.5px;
+		}
+		.settings-group-header.disabled .disabled-tag { display: inline; }
+		.settings-group-header input[type="checkbox"] { accent-color: #4a6aae; cursor: pointer; }
+		.settings-group-header label { cursor: pointer; }
+		.settings-group-body {
+			padding: 10px 14px;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12px 24px;
+			align-items: center;
+		}
+		.settings-group-body { flex-direction: column; align-items: flex-start; }
+		.settings-group-body .setting label:first-child { display: inline-flex; align-items: center; gap: 4px; width: 170px; }
+		.settings-group-body.disabled { opacity: 0.35; pointer-events: none; }
+		.setting {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 13px;
+		}
+		.setting label { color: #aaa; white-space: nowrap; cursor: pointer; }
+		.info-icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			background: #2a2a4e;
+			border: 1px solid #555;
+			color: #888;
+			font-size: 11px;
+			font-weight: 700;
+			font-style: normal;
+			cursor: help;
+			position: relative;
+			flex-shrink: 0;
+		}
+		.info-icon:hover { background: #3a3a6e; color: #ccc; border-color: #777; }
+		.info-icon .info-tip {
+			display: none;
+			position: absolute;
+			left: 24px;
+			top: 50%;
+			transform: translateY(-50%);
+			background: #1a1a2e;
+			border: 1px solid #444;
+			border-radius: 4px;
+			padding: 6px 10px;
+			font-size: 12px;
+			font-weight: 400;
+			color: #ccc;
+			white-space: normal;
+			width: 280px;
+			line-height: 1.4;
+			z-index: 100;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+		}
+		.info-icon:hover .info-tip { display: block; }
+		.setting select, .setting input[type="number"], .setting input[type="text"] {
+			padding: 4px 8px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+			cursor: pointer;
+			width: 120px;
+		}
+		.setting input[type="number"] { text-align: center; cursor: text; }
+		.setting input[type="checkbox"] { accent-color: #4a6aae; cursor: pointer; }
+		.tier-checks { display: flex; flex-direction: column; gap: 4px; }
+		.tier-check { display: flex; align-items: center; gap: 3px; color: #ccc; font-size: 13px; cursor: pointer; white-space: nowrap; }
+		.tier-check input { accent-color: #4a6aae; cursor: pointer; }
+
+		/* ===== Run Controls ===== */
+		#runControls {
+			max-width: 900px;
+			margin: 0 auto 16px;
+			padding: 0 20px;
+			display: flex;
+			gap: 12px;
+			align-items: center;
+		}
+		button {
+			padding: 8px 18px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			cursor: pointer;
+			border-radius: 4px;
+			font-size: 13px;
+		}
+		button:hover { background: #3a3a6e; }
+		button.primary { background: #3a6a3a; border-color: #5a9a5a; font-weight: 600; }
+		button.primary:hover { background: #4a8a4a; }
+		button:disabled { opacity: 0.4; cursor: default; }
+		#modeSelect {
+			padding: 6px 10px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+		}
+		#statusText { font-size: 13px; color: #888; margin-left: auto; }
+
+		/* ===== Progress ===== */
+		#progressWrap {
+			display: none;
+			max-width: 900px;
+			margin: 0 auto 12px;
+			padding: 0 20px;
+		}
+		#progressLabel { font-size: 13px; color: #aaa; margin-bottom: 4px; }
+		#progressBar {
+			width: 100%;
+			height: 6px;
+			background: #2a2a4e;
+			border-radius: 3px;
+			overflow: hidden;
+		}
+		#progressFill {
+			height: 100%;
+			width: 0%;
+			background: #4a6aae;
+			transition: width 0.15s;
+		}
+
+		/* ===== Canvas ===== */
+		#canvasWrap {
+			display: flex;
+			justify-content: center;
+			padding: 10px 0;
+			min-height: 40px;
+			gap: 4px;
+		}
+		#canvasWrap canvas { display: block; border: 1px solid #222; }
+
+		/* ===== Results Table ===== */
+		#results {
+			display: none;
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 10px 20px 40px;
+		}
+		#results h2 { font-size: 1rem; margin-bottom: 10px; color: #aac; }
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 12px;
+			margin-bottom: 20px;
+		}
+		th, td {
+			padding: 6px 10px;
+			border: 1px solid #2a2a4e;
+			text-align: left;
+			vertical-align: top;
+		}
+		th { background: #16213e; color: #aac; font-weight: 600; }
+		td { background: #111122; }
+		td.best { background: #1a3a1a; }
+		td.worst { background: #3a1a1a; }
+		.sl { color: #668899; font-size: 11px; }
+		.sv { color: #eee; }
+		.row-line { margin: 1px 0; }
+		.score-big { font-size: 16px; font-weight: 700; }
+		.score-unit { font-size: 11px; color: #888; }
+		#exportBtn { margin-bottom: 20px; }
+	</style>
+</head>
+<body>
+	<nav id="nav">
+		<a href="/examples/v8/">V8</a>
+		<a href="/examples/v7/">V7</a>
+		<a href="/examples/v6/">V6</a>
+		<a href="/examples/comparison/">pixi-slug vs Text</a>
+		<a href="/examples/benchmark/" class="active">Benchmark</a>
+	</nav>
+	<h1>pixi-slug Benchmark</h1>
+
+	<!-- ===== Settings Panel ===== -->
+	<div id="settingsPanel">
+
+		<!-- General -->
+		<div class="settings-group">
+			<div class="settings-group-header">General</div>
+			<div class="settings-group-body">
+				<div class="setting">
+					<label for="duration">Duration per test: <span class="info-icon">?<span class="info-tip">How long frame times are recorded per scenario. Longer durations produce more stable averages but the full suite takes proportionally longer.</span></span></label>
+					<select id="duration">
+						<option value="2000">2 s</option>
+						<option value="3000" selected>3 s</option>
+						<option value="5000">5 s</option>
+						<option value="10000">10 s</option>
+					</select>
+				</div>
+				<div class="setting">
+					<label for="warmupFrames">Warm-up frames: <span class="info-icon">?<span class="info-tip">Number of frames rendered before measurement begins. Lets the GPU pipeline, texture uploads, and JIT settle so early spikes don't skew results.</span></span></label>
+					<input type="number" id="warmupFrames" value="60" min="0" max="300" step="10">
+				</div>
+				<div class="setting">
+					<label for="canvasW">Canvas: <span class="info-icon">?<span class="info-tip">Resolution of the PixiJS canvas used during each test. Larger canvases increase GPU fill-rate cost.</span></span></label>
+					<input type="number" id="canvasW" value="800" min="200" max="1920" step="100">
+					<span style="color:#666">×</span>
+					<input type="number" id="canvasH" value="500" min="200" max="1080" step="100">
+				</div>
+				<div class="setting">
+					<label for="pixiAntialias">Pixi Antialiasing: <span class="info-icon">?<span class="info-tip">Enables MSAA antialiasing on the PixiJS WebGL canvas. May improve edge smoothness for canvas-rendered text but adds GPU overhead.</span></span></label>
+					<select id="pixiAntialias">
+						<option value="0" selected>Disabled</option>
+						<option value="1">Enabled</option>
+					</select>
+				</div>
+				<div class="setting">
+					<label for="pixiBgColor">Background Color: <span class="info-icon">?<span class="info-tip">Background color of the PixiJS canvas in hex format. The color picker and text field stay in sync.</span></span></label>
+					<input type="text" id="pixiBgColor" value="#16213e" maxlength="7" style="width:120px;font-family:monospace">
+					<input type="color" id="pixiBgColorPicker" value="#16213e" style="width:32px;height:26px;padding:0 2px;border:1px solid #444;background:#2a2a4e;border-radius:4px;cursor:pointer">
+				</div>
+				<div class="setting">
+					<label for="pixiResolution">Resolution: <span class="info-icon">?<span class="info-tip">Device pixel ratio for the PixiJS renderer. Higher values render at greater pixel density (e.g. 2 for Retina) but increase fill-rate cost proportionally.</span></span></label>
+					<input type="number" id="pixiResolution" value="1" min="0.5" max="4" step="0.5">
+				</div>
+				<div class="setting">
+					<label for="pixiPowerPref">GPU Power Preference: <span class="info-icon">?<span class="info-tip">Hints the browser to prefer a discrete GPU (high-performance) or integrated GPU (low-power). Affects which GPU adapter is selected on multi-GPU systems.</span></span></label>
+					<select id="pixiPowerPref">
+						<option value="high-performance" selected>high-performance</option>
+						<option value="low-power">low-power</option>
+					</select>
+				</div>
+				<div class="setting">
+					<label for="pixiBezierSmoothness">Bezier Smoothness: <span class="info-icon">?<span class="info-tip">Controls the tessellation quality for PixiJS Graphics bezier curves. Lower values produce more segments (smoother curves). Does not affect Slug rendering which evaluates curves analytically in the shader.</span></span></label>
+					<input type="number" id="pixiBezierSmoothness" value="0.5" min="0" max="1" step="0.05">
+				</div>
+				<div class="setting">
+					<label for="pixiBackBuffer">Back Buffer: <span class="info-icon">?<span class="info-tip">When enabled, PixiJS uses a back buffer (offscreen framebuffer) for rendering. Can prevent visual tearing but adds a copy pass per frame.</span></span></label>
+					<select id="pixiBackBuffer">
+						<option value="0" selected>Disabled</option>
+						<option value="1">Enabled</option>
+					</select>
+				</div>
+				<div class="setting">
+					<label>Object Count Tiers: <span class="info-icon">?<span class="info-tip">Select which object count tiers to include in multi-object tests (Object Count, Scroll, Mixed Stress, Create/Destroy). Higher counts use more GPU memory and may cause context loss on some hardware.</span></span></label>
+					<span class="tier-checks">
+						<label class="tier-check"><input type="checkbox" class="objCountTier" value="10" checked> 10</label>
+						<label class="tier-check"><input type="checkbox" class="objCountTier" value="50" checked> 50</label>
+						<label class="tier-check"><input type="checkbox" class="objCountTier" value="100" checked> 100</label>
+						<label class="tier-check"><input type="checkbox" class="objCountTier" value="200"> 200</label>
+						<label class="tier-check"><input type="checkbox" class="objCountTier" value="500"> 500</label>
+					</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- pixi-slug settings -->
+		<div class="settings-group">
+			<div class="settings-group-header">
+				<input type="checkbox" id="enableSlug" checked>
+				<label for="enableSlug">pixi-slug</label>
+				<span class="disabled-tag">DISABLED</span>
+			</div>
+			<div class="settings-group-body" id="slugSettings">
+				<div class="setting">
+					<label for="slugSupersampling">Supersampling: <span class="info-icon">?<span class="info-tip">Enable multi-sample antialiasing in the Slug fragment shader. Smoother edges at the cost of extra texture samples per pixel.</span></span></label>
+					<select id="slugSupersampling">
+						<option value="1" selected>Enabled</option>
+						<option value="0">Disabled</option>
+					</select>
+				</div>
+				<div class="setting">
+					<label for="slugSamples">Supersample Count: <span class="info-icon">?<span class="info-tip">Number of supersamples per pixel (2, 4, 8, or 16). Higher counts improve edge quality but increase fragment shader cost.</span></span></label>
+					<select id="slugSamples">
+						<option value="2">2</option>
+						<option value="4" selected>4</option>
+						<option value="8">8</option>
+						<option value="16">16</option>
+					</select>
+				</div>
+			</div>
+		</div>
+
+		<!-- PIXI.Text settings -->
+		<div class="settings-group">
+			<div class="settings-group-header">
+				<input type="checkbox" id="enableCanvas" checked>
+				<label for="enableCanvas">PIXI.Text (Canvas 2D)</label>
+				<span class="disabled-tag">DISABLED</span>
+			</div>
+			<div class="settings-group-body" id="canvasSettings">
+				<div class="setting">
+					<label for="canvasResolution">Resolution: <span class="info-icon">?<span class="info-tip">Pixel resolution multiplier for PIXI.Text canvas textures. 2× renders at double resolution for sharper text on high-DPI displays, but doubles texture memory.</span></span></label>
+					<select id="canvasResolution">
+						<option value="1" selected>1×</option>
+						<option value="2">2×</option>
+					</select>
+				</div>
+			</div>
+		</div>
+
+		<!-- BitmapText settings -->
+		<div class="settings-group">
+			<div class="settings-group-header">
+				<input type="checkbox" id="enableBitmap" checked>
+				<label for="enableBitmap">PIXI.BitmapText</label>
+				<span class="disabled-tag">DISABLED</span>
+			</div>
+			<div class="settings-group-body" id="bitmapSettings">
+				<div class="setting">
+					<label for="bitmapAtlasSize">Atlas font size: <span class="info-icon">?<span class="info-tip">Font size used to rasterize the BitmapFont atlas. Larger atlases look sharper at big sizes but use more texture memory. Text rendered above this size will be scaled up from the atlas.</span></span></label>
+					<select id="bitmapAtlasSize">
+						<option value="32">32 px</option>
+						<option value="48" selected>48 px</option>
+						<option value="64">64 px</option>
+						<option value="96">96 px</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ===== Run Controls ===== -->
+	<div id="runControls">
+		<label for="modeSelect" style="font-size:13px;color:#aaa">Run mode:</label>
+		<select id="modeSelect">
+			<option value="serial" selected>Serial (one at a time)</option>
+			<option value="parallel">Parallel (3 side-by-side)</option>
+		</select>
+		<span class="info-icon">?<span class="info-tip">Serial runs each system alone on a full-size canvas for cleanest isolation. Parallel runs all enabled systems simultaneously in side-by-side canvases — useful for visual comparison but systems compete for GPU time.</span></span>
+		<button id="btnStart" class="primary">Start Benchmark</button>
+		<button id="btnCancel" disabled>Cancel</button>
+		<span id="statusText">Ready</span>
+	</div>
+
+	<!-- ===== Progress ===== -->
+	<div id="progressWrap">
+		<div id="progressLabel">Initializing...</div>
+		<div id="progressBar"><div id="progressFill"></div></div>
+	</div>
+
+	<!-- ===== Canvas area ===== -->
+	<div id="canvasWrap"></div>
+
+	<!-- ===== Results ===== -->
+	<div id="results"></div>
+
+	<!-- PixiJS v8 via CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+
+	<!-- pixi-slug v8 bundle -->
+	<script src="../dist/v8/index.js"></script>
+
+	<script>
+	(function () {
+		'use strict';
+
+		// ================================================================
+		//  Utilities
+		// ================================================================
+
+		function formatBytes(bytes) {
+			if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+			if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+			return bytes + ' B';
+		}
+
+		function textureBytes(source) {
+			var w = (source.resource && source.resource.width) || source.pixelWidth || 0;
+			var h = (source.resource && source.resource.height) || source.pixelHeight || 0;
+			return w * h * 4;
+		}
+
+		function computeStats(frameTimes) {
+			if (!frameTimes.length) return { avg: 0, median: 0, p95: 0, p99: 0, min: 0, max: 0, fps: 0, fpsMin: 0, fpsMax: 0, frames: 0 };
+			var sorted = frameTimes.slice().sort(function (a, b) { return a - b; });
+			var sum = 0;
+			for (var i = 0; i < sorted.length; i++) sum += sorted[i];
+			var avg = sum / sorted.length;
+			var p95 = sorted[Math.floor(sorted.length * 0.95)];
+			var p99 = sorted[Math.floor(sorted.length * 0.99)];
+			return {
+				avg: avg,
+				median: sorted[Math.floor(sorted.length * 0.5)],
+				p95: p95,
+				p99: p99,
+				min: sorted[0],
+				max: sorted[sorted.length - 1],
+				fps: 1000 / avg,
+				fpsMin: 1000 / sorted[sorted.length - 1],
+				fpsMax: 1000 / sorted[0],
+				frames: sorted.length
+			};
+		}
+
+		function tryGC() {
+			if (window.gc) { window.gc(); window.gc(); }
+		}
+
+		function heapNow() {
+			return (performance.memory) ? performance.memory.usedJSHeapSize : null;
+		}
+
+		function sleep(ms) {
+			return new Promise(function (r) { setTimeout(r, ms); });
+		}
+
+		// ================================================================
+		//  Settings helpers
+		// ================================================================
+
+		// Sync color picker and text field
+		document.getElementById('pixiBgColorPicker').oninput = function () {
+			document.getElementById('pixiBgColor').value = this.value;
+		};
+		document.getElementById('pixiBgColor').oninput = function () {
+			var v = this.value.trim();
+			if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+				document.getElementById('pixiBgColorPicker').value = v;
+			}
+		};
+
+		function getSelectedTiers() {
+			var tiers = [];
+			var checks = document.querySelectorAll('.objCountTier');
+			for (var i = 0; i < checks.length; i++) {
+				if (checks[i].checked) tiers.push(parseInt(checks[i].value, 10));
+			}
+			tiers.sort(function (a, b) { return a - b; });
+			return tiers;
+		}
+
+		function getSettings() {
+			return {
+				durationMs: parseInt(document.getElementById('duration').value, 10),
+				warmupFrames: parseInt(document.getElementById('warmupFrames').value, 10) || 60,
+				canvasW: parseInt(document.getElementById('canvasW').value, 10) || 800,
+				canvasH: parseInt(document.getElementById('canvasH').value, 10) || 500,
+				pixiAntialias: document.getElementById('pixiAntialias').value === '1',
+				pixiBgColor: document.getElementById('pixiBgColor').value.trim(),
+				pixiResolution: parseFloat(document.getElementById('pixiResolution').value) || 1,
+				pixiPowerPref: document.getElementById('pixiPowerPref').value,
+				pixiBezierSmoothness: parseFloat(document.getElementById('pixiBezierSmoothness').value),
+				pixiBackBuffer: document.getElementById('pixiBackBuffer').value === '1',
+				objectCountTiers: getSelectedTiers(),
+				enableSlug: document.getElementById('enableSlug').checked,
+				enableCanvas: document.getElementById('enableCanvas').checked,
+				enableBitmap: document.getElementById('enableBitmap').checked,
+				slugSupersampling: document.getElementById('slugSupersampling').value === '1',
+				slugSamples: parseInt(document.getElementById('slugSamples').value, 10),
+				canvasResolution: parseInt(document.getElementById('canvasResolution').value, 10),
+				bitmapAtlasSize: parseInt(document.getElementById('bitmapAtlasSize').value, 10),
+				mode: document.getElementById('modeSelect').value
+			};
+		}
+
+		// Toggle settings body disabled state
+		function wireCheckbox(checkId, bodyId) {
+			var cb = document.getElementById(checkId);
+			var body = document.getElementById(bodyId);
+			var header = cb.closest('.settings-group-header');
+			function update() {
+				var off = !cb.checked;
+				body.classList.toggle('disabled', off);
+				if (header) header.classList.toggle('disabled', off);
+			}
+			cb.onchange = update;
+			update();
+		}
+		wireCheckbox('enableSlug', 'slugSettings');
+		wireCheckbox('enableCanvas', 'canvasSettings');
+		wireCheckbox('enableBitmap', 'bitmapSettings');
+
+		// ================================================================
+		//  Test Scenarios
+		// ================================================================
+
+		var sampleText = 'The quick brown fox jumps';
+		var sampleTexts = [
+			'The quick brown fox',
+			'jumps over the lazy dog',
+			'Pack my box with five',
+			'dozen liquor jugs',
+			'How vexingly quick daft',
+			'zebras jump!'
+		];
+
+		// Object count tiers used across all multi-object test types
+		// ---- Scenario generators for parameterized object counts ----
+
+		function makeObjectCountScenario(count) {
+			// Scale font size down as count grows so objects fit on canvas
+			var fontSize = count <= 10 ? 20 : count <= 100 ? 14 : 10;
+			var cols = count <= 10 ? 1 : count <= 100 ? 3 : count <= 1000 ? 8 : 10;
+			var colW = count <= 100 ? 260 : 100;
+			var rowH = count <= 100 ? Math.max(fontSize + 4, 15) : 11;
+			return {
+				name: 'Static ' + count + ' objects',
+				category: 'Object Count',
+				description: count + ' text objects at ' + fontSize + ' px',
+				setup: function (ctx) {
+					for (var i = 0; i < count; i++) {
+						var t = ctx.createText(sampleTexts[i % sampleTexts.length], fontSize);
+						t.x = 10 + (i % cols) * colW;
+						t.y = 5 + Math.floor(i / cols) * rowH;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+					}
+				}
+			};
+		}
+
+		function makeScrollScenario(count) {
+			return {
+				name: 'Scroll ' + count + ' objects',
+				category: 'Scroll',
+				description: count + ' objects scrolling at 120 px/s',
+				setup: function (ctx) {
+					ctx._scrollY = 0;
+					var container = new PIXI.Container();
+					var cols = count <= 100 ? 2 : count <= 1000 ? 4 : 6;
+					var colW = Math.floor((ctx.settings.canvasW - 20) / cols);
+					for (var i = 0; i < count; i++) {
+						var t = ctx.createText(sampleTexts[i % sampleTexts.length], 18);
+						t.x = 10 + (i % cols) * colW;
+						t.y = 5 + Math.floor(i / cols) * 22;
+						container.addChild(t);
+						ctx.objects.push(t);
+					}
+					ctx.app.stage.addChild(container);
+					ctx._scrollContainer = container;
+					ctx._contentH = Math.ceil(count / cols) * 22 + 30;
+				},
+				tick: function (ctx, elapsedMs, dtMs) {
+					ctx._scrollY -= (120 * dtMs / 1000);
+					if (ctx._scrollY < -ctx._contentH) ctx._scrollY = ctx.settings.canvasH;
+					ctx._scrollContainer.y = ctx._scrollY;
+				}
+			};
+		}
+
+		function makeMixedStressScenario(count) {
+			var sizes = [12, 16, 20, 26, 32];
+			var cols = count <= 10 ? 4 : count <= 100 ? 6 : count <= 1000 ? 10 : 14;
+			var colW = Math.floor(780 / cols);
+			var rowH = count <= 100 ? 58 : 28;
+			return {
+				name: 'Mixed stress ' + count,
+				category: 'Stress',
+				description: count + ' objects, scale + move + rotate',
+				setup: function (ctx) {
+					for (var i = 0; i < count; i++) {
+						var sz = sizes[i % sizes.length];
+						var t = ctx.createText(sampleTexts[i % sampleTexts.length], sz);
+						t.x = 20 + (i % cols) * colW;
+						t.y = 10 + Math.floor(i / cols) * rowH;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+					}
+				},
+				tick: function (ctx, elapsedMs) {
+					var s = 1.0 + 0.5 * Math.sin(elapsedMs / 800 * Math.PI);
+					var dx = 40 * Math.sin(elapsedMs / 1100 * Math.PI);
+					var rot = 0.15 * Math.sin(elapsedMs / 1400 * Math.PI);
+					for (var i = 0; i < ctx.objects.length; i++) {
+						ctx.objects[i].scale.set(s, s);
+						ctx.objects[i].x += dx * 0.008;
+						ctx.objects[i].rotation = rot;
+					}
+				}
+			};
+		}
+
+		function makeCreateDestroyScenario(count) {
+			var cols = count <= 10 ? 4 : count <= 100 ? 6 : count <= 1000 ? 10 : 14;
+			var colW = Math.floor(780 / cols);
+			var rowH = 30;
+			return {
+				name: 'Create/destroy ' + count,
+				category: 'Stress',
+				description: 'Create ' + count + ' objects, destroy, repeat every 500 ms',
+				setup: function (ctx) {
+					ctx._lastCycle = 0;
+					ctx._cycleObjects = [];
+				},
+				tick: function (ctx, elapsedMs) {
+					if (elapsedMs - ctx._lastCycle > 500) {
+						for (var i = 0; i < ctx._cycleObjects.length; i++) {
+							if (ctx._cycleObjects[i].parent) ctx._cycleObjects[i].parent.removeChild(ctx._cycleObjects[i]);
+							ctx._cycleObjects[i].destroy(true);
+						}
+						ctx._cycleObjects = [];
+						for (var j = 0; j < count; j++) {
+							var t = ctx.createText(sampleTexts[j % sampleTexts.length], 16 + (j % 4) * 6);
+							t.x = 10 + (j % cols) * colW;
+							t.y = 10 + Math.floor(j / cols) * rowH;
+							ctx.app.stage.addChild(t);
+							ctx._cycleObjects.push(t);
+						}
+						ctx._lastCycle = elapsedMs;
+					}
+				},
+				cleanup: function (ctx) {
+					for (var i = 0; i < ctx._cycleObjects.length; i++) {
+						if (ctx._cycleObjects[i].parent) ctx._cycleObjects[i].parent.removeChild(ctx._cycleObjects[i]);
+						ctx._cycleObjects[i].destroy(true);
+					}
+					ctx._cycleObjects = [];
+				}
+			};
+		}
+
+		// ---- Build scenario list from selected tiers ----
+
+		function buildScenarios(tiers) {
+			var list = [];
+
+			// Static (fixed, not tier-dependent)
+			list.push({
+				name: 'Static — 4 sizes',
+				category: 'Static',
+				description: 'Idle text at 16, 24, 32, 48 px',
+				setup: function (ctx) {
+					var sizes = [16, 24, 32, 48];
+					var y = 10;
+					for (var i = 0; i < sizes.length; i++) {
+						var t = ctx.createText(sampleText, sizes[i]);
+						t.x = 10; t.y = y;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+						y += sizes[i] * 1.5 + 12;
+					}
+				}
+			});
+			list.push({
+				name: 'Static — Large (120 px)',
+				category: 'Static',
+				description: 'Single text object at 120 px',
+				setup: function (ctx) {
+					var t = ctx.createText('Slug', 120);
+					t.x = 30; t.y = 50;
+					ctx.app.stage.addChild(t);
+					ctx.objects.push(t);
+				}
+			});
+
+			// Object Count variations (from tiers)
+			for (var i = 0; i < tiers.length; i++) {
+				list.push(makeObjectCountScenario(tiers[i]));
+			}
+
+			// Transform (fixed, not tier-dependent)
+			list.push({
+				name: 'Scale up/down',
+				category: 'Transform',
+				description: 'Oscillate scale 0.5× to 2.0×',
+				setup: function (ctx) {
+					var sizes = [16, 24, 32, 48];
+					var y = 20;
+					for (var j = 0; j < sizes.length; j++) {
+						var t = ctx.createText(sampleText, sizes[j]);
+						t.x = 10; t.y = y;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+						y += sizes[j] * 2 + 16;
+					}
+				},
+				tick: function (ctx, elapsedMs) {
+					var s = 1.25 + 0.75 * Math.sin(elapsedMs / 1500 * Math.PI);
+					for (var j = 0; j < ctx.objects.length; j++) {
+						ctx.objects[j].scale.set(s, s);
+					}
+				}
+			});
+			list.push({
+				name: 'Rotation',
+				category: 'Transform',
+				description: 'Rotating ±30° oscillation',
+				setup: function (ctx) {
+					var sizes = [16, 24, 32, 48];
+					var y = 80;
+					for (var j = 0; j < sizes.length; j++) {
+						var t = ctx.createText(sampleText, sizes[j]);
+						t.x = ctx.settings.canvasW / 2;
+						t.y = y;
+						t.pivot.set(150, sizes[j] / 2);
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+						y += sizes[j] * 2.5 + 20;
+					}
+				},
+				tick: function (ctx, elapsedMs) {
+					var angle = 0.52 * Math.sin(elapsedMs / 2000 * Math.PI);
+					for (var j = 0; j < ctx.objects.length; j++) {
+						ctx.objects[j].rotation = angle;
+					}
+				}
+			});
+
+			// Scroll variations (from tiers)
+			for (var i = 0; i < tiers.length; i++) {
+				list.push(makeScrollScenario(tiers[i]));
+			}
+
+			// Content change (fixed, not tier-dependent)
+			list.push({
+				name: 'Rapid text change',
+				category: 'Content',
+				description: 'Change text content every 200 ms',
+				setup: function (ctx) {
+					var t = ctx.createText(sampleText, 32);
+					t.x = 10; t.y = 50;
+					ctx.app.stage.addChild(t);
+					ctx.objects.push(t);
+					ctx._lastChange = 0;
+					ctx._changeIdx = 0;
+				},
+				tick: function (ctx, elapsedMs) {
+					if (elapsedMs - ctx._lastChange > 200) {
+						ctx._changeIdx = (ctx._changeIdx + 1) % sampleTexts.length;
+						ctx.objects[0].text = sampleTexts[ctx._changeIdx];
+						ctx._lastChange = elapsedMs;
+					}
+				}
+			});
+
+			// Mixed stress (from tiers)
+			for (var i = 0; i < tiers.length; i++) {
+				list.push(makeMixedStressScenario(tiers[i]));
+			}
+
+			// Create/destroy — cap at 200 to avoid context loss from rapid GPU churn
+			for (var i = 0; i < tiers.length; i++) {
+				if (tiers[i] <= 200) {
+					list.push(makeCreateDestroyScenario(tiers[i]));
+				}
+			}
+
+			return list;
+		}
+
+		// ================================================================
+		//  System definitions
+		// ================================================================
+
+		var systemDefs = {
+			slug: {
+				key: 'slug',
+				label: 'pixi-slug',
+				color: '#4a9aff',
+				enableId: 'enableSlug',
+				factory: function (text, size, resources, settings) {
+					var t = new pixiSlug.SlugText(text, resources.slugFont, size);
+					t.supersampling = settings.slugSupersampling;
+					t.supersampleCount = settings.slugSamples;
+					return t;
+				},
+				loadFont: async function (fontData, resources) {
+					var font = new pixiSlug.SlugFont(4096);
+					await font.load(fontData.slice(0));
+					resources.slugFont = font;
+				},
+				measureMemory: function (objects, resources) {
+					var mem = resources.slugFont ? resources.slugFont.memoryBytes() : 0;
+					for (var i = 0; i < objects.length; i++) {
+						if (objects[i].meshMemoryBytes) mem += objects[i].meshMemoryBytes();
+					}
+					return mem;
+				}
+			},
+			canvas: {
+				key: 'canvas',
+				label: 'PIXI.Text',
+				color: '#ffa04a',
+				enableId: 'enableCanvas',
+				factory: function (text, size, resources, settings) {
+					return new PIXI.Text({
+						text: text,
+						style: { fontFamily: 'BenchmarkFont', fontSize: size, fill: '#ffffff' },
+						resolution: settings.canvasResolution
+					});
+				},
+				loadFont: async function (fontData, resources) {
+					if (!resources.cssFontLoaded) {
+						var blob = new Blob([fontData], { type: 'font/ttf' });
+						var url = URL.createObjectURL(blob);
+						var face = new FontFace('BenchmarkFont', 'url(' + url + ')');
+						await face.load();
+						document.fonts.add(face);
+						resources.cssFontUrl = url;
+						resources.cssFontLoaded = true;
+					}
+				},
+				measureMemory: function (objects) {
+					var mem = 0;
+					for (var i = 0; i < objects.length; i++) {
+						var src = objects[i].texture && objects[i].texture.source;
+						if (src && src.pixelWidth > 0) mem += textureBytes(src);
+					}
+					return mem;
+				}
+			},
+			bitmap: {
+				key: 'bitmap',
+				label: 'BitmapText',
+				color: '#aa66ff',
+				enableId: 'enableBitmap',
+				factory: function (text, size, resources) {
+					return new PIXI.BitmapText({
+						text: text,
+						style: { fontFamily: 'BenchmarkBitmap', fontSize: size }
+					});
+				},
+				loadFont: async function (fontData, resources, settings) {
+					// CSS font needed for bitmap atlas generation
+					if (!resources.cssFontLoaded) {
+						var blob = new Blob([fontData], { type: 'font/ttf' });
+						var url = URL.createObjectURL(blob);
+						var face = new FontFace('BenchmarkFont', 'url(' + url + ')');
+						await face.load();
+						document.fonts.add(face);
+						resources.cssFontUrl = url;
+						resources.cssFontLoaded = true;
+					}
+					PIXI.BitmapFont.install({
+						name: 'BenchmarkBitmap',
+						style: { fontFamily: 'BenchmarkFont', fontSize: settings.bitmapAtlasSize, fill: '#ffffff' }
+					});
+					resources.bitmapFontInstalled = true;
+				},
+				measureMemory: function () {
+					var mem = 0;
+					var font = PIXI.Cache.get('BenchmarkBitmap-bitmap');
+					if (font && font.pages) {
+						for (var i = 0; i < font.pages.length; i++) {
+							var src = font.pages[i].texture && font.pages[i].texture.source;
+							if (src && src.pixelWidth > 0) mem += textureBytes(src);
+						}
+					}
+					return mem;
+				}
+			}
+		};
+
+		// ================================================================
+		//  Runner core
+		// ================================================================
+
+		var cancelled = false;
+
+		function waitFrames(app, count) {
+			return new Promise(function (resolve) {
+				var n = 0;
+				function tick() {
+					if (++n >= count) { app.ticker.remove(tick); resolve(); }
+				}
+				app.ticker.add(tick);
+			});
+		}
+
+		function timedRun(app, scenario, ctx, durationMs) {
+			return new Promise(function (resolve) {
+				var frameTimes = [];
+				var t0 = performance.now();
+				var startTime = t0;
+
+				function onTick() {
+					var now = performance.now();
+					var dt = now - t0;
+					frameTimes.push(dt);
+					t0 = now;
+
+					if (scenario.tick) {
+						scenario.tick(ctx, now - startTime, dt);
+					}
+
+					if (cancelled || now - startTime >= durationMs) {
+						app.ticker.remove(onTick);
+						resolve(frameTimes);
+					}
+				}
+
+				app.ticker.add(onTick);
+			});
+		}
+
+		function destroyObjects(objects) {
+			for (var i = 0; i < objects.length; i++) {
+				if (objects[i].parent) objects[i].parent.removeChild(objects[i]);
+				objects[i].destroy(true);
+			}
+			objects.length = 0;
+		}
+
+		async function createApp(settings) {
+			var bgColor = parseInt(settings.pixiBgColor.replace('#', ''), 16) || 0x16213e;
+			var app = new PIXI.Application();
+			await app.init({
+				width: settings.canvasW,
+				height: settings.canvasH,
+				backgroundColor: bgColor,
+				preferWebGLVersion: 2,
+				antialias: settings.pixiAntialias,
+				resolution: settings.pixiResolution,
+				powerPreference: settings.pixiPowerPref,
+				useBackBuffer: settings.pixiBackBuffer
+			});
+			if (PIXI.GraphicsContext && PIXI.GraphicsContext.defaultOptions && !isNaN(settings.pixiBezierSmoothness)) {
+				PIXI.GraphicsContext.defaultOptions.bezierSmoothness = settings.pixiBezierSmoothness;
+			}
+			app.ticker.maxFPS = 0; // uncapped for benchmarking
+			return app;
+		}
+
+		// ================================================================
+		//  Serial runner — one system at a time, full canvas
+		// ================================================================
+
+		async function runSerial(settings, fontData, enabledSystems, progressFn) {
+			var results = {};
+			var total = enabledSystems.length * scenarios.length;
+			var done = 0;
+			var canvasWrap = document.getElementById('canvasWrap');
+
+			for (var si = 0; si < enabledSystems.length; si++) {
+				if (cancelled) break;
+				var sys = enabledSystems[si];
+				results[sys.key] = {};
+
+				// Fresh app per system
+				var app = await createApp(settings);
+				canvasWrap.innerHTML = '';
+				canvasWrap.appendChild(app.canvas);
+
+				// Load fonts
+				var resources = {};
+				await sys.loadFont(fontData, resources, settings);
+
+				for (var ti = 0; ti < scenarios.length; ti++) {
+					if (cancelled) break;
+					var scenario = scenarios[ti];
+					done++;
+					progressFn(sys.label + ' — ' + scenario.name, done, total);
+
+					// Force GC if available
+					tryGC();
+					await sleep(50);
+
+					var heapBefore = heapNow();
+
+					// Setup — time object creation
+					var ctx = {
+						app: app,
+						objects: [],
+						settings: settings,
+						createText: function (text, size) {
+							return sys.factory(text, size, resources, settings);
+						}
+					};
+					var createT0 = performance.now();
+					scenario.setup(ctx);
+					app.render(); // force first render
+					var createMs = performance.now() - createT0;
+					var objectCount = ctx.objects.length;
+
+					// Warmup
+					await waitFrames(app, settings.warmupFrames);
+
+					// Measure memory after warmup
+					var gpuMem = sys.measureMemory(ctx.objects, resources);
+					var heapAfterSetup = heapNow();
+
+					// Timed run
+					var frameTimes = await timedRun(app, scenario, ctx, settings.durationMs);
+
+					var heapAfterRun = heapNow();
+
+					// Cleanup — time destruction
+					var destroyT0 = performance.now();
+					if (scenario.cleanup) scenario.cleanup(ctx);
+					destroyObjects(ctx.objects);
+
+					// Clear stage completely — destroy remaining children (containers, etc.)
+					while (app.stage.children.length > 0) {
+						var child = app.stage.children[0];
+						app.stage.removeChild(child);
+						if (!child.destroyed) child.destroy(true);
+					}
+					app.render();
+					var destroyMs = performance.now() - destroyT0;
+
+					results[sys.key][scenario.name] = {
+						timing: computeStats(frameTimes),
+						gpuMemory: gpuMem,
+						heapSetup: (heapBefore !== null && heapAfterSetup !== null) ? heapAfterSetup - heapBefore : null,
+						heapRun: (heapAfterSetup !== null && heapAfterRun !== null) ? heapAfterRun - heapAfterSetup : null,
+						objectCount: objectCount,
+						createMs: createMs,
+						destroyMs: destroyMs
+					};
+
+					// Let GPU reclaim freed buffers
+					tryGC();
+					await sleep(50);
+				}
+
+				app.destroy(true);
+				canvasWrap.innerHTML = '';
+			}
+
+			return results;
+		}
+
+		// ================================================================
+		//  Parallel runner — 3 side-by-side canvases
+		// ================================================================
+
+		async function runParallel(settings, fontData, enabledSystems, progressFn) {
+			var results = {};
+			var total = scenarios.length;
+			var canvasWrap = document.getElementById('canvasWrap');
+
+			// Create one app per system
+			var apps = [];
+			var resourcesList = [];
+			for (var si = 0; si < enabledSystems.length; si++) {
+				var sys = enabledSystems[si];
+				results[sys.key] = {};
+
+				var perSystemSettings = Object.assign({}, settings, {
+					canvasW: Math.floor(settings.canvasW / enabledSystems.length),
+					canvasH: settings.canvasH
+				});
+
+				var app = await createApp(perSystemSettings);
+				apps.push({ app: app, sys: sys, settings: perSystemSettings });
+
+				var resources = {};
+				await sys.loadFont(fontData, resources, settings);
+				resourcesList.push(resources);
+			}
+
+			canvasWrap.innerHTML = '';
+			for (var si = 0; si < apps.length; si++) {
+				// Label above each canvas
+				var label = document.createElement('div');
+				label.style.cssText = 'text-align:center;font-size:12px;color:' + apps[si].sys.color + ';margin-bottom:2px;';
+				label.textContent = apps[si].sys.label;
+				var col = document.createElement('div');
+				col.appendChild(label);
+				col.appendChild(apps[si].app.canvas);
+				canvasWrap.appendChild(col);
+			}
+
+			for (var ti = 0; ti < scenarios.length; ti++) {
+				if (cancelled) break;
+				var scenario = scenarios[ti];
+				progressFn(scenario.name + ' (all systems)', ti + 1, total);
+
+				tryGC();
+				await sleep(50);
+
+				// Setup all systems
+				var contexts = [];
+				var heapsBefore = [];
+				var createMsList = [];
+				var objectCounts = [];
+				for (var si = 0; si < apps.length; si++) {
+					var sysApp = apps[si].app;
+					var sys = apps[si].sys;
+					heapsBefore.push(heapNow());
+
+					var perSys = apps[si].settings;
+					var ctx = {
+						app: sysApp,
+						objects: [],
+						settings: perSys,
+						createText: (function (s, res) {
+							return function (text, size) {
+								return s.factory(text, size, res, settings);
+							};
+						})(sys, resourcesList[si])
+					};
+					var createT0 = performance.now();
+					scenario.setup(ctx);
+					sysApp.render();
+					createMsList.push(performance.now() - createT0);
+					objectCounts.push(ctx.objects.length);
+					contexts.push(ctx);
+				}
+
+				// Warmup all
+				var warmupPromises = [];
+				for (var si = 0; si < apps.length; si++) {
+					warmupPromises.push(waitFrames(apps[si].app, settings.warmupFrames));
+				}
+				await Promise.all(warmupPromises);
+
+				// Measure GPU memory
+				var gpuMems = [];
+				var heapsAfterSetup = [];
+				for (var si = 0; si < apps.length; si++) {
+					gpuMems.push(apps[si].sys.measureMemory(contexts[si].objects, resourcesList[si]));
+					heapsAfterSetup.push(heapNow());
+				}
+
+				// Run all in parallel
+				var runPromises = [];
+				for (var si = 0; si < apps.length; si++) {
+					runPromises.push(timedRun(apps[si].app, scenario, contexts[si], settings.durationMs));
+				}
+				var allFrameTimes = await Promise.all(runPromises);
+
+				// Cleanup all — time destruction per system
+				var destroyMsList = [];
+				for (var si = 0; si < apps.length; si++) {
+					var destroyT0 = performance.now();
+					if (scenario.cleanup) scenario.cleanup(contexts[si]);
+					destroyObjects(contexts[si].objects);
+					while (apps[si].app.stage.children.length > 0) {
+						var child = apps[si].app.stage.children[0];
+						apps[si].app.stage.removeChild(child);
+						if (!child.destroyed) child.destroy(true);
+					}
+					apps[si].app.render();
+					destroyMsList.push(performance.now() - destroyT0);
+				}
+
+				// Collect results
+				for (var si = 0; si < apps.length; si++) {
+					var heapAfterRun = heapNow();
+					results[apps[si].sys.key][scenario.name] = {
+						timing: computeStats(allFrameTimes[si]),
+						gpuMemory: gpuMems[si],
+						heapSetup: (heapsBefore[si] !== null && heapsAfterSetup[si] !== null) ? heapsAfterSetup[si] - heapsBefore[si] : null,
+						heapRun: (heapsAfterSetup[si] !== null && heapAfterRun !== null) ? heapAfterRun - heapsAfterSetup[si] : null,
+						objectCount: objectCounts[si],
+						createMs: createMsList[si],
+						destroyMs: destroyMsList[si]
+					};
+				}
+				tryGC();
+				await sleep(50);
+			}
+
+			// Destroy all apps
+			for (var si = 0; si < apps.length; si++) {
+				apps[si].app.destroy(true);
+			}
+			canvasWrap.innerHTML = '';
+
+			return results;
+		}
+
+		// ================================================================
+		//  Results rendering
+		// ================================================================
+
+		function renderResults(results, enabledSystems, settings) {
+			var html = '';
+
+			// Summary header
+			html += '<h2>Results — ' + settings.durationMs / 1000 + 's per test, ' +
+				settings.canvasW + '×' + settings.canvasH + ' canvas, ' +
+				settings.warmupFrames + ' warmup frames</h2>';
+
+			// Export button
+			html += '<button id="exportBtn" onclick="exportResults()">Export as JSON</button> ';
+			html += '<button id="copyBtn" onclick="copyResults()">Copy to clipboard</button>';
+
+			// Group scenarios by category
+			var categories = [];
+			var catMap = {};
+			for (var i = 0; i < scenarios.length; i++) {
+				var cat = scenarios[i].category;
+				if (!catMap[cat]) { catMap[cat] = []; categories.push(cat); }
+				catMap[cat].push(scenarios[i]);
+			}
+
+			for (var ci = 0; ci < categories.length; ci++) {
+				var cat = categories[ci];
+				var catScenarios = catMap[cat];
+
+				html += '<h3 style="color:#aac;margin:16px 0 8px;font-size:13px">' + cat + '</h3>';
+				html += '<table>';
+				html += '<tr><th style="width:200px">Scenario</th>';
+				for (var s = 0; s < enabledSystems.length; s++) {
+					html += '<th style="color:' + enabledSystems[s].color + '">' + enabledSystems[s].label + '</th>';
+				}
+				html += '</tr>';
+
+				for (var ti = 0; ti < catScenarios.length; ti++) {
+					var scenario = catScenarios[ti];
+					html += '<tr>';
+					html += '<td><strong>' + scenario.name + '</strong><br><span class="sl">' + scenario.description + '</span></td>';
+
+					// Collect values for best/worst
+					var fpsVals = [];
+					var p95Vals = [];
+					var memVals = [];
+					for (var s = 0; s < enabledSystems.length; s++) {
+						var r = results[enabledSystems[s].key] && results[enabledSystems[s].key][scenario.name];
+						fpsVals.push(r ? r.timing.fps : 0);
+						p95Vals.push(r ? r.timing.p95 : Infinity);
+						memVals.push(r ? r.gpuMemory : Infinity);
+					}
+
+					var bestFps = Math.max.apply(null, fpsVals);
+					var worstFps = Math.min.apply(null, fpsVals);
+
+					for (var s = 0; s < enabledSystems.length; s++) {
+						var r = results[enabledSystems[s].key] && results[enabledSystems[s].key][scenario.name];
+						if (!r) { html += '<td>—</td>'; continue; }
+
+						var t = r.timing;
+						var cls = '';
+						if (enabledSystems.length > 1) {
+							if (fpsVals[s] === bestFps && bestFps !== worstFps) cls = 'best';
+							else if (fpsVals[s] === worstFps && bestFps !== worstFps) cls = 'worst';
+						}
+
+						html += '<td class="' + cls + '">';
+
+						// Score: avg FPS
+						html += '<div class="row-line"><span class="score-big">' + t.fps.toFixed(1) + '</span> <span class="score-unit">avg FPS</span></div>';
+
+						// FPS range
+						html += '<div class="row-line"><span class="sl">FPS range: </span><span class="sv">' + t.fpsMin.toFixed(0) + ' – ' + t.fpsMax.toFixed(0) + '</span></div>';
+
+						// Frame timing
+						html += '<div class="row-line"><span class="sl">Frame: </span><span class="sv">' +
+							t.avg.toFixed(2) + ' ms avg, ' +
+							t.median.toFixed(2) + ' ms med, ' +
+							t.p95.toFixed(2) + ' ms p95</span></div>';
+
+						// Min/max frame
+						html += '<div class="row-line"><span class="sl">Min/Max: </span><span class="sv">' +
+							t.min.toFixed(2) + ' / ' + t.max.toFixed(2) + ' ms</span></div>';
+
+						// Frame count
+						html += '<div class="row-line"><span class="sl">Frames: </span><span class="sv">' + t.frames + '</span></div>';
+
+						// Object lifecycle
+						html += '<div class="row-line"><span class="sl">Objects: </span><span class="sv">' + r.objectCount + '</span></div>';
+						html += '<div class="row-line"><span class="sl">Create: </span><span class="sv">' + r.createMs.toFixed(2) + ' ms';
+						if (r.objectCount > 0) {
+							html += ' (' + (r.createMs / r.objectCount).toFixed(2) + ' ms/obj)';
+						}
+						html += '</span></div>';
+						html += '<div class="row-line"><span class="sl">Destroy: </span><span class="sv">' + r.destroyMs.toFixed(2) + ' ms';
+						if (r.objectCount > 0) {
+							html += ' (' + (r.destroyMs / r.objectCount).toFixed(2) + ' ms/obj)';
+						}
+						html += '</span></div>';
+
+						// GPU memory
+						html += '<div class="row-line"><span class="sl">GPU mem: </span><span class="sv">' + formatBytes(r.gpuMemory) + '</span></div>';
+
+						// Heap
+						if (r.heapSetup !== null) {
+							html += '<div class="row-line"><span class="sl">Heap (setup): </span><span class="sv">' + (r.heapSetup >= 0 ? '+' : '') + formatBytes(Math.abs(r.heapSetup)) + '</span></div>';
+							html += '<div class="row-line"><span class="sl">Heap (run): </span><span class="sv">' + (r.heapRun >= 0 ? '+' : '') + formatBytes(Math.abs(r.heapRun)) + '</span></div>';
+						} else {
+							html += '<div class="row-line"><span class="sl">Heap: </span><span class="sv">N/A (use --js-flags="--expose-gc")</span></div>';
+						}
+
+						html += '</td>';
+					}
+
+					html += '</tr>';
+				}
+
+				html += '</table>';
+			}
+
+			document.getElementById('results').innerHTML = html;
+			document.getElementById('results').style.display = 'block';
+
+			// Store for export
+			window.__benchResults = results;
+			window.__benchSettings = settings;
+			window.__benchSystems = enabledSystems.map(function (s) { return s.key; });
+		}
+
+		// ================================================================
+		//  Export
+		// ================================================================
+
+		window.exportResults = function () {
+			if (!window.__benchResults) return;
+			var data = {
+				timestamp: new Date().toISOString(),
+				settings: window.__benchSettings,
+				systems: window.__benchSystems,
+				scenarios: scenarios.map(function (s) { return { name: s.name, category: s.category, description: s.description }; }),
+				results: window.__benchResults
+			};
+			var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			var a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+			a.download = 'pixi-slug-benchmark-' + Date.now() + '.json';
+			a.click();
+			URL.revokeObjectURL(a.href);
+		};
+
+		window.copyResults = function () {
+			if (!window.__benchResults) return;
+			var data = {
+				timestamp: new Date().toISOString(),
+				settings: window.__benchSettings,
+				systems: window.__benchSystems,
+				scenarios: scenarios.map(function (s) { return { name: s.name, category: s.category, description: s.description }; }),
+				results: window.__benchResults
+			};
+			navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(function () {
+				var btn = document.getElementById('copyBtn');
+				btn.textContent = 'Copied!';
+				setTimeout(function () { btn.textContent = 'Copy to clipboard'; }, 1500);
+			});
+		};
+
+		// ================================================================
+		//  UI wiring
+		// ================================================================
+
+		// Current scenario list — rebuilt each run from selected tiers
+		var scenarios = [];
+
+		document.getElementById('btnStart').onclick = async function () {
+			var settings = getSettings();
+
+			// Build scenarios from selected tiers
+			if (settings.objectCountTiers.length === 0) {
+				document.getElementById('statusText').textContent = 'Select at least one object count tier';
+				return;
+			}
+			scenarios = buildScenarios(settings.objectCountTiers);
+
+			// Determine enabled systems
+			var enabledSystems = [];
+			if (settings.enableSlug) enabledSystems.push(systemDefs.slug);
+			if (settings.enableCanvas) enabledSystems.push(systemDefs.canvas);
+			if (settings.enableBitmap) enabledSystems.push(systemDefs.bitmap);
+
+			if (enabledSystems.length === 0) {
+				document.getElementById('statusText').textContent = 'Enable at least one text system';
+				return;
+			}
+
+			cancelled = false;
+			document.getElementById('btnStart').disabled = true;
+			document.getElementById('btnCancel').disabled = false;
+			document.getElementById('settingsPanel').style.opacity = '0.5';
+			document.getElementById('settingsPanel').style.pointerEvents = 'none';
+			document.getElementById('progressWrap').style.display = 'block';
+			document.getElementById('results').style.display = 'none';
+			document.getElementById('statusText').textContent = 'Running...';
+			document.getElementById('progressFill').style.width = '0%';
+
+			// Load font data
+			var fontResponse = await fetch('./font.ttf');
+			if (!fontResponse.ok) {
+				document.getElementById('statusText').textContent = 'Error: font.ttf not found in examples/comparison/';
+				resetUI();
+				return;
+			}
+			var fontData = await fontResponse.arrayBuffer();
+
+			function progressFn(label, done, total) {
+				document.getElementById('progressLabel').textContent = label + '  (' + done + '/' + total + ')';
+				document.getElementById('progressFill').style.width = (done / total * 100).toFixed(1) + '%';
+			}
+
+			var results;
+			try {
+				if (settings.mode === 'parallel') {
+					results = await runParallel(settings, fontData, enabledSystems, progressFn);
+				} else {
+					results = await runSerial(settings, fontData, enabledSystems, progressFn);
+				}
+			} catch (err) {
+				console.error('Benchmark error:', err);
+				document.getElementById('statusText').textContent = 'Error: ' + err.message;
+				resetUI();
+				return;
+			}
+
+			resetUI();
+
+			if (results && !cancelled) {
+				document.getElementById('statusText').textContent = 'Complete';
+				renderResults(results, enabledSystems, settings);
+			} else {
+				document.getElementById('statusText').textContent = cancelled ? 'Cancelled' : 'Error';
+			}
+		};
+
+		function resetUI() {
+			document.getElementById('btnStart').disabled = false;
+			document.getElementById('btnCancel').disabled = true;
+			document.getElementById('settingsPanel').style.opacity = '';
+			document.getElementById('settingsPanel').style.pointerEvents = '';
+			document.getElementById('progressWrap').style.display = 'none';
+		}
+
+		document.getElementById('btnCancel').onclick = function () {
+			cancelled = true;
+			document.getElementById('statusText').textContent = 'Cancelling...';
+		};
+
+	})();
+	</script>
+</body>
+</html>
