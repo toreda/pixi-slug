@@ -297,6 +297,11 @@
 			// Per-group scroll Y (world-space top of the group container).
 			var scrollY = [textStartY, textStartY, textStartY];
 
+			// Current scroll velocity in px/sec, lerped toward the target each frame.
+			var scrollVelocity = 0;
+			// How quickly velocity catches up to the target (higher = snappier).
+			var SCROLL_LERP_RATE = 4.0;
+
 			// ----- Group reset -----
 			// Restores every group to its default transform and resets all
 			// animation state. Called on every mode change before mode-specific
@@ -315,6 +320,7 @@
 				elapsedSec = 0;
 				// Reset scroll positions to the natural start.
 				for (var i = 0; i < 3; i++) scrollY[i] = textStartY;
+				scrollVelocity = 0;
 			}
 
 			// Button handlers
@@ -427,7 +433,12 @@
 			// ----- Scroll update -----
 			function updateScroll(dtSec) {
 				var groups = [slugGroup, textGroup, bitmapGroup];
-				var dy = SCROLL_SPEED * dtSec;
+
+				// Lerp velocity toward target speed — frame-rate independent exponential ease.
+				var targetVelocity = SCROLL_SPEED * speed;
+				scrollVelocity += (targetVelocity - scrollVelocity) * Math.min(SCROLL_LERP_RATE * dtSec, 1.0);
+
+				var dy = scrollVelocity * dtSec;
 
 				for (var gi = 0; gi < groups.length; gi++) {
 					scrollY[gi] += dy;
