@@ -5,4 +5,6 @@ export class Defaults {
 	public static readonly BAND_COUNT = 32 as const;
 	/** Default font size in pixels. */
 	public static readonly FONT_SIZE = 24 as const;
+	/** Default number of supersamples when supersampling is enabled. */
+	public static readonly SUPERSAMPLE_COUNT = 4 as const;
 }

@@ -23,7 +23,8 @@
       "Read(//tmp/**)",
       "Bash(pdftotext \"Dynamic Glyph Dilation - Eric Lengyel.pdf\" /tmp/dilation.txt)",
       "Bash(pdftotext \"Lengyel2017FontRendering.pdf\" /tmp/lengyel2017.txt)",
-      "Bash(pdftotext -layout \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_US10373352.pdf\" \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_text.txt\")"
+      "Bash(pdftotext -layout \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_US10373352.pdf\" \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_text.txt\")",
+      "Bash(npx tsc:*)"
     ]
   }
 }

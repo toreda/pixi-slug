@@ -17,6 +17,7 @@ export class SlugText extends Container {
 	private _curveTexture: Texture | null;
 	private _bandTexture: Texture | null;
 	private _supersampling: boolean;
+	private _supersampleCount: number;
 	private _uniforms: UniformGroup | null;
 	private _vertexBytes: number;
 	private _indexBytes: number;
@@ -32,6 +33,7 @@ export class SlugText extends Container {
 		this._curveTexture = null;
 		this._bandTexture = null;
 		this._supersampling = false;
+		this._supersampleCount = Defaults.SUPERSAMPLE_COUNT;
 		this._uniforms = null;
 		this._vertexBytes = 0;
 		this._indexBytes = 0;
@@ -83,7 +85,7 @@ export class SlugText extends Container {
 		this.rebuild();
 	}
 
-	/** Enable 4-sample rotated-grid supersampling for smoother edges. */
+	/** Enable supersampling for smoother edges. */
 	public get supersampling(): boolean {
 		return this._supersampling;
 	}
@@ -92,7 +94,20 @@ export class SlugText extends Container {
 		if (this._supersampling === value) return;
 		this._supersampling = value;
 		if (this._uniforms) {
-			this._uniforms.uniforms.uSupersampling = value ? 1 : 0;
+			this._uniforms.uniforms.uSupersampleCount = value ? this._supersampleCount : 0;
+		}
+	}
+
+	/** Number of supersamples (2, 4, 8, or 16). Only used when supersampling is true. */
+	public get supersampleCount(): number {
+		return this._supersampleCount;
+	}
+
+	public set supersampleCount(value: number) {
+		if (this._supersampleCount === value) return;
+		this._supersampleCount = value;
+		if (this._uniforms && this._supersampling) {
+			this._uniforms.uniforms.uSupersampleCount = value;
 		}
 	}
 
@@ -209,7 +224,7 @@ export class SlugText extends Container {
 
 		const { shader, uniforms } = slugShader(this._curveTexture, this._bandTexture);
 		this._uniforms = uniforms;
-		this._uniforms.uniforms.uSupersampling = this._supersampling ? 1 : 0;
+		this._uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		const mesh = new Mesh({ geometry, shader });
 		this._mesh = mesh;
 		this.addChild(mesh);
