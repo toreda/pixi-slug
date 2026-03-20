@@ -140,6 +140,90 @@
 		.tier-check { display: flex; align-items: center; gap: 3px; color: #ccc; font-size: 13px; cursor: pointer; white-space: nowrap; }
 		.tier-check input { accent-color: #4a6aae; cursor: pointer; }
 
+		/* ===== Test Toggle Grid ===== */
+		.test-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 8px;
+			width: 100%;
+		}
+		.test-grid.test-grid-5 {
+			grid-template-columns: repeat(5, 1fr);
+		}
+		.test-card {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 8px 6px 6px;
+			border-radius: 6px;
+			cursor: pointer;
+			user-select: none;
+			transition: background 0.15s, border-color 0.15s;
+			border: 1px solid transparent;
+		}
+		.test-card.on {
+			background: #1a2e1a;
+			border-color: #2a4a2a;
+		}
+		.test-card:not(.on) {
+			background: #3a2a10;
+			border-color: #5a3a10;
+		}
+		.test-card:hover { filter: brightness(1.15); }
+		.test-card-name {
+			font-size: 13px;
+			font-weight: 600;
+			color: #ccc;
+			margin-bottom: 6px;
+			text-align: center;
+			line-height: 1.2;
+		}
+		.test-card-icon {
+			width: 80px;
+			height: 50px;
+			margin-bottom: 4px;
+		}
+		.test-card-status {
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.3px;
+		}
+		.test-card.on .test-card-status { color: #5a9a5a; }
+		.test-card:not(.on) .test-card-status { color: #cc8833; }
+
+		.toggle-all-btn {
+			padding: 3px 10px;
+			font-size: 11px;
+			border: 1px solid #333;
+			background: #1a1a2e;
+			color: #999;
+			border-radius: 3px;
+			cursor: pointer;
+		}
+		.toggle-all-btn:hover { background: #2a2a4e; color: #ccc; }
+
+		/* ===== Test Plan ===== */
+		#testPlan table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 11px;
+		}
+		#testPlan th, #testPlan td {
+			padding: 4px 8px;
+			border: 1px solid #1a1a3a;
+			text-align: left;
+		}
+		#testPlan th { background: #16213e; color: #aac; font-weight: 600; position: sticky; top: 0; }
+		#testPlan td { background: #0d0d1a; }
+		#testPlan .plan-system { color: #888; }
+		#testPlan .plan-summary {
+			padding: 10px 12px;
+			font-size: 12px;
+			color: #aaa;
+			border-top: 1px solid #2a2a4e;
+		}
+		#testPlan .plan-summary strong { color: #ccc; }
+
 		/* ===== Run Controls ===== */
 		#runControls {
 			max-width: 900px;
@@ -296,8 +380,9 @@
 					</select>
 				</div>
 				<div class="setting">
-					<label for="pixiBezierSmoothness">Bezier Smoothness: <span class="info-icon">?<span class="info-tip">Controls the tessellation quality for PixiJS Graphics bezier curves. Lower values produce more segments (smoother curves). Does not affect Slug rendering which evaluates curves analytically in the shader.</span></span></label>
-					<input type="number" id="pixiBezierSmoothness" value="0.5" min="0" max="1" step="0.05">
+					<label for="pixiBezierSmoothness">Bezier Smoothness: <span class="info-icon">?<span class="info-tip">Controls the tessellation quality for PixiJS Graphics bezier curves. Lower values produce more segments (smoother curves). Does not affect Slug rendering which evaluates curves analytically in the shader. Pixi clamps this value between 0 and 1 (inclusive).</span></span></label>
+					<input type="range" id="pixiBezierSlider" value="0.5" min="0" max="1" step="0.1" style="width:100px;cursor:pointer;accent-color:#4a6aae">
+					<input type="number" id="pixiBezierSmoothness" value="0.5" min="0" max="1" step="0.05" style="width:60px">
 				</div>
 				<div class="setting">
 					<label for="pixiBackBuffer">Back Buffer: <span class="info-icon">?<span class="info-tip">When enabled, PixiJS uses a back buffer (offscreen framebuffer) for rendering. Can prevent visual tearing but adds a copy pass per frame.</span></span></label>
@@ -307,28 +392,15 @@
 					</select>
 				</div>
 				<div class="setting">
-					<label>Object Count Tiers: <span class="info-icon">?<span class="info-tip">Select which object count tiers to include in multi-object tests (Object Count, Scroll, Mixed Stress, Create/Destroy). Higher counts use more GPU memory and may cause context loss on some hardware.</span></span></label>
-					<span class="tier-checks">
-						<label class="tier-check"><input type="checkbox" class="objCountTier" value="10" checked> 10</label>
-						<label class="tier-check"><input type="checkbox" class="objCountTier" value="50" checked> 50</label>
-						<label class="tier-check"><input type="checkbox" class="objCountTier" value="100" checked> 100</label>
-						<label class="tier-check"><input type="checkbox" class="objCountTier" value="200"> 200</label>
-						<label class="tier-check"><input type="checkbox" class="objCountTier" value="500"> 500</label>
-					</span>
-				</div>
-				<div class="setting">
-					<label style="width:auto">Tests: <span class="info-icon">?<span class="info-tip">Select which test types to include. Uncheck tests you don't need to speed up repeated runs. Tier-dependent tests generate one scenario per selected tier above.</span></span></label>
-					<span class="tier-checks" id="testChecks">
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="static-sizes" checked> Static — 4 sizes</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="static-large" checked> Static — Large (120 px)</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="object-count" checked> Object Count (per tier)</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="scale" checked> Scale up/down</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="rotation" checked> Rotation</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="scroll" checked> Scroll (per tier)</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="text-change" checked> Rapid text change</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="mixed-stress" checked> Mixed stress (per tier)</label>
-						<label class="tier-check"><input type="checkbox" class="testToggle" value="create-destroy" checked> Create/destroy (per tier)</label>
-					</span>
+					<label for="fpsLimit">FPS Limit: <span class="info-icon">?<span class="info-tip">Cap the frame rate via PixiJS ticker.maxFPS. 0 = uncapped (measure max throughput). Set to 60 or 144 to simulate a vsync-locked display and measure frame-time consistency under a fixed budget.</span></span></label>
+					<select id="fpsLimit">
+						<option value="0">Uncapped</option>
+						<option value="30">30 FPS</option>
+						<option value="60" selected>60 FPS</option>
+						<option value="120">120 FPS</option>
+						<option value="144">144 FPS</option>
+						<option value="240">240 FPS</option>
+					</select>
 				</div>
 			</div>
 		</div>
@@ -395,6 +467,127 @@
 						<option value="96">96 px</option>
 					</select>
 				</div>
+			</div>
+		</div>
+
+		<!-- Benchmarking Tests -->
+		<div class="settings-group">
+			<div class="settings-group-header">Benchmarking Tests</div>
+			<div class="settings-group-body">
+				<div style="width:100%;margin-top:4px">
+					<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+						<label style="font-size:13px;color:#aaa">Object Count Tiers <span class="info-icon">?<span class="info-tip">Select which object count tiers to include in multi-object tests (Object Count, Scroll, Mixed Stress, Create/Destroy). Higher counts use more GPU memory and may cause context loss on some hardware.</span></span></label>
+						<span>
+							<button type="button" class="toggle-all-btn" onclick="toggleAllCards('[data-tier]', true)">Enable All</button>
+							<button type="button" class="toggle-all-btn" onclick="toggleAllCards('[data-tier]', false)">Disable All</button>
+						</span>
+					</div>
+					<div class="test-grid test-grid-5">
+						<div class="test-card on" data-tier="10">
+							<input type="checkbox" class="objCountTier" value="10" checked hidden>
+							<div class="test-card-name">10</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="10" y="28" font-size="22" fill="#aac">10</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-tier="50">
+							<input type="checkbox" class="objCountTier" value="50" checked hidden>
+							<div class="test-card-name">50</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="10" y="28" font-size="22" fill="#aac">50</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-tier="100">
+							<input type="checkbox" class="objCountTier" value="100" checked hidden>
+							<div class="test-card-name">100</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="6" y="28" font-size="20" fill="#aac">100</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card" data-tier="200">
+							<input type="checkbox" class="objCountTier" value="200" hidden>
+							<div class="test-card-name">200</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="6" y="28" font-size="20" fill="#aac">200</text></svg>
+							<div class="test-card-status">Disabled</div>
+						</div>
+						<div class="test-card" data-tier="500">
+							<input type="checkbox" class="objCountTier" value="500" hidden>
+							<div class="test-card-name">500</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="6" y="28" font-size="20" fill="#aac">500</text></svg>
+							<div class="test-card-status">Disabled</div>
+						</div>
+					</div>
+				</div>
+				<div style="width:100%;margin-top:12px">
+					<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+						<label style="font-size:13px;color:#aaa">Tests <span class="info-icon">?<span class="info-tip">Select which test types to include. Uncheck tests you don't need to speed up repeated runs. Tier-dependent tests generate one scenario per selected tier above. Click a card to toggle.</span></span></label>
+						<span>
+							<button type="button" class="toggle-all-btn" onclick="toggleAllCards('[data-test]', true)">Enable All</button>
+							<button type="button" class="toggle-all-btn" onclick="toggleAllCards('[data-test]', false)">Disable All</button>
+						</span>
+					</div>
+					<div class="test-grid">
+						<div class="test-card on" data-test="static-sizes">
+							<input type="checkbox" class="testToggle" value="static-sizes" checked hidden>
+							<div class="test-card-name">Static — 4 sizes</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="4" y="12" font-size="8" fill="#aac">Aa 16</text><text x="4" y="22" font-size="10" fill="#aac">Aa 24</text><text x="4" y="33" font-size="11" fill="#aac">Aa 32</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="static-large">
+							<input type="checkbox" class="testToggle" value="static-large" checked hidden>
+							<div class="test-card-name">Static — Large</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="6" y="30" font-size="24" fill="#aac">Aa</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="object-count">
+							<input type="checkbox" class="testToggle" value="object-count" checked hidden>
+							<div class="test-card-name">Object Count</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="2" y="9" font-size="6" fill="#aac">Aa</text><text x="22" y="9" font-size="6" fill="#aac">Bb</text><text x="42" y="9" font-size="6" fill="#aac">Cc</text><text x="2" y="19" font-size="6" fill="#aac">Dd</text><text x="22" y="19" font-size="6" fill="#aac">Ee</text><text x="42" y="19" font-size="6" fill="#aac">Ff</text><text x="2" y="29" font-size="6" fill="#aac">Gg</text><text x="22" y="29" font-size="6" fill="#aac">Hh</text><text x="42" y="29" font-size="6" fill="#668">...</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="scale">
+							<input type="checkbox" class="testToggle" value="scale" checked hidden>
+							<div class="test-card-name">Scale up/down</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="16" y="16" font-size="8" fill="#668">Aa</text><text x="8" y="32" font-size="16" fill="#aac">Aa</text><line x1="44" y1="8" x2="44" y2="36" stroke="#446" stroke-width="0.5"/><line x1="40" y1="8" x2="48" y2="8" stroke="#446" stroke-width="0.5"/><line x1="38" y1="36" x2="50" y2="36" stroke="#446" stroke-width="0.5"/></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="rotation">
+							<input type="checkbox" class="testToggle" value="rotation" checked hidden>
+							<div class="test-card-name">Rotation</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="10" y="28" font-size="12" fill="#aac" transform="rotate(-15,32,20)">Aa</text><path d="M48,10 A12,12 0 0,1 52,30" fill="none" stroke="#668" stroke-width="0.7"/><polygon points="51,30 54,28 53,32" fill="#668"/></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="scroll">
+							<input type="checkbox" class="testToggle" value="scroll" checked hidden>
+							<div class="test-card-name">Scroll</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="4" y="10" font-size="6" fill="#668">Line 1</text><text x="4" y="18" font-size="6" fill="#aac">Line 2</text><text x="4" y="26" font-size="6" fill="#aac">Line 3</text><text x="4" y="34" font-size="6" fill="#668">Line 4</text><line x1="56" y1="6" x2="56" y2="36" stroke="#446" stroke-width="1"/><rect x="54.5" y="12" width="3" height="10" rx="1" fill="#668"/></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="text-change">
+							<input type="checkbox" class="testToggle" value="text-change" checked hidden>
+							<div class="test-card-name">Text change</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="4" y="18" font-size="9" fill="#668"><tspan text-decoration="line-through">Hello</tspan></text><text x="4" y="32" font-size="9" fill="#aac">World</text><text x="46" y="24" font-size="14" fill="#446">⟳</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="mixed-stress">
+							<input type="checkbox" class="testToggle" value="mixed-stress" checked hidden>
+							<div class="test-card-name">Mixed stress</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="2" y="14" font-size="7" fill="#aac" transform="rotate(-8,16,12)">Aa</text><text x="30" y="20" font-size="10" fill="#aac" transform="rotate(5,40,18)">Bb</text><text x="10" y="34" font-size="9" fill="#668">Cc</text><text x="44" y="36" font-size="6" fill="#aac">Dd</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+						<div class="test-card on" data-test="create-destroy">
+							<input type="checkbox" class="testToggle" value="create-destroy" checked hidden>
+							<div class="test-card-name">Create/destroy</div>
+							<svg class="test-card-icon" viewBox="0 0 64 40"><text x="6" y="16" font-size="10" fill="#4a4">+</text><text x="18" y="16" font-size="7" fill="#aac">Aa</text><text x="6" y="32" font-size="10" fill="#a44">×</text><text x="18" y="32" font-size="7" fill="#668">Aa</text><text x="42" y="24" font-size="14" fill="#446">⟳</text></svg>
+							<div class="test-card-status">Enabled</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Test Plan (auto-generated) -->
+		<div class="settings-group">
+			<div class="settings-group-header">Test Plan</div>
+			<div class="settings-group-body" style="padding:0">
+				<div id="testPlan" style="width:100%;max-height:400px;overflow-y:auto"></div>
 			</div>
 		</div>
 	</div>
@@ -503,6 +696,133 @@
 			}
 		};
 
+		// Sync bezier smoothness slider ↔ number input (clamped 0–1)
+		document.getElementById('pixiBezierSlider').oninput = function () {
+			document.getElementById('pixiBezierSmoothness').value = this.value;
+		};
+		document.getElementById('pixiBezierSmoothness').oninput = function () {
+			var v = parseFloat(this.value);
+			if (isNaN(v) || v < 0) { v = 0; this.value = '0'; }
+			if (v > 1) { v = 1; this.value = '1'; }
+			document.getElementById('pixiBezierSlider').value = String(v);
+		};
+
+		// Wire test card click → toggle checkbox + visual state
+		document.querySelectorAll('.test-card').forEach(function (card) {
+			card.addEventListener('click', function () {
+				var cb = card.querySelector('input[type="checkbox"]');
+				if (!cb) return;
+				cb.checked = !cb.checked;
+				card.classList.toggle('on', cb.checked);
+				card.querySelector('.test-card-status').textContent = cb.checked ? 'Enabled' : 'Disabled';
+				rebuildTestPlan();
+			});
+		});
+
+		// Enable/disable all cards matching a selector
+		window.toggleAllCards = function (selector, enable) {
+			document.querySelectorAll(selector).forEach(function (card) {
+				var cb = card.querySelector('input[type="checkbox"]');
+				if (!cb) return;
+				cb.checked = enable;
+				card.classList.toggle('on', enable);
+				card.querySelector('.test-card-status').textContent = enable ? 'Enabled' : 'Disabled';
+			});
+			rebuildTestPlan();
+		};
+
+		// ================================================================
+		//  Test Plan builder
+		// ================================================================
+
+		function formatTime(ms) {
+			if (ms < 1000) return ms + ' ms';
+			var s = ms / 1000;
+			if (s < 60) return s.toFixed(1) + 's';
+			var m = Math.floor(s / 60);
+			return m + 'm ' + Math.round(s % 60) + 's';
+		}
+
+		function rebuildTestPlan() {
+			var container = document.getElementById('testPlan');
+			if (!container || !systemDefs) return;
+
+			var tiers = getSelectedTiers();
+			var enabledTests = getSelectedTests();
+			var durationMs = parseInt(document.getElementById('duration').value, 10) || 3000;
+
+			// Determine enabled systems
+			var systems = [];
+			if (document.getElementById('enableSlug').checked) systems.push(systemDefs.slug);
+			if (document.getElementById('enableCanvas').checked) systems.push(systemDefs.canvas);
+			if (document.getElementById('enableBitmap').checked) systems.push(systemDefs.bitmap);
+
+			// Build scenario list
+			var planScenarios = buildScenarios(tiers, enabledTests);
+
+			if (systems.length === 0 || planScenarios.length === 0) {
+				container.innerHTML = '<div class="plan-summary">No tests to run. Enable at least one text system and one test.</div>';
+				return;
+			}
+
+			// Build flat row list: for each system → for each scenario
+			var rows = [];
+			var cumulativeMs = 0;
+			for (var si = 0; si < systems.length; si++) {
+				for (var ti = 0; ti < planScenarios.length; ti++) {
+					rows.push({
+						system: systems[si].label,
+						systemColor: systems[si].color,
+						scenario: planScenarios[ti].name,
+						category: planScenarios[ti].category,
+						description: planScenarios[ti].description,
+						index: rows.length + 1,
+						startMs: cumulativeMs,
+						durationMs: durationMs
+					});
+					cumulativeMs += durationMs;
+				}
+			}
+
+			var totalTests = rows.length;
+			var totalMs = cumulativeMs;
+
+			// Render table
+			var html = '<table>';
+			html += '<tr><th>#</th><th>System</th><th>Test</th><th>Details</th><th>Duration</th><th>Starts at</th></tr>';
+
+			var prevSystem = '';
+			for (var i = 0; i < rows.length; i++) {
+				var r = rows[i];
+				// Visual separator between systems
+				if (r.system !== prevSystem && i > 0) {
+					html += '<tr><td colspan="6" style="background:#16213e;padding:2px;border:none"></td></tr>';
+				}
+				prevSystem = r.system;
+
+				html += '<tr>';
+				html += '<td style="color:#556;text-align:right">' + r.index + '</td>';
+				html += '<td class="plan-system" style="color:' + r.systemColor + '">' + r.system + '</td>';
+				html += '<td>' + r.scenario + '</td>';
+				html += '<td style="color:#888">' + r.description + '</td>';
+				html += '<td>' + formatTime(r.durationMs) + '</td>';
+				html += '<td style="color:#668">' + formatTime(r.startMs) + '</td>';
+				html += '</tr>';
+			}
+			html += '</table>';
+
+			// Summary
+			html += '<div class="plan-summary">';
+			html += '<strong>' + totalTests + '</strong> tests';
+			html += ' across <strong>' + systems.length + '</strong> system' + (systems.length !== 1 ? 's' : '');
+			html += ' &times; <strong>' + planScenarios.length + '</strong> scenario' + (planScenarios.length !== 1 ? 's' : '');
+			html += ' &mdash; estimated total: <strong>' + formatTime(totalMs) + '</strong>';
+			html += ' (excludes warmup and setup overhead)';
+			html += '</div>';
+
+			container.innerHTML = html;
+		}
+
 		function getSelectedTiers() {
 			var tiers = [];
 			var checks = document.querySelectorAll('.objCountTier');
@@ -534,6 +854,7 @@
 				pixiPowerPref: document.getElementById('pixiPowerPref').value,
 				pixiBezierSmoothness: parseFloat(document.getElementById('pixiBezierSmoothness').value),
 				pixiBackBuffer: document.getElementById('pixiBackBuffer').value === '1',
+				fpsLimit: parseInt(document.getElementById('fpsLimit').value, 10) || 0,
 				objectCountTiers: getSelectedTiers(),
 				enabledTests: getSelectedTests(),
 				enableSlug: document.getElementById('enableSlug').checked,
@@ -556,6 +877,7 @@
 				var off = !cb.checked;
 				body.classList.toggle('disabled', off);
 				if (header) header.classList.toggle('disabled', off);
+				rebuildTestPlan();
 			}
 			cb.onchange = update;
 			update();
@@ -563,6 +885,121 @@
 		wireCheckbox('enableSlug', 'slugSettings');
 		wireCheckbox('enableCanvas', 'canvasSettings');
 		wireCheckbox('enableBitmap', 'bitmapSettings');
+
+		// Rebuild test plan when duration changes
+		document.getElementById('duration').onchange = function () { rebuildTestPlan(); };
+
+		// ================================================================
+		//  Settings persistence (localStorage)
+		//  Saved only when "Start Benchmark" is clicked — acts as a checkpoint.
+		//  On reload, the page restores the last-started settings.
+		// ================================================================
+
+		var STORAGE_KEY = 'pixi-slug-bench-settings';
+
+		function saveSettings(settings) {
+			try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) { /* quota/private */ }
+		}
+
+		function loadSettings() {
+			try {
+				var raw = localStorage.getItem(STORAGE_KEY);
+				if (!raw) return null;
+				return JSON.parse(raw);
+			} catch (e) { return null; }
+		}
+
+		function applySettings(s) {
+			if (!s) return;
+
+			// Simple value elements: id → settings key → value
+			var selects = {
+				duration: s.durationMs,
+				pixiAntialias: s.pixiAntialias ? '1' : '0',
+				pixiPowerPref: s.pixiPowerPref,
+				pixiBackBuffer: s.pixiBackBuffer ? '1' : '0',
+				fpsLimit: String(s.fpsLimit || 0),
+				slugSupersampling: s.slugSupersampling ? '1' : '0',
+				slugSamples: s.slugSamples,
+				canvasResolution: s.canvasResolution,
+				bitmapAtlasSize: s.bitmapAtlasSize,
+				modeSelect: s.mode
+			};
+			for (var id in selects) {
+				var el = document.getElementById(id);
+				if (el && selects[id] !== undefined) el.value = String(selects[id]);
+			}
+
+			// Number inputs
+			var numbers = {
+				warmupFrames: s.warmupFrames,
+				canvasW: s.canvasW,
+				canvasH: s.canvasH,
+				pixiResolution: s.pixiResolution,
+				pixiBezierSmoothness: s.pixiBezierSmoothness
+			};
+			for (var id in numbers) {
+				var el = document.getElementById(id);
+				if (el && numbers[id] !== undefined) el.value = String(numbers[id]);
+			}
+
+			// Sync bezier slider to match restored number input
+			if (s.pixiBezierSmoothness !== undefined) {
+				document.getElementById('pixiBezierSlider').value = String(s.pixiBezierSmoothness);
+			}
+
+			// Color
+			if (s.pixiBgColor) {
+				document.getElementById('pixiBgColor').value = s.pixiBgColor;
+				if (/^#[0-9a-fA-F]{6}$/.test(s.pixiBgColor)) {
+					document.getElementById('pixiBgColorPicker').value = s.pixiBgColor;
+				}
+			}
+
+			// Checkboxes: system enables
+			if (s.enableSlug !== undefined) document.getElementById('enableSlug').checked = s.enableSlug;
+			if (s.enableCanvas !== undefined) document.getElementById('enableCanvas').checked = s.enableCanvas;
+			if (s.enableBitmap !== undefined) document.getElementById('enableBitmap').checked = s.enableBitmap;
+
+			// Re-run wireCheckbox updates so disabled styling matches
+			['enableSlug', 'enableCanvas', 'enableBitmap'].forEach(function (id) {
+				var cb = document.getElementById(id);
+				if (cb && cb.onchange) cb.onchange();
+			});
+
+			// Object count tier cards + checkboxes
+			if (s.objectCountTiers) {
+				var tierSet = {};
+				for (var i = 0; i < s.objectCountTiers.length; i++) tierSet[s.objectCountTiers[i]] = true;
+				var tierCards = document.querySelectorAll('[data-tier]');
+				for (var i = 0; i < tierCards.length; i++) {
+					var cb = tierCards[i].querySelector('.objCountTier');
+					if (!cb) continue;
+					var isOn = !!tierSet[parseInt(cb.value, 10)];
+					cb.checked = isOn;
+					tierCards[i].classList.toggle('on', isOn);
+					tierCards[i].querySelector('.test-card-status').textContent = isOn ? 'Enabled' : 'Disabled';
+				}
+			}
+
+			// Test toggle checkboxes + card visual state
+			if (s.enabledTests) {
+				var testCards = document.querySelectorAll('[data-test]');
+				for (var i = 0; i < testCards.length; i++) {
+					var cb = testCards[i].querySelector('.testToggle');
+					if (!cb) continue;
+					var key = cb.value;
+					if (s.enabledTests[key] !== undefined) {
+						cb.checked = s.enabledTests[key];
+						testCards[i].classList.toggle('on', cb.checked);
+						testCards[i].querySelector('.test-card-status').textContent = cb.checked ? 'Enabled' : 'Disabled';
+					}
+				}
+			}
+		}
+
+		// Restore saved settings on page load
+		applySettings(loadSettings());
 
 		// ================================================================
 		//  Test Scenarios
@@ -954,6 +1391,9 @@
 			}
 		};
 
+		// Initial test plan render (must be after systemDefs is defined)
+		rebuildTestPlan();
+
 		// ================================================================
 		//  Runner core
 		// ================================================================
@@ -1020,7 +1460,7 @@
 			if (PIXI.GraphicsContext && PIXI.GraphicsContext.defaultOptions && !isNaN(settings.pixiBezierSmoothness)) {
 				PIXI.GraphicsContext.defaultOptions.bezierSmoothness = settings.pixiBezierSmoothness;
 			}
-			app.ticker.maxFPS = 0; // uncapped for benchmarking
+			app.ticker.maxFPS = settings.fpsLimit || 0; // 0 = uncapped
 			return app;
 		}
 
@@ -1558,6 +1998,7 @@
 			html += '<tr><td>GPU Power Preference</td><td>' + settings.pixiPowerPref + '</td></tr>';
 			html += '<tr><td>Bezier Smoothness</td><td>' + settings.pixiBezierSmoothness + '</td></tr>';
 			html += '<tr><td>Back Buffer</td><td>' + (settings.pixiBackBuffer ? 'Enabled' : 'Disabled') + '</td></tr>';
+			html += '<tr><td>FPS Limit</td><td>' + (settings.fpsLimit ? settings.fpsLimit + ' FPS' : 'Uncapped') + '</td></tr>';
 			html += '<tr><td>Object Count Tiers</td><td>' + settings.objectCountTiers.join(', ') + '</td></tr>';
 			var enabledTestNames = [];
 			var et = settings.enabledTests || {};
@@ -1660,6 +2101,9 @@
 
 		document.getElementById('btnStart').onclick = async function () {
 			var settings = getSettings();
+
+			// Checkpoint: save settings so they persist across page reloads.
+			saveSettings(settings);
 
 			// Build scenarios from selected tiers and tests
 			scenarios = buildScenarios(settings.objectCountTiers, settings.enabledTests);

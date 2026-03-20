@@ -3,6 +3,11 @@ import path from 'path';
 import type { Configuration, Compiler } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 
+// webpack-cli 7 may load .ts configs as ESM (where ROOT is unavailable)
+// or CJS (where import.meta is unavailable). Use process.cwd() which works
+// in both — webpack is always invoked from the project root via pnpm scripts.
+const ROOT = process.cwd();
+
 /**
  * Webpack plugin that removes all contents of the output directory before
  * each build. Only cleans if the directory already exists.
@@ -88,9 +93,9 @@ function buildConfig(version: PixiVersion, target: BuildTarget): Configuration {
 		name: `${version}:${target}`,
 		mode: isProd ? 'production' : 'development',
 		devtool: isProd ? false : 'source-map',
-		entry: path.resolve(__dirname, 'src', version, 'index.ts'),
+		entry: path.resolve(ROOT, 'src', version, 'index.ts'),
 		output: {
-			path: path.resolve(__dirname, 'dist', version),
+			path: path.resolve(ROOT, 'dist', version),
 			filename: 'index.js',
 			library: {
 				name: 'pixiSlug',
@@ -111,7 +116,7 @@ function buildConfig(version: PixiVersion, target: BuildTarget): Configuration {
 					use: {
 						loader: 'ts-loader',
 						options: {
-							configFile: path.resolve(__dirname, `tsconfig.${version}.json`),
+							configFile: path.resolve(ROOT, `tsconfig.${version}.json`),
 							compilerOptions: {
 								declaration: false,
 								declarationMap: false,

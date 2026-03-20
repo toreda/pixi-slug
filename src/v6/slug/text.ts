@@ -1,11 +1,12 @@
-import { BaseTexture, Buffer, FORMATS, Geometry, TYPES, Texture } from '@pixi/core';
-import { Container } from '@pixi/display';
-import { Mesh } from '@pixi/mesh';
-import type { Shader } from '@pixi/core';
-import { Defaults } from '../../defaults';
-import { SlugFont } from '../../shared/slug/font';
-import { slugGlyphQuads } from '../../shared/slug/glyph/quad';
-import { slugShader } from './shader';
+import {Buffer, Geometry, TYPES} from '@pixi/core';
+import {Container} from '@pixi/display';
+import {Mesh} from '@pixi/mesh';
+import type {Shader} from '@pixi/core';
+import {Defaults} from '../../defaults';
+import {SlugFont} from '../../shared/slug/font';
+import {slugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugFontGpuV6} from './font/gpu';
+import {slugShader} from './shader';
 
 /**
  * Renderable text element using the Slug algorithm for PixiJS v6.
@@ -13,15 +14,17 @@ import { slugShader } from './shader';
  *
  * Note: Requires WebGL2. The application must be configured with
  * `preferWebGLVersion: 2` to enable the WebGL2 features required by Slug.
+ *
+ * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
+ * and shared across all SlugText instances using the same font. SlugText owns only
+ * its per-instance vertex/index buffers and mesh.
  */
 export class SlugText extends Container {
 	private _text: string;
-	private _font: SlugFont;
+	private _fontRef: WeakRef<SlugFont>;
 	private _fontSize: number;
 	private _color: [number, number, number, number];
 	private _mesh: Mesh<Shader> | null;
-	private _curveTexture: Texture | null;
-	private _bandTexture: Texture | null;
 	private _supersampling: boolean;
 	private _supersampleCount: number;
 	private _shader: Shader | null;
@@ -32,12 +35,10 @@ export class SlugText extends Container {
 	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
 		super();
 		this._text = text;
-		this._font = font;
+		this._fontRef = new WeakRef(font);
 		this._fontSize = fontSize;
 		this._color = [1, 1, 1, 1];
 		this._mesh = null;
-		this._curveTexture = null;
-		this._bandTexture = null;
 		this._supersampling = false;
 		this._supersampleCount = Defaults.SUPERSAMPLE_COUNT;
 		this._shader = null;
@@ -59,14 +60,16 @@ export class SlugText extends Container {
 		this.rebuild();
 	}
 
-	/** The Slug font used for rendering. */
-	public get font(): SlugFont {
-		return this._font;
+	/**
+	 * The Slug font used for rendering, or null if the font has been garbage collected.
+	 */
+	public get font(): SlugFont | null {
+		return this._fontRef.deref() ?? null;
 	}
 
 	public set font(value: SlugFont) {
-		if (this._font === value) return;
-		this._font = value;
+		if (this._fontRef.deref() === value) return;
+		this._fontRef = new WeakRef(value);
 		this.rebuild();
 	}
 
@@ -119,35 +122,32 @@ export class SlugText extends Container {
 	}
 
 	/**
-	 * Build mesh geometry and shader for current text + font.
-	 * Creates per-glyph quads with the 5 vertex attributes required by the Slug shaders,
-	 * creates separate curve and band GPU textures from the font data, and assembles a Mesh.
+	 * Build mesh geometry for current text + font.
+	 * Textures and shader program come from the font's shared GPU cache.
 	 */
 	private rebuild(): void {
 		this._rebuildCount++;
-		// Clean up previous mesh and textures
+
+		// Clean up previous mesh (per-instance resource).
 		if (this._mesh) {
 			this.removeChild(this._mesh);
 			this._mesh.destroy();
 			this._mesh = null;
 		}
-		this._curveTexture?.destroy();
-		this._bandTexture?.destroy();
-		this._curveTexture = null;
-		this._bandTexture = null;
 
-		if (this._text.length === 0 || this._font.glyphs.size === 0) {
+		const font = this._fontRef.deref();
+		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
 			return;
 		}
 
 		// Build per-glyph quads with all 5 vertex attributes
 		const quads = slugGlyphQuads(
 			this._text,
-			this._font.glyphs,
-			this._font.advances,
-			this._font.unitsPerEm,
+			font.glyphs,
+			font.advances,
+			font.unitsPerEm,
 			this._fontSize,
-			this._font.textureWidth,
+			font.textureWidth,
 			this._color
 		);
 
@@ -160,7 +160,7 @@ export class SlugText extends Container {
 		this._indexBytes = quads.indices.byteLength;
 
 		// Create geometry with 5 interleaved vec4 attributes
-		const stride = 20 * 4; // 20 floats * 4 bytes per float
+		const stride = 20 * 4;
 		const vertexBuffer = new Buffer(quads.vertices.buffer as ArrayBuffer, true);
 		const geometry = new Geometry();
 
@@ -169,43 +169,20 @@ export class SlugText extends Container {
 		geometry.addAttribute('aJacobian', vertexBuffer, 4, false, TYPES.FLOAT, stride, 8 * 4);
 		geometry.addAttribute('aBanding', vertexBuffer, 4, false, TYPES.FLOAT, stride, 12 * 4);
 		geometry.addAttribute('aColor', vertexBuffer, 4, false, TYPES.FLOAT, stride, 16 * 4);
+
 		// PixiJS v6 only supports Uint16 index buffers. Convert from Uint32.
-		// Max 65535 vertices = ~16383 glyphs — sufficient for text rendering.
 		const indices16 = new Uint16Array(quads.indices.length);
 		for (let i = 0; i < quads.indices.length; i++) {
 			indices16[i] = quads.indices[i];
 		}
 		geometry.addIndex(indices16 as any);
 
-		// Curve texture: RGBA float32
-		const textureWidth = this._font.textureWidth;
-		const curveRows = Math.ceil(this._font.curveData.length / 4 / textureWidth) || 1;
-		const curveBase = BaseTexture.fromBuffer(this._font.curveData, textureWidth, curveRows, {
-			format: FORMATS.RGBA,
-			type: TYPES.FLOAT
-		});
-		this._curveTexture = new Texture(curveBase);
+		// GPU resources from font cache (created once, shared).
+		const gpu = slugFontGpuV6(font);
 
-		// Band texture: Uint32 integer values converted to Float32 float values
-		// and uploaded as RGBA FLOAT. The shader recovers uint values via
-		// float-to-uint cast: uint(raw.x + 0.5). Safe for values < 2^24.
-		// DO NOT use RGBA_INTEGER — the shader uses sampler2D, not usampler2D.
-		const bandRows = Math.ceil(this._font.bandData.length / 4 / textureWidth) || 1;
-		const bandFloat = new Float32Array(this._font.bandData.length);
-		for (let i = 0; i < this._font.bandData.length; i++) {
-			bandFloat[i] = this._font.bandData[i];
-		}
-		const bandBase = BaseTexture.fromBuffer(bandFloat, textureWidth, bandRows, {
-			format: FORMATS.RGBA,
-			type: TYPES.FLOAT
-		});
-		this._bandTexture = new Texture(bandBase);
-
-		// Create shader with resolution. In v6, uResolution is not auto-populated
-		// so we pass it at shader creation time. For dynamic resize, it would need
-		// to be updated per frame.
+		// Per-instance shader with shared program + textures.
 		// TODO: Update resolution on resize.
-		const shader = slugShader(this._curveTexture, this._bandTexture, [800, 400]);
+		const shader = slugShader(gpu.program, gpu.curveTexture, gpu.bandTexture, [800, 400]);
 		this._shader = shader;
 		shader.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		this._mesh = new Mesh(geometry, shader);
@@ -230,13 +207,13 @@ export class SlugText extends Container {
 	 * Use this when the font is not shared, or to get a complete per-instance total.
 	 */
 	public totalMemoryBytes(): number {
-		return this.meshMemoryBytes() + this._font.memoryBytes();
+		const font = this._fontRef.deref();
+		return this.meshMemoryBytes() + (font ? font.memoryBytes() : 0);
 	}
 
 	public destroy(): void {
 		this._mesh?.destroy();
-		this._curveTexture?.destroy();
-		this._bandTexture?.destroy();
+		// DO NOT destroy textures — they belong to the font's GPU cache.
 		super.destroy();
 	}
 }
