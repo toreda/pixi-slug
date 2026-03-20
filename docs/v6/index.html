@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pixi-slug — PixiJS v6 Example</title>
+	<style>
+		body {
+			margin: 0;
+			background: #1a1a2e;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			font-family: sans-serif;
+			color: #eee;
+		}
+		h1 {
+			margin-bottom: 16px;
+			font-size: 1.4rem;
+		}
+		canvas {
+			border: 1px solid #333;
+		}
+	</style>
+</head>
+<body>
+	<h1>pixi-slug — PixiJS v6</h1>
+	<div id="app"></div>
+
+	<!-- PixiJS v6 via CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/pixi.js@6/dist/browser/pixi.min.js"></script>
+
+	<!-- pixi-slug v6 bundle (build with: pnpm run build:v6) -->
+	<script src="../dist/v6/index.js"></script>
+
+	<script>
+		(async function () {
+			var app = new PIXI.Application({
+				width: 800,
+				height: 400,
+				backgroundColor: 0x1a1a2e,
+				preferWebGLVersion: 2
+			});
+			document.getElementById('app').appendChild(app.view);
+
+			// Load a font file
+			var fontResponse = await fetch('./font.ttf');
+			if (!fontResponse.ok) {
+				console.warn('No font.ttf found in examples/v6/. Place a .ttf file there to see rendered text.');
+				var info = new PIXI.Text('Place a font.ttf file in examples/v6/ to see Slug rendering.', {
+					fill: '#ffffff',
+					fontSize: 18
+				});
+				info.x = 40;
+				info.y = 180;
+				app.stage.addChild(info);
+				return;
+			}
+
+			var fontData = await fontResponse.arrayBuffer();
+			var font = new pixiSlug.SlugFont(4096);
+			await font.load(fontData);
+
+			var slugText = new pixiSlug.SlugText('Hello, Slug!', font, 48);
+			slugText.position.set(40, 120);
+			app.stage.addChild(slugText);
+
+			var slugText2 = new pixiSlug.SlugText('GPU Bezier Text Rendering', font, 32);
+			slugText2.position.set(40, 200);
+			app.stage.addChild(slugText2);
+
+			var slugText3 = new pixiSlug.SlugText('pixi-slug + PixiJS v6', font, 24);
+			slugText3.position.set(40, 260);
+			app.stage.addChild(slugText3);
+		})();
+	</script>
+</body>
+</html>

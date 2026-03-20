@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pixi-slug — PixiJS v8 Example</title>
+	<style>
+		body {
+			margin: 0;
+			background: #1a1a2e;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			font-family: sans-serif;
+			color: #eee;
+		}
+		h1 {
+			margin-bottom: 16px;
+			font-size: 1.4rem;
+		}
+		canvas {
+			border: 1px solid #333;
+		}
+	</style>
+</head>
+<body>
+	<h1>pixi-slug — PixiJS v8</h1>
+	<div id="app"></div>
+
+	<!-- PixiJS v8 via CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+
+	<!-- pixi-slug v8 bundle (build with: pnpm run build:v8) -->
+	<script src="../dist/v8/index.js"></script>
+
+	<script>
+		(async function () {
+			var app = new PIXI.Application();
+			await app.init({
+				width: 800,
+				height: 450,
+				backgroundColor: 0x16213e,
+				preferWebGLVersion: 2,
+				antialias: false,
+				resolution: 1,
+			});
+			window.__PIXI_APP__ = app;
+
+			document.getElementById('app').appendChild(app.canvas);
+
+			// Slug requires WebGL2. PixiJS may silently fall back to WebGL1.
+			var gl = app.renderer.gl;
+			if (!gl || !(gl instanceof WebGL2RenderingContext)) {
+				var err = new PIXI.Text({
+					text: 'WebGL2 is required but not available. Slug shaders cannot run on WebGL1.',
+					style: { fill: '#ff4444', fontSize: 16 }
+				});
+				err.x = 20;
+				err.y = Math.floor(app.screen.height / 2);
+				app.stage.addChild(err);
+				return;
+			}
+
+			// Load font as raw binary via fetch (not PIXI.Assets which treats .ttf as CSS font)
+			var fontResponse = await fetch('./font.ttf');
+			if (!fontResponse.ok) {
+				console.warn('No font.ttf found in examples/v8/. Place a .ttf file there to see rendered text.');
+				var info = new PIXI.Text({
+					text: 'Place a font.ttf file in examples/v8/ to see Slug rendering.',
+					style: { fill: '#ffffff', fontSize: 18 }
+				});
+				info.anchor = { x: 0.5, y: 0.5 };
+				info.x = Math.floor(app.screen.width / 2);
+				info.y = Math.floor(app.screen.height / 2);
+				app.stage.addChild(info);
+				return;
+			}
+
+			var fontData = await fontResponse.arrayBuffer();
+			var font = new pixiSlug.SlugFont(4096);
+			await font.load(fontData);
+
+			var slugText = new pixiSlug.SlugText('XxvVR', font, 280);
+			slugText.position.set(0, 0);
+			app.stage.addChild(slugText);
+
+			var slugText2 = new pixiSlug.SlugText('The quick brown fox jumps over the lazy dog', font, 24);
+			slugText2.position.set(10, 280);
+			app.stage.addChild(slugText2);
+
+			var slugText3 = new pixiSlug.SlugText('ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789', font, 32);
+			slugText3.position.set(10, 320);
+			app.stage.addChild(slugText3);
+
+			var slugText4 = new pixiSlug.SlugText('abcdefghijklmnopqrstuvwxyz !@#$%^&*()', font, 32);
+			slugText4.position.set(10, 370);
+			app.stage.addChild(slugText4);
+		})();
+	</script>
+</body>
+</html>
