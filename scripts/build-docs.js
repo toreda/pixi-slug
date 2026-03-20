@@ -90,6 +90,18 @@ try {
 	sedReplace('docs/comparison/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
 	sedReplace('docs/benchmark/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
 
+	// Fix nav links: /examples/X/ → ../X/ so they work on GitHub Pages
+	// where the base path is /pixi-slug/, not /.
+	for (const page of [
+		'docs/v6/index.html',
+		'docs/v7/index.html',
+		'docs/v8/index.html',
+		'docs/comparison/index.html',
+		'docs/benchmark/index.html'
+	]) {
+		sedReplace(page, '/examples/', '../');
+	}
+
 	// ----- Write docs/index.html -----
 	console.log('Creating docs/index.html...');
 	fs.writeFileSync(
@@ -113,6 +125,7 @@ try {
 	<h1>pixi-slug Examples</h1>
 	<p>GPU-accelerated text rendering for PixiJS using the Slug algorithm.</p>
 	<a href="comparison/">Font Rendering Comparison <small>— pixi-slug vs Text vs BitmapText</small></a>
+	<a href="benchmark/">Benchmark</a>
 	<a href="v8/">PixiJS v8 Example</a>
 	<a href="v7/">PixiJS v7 Example</a>
 	<a href="v6/">PixiJS v6 Example</a>

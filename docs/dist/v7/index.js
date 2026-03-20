@@ -4134,14 +4134,15 @@ Defaults.MAX_SUPERSAMPLE_COUNT=16},
  * Preprocesses font glyph outlines into GPU-ready curve and band textures
  * for the Slug rendering algorithm.
  */
-class{constructor(textureWidth=defaults_1.Defaults.TEXTURE_SIZE){if(textureWidth<=0||textureWidth&textureWidth-1)throw new Error(`textureWidth must be a power of 2, got ${textureWidth}`);this.textureWidth=textureWidth,this.curveData=new Float32Array(0),this.bandData=new Uint32Array(0),this.glyphs=new Map,this.advances=new Map,this.unitsPerEm=0}
+class{constructor(textureWidth=defaults_1.Defaults.TEXTURE_SIZE){if(textureWidth<=0||textureWidth&textureWidth-1)throw new Error(`textureWidth must be a power of 2, got ${textureWidth}`);this.textureWidth=textureWidth,this.curveData=new Float32Array(0),this.bandData=new Uint32Array(0),this.bandDataFloat32=new Float32Array(0),this.glyphs=new Map,this.advances=new Map,this.unitsPerEm=0,this.gpuCache=null,this._gpuDestroy=null}
 /**
-     * Load and preprocess a font file into curve and band texture data.
-     * Extracts glyph outlines as quadratic Bezier curves and packs them
-     * into the format expected by the Slug shaders.
-     *
-     * @param fontData		ArrayBuffer containing the font file (TTF/OTF)
-     */
+     * Set the GPU cache cleanup function. Called by version-specific factories
+     * (e.g. slugFontGpuV8) when they populate gpuCache.
+     */setGpuDestroy(fn){this._gpuDestroy=fn}
+/**
+     * Destroy GPU resources (textures, etc.) owned by this font.
+     * Call only after all SlugText instances using this font are destroyed.
+     */destroyGpu(){this._gpuDestroy&&(this._gpuDestroy(),this._gpuDestroy=null),this.gpuCache=null}
 /**
      * GPU memory consumed by this font's curve and band textures, in bytes.
      * Both textures use rgba32float (4 channels × 4 bytes per texel).
@@ -4157,7 +4158,13 @@ const bounds=glyph.getBoundingBox(),bandResult=(0,bands_1.slugGlyphBands)(curves
 // Compute band assignments
 glyphList.push(glyphData),this.glyphs.set(charCode,glyphData)}
 // Pack all glyph data into GPU textures
-const packed=(0,pack_1.slugTexturePack)(glyphList,this.textureWidth);this.curveData=packed.curveData,this.bandData=packed.bandData}}},
+const packed=(0,pack_1.slugTexturePack)(glyphList,this.textureWidth);this.curveData=packed.curveData,this.bandData=packed.bandData,
+// Pre-convert band data from uint32 to float32 once.
+// This is a VALUE conversion (6 → 6.0), NOT a bit-pattern reinterpretation.
+// Safe for all values < 2^24 (see webgl-requirements.md Section 5).
+this.bandDataFloat32=new Float32Array(this.bandData.length);for(let i=0;i<this.bandData.length;i++)this.bandDataFloat32[i]=this.bandData[i];
+// Invalidate any existing GPU cache since font data changed.
+this.destroyGpu()}}},
 /***/382(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugGlyphBands=
 /**
  * Assign curves to horizontal and vertical bands for spatial indexing.

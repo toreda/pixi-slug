@@ -1338,6 +1338,37 @@
 				html += '</table>';
 			}
 
+			// Settings summary at the end of all results
+			html += '<h3 style="color:#aac;margin:24px 0 8px;font-size:13px">Benchmark Settings</h3>';
+			html += '<table>';
+			html += '<tr><th style="width:220px">Setting</th><th>Value</th></tr>';
+			html += '<tr><td>Run mode</td><td>' + settings.mode + '</td></tr>';
+			html += '<tr><td>Duration per test</td><td>' + (settings.durationMs / 1000) + ' s</td></tr>';
+			html += '<tr><td>Warm-up frames</td><td>' + settings.warmupFrames + '</td></tr>';
+			html += '<tr><td>Canvas</td><td>' + settings.canvasW + ' × ' + settings.canvasH + '</td></tr>';
+			html += '<tr><td>Resolution</td><td>' + settings.pixiResolution + '</td></tr>';
+			html += '<tr><td>Pixi Antialiasing</td><td>' + (settings.pixiAntialias ? 'Enabled' : 'Disabled') + '</td></tr>';
+			html += '<tr><td>Background Color</td><td>' + settings.pixiBgColor + '</td></tr>';
+			html += '<tr><td>GPU Power Preference</td><td>' + settings.pixiPowerPref + '</td></tr>';
+			html += '<tr><td>Bezier Smoothness</td><td>' + settings.pixiBezierSmoothness + '</td></tr>';
+			html += '<tr><td>Back Buffer</td><td>' + (settings.pixiBackBuffer ? 'Enabled' : 'Disabled') + '</td></tr>';
+			html += '<tr><td>Object Count Tiers</td><td>' + settings.objectCountTiers.join(', ') + '</td></tr>';
+			html += '<tr><th colspan="2" style="color:#aac">Enabled Systems</th></tr>';
+			html += '<tr><td>pixi-slug</td><td>' + (settings.enableSlug ? 'Enabled' : 'Disabled') + '</td></tr>';
+			if (settings.enableSlug) {
+				html += '<tr><td style="padding-left:24px">Supersampling</td><td>' + (settings.slugSupersampling ? 'Enabled' : 'Disabled') + '</td></tr>';
+				html += '<tr><td style="padding-left:24px">Supersample Count</td><td>' + settings.slugSamples + '</td></tr>';
+			}
+			html += '<tr><td>PIXI.Text (Canvas 2D)</td><td>' + (settings.enableCanvas ? 'Enabled' : 'Disabled') + '</td></tr>';
+			if (settings.enableCanvas) {
+				html += '<tr><td style="padding-left:24px">Resolution</td><td>' + settings.canvasResolution + '×</td></tr>';
+			}
+			html += '<tr><td>PIXI.BitmapText</td><td>' + (settings.enableBitmap ? 'Enabled' : 'Disabled') + '</td></tr>';
+			if (settings.enableBitmap) {
+				html += '<tr><td style="padding-left:24px">Atlas Font Size</td><td>' + settings.bitmapAtlasSize + ' px</td></tr>';
+			}
+			html += '</table>';
+
 			document.getElementById('results').innerHTML = html;
 			document.getElementById('results').style.display = 'block';
 
