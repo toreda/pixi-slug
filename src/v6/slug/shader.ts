@@ -1,7 +1,6 @@
 import {Program, Shader, Texture} from '@pixi/core';
-import {SlugFont} from '../../shared/slug/font';
 
-import vertSource from '../../shared/shader/slug/vert.glsl';
+import vertSource from '../../v7/shader/slug/vert.glsl';
 import fragSource from '../../shared/shader/slug/frag.glsl';
 
 /**
@@ -10,16 +9,22 @@ import fragSource from '../../shared/shader/slug/frag.glsl';
  *
  * Note: v6 defaults to WebGL1. The application must be configured with
  * `preferWebGLVersion: 2` to enable WebGL2 features required by Slug.
+ *
+ * Uses the v7 vertex shader since v6 and v7 share the same uniform names
+ * (projectionMatrix, translationMatrix) auto-populated by the Mesh renderer.
  */
-export function slugShader(font: SlugFont, curveTexture: Texture, bandTexture: Texture): Shader {
+export function slugShader(
+	curveTexture: Texture,
+	bandTexture: Texture,
+	resolution: [number, number]
+): Shader {
 	const program = Program.from(vertSource, fragSource);
 
 	const uniforms = {
-		uSlugMatrix: new Float32Array(16),
-		uSlugViewport: new Float32Array(2),
-		uLogTextureWidth: Math.log2(font.textureWidth),
 		uCurveTexture: curveTexture,
-		uBandTexture: bandTexture
+		uBandTexture: bandTexture,
+		uResolution: new Float32Array(resolution),
+		uSupersampleCount: 0
 	};
 
 	return new Shader(program, uniforms);

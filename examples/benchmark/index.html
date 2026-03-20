@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pixi-slug — Benchmark</title>
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			background: #0a0a1a;
+			font-family: sans-serif;
+			color: #eee;
+		}
+		h1 {
+			text-align: center;
+			padding: 12px;
+			font-size: 1.2rem;
+			background: #16213e;
+		}
+		#nav {
+			display: flex;
+			gap: 0;
+			background: #0d1117;
+			width: 100%;
+		}
+		#nav a {
+			padding: 8px 18px;
+			color: #8b949e;
+			text-decoration: none;
+			font-size: 13px;
+		}
+		#nav a:hover { color: #eee; background: #161b22; }
+		#nav a.active { color: #eee; border-bottom: 2px solid #4a6aae; }
+		#controls {
+			display: flex;
+			gap: 12px;
+			padding: 10px 20px;
+			background: #1a1a2e;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+		#controls button {
+			padding: 6px 14px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			cursor: pointer;
+			border-radius: 4px;
+			font-size: 13px;
+		}
+		#controls button:hover { background: #3a3a6e; }
+		#controls button.active { background: #4a6aae; border-color: #6a8ade; }
+		#controls button:disabled { opacity: 0.4; cursor: default; }
+		#controls label { font-size: 13px; color: #aaa; }
+		#controls select {
+			padding: 5px 8px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			cursor: pointer;
+			border-radius: 4px;
+			font-size: 13px;
+		}
+		#controls span { font-size: 13px; color: #aaa; }
+		#progressWrap {
+			display: none;
+			padding: 8px 20px;
+			background: #1a1a2e;
+		}
+		#progressLabel { font-size: 13px; color: #aaa; margin-bottom: 4px; }
+		#progressBar {
+			width: 100%;
+			height: 6px;
+			background: #2a2a4e;
+			border-radius: 3px;
+			overflow: hidden;
+		}
+		#progressFill {
+			height: 100%;
+			width: 0%;
+			background: #4a6aae;
+			transition: width 0.2s;
+		}
+		#canvasWrap {
+			display: flex;
+			justify-content: center;
+			padding: 10px 0;
+			min-height: 60px;
+		}
+		canvas { display: block; }
+		#results {
+			display: none;
+			padding: 10px 20px 30px;
+		}
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 13px;
+		}
+		th, td {
+			padding: 6px 10px;
+			border: 1px solid #2a2a4e;
+			text-align: left;
+			vertical-align: top;
+		}
+		th { background: #16213e; color: #aac; font-weight: 600; }
+		td { background: #111122; }
+		td.best { background: #1a3a1a; }
+		td.worst { background: #3a1a1a; }
+		.stat-label { color: #668899; font-size: 11px; }
+		.stat-value { color: #eee; }
+		.stat-line { margin: 2px 0; }
+	</style>
+</head>
+<body>
+	<nav id="nav">
+		<a href="/examples/v8/">V8</a>
+		<a href="/examples/v7/">V7</a>
+		<a href="/examples/v6/">V6</a>
+		<a href="/examples/comparison/">pixi-slug vs Text</a>
+		<a href="/examples/benchmark/" class="active">Benchmark</a>
+	</nav>
+	<h1>pixi-slug Benchmark</h1>
+	<div id="controls">
+		<label for="duration">Duration per test:</label>
+		<select id="duration">
+			<option value="2000">2s</option>
+			<option value="3000" selected>3s</option>
+			<option value="5000">5s</option>
+			<option value="10000">10s</option>
+		</select>
+		<span>|</span>
+		<button id="btnStart">Start Benchmark</button>
+		<button id="btnCancel" disabled>Cancel</button>
+		<span id="statusText">Ready</span>
+	</div>
+	<div id="progressWrap">
+		<div id="progressLabel">Initializing...</div>
+		<div id="progressBar"><div id="progressFill"></div></div>
+	</div>
+	<div id="canvasWrap"></div>
+	<div id="results"></div>
+
+	<!-- PixiJS v8 via CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+
+	<!-- pixi-slug v8 bundle -->
+	<script src="../../dist/v8/index.js"></script>
+
+	<script>
+		(function () {
+			// ===== Utilities =====
+			function formatBytes(bytes) {
+				if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+				if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+				return bytes + ' B';
+			}
+
+			function textureBytes(source) {
+				var w = (source.resource && source.resource.width) || source.pixelWidth || 0;
+				var h = (source.resource && source.resource.height) || source.pixelHeight || 0;
+				return w * h * 4;
+			}
+
+			function computeStats(frameTimes) {
+				if (frameTimes.length === 0) return { avg: 0, median: 0, p95: 0, p99: 0, min: 0, max: 0, fps: 0, frames: 0 };
+				var sorted = frameTimes.slice().sort(function (a, b) { return a - b; });
+				var sum = 0;
+				for (var i = 0; i < sorted.length; i++) sum += sorted[i];
+				var avg = sum / sorted.length;
+				return {
+					avg: avg,
+					median: sorted[Math.floor(sorted.length * 0.5)],
+					p95: sorted[Math.floor(sorted.length * 0.95)],
+					p99: sorted[Math.floor(sorted.length * 0.99)],
+					min: sorted[0],
+					max: sorted[sorted.length - 1],
+					fps: 1000 / avg,
+					frames: sorted.length
+				};
+			}
+
+			// ===== Text system factories =====
+			var factories = {
+				slug: function (opts) {
+					var t = new pixiSlug.SlugText(opts.text, opts.font, opts.size);
+					t.supersampling = true;
+					return t;
+				},
+				canvas: function (opts) {
+					return new PIXI.Text({
+						text: opts.text,
+						style: { fontFamily: 'BenchmarkFont', fontSize: opts.size, fill: '#ffffff' }
+					});
+				},
+				bitmap: function (opts) {
+					return new PIXI.BitmapText({
+						text: opts.text,
+						style: { fontFamily: 'BenchmarkBitmap', fontSize: opts.size }
+					});
+				}
+			};
+
+			// ===== GPU memory measurement =====
+			function measureGpuMemory(sysName, objects, font) {
+				if (sysName === 'slug') {
+					var fontMem = font ? font.memoryBytes() : 0;
+					var meshMem = 0;
+					for (var i = 0; i < objects.length; i++) {
+						if (objects[i].meshMemoryBytes) meshMem += objects[i].meshMemoryBytes();
+					}
+					return fontMem + meshMem;
+				}
+				if (sysName === 'canvas') {
+					var mem = 0;
+					for (var i = 0; i < objects.length; i++) {
+						var src = objects[i].texture && objects[i].texture.source;
+						if (src && src.pixelWidth > 0) mem += textureBytes(src);
+					}
+					return mem;
+				}
+				if (sysName === 'bitmap') {
+					var mem = 0;
+					var installedFont = PIXI.Cache.get('BenchmarkBitmap-bitmap');
+					if (installedFont && installedFont.pages) {
+						for (var i = 0; i < installedFont.pages.length; i++) {
+							var src = installedFont.pages[i].texture && installedFont.pages[i].texture.source;
+							if (src && src.pixelWidth > 0) mem += textureBytes(src);
+						}
+					}
+					return mem;
+				}
+				return 0;
+			}
+
+			// ===== Test scenarios =====
+			var sampleText = 'The quick brown fox jumps';
+			var sampleTexts = [
+				'The quick brown fox',
+				'jumps over the lazy dog',
+				'Pack my box with five',
+				'dozen liquor jugs',
+				'How vexingly quick daft',
+				'zebras jump!'
+			];
+
+			var scenarios = [
+				{
+					name: 'Static (4 sizes)',
+					description: 'Idle text at 16, 24, 32, 48px',
+					setup: function (app, factory, opts) {
+						var sizes = [16, 24, 32, 48];
+						var objects = [];
+						var y = 10;
+						for (var i = 0; i < sizes.length; i++) {
+							var t = factory({ text: sampleText, font: opts.font, size: sizes[i] });
+							t.x = 10;
+							t.y = y;
+							app.stage.addChild(t);
+							objects.push(t);
+							y += sizes[i] * 1.5 + 10;
+						}
+						return objects;
+					}
+				},
+				{
+					name: 'Many objects (50)',
+					description: '50 text objects at 18px',
+					setup: function (app, factory, opts) {
+						var objects = [];
+						for (var i = 0; i < 50; i++) {
+							var t = factory({ text: sampleTexts[i % sampleTexts.length], font: opts.font, size: 18 });
+							t.x = 10 + (i % 2) * 400;
+							t.y = 5 + Math.floor(i / 2) * 19;
+							app.stage.addChild(t);
+							objects.push(t);
+						}
+						return objects;
+					}
+				},
+				{
+					name: 'Large text (120px)',
+					description: 'Single text at 120px',
+					setup: function (app, factory, opts) {
+						var t = factory({ text: 'Slug', font: opts.font, size: 120 });
+						t.x = 30;
+						t.y = 50;
+						app.stage.addChild(t);
+						return [t];
+					}
+				},
+				{
+					name: 'Continuous scale',
+					description: 'Scale 0.5x to 2.0x oscillation',
+					setup: function (app, factory, opts) {
+						var sizes = [16, 24, 32, 48];
+						var objects = [];
+						var y = 10;
+						for (var i = 0; i < sizes.length; i++) {
+							var t = factory({ text: sampleText, font: opts.font, size: sizes[i] });
+							t.x = 10;
+							t.y = y;
+							app.stage.addChild(t);
+							objects.push(t);
+							y += sizes[i] * 1.5 + 10;
+						}
+						return objects;
+					},
+					tick: function (objects, elapsedMs) {
+						var s = 1.0 + 0.7 * Math.sin(elapsedMs / 1000 * Math.PI);
+						for (var i = 0; i < objects.length; i++) {
+							objects[i].scale.set(s, s);
+						}
+					}
+				},
+				{
+					name: 'Rapid text change',
+					description: 'Change text content every 500ms',
+					setup: function (app, factory, opts) {
+						var t = factory({ text: sampleText, font: opts.font, size: 32 });
+						t.x = 10;
+						t.y = 50;
+						app.stage.addChild(t);
+						t._benchLastChange = 0;
+						t._benchIndex = 0;
+						return [t];
+					},
+					tick: function (objects, elapsedMs) {
+						var t = objects[0];
+						if (elapsedMs - t._benchLastChange > 500) {
+							t._benchIndex = (t._benchIndex + 1) % sampleTexts.length;
+							t.text = sampleTexts[t._benchIndex];
+							t._benchLastChange = elapsedMs;
+						}
+					}
+				},
+				{
+					name: 'Rotation',
+					description: 'Rotating text oscillation',
+					setup: function (app, factory, opts) {
+						var sizes = [16, 24, 32, 48];
+						var objects = [];
+						var y = 60;
+						for (var i = 0; i < sizes.length; i++) {
+							var t = factory({ text: sampleText, font: opts.font, size: sizes[i] });
+							t.x = 400;
+							t.y = y;
+							t.pivot.set(150, sizes[i] / 2);
+							app.stage.addChild(t);
+							objects.push(t);
+							y += sizes[i] * 2 + 30;
+						}
+						return objects;
+					},
+					tick: function (objects, elapsedMs) {
+						var angle = 0.3 * Math.sin(elapsedMs / 1000 * Math.PI);
+						for (var i = 0; i < objects.length; i++) {
+							objects[i].rotation = angle;
+						}
+					}
+				},
+				{
+					name: 'Mixed stress',
+					description: '20 objects scaling + moving',
+					setup: function (app, factory, opts) {
+						var objects = [];
+						var sizes = [14, 18, 22, 28, 36];
+						for (var i = 0; i < 20; i++) {
+							var sz = sizes[i % sizes.length];
+							var t = factory({ text: sampleTexts[i % sampleTexts.length], font: opts.font, size: sz });
+							t.x = 10 + (i % 3) * 280;
+							t.y = 10 + Math.floor(i / 3) * 65;
+							app.stage.addChild(t);
+							objects.push(t);
+						}
+						return objects;
+					},
+					tick: function (objects, elapsedMs) {
+						var s = 1.0 + 0.4 * Math.sin(elapsedMs / 800 * Math.PI);
+						var dx = 30 * Math.sin(elapsedMs / 1200 * Math.PI);
+						for (var i = 0; i < objects.length; i++) {
+							objects[i].scale.set(s, s);
+							objects[i].x += dx * 0.01;
+						}
+					}
+				}
+			];
+
+			// ===== Runner =====
+			var cancelled = false;
+
+			function warmup(app) {
+				return new Promise(function (resolve) {
+					var count = 0;
+					function tick() {
+						if (++count >= 30) {
+							app.ticker.remove(tick);
+							resolve();
+						}
+					}
+					app.ticker.add(tick);
+				});
+			}
+
+			function timedRun(app, scenario, objects, durationMs) {
+				return new Promise(function (resolve) {
+					var frameTimes = [];
+					var t0 = performance.now();
+					var startTime = t0;
+
+					function onTick() {
+						var now = performance.now();
+						frameTimes.push(now - t0);
+						t0 = now;
+
+						if (scenario.tick) {
+							scenario.tick(objects, now - startTime);
+						}
+
+						if (cancelled || now - startTime >= durationMs) {
+							app.ticker.remove(onTick);
+							resolve(frameTimes);
+						}
+					}
+
+					app.ticker.add(onTick);
+				});
+			}
+
+			function destroyObjects(objects) {
+				for (var i = 0; i < objects.length; i++) {
+					if (objects[i].parent) objects[i].parent.removeChild(objects[i]);
+					objects[i].destroy();
+				}
+			}
+
+			async function runBenchmark() {
+				var durationMs = parseInt(document.getElementById('duration').value, 10);
+				var systems = ['slug', 'canvas', 'bitmap'];
+				var systemLabels = { slug: 'pixi-slug', canvas: 'PIXI.Text', bitmap: 'BitmapText' };
+				var total = systems.length * scenarios.length;
+				var done = 0;
+				var results = {};
+
+				// Load font data once
+				var fontResponse = await fetch('/examples/comparison/font.ttf');
+				if (!fontResponse.ok) {
+					document.getElementById('statusText').textContent = 'Error: font.ttf not found';
+					return null;
+				}
+				var fontData = await fontResponse.arrayBuffer();
+
+				// Load CSS font for canvas/bitmap text
+				var fontBlob = new Blob([fontData], { type: 'font/ttf' });
+				var fontUrl = URL.createObjectURL(fontBlob);
+				var fontFace = new FontFace('BenchmarkFont', 'url(' + fontUrl + ')');
+				await fontFace.load();
+				document.fonts.add(fontFace);
+
+				PIXI.BitmapFont.install({
+					name: 'BenchmarkBitmap',
+					style: { fontFamily: 'BenchmarkFont', fontSize: 48, fill: '#ffffff' }
+				});
+
+				var canvasWrap = document.getElementById('canvasWrap');
+
+				for (var si = 0; si < systems.length; si++) {
+					if (cancelled) break;
+					var sysName = systems[si];
+					results[sysName] = {};
+
+					// Create fresh app per system
+					var app = new PIXI.Application();
+					await app.init({
+						width: 900, height: 500,
+						backgroundColor: 0x16213e,
+						preferWebGLVersion: 2,
+						antialias: true,
+						resolution: 1
+					});
+					canvasWrap.innerHTML = '';
+					canvasWrap.appendChild(app.canvas);
+
+					// Load slug font per system run
+					var slugFont = null;
+					if (sysName === 'slug') {
+						slugFont = new pixiSlug.SlugFont(4096);
+						await slugFont.load(fontData.slice(0));
+					}
+
+					// Warmup
+					await warmup(app);
+
+					for (var ti = 0; ti < scenarios.length; ti++) {
+						if (cancelled) break;
+						var scenario = scenarios[ti];
+						done++;
+
+						document.getElementById('progressLabel').textContent =
+							systemLabels[sysName] + ' — ' + scenario.name + '  (' + done + '/' + total + ')';
+						document.getElementById('progressFill').style.width =
+							(done / total * 100).toFixed(1) + '%';
+
+						var factoryOpts = { font: slugFont };
+						var heapBefore = (performance.memory) ? performance.memory.usedJSHeapSize : null;
+
+						// Setup
+						var objects = scenario.setup(app, factories[sysName], factoryOpts);
+						app.render();
+
+						var heapAfter = (performance.memory) ? performance.memory.usedJSHeapSize : null;
+						var gpuMem = measureGpuMemory(sysName, objects, slugFont);
+
+						// Timed run
+						var frameTimes = await timedRun(app, scenario, objects, durationMs);
+
+						results[sysName][scenario.name] = {
+							timing: computeStats(frameTimes),
+							gpuMemory: gpuMem,
+							heapDelta: (heapBefore !== null && heapAfter !== null) ? heapAfter - heapBefore : null
+						};
+
+						destroyObjects(objects);
+					}
+
+					app.destroy(true);
+					canvasWrap.innerHTML = '';
+				}
+
+				URL.revokeObjectURL(fontUrl);
+				return results;
+			}
+
+			// ===== Results rendering =====
+			function renderResults(results) {
+				var systems = ['slug', 'canvas', 'bitmap'];
+				var systemLabels = { slug: 'pixi-slug', canvas: 'PIXI.Text', bitmap: 'BitmapText' };
+
+				var html = '<table>';
+				html += '<tr><th>Scenario</th>';
+				for (var s = 0; s < systems.length; s++) {
+					html += '<th>' + systemLabels[systems[s]] + '</th>';
+				}
+				html += '</tr>';
+
+				for (var ti = 0; ti < scenarios.length; ti++) {
+					var scenarioName = scenarios[ti].name;
+					html += '<tr>';
+					html += '<td><strong>' + scenarioName + '</strong><br><span class="stat-label">' + scenarios[ti].description + '</span></td>';
+
+					// Collect FPS values for best/worst marking
+					var fpsValues = [];
+					var memValues = [];
+					for (var s = 0; s < systems.length; s++) {
+						var r = results[systems[s]] && results[systems[s]][scenarioName];
+						fpsValues.push(r ? r.timing.fps : 0);
+						memValues.push(r ? r.gpuMemory : Infinity);
+					}
+					var bestFps = Math.max.apply(null, fpsValues);
+					var worstFps = Math.min.apply(null, fpsValues);
+					var bestMem = Math.min.apply(null, memValues);
+					var worstMem = Math.max.apply(null, memValues);
+
+					for (var s = 0; s < systems.length; s++) {
+						var r = results[systems[s]] && results[systems[s]][scenarioName];
+						if (!r) {
+							html += '<td>N/A</td>';
+							continue;
+						}
+						var t = r.timing;
+						var cls = '';
+						if (fpsValues[s] === bestFps && bestFps !== worstFps) cls = 'best';
+						else if (fpsValues[s] === worstFps && bestFps !== worstFps) cls = 'worst';
+
+						html += '<td class="' + cls + '">';
+						html += '<div class="stat-line"><span class="stat-label">FPS: </span><span class="stat-value">' + t.fps.toFixed(1) + '</span></div>';
+						html += '<div class="stat-line"><span class="stat-label">Frame: </span><span class="stat-value">' + t.median.toFixed(2) + 'ms med / ' + t.p95.toFixed(2) + 'ms p95</span></div>';
+						html += '<div class="stat-line"><span class="stat-label">Frames: </span><span class="stat-value">' + t.frames + '</span></div>';
+						html += '<div class="stat-line"><span class="stat-label">GPU: </span><span class="stat-value">' + formatBytes(r.gpuMemory) + '</span></div>';
+						if (r.heapDelta !== null) {
+							html += '<div class="stat-line"><span class="stat-label">Heap: </span><span class="stat-value">' + (r.heapDelta >= 0 ? '+' : '') + formatBytes(r.heapDelta) + '</span></div>';
+						} else {
+							html += '<div class="stat-line"><span class="stat-label">Heap: </span><span class="stat-value">N/A</span></div>';
+						}
+						html += '</td>';
+					}
+					html += '</tr>';
+				}
+
+				html += '</table>';
+				document.getElementById('results').innerHTML = html;
+				document.getElementById('results').style.display = 'block';
+			}
+
+			// ===== UI wiring =====
+			document.getElementById('btnStart').onclick = async function () {
+				cancelled = false;
+				document.getElementById('btnStart').disabled = true;
+				document.getElementById('btnCancel').disabled = false;
+				document.getElementById('progressWrap').style.display = 'block';
+				document.getElementById('results').style.display = 'none';
+				document.getElementById('statusText').textContent = 'Running...';
+				document.getElementById('progressFill').style.width = '0%';
+
+				var results = await runBenchmark();
+
+				document.getElementById('btnStart').disabled = false;
+				document.getElementById('btnCancel').disabled = true;
+				document.getElementById('progressWrap').style.display = 'none';
+
+				if (results && !cancelled) {
+					document.getElementById('statusText').textContent = 'Complete';
+					renderResults(results);
+				} else {
+					document.getElementById('statusText').textContent = cancelled ? 'Cancelled' : 'Error';
+				}
+			};
+
+			document.getElementById('btnCancel').onclick = function () {
+				cancelled = true;
+				document.getElementById('statusText').textContent = 'Cancelling...';
+			};
+		})();
+	</script>
+</body>
+</html>

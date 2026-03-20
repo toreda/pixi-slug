@@ -1,5 +1,5 @@
-import type { PathCommand } from 'opentype.js';
-import type { SlugGlyphCurve } from './data';
+import type {PathCommand} from 'opentype.js';
+import type {SlugGlyphCurve} from './data';
 
 /**
  * Convert a cubic Bezier curve to two quadratic Bezier approximations.
@@ -21,8 +21,8 @@ function cubicToQuadratics(
 	// two cubic halves: [x0, q0, r0, mid] and [mid, r1, q2, x3].
 	const q0x = (x0 + x1) * 0.5;
 	const q0y = (y0 + y1) * 0.5;
-	const mx  = (x1 + x2) * 0.5;
-	const my  = (y1 + y2) * 0.5;
+	const mx = (x1 + x2) * 0.5;
+	const my = (y1 + y2) * 0.5;
 	const q2x = (x2 + x3) * 0.5;
 	const q2y = (y2 + y3) * 0.5;
 
@@ -70,7 +70,7 @@ function cubicToQuadratics(
  * The control point is placed at the midpoint so the curve evaluates
  * as a straight line.
  */
-function lineToQuadratic(x0: number, y0: number, x1: number, y1: number): SlugGlyphCurve {
+export function lineToQuadratic(x0: number, y0: number, x1: number, y1: number): SlugGlyphCurve {
 	return {
 		p1x: x0,
 		p1y: y0,
