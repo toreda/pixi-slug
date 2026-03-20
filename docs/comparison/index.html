@@ -48,6 +48,17 @@
 			font-size: 13px;
 		}
 		#controls select:hover { background: #3a3a6e; }
+		#speedSlider { width: 80px; accent-color: #4a6aae; cursor: pointer; }
+		#speedNumber {
+			width: 48px;
+			padding: 4px 6px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+			text-align: center;
+		}
 		#status { font-size: 12px; color: #888; margin-left: auto; }
 		canvas { display: block; }
 	</style>
@@ -64,6 +75,8 @@
 		<span>|</span>
 		<button id="btnReset">Reset</button>
 		<span>|</span>
+		<button id="btnSupersampling">Supersampling: Off</button>
+		<span>|</span>
 		<label for="fpsLimit">FPS Limit:</label>
 		<select id="fpsLimit">
 			<option value="0">Unlimited</option>
@@ -72,6 +85,10 @@
 			<option value="30">30</option>
 			<option value="15">15</option>
 		</select>
+		<span>|</span>
+		<label for="speedSlider">Speed:</label>
+		<input type="range" id="speedSlider" min="0.1" max="4" step="0.1" value="1">
+		<input type="number" id="speedNumber" min="0.1" max="4" step="0.1" value="1">
 		<span id="status">Loading...</span>
 	</div>
 	<div id="app"></div>
@@ -91,7 +108,7 @@
 				height: 800,
 				backgroundColor: 0x16213e,
 				preferWebGLVersion: 2,
-				antialias: false,
+				antialias: true,
 				resolution: 1,
 			});
 			document.getElementById('app').appendChild(app.canvas);
@@ -184,6 +201,7 @@
 			bitmapGroup.x = colX[2] + 10;
 			bitmapGroup.y = textStartY;
 
+			var slugTexts = [];
 			var yOffset = 0;
 			for (var si = 0; si < sizes.length; si++) {
 				var sz = sizes[si];
@@ -209,6 +227,7 @@
 				var slugText = new pixiSlug.SlugText(sampleText, slugFont, sz);
 				slugText.y = yOffset;
 				slugGroup.addChild(slugText);
+				slugTexts.push(slugText);
 
 				// PIXI.Text (Canvas 2D rendered)
 				var pixiText = new PIXI.Text({
@@ -243,6 +262,17 @@
 			// ----- Animation state -----
 			var mode = 'scale';  // 'scale', 'move', 'rotate', 'all', 'scroll'
 			var paused = false;
+			var speed = 1.0;  // multiplier applied to dtSec each frame
+
+			document.getElementById('speedSlider').oninput = function () {
+				speed = parseFloat(this.value);
+				document.getElementById('speedNumber').value = this.value;
+			};
+			document.getElementById('speedNumber').oninput = function () {
+				var v = Math.min(4, Math.max(0.1, parseFloat(this.value) || 1));
+				speed = v;
+				document.getElementById('speedSlider').value = v;
+			};
 			// elapsedSec accumulates real wall-clock seconds via deltaMS so
 			// animation speed is frame-rate independent.
 			var elapsedSec = 0;
@@ -319,6 +349,16 @@
 				paused = !paused;
 				this.textContent = paused ? 'Resume' : 'Pause';
 				this.classList.toggle('active', paused);
+			};
+
+			var supersampling = false;
+			document.getElementById('btnSupersampling').onclick = function () {
+				supersampling = !supersampling;
+				for (var i = 0; i < slugTexts.length; i++) {
+					slugTexts[i].supersampling = supersampling;
+				}
+				this.textContent = 'Supersampling: ' + (supersampling ? 'On' : 'Off');
+				this.classList.toggle('active', supersampling);
 			};
 
 			document.getElementById('fpsLimit').onchange = function () {
@@ -426,7 +466,7 @@
 			var fpsTime = 0;
 
 			app.ticker.add(function (ticker) {
-				var dtSec = ticker.deltaMS / 1000;
+				var dtSec = (ticker.deltaMS / 1000) * speed;
 				if (!paused) {
 					if (mode === 'scroll') {
 						updateScroll(dtSec);
