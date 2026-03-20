@@ -46,7 +46,7 @@ float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 		max(abs(xcov), abs(ycov))
 	);
 
-	return clamp(coverage, 0.0, 1.0);
+	return clamp(sqrt(abs(coverage)), 0.0, 1.0);
 }
 
 out vec4 fragColor;
