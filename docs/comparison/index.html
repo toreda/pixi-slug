@@ -120,7 +120,7 @@
 			var colX = [0, 400, 800];
 			var headerY = 10;
 			var textStartY = 60;
-			var sampleText = 'The quick brown\nfox jumps over\nthe lazy dog.';
+			var sampleText = 'The quick brown fox';
 			var sizes = [16, 24, 32, 48];
 
 			// ----- Column headers (static) -----
@@ -185,19 +185,17 @@
 				yOffset += 16;
 
 				// pixi-slug text
-				var slugText = new pixiSlug.SlugText(sampleText.replace(/\n/g, ' '), slugFont, sz);
+				var slugText = new pixiSlug.SlugText(sampleText, slugFont, sz);
 				slugText.y = yOffset;
 				slugGroup.addChild(slugText);
 
 				// PIXI.Text (Canvas 2D rendered)
 				var pixiText = new PIXI.Text({
-					text: sampleText.replace(/\n/g, ' '),
+					text: sampleText,
 					style: {
 						fontFamily: 'ComparisonFont',
 						fontSize: sz,
 						fill: '#ffffff',
-						wordWrap: true,
-						wordWrapWidth: colWidth - 20,
 					}
 				});
 				pixiText.y = yOffset;
@@ -205,7 +203,7 @@
 
 				// BitmapText
 				var bmpText = new PIXI.BitmapText({
-					text: sampleText.replace(/\n/g, ' '),
+					text: sampleText,
 					style: {
 						fontFamily: 'ComparisonBitmap',
 						fontSize: sz,
@@ -309,11 +307,31 @@
 				}
 			}
 
+			// ----- FPS counter -----
+			var fpsText = new PIXI.Text({
+				text: 'FPS: --',
+				style: { fill: '#00ff88', fontSize: 14, fontFamily: 'monospace' }
+			});
+			fpsText.x = 1200 - 90;
+			fpsText.y = 6;
+			app.stage.addChild(fpsText);
+
+			var fpsFrames = 0;
+			var fpsTime = 0;
+
 			app.ticker.add(function (ticker) {
 				if (!paused) {
 					elapsed += ticker.deltaTime / 60;
 				}
 				applyTransform(elapsed);
+
+				fpsFrames++;
+				fpsTime += ticker.deltaMS;
+				if (fpsTime >= 500) {
+					fpsText.text = 'FPS: ' + Math.round(fpsFrames / (fpsTime / 1000));
+					fpsFrames = 0;
+					fpsTime = 0;
+				}
 			});
 		})();
 	</script>
