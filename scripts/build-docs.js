@@ -124,7 +124,7 @@ try {
 <body>
 	<h1>pixi-slug Examples</h1>
 	<p>GPU-accelerated text rendering for PixiJS using the Slug algorithm.</p>
-	<a href="comparison/">Font Rendering Comparison <small>— pixi-slug vs Text vs BitmapText</small></a>
+	<a href="comparison/">Live Rendering Comparison <small>— pixi-slug vs Text vs BitmapText</small></a>
 	<a href="benchmark/">Benchmark</a>
 	<a href="v8/">PixiJS v8 Example</a>
 	<a href="v7/">PixiJS v7 Example</a>

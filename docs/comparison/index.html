@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>pixi-slug — Font Rendering Comparison</title>
+	<title>pixi-slug — Live Rendering Comparison</title>
 	<style>
 		* { margin: 0; padding: 0; box-sizing: border-box; }
 		body {
@@ -87,7 +87,7 @@
 		<a href="../comparison/" class="active">pixi-slug vs Text</a>
 		<a href="../benchmark/">Benchmark</a>
 	</nav>
-	<h1>Font Rendering Comparison — pixi-slug vs Text vs BitmapText</h1>
+	<h1>Live Rendering Comparison — pixi-slug vs Text vs BitmapText</h1>
 	<div id="controls">
 		<button id="btnScale" class="active">Scale</button>
 		<button id="btnMove">Move</button>
@@ -307,15 +307,6 @@
 				return bytes + ' B';
 			}
 
-			function textureBytes(source) {
-				// All PixiJS canvas-backed textures use rgba8unorm: 4 bytes per pixel.
-				// Use resource.width/height (the actual canvas element dimensions) rather
-				// than pixelWidth/pixelHeight, which may not be synced before first GPU upload.
-				var w = (source.resource && source.resource.width) || source.pixelWidth || 0;
-				var h = (source.resource && source.resource.height) || source.pixelHeight || 0;
-				return w * h * 4;
-			}
-
 			function updateStatus() {
 				// --- pixi-slug: exact GPU breakdown ---
 				var fontMem = slugFont.memoryBytes();
@@ -331,38 +322,12 @@
 					' + mesh ' + formatBytes(meshMem) + ')' +
 					'  rebuilds: ' + totalRebuilds;
 
-				// --- PIXI.Text: one canvas texture per object ---
-				// texture.source may not be populated until after first render,
-				// so guard against zero dimensions.
-				var pixiTexMem = 0;
-				for (var i = 0; i < pixiTexts.length; i++) {
-					var src = pixiTexts[i].texture && pixiTexts[i].texture.source;
-					if (src && src.pixelWidth > 0) {
-						pixiTexMem += textureBytes(src);
-					}
-				}
-				statLabels[1].text = pixiTexMem > 0
-					? 'GPU: ' + formatBytes(pixiTexMem) + '  (' + pixiTexts.length + ' canvas textures)'
-					: 'GPU: measuring... (render first frame)';
-
-				// --- BitmapText: shared atlas pages ---
-				// BitmapFont.install() returns void; retrieve from PixiJS Cache by key.
-				var atlasMem = 0;
-				var atlasPageCount = 0;
-				var installedFont = PIXI.Cache.get('ComparisonBitmap-bitmap');
-				if (installedFont && installedFont.pages) {
-					var pages = installedFont.pages;
-					atlasPageCount = pages.length;
-					for (var i = 0; i < pages.length; i++) {
-						var src = pages[i].texture && pages[i].texture.source;
-						if (src && src.pixelWidth > 0) {
-							atlasMem += textureBytes(src);
-						}
-					}
-				}
-				statLabels[2].text = atlasMem > 0
-					? 'GPU: ' + formatBytes(atlasMem) + '  (' + atlasPageCount + ' atlas page' + (atlasPageCount !== 1 ? 's' : '') + ', shared)'
-					: 'GPU: measuring... (render first frame)';
+				// GPU details for PIXI.Text and BitmapText are omitted —
+				// only pixi-slug reports accurate GPU memory via its own API.
+				// PixiJS does not expose reliable per-object GPU memory figures
+				// for canvas-backed Text or BitmapFont atlas textures.
+				statLabels[1].text = '';
+				statLabels[2].text = '';
 
 				document.getElementById('status').textContent = 'Ready';
 			}

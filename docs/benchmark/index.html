@@ -241,7 +241,7 @@
 		<a href="../v8/">V8</a>
 		<a href="../v7/">V7</a>
 		<a href="../v6/">V6</a>
-		<a href="../comparison/">pixi-slug vs Text</a>
+		<a href="../comparison/">Live Rendering Comparison</a>
 		<a href="../benchmark/" class="active">Benchmark</a>
 	</nav>
 	<h1>pixi-slug Benchmark</h1>
@@ -314,6 +314,20 @@
 						<label class="tier-check"><input type="checkbox" class="objCountTier" value="100" checked> 100</label>
 						<label class="tier-check"><input type="checkbox" class="objCountTier" value="200"> 200</label>
 						<label class="tier-check"><input type="checkbox" class="objCountTier" value="500"> 500</label>
+					</span>
+				</div>
+				<div class="setting">
+					<label style="width:auto">Tests: <span class="info-icon">?<span class="info-tip">Select which test types to include. Uncheck tests you don't need to speed up repeated runs. Tier-dependent tests generate one scenario per selected tier above.</span></span></label>
+					<span class="tier-checks" id="testChecks">
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="static-sizes" checked> Static — 4 sizes</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="static-large" checked> Static — Large (120 px)</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="object-count" checked> Object Count (per tier)</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="scale" checked> Scale up/down</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="rotation" checked> Rotation</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="scroll" checked> Scroll (per tier)</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="text-change" checked> Rapid text change</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="mixed-stress" checked> Mixed stress (per tier)</label>
+						<label class="tier-check"><input type="checkbox" class="testToggle" value="create-destroy" checked> Create/destroy (per tier)</label>
 					</span>
 				</div>
 			</div>
@@ -437,11 +451,12 @@
 		}
 
 		function computeStats(frameTimes) {
-			if (!frameTimes.length) return { avg: 0, median: 0, p95: 0, p99: 0, min: 0, max: 0, fps: 0, fpsMin: 0, fpsMax: 0, frames: 0 };
+			if (!frameTimes.length) return { avg: 0, median: 0, p95: 0, p99: 0, min: 0, max: 0, fps: 0, fpsMin: 0, fpsMax: 0, fpsP90: 0, fpsP95: 0, fpsP99: 0, frames: 0 };
 			var sorted = frameTimes.slice().sort(function (a, b) { return a - b; });
 			var sum = 0;
 			for (var i = 0; i < sorted.length; i++) sum += sorted[i];
 			var avg = sum / sorted.length;
+			var p90 = sorted[Math.floor(sorted.length * 0.90)];
 			var p95 = sorted[Math.floor(sorted.length * 0.95)];
 			var p99 = sorted[Math.floor(sorted.length * 0.99)];
 			return {
@@ -454,6 +469,9 @@
 				fps: 1000 / avg,
 				fpsMin: 1000 / sorted[sorted.length - 1],
 				fpsMax: 1000 / sorted[0],
+				fpsP90: 1000 / p90,
+				fpsP95: 1000 / p95,
+				fpsP99: 1000 / p99,
 				frames: sorted.length
 			};
 		}
@@ -495,6 +513,15 @@
 			return tiers;
 		}
 
+		function getSelectedTests() {
+			var tests = {};
+			var checks = document.querySelectorAll('.testToggle');
+			for (var i = 0; i < checks.length; i++) {
+				tests[checks[i].value] = checks[i].checked;
+			}
+			return tests;
+		}
+
 		function getSettings() {
 			return {
 				durationMs: parseInt(document.getElementById('duration').value, 10),
@@ -508,6 +535,7 @@
 				pixiBezierSmoothness: parseFloat(document.getElementById('pixiBezierSmoothness').value),
 				pixiBackBuffer: document.getElementById('pixiBackBuffer').value === '1',
 				objectCountTiers: getSelectedTiers(),
+				enabledTests: getSelectedTests(),
 				enableSlug: document.getElementById('enableSlug').checked,
 				enableCanvas: document.getElementById('enableCanvas').checked,
 				enableBitmap: document.getElementById('enableBitmap').checked,
@@ -677,127 +705,146 @@
 
 		// ---- Build scenario list from selected tiers ----
 
-		function buildScenarios(tiers) {
+		function buildScenarios(tiers, enabledTests) {
 			var list = [];
+			var on = enabledTests || {};
 
 			// Static (fixed, not tier-dependent)
-			list.push({
-				name: 'Static — 4 sizes',
-				category: 'Static',
-				description: 'Idle text at 16, 24, 32, 48 px',
-				setup: function (ctx) {
-					var sizes = [16, 24, 32, 48];
-					var y = 10;
-					for (var i = 0; i < sizes.length; i++) {
-						var t = ctx.createText(sampleText, sizes[i]);
-						t.x = 10; t.y = y;
+			if (on['static-sizes'] !== false) {
+				list.push({
+					name: 'Static — 4 sizes',
+					category: 'Static',
+					description: 'Idle text at 16, 24, 32, 48 px',
+					setup: function (ctx) {
+						var sizes = [16, 24, 32, 48];
+						var y = 10;
+						for (var i = 0; i < sizes.length; i++) {
+							var t = ctx.createText(sampleText, sizes[i]);
+							t.x = 10; t.y = y;
+							ctx.app.stage.addChild(t);
+							ctx.objects.push(t);
+							y += sizes[i] * 1.5 + 12;
+						}
+					}
+				});
+			}
+			if (on['static-large'] !== false) {
+				list.push({
+					name: 'Static — Large (120 px)',
+					category: 'Static',
+					description: 'Single text object at 120 px',
+					setup: function (ctx) {
+						var t = ctx.createText('Slug', 120);
+						t.x = 30; t.y = 50;
 						ctx.app.stage.addChild(t);
 						ctx.objects.push(t);
-						y += sizes[i] * 1.5 + 12;
 					}
-				}
-			});
-			list.push({
-				name: 'Static — Large (120 px)',
-				category: 'Static',
-				description: 'Single text object at 120 px',
-				setup: function (ctx) {
-					var t = ctx.createText('Slug', 120);
-					t.x = 30; t.y = 50;
-					ctx.app.stage.addChild(t);
-					ctx.objects.push(t);
-				}
-			});
+				});
+			}
 
 			// Object Count variations (from tiers)
-			for (var i = 0; i < tiers.length; i++) {
-				list.push(makeObjectCountScenario(tiers[i]));
+			if (on['object-count'] !== false) {
+				for (var i = 0; i < tiers.length; i++) {
+					list.push(makeObjectCountScenario(tiers[i]));
+				}
 			}
 
 			// Transform (fixed, not tier-dependent)
-			list.push({
-				name: 'Scale up/down',
-				category: 'Transform',
-				description: 'Oscillate scale 0.5× to 2.0×',
-				setup: function (ctx) {
-					var sizes = [16, 24, 32, 48];
-					var y = 20;
-					for (var j = 0; j < sizes.length; j++) {
-						var t = ctx.createText(sampleText, sizes[j]);
-						t.x = 10; t.y = y;
-						ctx.app.stage.addChild(t);
-						ctx.objects.push(t);
-						y += sizes[j] * 2 + 16;
+			if (on['scale'] !== false) {
+				list.push({
+					name: 'Scale up/down',
+					category: 'Transform',
+					description: 'Oscillate scale 0.5× to 2.0×',
+					setup: function (ctx) {
+						var sizes = [16, 24, 32, 48];
+						var y = 20;
+						for (var j = 0; j < sizes.length; j++) {
+							var t = ctx.createText(sampleText, sizes[j]);
+							t.x = 10; t.y = y;
+							ctx.app.stage.addChild(t);
+							ctx.objects.push(t);
+							y += sizes[j] * 2 + 16;
+						}
+					},
+					tick: function (ctx, elapsedMs) {
+						var s = 1.25 + 0.75 * Math.sin(elapsedMs / 1500 * Math.PI);
+						for (var j = 0; j < ctx.objects.length; j++) {
+							ctx.objects[j].scale.set(s, s);
+						}
 					}
-				},
-				tick: function (ctx, elapsedMs) {
-					var s = 1.25 + 0.75 * Math.sin(elapsedMs / 1500 * Math.PI);
-					for (var j = 0; j < ctx.objects.length; j++) {
-						ctx.objects[j].scale.set(s, s);
+				});
+			}
+			if (on['rotation'] !== false) {
+				list.push({
+					name: 'Rotation',
+					category: 'Transform',
+					description: 'Rotating ±30° oscillation',
+					setup: function (ctx) {
+						var sizes = [16, 24, 32, 48];
+						var y = 80;
+						for (var j = 0; j < sizes.length; j++) {
+							var t = ctx.createText(sampleText, sizes[j]);
+							t.x = ctx.settings.canvasW / 2;
+							t.y = y;
+							t.pivot.set(150, sizes[j] / 2);
+							ctx.app.stage.addChild(t);
+							ctx.objects.push(t);
+							y += sizes[j] * 2.5 + 20;
+						}
+					},
+					tick: function (ctx, elapsedMs) {
+						var angle = 0.52 * Math.sin(elapsedMs / 2000 * Math.PI);
+						for (var j = 0; j < ctx.objects.length; j++) {
+							ctx.objects[j].rotation = angle;
+						}
 					}
-				}
-			});
-			list.push({
-				name: 'Rotation',
-				category: 'Transform',
-				description: 'Rotating ±30° oscillation',
-				setup: function (ctx) {
-					var sizes = [16, 24, 32, 48];
-					var y = 80;
-					for (var j = 0; j < sizes.length; j++) {
-						var t = ctx.createText(sampleText, sizes[j]);
-						t.x = ctx.settings.canvasW / 2;
-						t.y = y;
-						t.pivot.set(150, sizes[j] / 2);
-						ctx.app.stage.addChild(t);
-						ctx.objects.push(t);
-						y += sizes[j] * 2.5 + 20;
-					}
-				},
-				tick: function (ctx, elapsedMs) {
-					var angle = 0.52 * Math.sin(elapsedMs / 2000 * Math.PI);
-					for (var j = 0; j < ctx.objects.length; j++) {
-						ctx.objects[j].rotation = angle;
-					}
-				}
-			});
+				});
+			}
 
 			// Scroll variations (from tiers)
-			for (var i = 0; i < tiers.length; i++) {
-				list.push(makeScrollScenario(tiers[i]));
+			if (on['scroll'] !== false) {
+				for (var i = 0; i < tiers.length; i++) {
+					list.push(makeScrollScenario(tiers[i]));
+				}
 			}
 
 			// Content change (fixed, not tier-dependent)
-			list.push({
-				name: 'Rapid text change',
-				category: 'Content',
-				description: 'Change text content every 200 ms',
-				setup: function (ctx) {
-					var t = ctx.createText(sampleText, 32);
-					t.x = 10; t.y = 50;
-					ctx.app.stage.addChild(t);
-					ctx.objects.push(t);
-					ctx._lastChange = 0;
-					ctx._changeIdx = 0;
-				},
-				tick: function (ctx, elapsedMs) {
-					if (elapsedMs - ctx._lastChange > 200) {
-						ctx._changeIdx = (ctx._changeIdx + 1) % sampleTexts.length;
-						ctx.objects[0].text = sampleTexts[ctx._changeIdx];
-						ctx._lastChange = elapsedMs;
+			if (on['text-change'] !== false) {
+				list.push({
+					name: 'Rapid text change',
+					category: 'Content',
+					description: 'Change text content every 200 ms',
+					setup: function (ctx) {
+						var t = ctx.createText(sampleText, 32);
+						t.x = 10; t.y = 50;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+						ctx._lastChange = 0;
+						ctx._changeIdx = 0;
+					},
+					tick: function (ctx, elapsedMs) {
+						if (elapsedMs - ctx._lastChange > 200) {
+							ctx._changeIdx = (ctx._changeIdx + 1) % sampleTexts.length;
+							ctx.objects[0].text = sampleTexts[ctx._changeIdx];
+							ctx._lastChange = elapsedMs;
+						}
 					}
-				}
-			});
+				});
+			}
 
 			// Mixed stress (from tiers)
-			for (var i = 0; i < tiers.length; i++) {
-				list.push(makeMixedStressScenario(tiers[i]));
+			if (on['mixed-stress'] !== false) {
+				for (var i = 0; i < tiers.length; i++) {
+					list.push(makeMixedStressScenario(tiers[i]));
+				}
 			}
 
 			// Create/destroy — cap at 200 to avoid context loss from rapid GPU churn
-			for (var i = 0; i < tiers.length; i++) {
-				if (tiers[i] <= 200) {
-					list.push(makeCreateDestroyScenario(tiers[i]));
+			if (on['create-destroy'] !== false) {
+				for (var i = 0; i < tiers.length; i++) {
+					if (tiers[i] <= 200) {
+						list.push(makeCreateDestroyScenario(tiers[i]));
+					}
 				}
 			}
 
@@ -1056,6 +1103,7 @@
 
 					results[sys.key][scenario.name] = {
 						timing: computeStats(frameTimes),
+						frameTimes: frameTimes,
 						gpuMemory: gpuMem,
 						heapSetup: (heapBefore !== null && heapAfterSetup !== null) ? heapAfterSetup - heapBefore : null,
 						heapRun: (heapAfterSetup !== null && heapAfterRun !== null) ? heapAfterRun - heapAfterSetup : null,
@@ -1196,6 +1244,7 @@
 					var heapAfterRun = heapNow();
 					results[apps[si].sys.key][scenario.name] = {
 						timing: computeStats(allFrameTimes[si]),
+						frameTimes: allFrameTimes[si],
 						gpuMemory: gpuMems[si],
 						heapSetup: (heapsBefore[si] !== null && heapsAfterSetup[si] !== null) ? heapsAfterSetup[si] - heapsBefore[si] : null,
 						heapRun: (heapsAfterSetup[si] !== null && heapAfterRun !== null) ? heapAfterRun - heapsAfterSetup[si] : null,
@@ -1215,6 +1264,160 @@
 			canvasWrap.innerHTML = '';
 
 			return results;
+		}
+
+		// ================================================================
+		//  FPS timeline chart
+		// ================================================================
+
+		var CHART_HEIGHT = 120;
+
+		/**
+		 * Render an FPS timeline chart to a canvas element.
+		 * frameTimes: raw ms-per-frame array in chronological order.
+		 * color: stroke color for the line.
+		 * Returns an HTMLCanvasElement sized to fill parent width × CHART_HEIGHT.
+		 */
+		function renderFpsChart(frameTimes, color) {
+			if (!frameTimes || frameTimes.length < 2) return null;
+
+			// Convert frame times to per-frame FPS and cumulative time axis
+			var fps = [];
+			var timeAxis = []; // cumulative seconds
+			var t = 0;
+			for (var i = 0; i < frameTimes.length; i++) {
+				t += frameTimes[i];
+				timeAxis.push(t / 1000);
+				fps.push(1000 / frameTimes[i]);
+			}
+
+			// Clamp FPS outliers for readable axis (cap at p99 * 1.2)
+			var sortedFps = fps.slice().sort(function (a, b) { return a - b; });
+			var fpsFloor = 0;
+			var fpsCeil = Math.ceil(sortedFps[Math.floor(sortedFps.length * 0.99)] * 1.2);
+			if (fpsCeil < 10) fpsCeil = 10;
+
+			var canvas = document.createElement('canvas');
+			canvas.height = CHART_HEIGHT;
+			// Width set after insertion via a class; use a default for now
+			canvas.width = 300;
+			canvas.style.width = '100%';
+			canvas.style.height = CHART_HEIGHT + 'px';
+			canvas.style.display = 'block';
+			canvas.style.marginBottom = '6px';
+			canvas.style.borderRadius = '3px';
+			canvas.style.background = '#0a0a18';
+
+			// Deferred render — need actual pixel width
+			canvas.__fpsData = { fps: fps, timeAxis: timeAxis, fpsFloor: fpsFloor, fpsCeil: fpsCeil, color: color };
+			return canvas;
+		}
+
+		function paintFpsChart(canvas) {
+			var d = canvas.__fpsData;
+			if (!d) return;
+
+			var dpr = window.devicePixelRatio || 1;
+			var rect = canvas.getBoundingClientRect();
+			var w = Math.round(rect.width * dpr);
+			var h = Math.round(CHART_HEIGHT * dpr);
+			canvas.width = w;
+			canvas.height = h;
+
+			var ctx = canvas.getContext('2d');
+			ctx.scale(dpr, dpr);
+			var cw = rect.width;
+			var ch = CHART_HEIGHT;
+
+			var fps = d.fps;
+			var timeAxis = d.timeAxis;
+			var fpsFloor = d.fpsFloor;
+			var fpsCeil = d.fpsCeil;
+			var fpsRange = fpsCeil - fpsFloor || 1;
+			var totalTime = timeAxis[timeAxis.length - 1] || 1;
+
+			// Margins for axis labels
+			var ml = 32, mr = 4, mt = 4, mb = 16;
+			var pw = cw - ml - mr;
+			var ph = ch - mt - mb;
+
+			// Grid lines
+			ctx.strokeStyle = '#1a1a3a';
+			ctx.lineWidth = 0.5;
+			var gridSteps = 4;
+			for (var gi = 0; gi <= gridSteps; gi++) {
+				var gy = mt + ph - (gi / gridSteps) * ph;
+				ctx.beginPath();
+				ctx.moveTo(ml, gy);
+				ctx.lineTo(ml + pw, gy);
+				ctx.stroke();
+			}
+
+			// Y-axis labels
+			ctx.fillStyle = '#556';
+			ctx.font = '9px sans-serif';
+			ctx.textAlign = 'right';
+			ctx.textBaseline = 'middle';
+			for (var gi = 0; gi <= gridSteps; gi++) {
+				var val = fpsFloor + (gi / gridSteps) * fpsRange;
+				var gy = mt + ph - (gi / gridSteps) * ph;
+				ctx.fillText(val.toFixed(0), ml - 3, gy);
+			}
+
+			// X-axis labels (seconds)
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'top';
+			var xSteps = Math.min(5, Math.ceil(totalTime));
+			for (var xi = 0; xi <= xSteps; xi++) {
+				var xSec = (xi / xSteps) * totalTime;
+				var xx = ml + (xSec / totalTime) * pw;
+				ctx.fillText(xSec.toFixed(1) + 's', xx, ch - mb + 3);
+			}
+
+			// FPS line
+			ctx.strokeStyle = d.color;
+			ctx.lineWidth = 1;
+			ctx.lineJoin = 'round';
+			ctx.beginPath();
+			for (var i = 0; i < fps.length; i++) {
+				var x = ml + (timeAxis[i] / totalTime) * pw;
+				var y = mt + ph - ((Math.min(Math.max(fps[i], fpsFloor), fpsCeil) - fpsFloor) / fpsRange) * ph;
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+			}
+			ctx.stroke();
+
+			// P95 / P99 reference lines
+			var sortedFps = fps.slice().sort(function (a, b) { return a - b; });
+			var p95fps = 1000 / sortedFps[Math.floor(sortedFps.length * 0.95)]; // p95 frame time → fps
+			var p99fps = 1000 / sortedFps[Math.floor(sortedFps.length * 0.99)];
+
+			// Actually we want the FPS that 95%/99% of frames are AT or ABOVE
+			// So use the sorted fps values directly (ascending): p5 of fps = bottom 5%
+			var fpsSorted = fps.slice().sort(function (a, b) { return a - b; });
+			var fpsP95 = fpsSorted[Math.floor(fpsSorted.length * 0.05)]; // 95% of frames are above this
+			var fpsP99 = fpsSorted[Math.floor(fpsSorted.length * 0.01)]; // 99% of frames are above this
+
+			function drawRefLine(fpsVal, label, lineColor) {
+				if (fpsVal < fpsFloor || fpsVal > fpsCeil) return;
+				var ry = mt + ph - ((fpsVal - fpsFloor) / fpsRange) * ph;
+				ctx.strokeStyle = lineColor;
+				ctx.lineWidth = 0.7;
+				ctx.setLineDash([3, 3]);
+				ctx.beginPath();
+				ctx.moveTo(ml, ry);
+				ctx.lineTo(ml + pw, ry);
+				ctx.stroke();
+				ctx.setLineDash([]);
+				ctx.fillStyle = lineColor;
+				ctx.font = '8px sans-serif';
+				ctx.textAlign = 'left';
+				ctx.textBaseline = 'bottom';
+				ctx.fillText(label + ' ' + fpsVal.toFixed(0), ml + 2, ry - 1);
+			}
+
+			drawRefLine(fpsP95, 'P95', '#5588aa');
+			drawRefLine(fpsP99, 'P99', '#aa5555');
 		}
 
 		// ================================================================
@@ -1259,19 +1462,15 @@
 					html += '<tr>';
 					html += '<td><strong>' + scenario.name + '</strong><br><span class="sl">' + scenario.description + '</span></td>';
 
-					// Collect values for best/worst
-					var fpsVals = [];
-					var p95Vals = [];
-					var memVals = [];
+					// Collect P95 FPS values for best/worst comparison
+					var fpsP95Vals = [];
 					for (var s = 0; s < enabledSystems.length; s++) {
 						var r = results[enabledSystems[s].key] && results[enabledSystems[s].key][scenario.name];
-						fpsVals.push(r ? r.timing.fps : 0);
-						p95Vals.push(r ? r.timing.p95 : Infinity);
-						memVals.push(r ? r.gpuMemory : Infinity);
+						fpsP95Vals.push(r ? r.timing.fpsP95 : 0);
 					}
 
-					var bestFps = Math.max.apply(null, fpsVals);
-					var worstFps = Math.min.apply(null, fpsVals);
+					var bestFps = Math.max.apply(null, fpsP95Vals);
+					var worstFps = Math.min.apply(null, fpsP95Vals);
 
 					for (var s = 0; s < enabledSystems.length; s++) {
 						var r = results[enabledSystems[s].key] && results[enabledSystems[s].key][scenario.name];
@@ -1280,17 +1479,24 @@
 						var t = r.timing;
 						var cls = '';
 						if (enabledSystems.length > 1) {
-							if (fpsVals[s] === bestFps && bestFps !== worstFps) cls = 'best';
-							else if (fpsVals[s] === worstFps && bestFps !== worstFps) cls = 'worst';
+							if (fpsP95Vals[s] === bestFps && bestFps !== worstFps) cls = 'best';
+							else if (fpsP95Vals[s] === worstFps && bestFps !== worstFps) cls = 'worst';
 						}
 
 						html += '<td class="' + cls + '">';
 
-						// Score: avg FPS
-						html += '<div class="row-line"><span class="score-big">' + t.fps.toFixed(1) + '</span> <span class="score-unit">avg FPS</span></div>';
+						// Chart placeholder — canvas inserted after innerHTML is set
+						var chartId = 'chart-' + scenario.name.replace(/\W+/g, '-') + '-' + enabledSystems[s].key;
+						html += '<div id="' + chartId + '"></div>';
 
-						// FPS range
-						html += '<div class="row-line"><span class="sl">FPS range: </span><span class="sv">' + t.fpsMin.toFixed(0) + ' – ' + t.fpsMax.toFixed(0) + '</span></div>';
+						// Percentile FPS (what matters for comparing consistency)
+						html += '<div class="row-line"><span class="score-big">' + t.fpsP95.toFixed(1) + '</span> <span class="score-unit">P95 FPS</span></div>';
+						html += '<div class="row-line"><span class="sl">P90 FPS: </span><span class="sv">' + t.fpsP90.toFixed(1) + '</span>';
+						html += ' &nbsp; <span class="sl">P99 FPS: </span><span class="sv">' + t.fpsP99.toFixed(1) + '</span></div>';
+
+						// Average and range
+						html += '<div class="row-line"><span class="sl">Avg FPS: </span><span class="sv">' + t.fps.toFixed(1) + '</span>';
+						html += ' &nbsp; <span class="sl">Range: </span><span class="sv">' + t.fpsMin.toFixed(0) + ' – ' + t.fpsMax.toFixed(0) + '</span></div>';
 
 						// Frame timing
 						html += '<div class="row-line"><span class="sl">Frame: </span><span class="sv">' +
@@ -1353,6 +1559,10 @@
 			html += '<tr><td>Bezier Smoothness</td><td>' + settings.pixiBezierSmoothness + '</td></tr>';
 			html += '<tr><td>Back Buffer</td><td>' + (settings.pixiBackBuffer ? 'Enabled' : 'Disabled') + '</td></tr>';
 			html += '<tr><td>Object Count Tiers</td><td>' + settings.objectCountTiers.join(', ') + '</td></tr>';
+			var enabledTestNames = [];
+			var et = settings.enabledTests || {};
+			for (var tk in et) { if (et[tk]) enabledTestNames.push(tk); }
+			html += '<tr><td>Enabled Tests</td><td>' + (enabledTestNames.length ? enabledTestNames.join(', ') : 'none') + '</td></tr>';
 			html += '<tr><th colspan="2" style="color:#aac">Enabled Systems</th></tr>';
 			html += '<tr><td>pixi-slug</td><td>' + (settings.enableSlug ? 'Enabled' : 'Disabled') + '</td></tr>';
 			if (settings.enableSlug) {
@@ -1372,6 +1582,26 @@
 			document.getElementById('results').innerHTML = html;
 			document.getElementById('results').style.display = 'block';
 
+			// Insert and paint FPS charts (must happen after innerHTML is set so containers have layout)
+			for (var ci = 0; ci < categories.length; ci++) {
+				var catScenarios = catMap[categories[ci]];
+				for (var ti = 0; ti < catScenarios.length; ti++) {
+					var scenario = catScenarios[ti];
+					for (var s = 0; s < enabledSystems.length; s++) {
+						var r = results[enabledSystems[s].key] && results[enabledSystems[s].key][scenario.name];
+						if (!r || !r.frameTimes) continue;
+						var chartId = 'chart-' + scenario.name.replace(/\W+/g, '-') + '-' + enabledSystems[s].key;
+						var container = document.getElementById(chartId);
+						if (!container) continue;
+						var chartCanvas = renderFpsChart(r.frameTimes, enabledSystems[s].color);
+						if (chartCanvas) {
+							container.appendChild(chartCanvas);
+							paintFpsChart(chartCanvas);
+						}
+					}
+				}
+			}
+
 			// Store for export
 			window.__benchResults = results;
 			window.__benchSettings = settings;
@@ -1382,6 +1612,12 @@
 		//  Export
 		// ================================================================
 
+		// Strip raw frameTimes from export (too large; stats already capture the summary).
+		function exportReplacer(key, value) {
+			if (key === 'frameTimes') return undefined;
+			return value;
+		}
+
 		window.exportResults = function () {
 			if (!window.__benchResults) return;
 			var data = {
@@ -1391,7 +1627,7 @@
 				scenarios: scenarios.map(function (s) { return { name: s.name, category: s.category, description: s.description }; }),
 				results: window.__benchResults
 			};
-			var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			var blob = new Blob([JSON.stringify(data, exportReplacer, 2)], { type: 'application/json' });
 			var a = document.createElement('a');
 			a.href = URL.createObjectURL(blob);
 			a.download = 'pixi-slug-benchmark-' + Date.now() + '.json';
@@ -1408,7 +1644,7 @@
 				scenarios: scenarios.map(function (s) { return { name: s.name, category: s.category, description: s.description }; }),
 				results: window.__benchResults
 			};
-			navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(function () {
+			navigator.clipboard.writeText(JSON.stringify(data, exportReplacer, 2)).then(function () {
 				var btn = document.getElementById('copyBtn');
 				btn.textContent = 'Copied!';
 				setTimeout(function () { btn.textContent = 'Copy to clipboard'; }, 1500);
@@ -1425,12 +1661,13 @@
 		document.getElementById('btnStart').onclick = async function () {
 			var settings = getSettings();
 
-			// Build scenarios from selected tiers
-			if (settings.objectCountTiers.length === 0) {
-				document.getElementById('statusText').textContent = 'Select at least one object count tier';
+			// Build scenarios from selected tiers and tests
+			scenarios = buildScenarios(settings.objectCountTiers, settings.enabledTests);
+
+			if (scenarios.length === 0) {
+				document.getElementById('statusText').textContent = 'No tests selected — enable at least one test and one tier';
 				return;
 			}
-			scenarios = buildScenarios(settings.objectCountTiers);
 
 			// Determine enabled systems
 			var enabledSystems = [];
