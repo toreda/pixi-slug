@@ -61,9 +61,31 @@
 		}
 		#status { font-size: 12px; color: #888; margin-left: auto; }
 		canvas { display: block; }
+		#nav {
+			display: flex;
+			gap: 0;
+			background: #0d1117;
+			width: 100%;
+		}
+		#nav a {
+			padding: 8px 18px;
+			color: #8b949e;
+			text-decoration: none;
+			font-size: 13px;
+			font-family: sans-serif;
+			border-bottom: 2px solid transparent;
+		}
+		#nav a:hover { color: #eee; background: #161b22; }
+		#nav a.active { color: #eee; border-bottom-color: #4a6aae; }
 	</style>
 </head>
 <body>
+	<nav id="nav">
+		<a href="/examples/v8/">V8</a>
+		<a href="/examples/v7/">V7</a>
+		<a href="/examples/v6/">V6</a>
+		<a href="/examples/comparison/" class="active">pixi-slug vs Text</a>
+	</nav>
 	<h1>Font Rendering Comparison — pixi-slug vs Text vs BitmapText</h1>
 	<div id="controls">
 		<button id="btnScale" class="active">Scale</button>
@@ -76,6 +98,13 @@
 		<button id="btnReset">Reset</button>
 		<span>|</span>
 		<button id="btnSupersampling">Supersampling: Off</button>
+		<label for="supersampleCount">Samples:</label>
+		<select id="supersampleCount">
+			<option value="2">2</option>
+			<option value="4" selected>4</option>
+			<option value="8">8</option>
+			<option value="16">16</option>
+		</select>
 		<span>|</span>
 		<label for="fpsLimit">FPS Limit:</label>
 		<select id="fpsLimit">
@@ -142,7 +171,7 @@
 			document.fonts.add(fontFace);
 
 			// Install BitmapFont at a specific size for bitmap text comparison
-			var bitmapFont = PIXI.BitmapFont.install({
+			PIXI.BitmapFont.install({
 				name: 'ComparisonBitmap',
 				style: {
 					fontFamily: 'ComparisonFont',
@@ -157,7 +186,7 @@
 			var colWidth = 400;
 			var colX = [0, 400, 800];
 			var headerY = 10;
-			var textStartY = 60;
+			var textStartY = 75;
 			var sampleText = 'The quick brown fox';
 			var sizes = [16, 24, 32, 48];
 
@@ -168,6 +197,9 @@
 				{ label: 'PIXI.BitmapText (Bitmap)', x: colX[2] },
 			];
 
+			var statStyle = { fill: '#668899', fontSize: 11, fontFamily: 'monospace' };
+			var statLabels = [];
+
 			for (var h of headers) {
 				var hdr = new PIXI.Text({
 					text: h.label,
@@ -176,6 +208,12 @@
 				hdr.x = h.x + 10;
 				hdr.y = headerY;
 				app.stage.addChild(hdr);
+
+				var stat = new PIXI.Text({ text: '', style: statStyle });
+				stat.x = h.x + 10;
+				stat.y = headerY + 18;
+				app.stage.addChild(stat);
+				statLabels.push(stat);
 			}
 
 			// Divider lines
@@ -202,6 +240,7 @@
 			bitmapGroup.y = textStartY;
 
 			var slugTexts = [];
+			var pixiTexts = [];
 			var yOffset = 0;
 			for (var si = 0; si < sizes.length; si++) {
 				var sz = sizes[si];
@@ -240,6 +279,7 @@
 				});
 				pixiText.y = yOffset;
 				textGroup.addChild(pixiText);
+				pixiTexts.push(pixiText);
 
 				// BitmapText
 				var bmpText = new PIXI.BitmapText({
@@ -258,6 +298,75 @@
 			app.stage.addChild(slugGroup);
 			app.stage.addChild(textGroup);
 			app.stage.addChild(bitmapGroup);
+
+			// ----- Memory + rebuild stats -----
+			function formatBytes(bytes) {
+				if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+				if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+				return bytes + ' B';
+			}
+
+			function textureBytes(source) {
+				// All PixiJS canvas-backed textures use rgba8unorm: 4 bytes per pixel.
+				// Use resource.width/height (the actual canvas element dimensions) rather
+				// than pixelWidth/pixelHeight, which may not be synced before first GPU upload.
+				var w = (source.resource && source.resource.width) || source.pixelWidth || 0;
+				var h = (source.resource && source.resource.height) || source.pixelHeight || 0;
+				return w * h * 4;
+			}
+
+			function updateStatus() {
+				// --- pixi-slug: exact GPU breakdown ---
+				var fontMem = slugFont.memoryBytes();
+				var meshMem = 0;
+				var totalRebuilds = 0;
+				for (var i = 0; i < slugTexts.length; i++) {
+					meshMem += slugTexts[i].meshMemoryBytes();
+					totalRebuilds += slugTexts[i].rebuildCount;
+				}
+				statLabels[0].text =
+					'GPU: ' + formatBytes(fontMem + meshMem) +
+					'  (font ' + formatBytes(fontMem) +
+					' + mesh ' + formatBytes(meshMem) + ')' +
+					'  rebuilds: ' + totalRebuilds;
+
+				// --- PIXI.Text: one canvas texture per object ---
+				// texture.source may not be populated until after first render,
+				// so guard against zero dimensions.
+				var pixiTexMem = 0;
+				for (var i = 0; i < pixiTexts.length; i++) {
+					var src = pixiTexts[i].texture && pixiTexts[i].texture.source;
+					if (src && src.pixelWidth > 0) {
+						pixiTexMem += textureBytes(src);
+					}
+				}
+				statLabels[1].text = pixiTexMem > 0
+					? 'GPU: ' + formatBytes(pixiTexMem) + '  (' + pixiTexts.length + ' canvas textures)'
+					: 'GPU: measuring... (render first frame)';
+
+				// --- BitmapText: shared atlas pages ---
+				// BitmapFont.install() returns void; retrieve from PixiJS Cache by key.
+				var atlasMem = 0;
+				var atlasPageCount = 0;
+				var installedFont = PIXI.Cache.get('ComparisonBitmap-bitmap');
+				if (installedFont && installedFont.pages) {
+					var pages = installedFont.pages;
+					atlasPageCount = pages.length;
+					for (var i = 0; i < pages.length; i++) {
+						var src = pages[i].texture && pages[i].texture.source;
+						if (src && src.pixelWidth > 0) {
+							atlasMem += textureBytes(src);
+						}
+					}
+				}
+				statLabels[2].text = atlasMem > 0
+					? 'GPU: ' + formatBytes(atlasMem) + '  (' + atlasPageCount + ' atlas page' + (atlasPageCount !== 1 ? 's' : '') + ', shared)'
+					: 'GPU: measuring... (render first frame)';
+
+				document.getElementById('status').textContent = 'Ready';
+			}
+			updateStatus();
+
 
 			// ----- Animation state -----
 			var mode = 'scale';  // 'scale', 'move', 'rotate', 'all', 'scroll'
@@ -365,6 +474,13 @@
 				}
 				this.textContent = 'Supersampling: ' + (supersampling ? 'On' : 'Off');
 				this.classList.toggle('active', supersampling);
+			};
+
+			document.getElementById('supersampleCount').onchange = function () {
+				var count = parseInt(this.value, 10);
+				for (var i = 0; i < slugTexts.length; i++) {
+					slugTexts[i].supersampleCount = count;
+				}
 			};
 
 			document.getElementById('fpsLimit').onchange = function () {

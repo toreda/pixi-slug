@@ -23,9 +23,34 @@
 		canvas {
 			border: 1px solid #333;
 		}
+		#nav {
+			display: flex;
+			gap: 0;
+			background: #0d1117;
+			width: 100%;
+			position: fixed;
+			top: 0;
+			left: 0;
+			z-index: 100;
+		}
+		#nav a {
+			padding: 8px 18px;
+			color: #8b949e;
+			text-decoration: none;
+			font-size: 13px;
+			border-bottom: 2px solid transparent;
+		}
+		#nav a:hover { color: #eee; background: #161b22; }
+		#nav a.active { color: #eee; border-bottom-color: #4a6aae; }
 	</style>
 </head>
 <body>
+	<nav id="nav">
+		<a href="/examples/v8/">V8</a>
+		<a href="/examples/v7/" class="active">V7</a>
+		<a href="/examples/v6/">V6</a>
+		<a href="/examples/comparison/">pixi-slug vs Text</a>
+	</nav>
 	<h1>pixi-slug — PixiJS v7</h1>
 	<div id="app"></div>
 
