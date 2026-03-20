@@ -59,6 +59,7 @@
 		<button id="btnMove">Move</button>
 		<button id="btnRotate">Rotate</button>
 		<button id="btnAll">All Combined</button>
+		<button id="btnScroll">Scroll</button>
 		<button id="btnPause">Pause</button>
 		<span>|</span>
 		<button id="btnReset">Reset</button>
@@ -240,7 +241,7 @@
 			app.stage.addChild(bitmapGroup);
 
 			// ----- Animation state -----
-			var mode = 'scale';  // 'scale', 'move', 'rotate', 'all'
+			var mode = 'scale';  // 'scale', 'move', 'rotate', 'all', 'scroll'
 			var paused = false;
 			// elapsedSec accumulates real wall-clock seconds via deltaMS so
 			// animation speed is frame-rate independent.
@@ -252,12 +253,47 @@
 			var MOVE_PERIOD_X = 5.0;
 			var ROTATE_PERIOD = 6.0;
 
+			// Scroll state — one Y position per group, driven by dt.
+			var SCROLL_SPEED = 80;  // pixels per second
+			var CANVAS_H = 800;
+			// Safety margin: wait until this far past canvas bottom before wrapping.
+			var SCROLL_BOTTOM_MARGIN = CANVAS_H * 0.05;
+			// Gap above canvas top that text starts from on wrap (so the jump isn't visible).
+			var SCROLL_TOP_GAP = CANVAS_H * 0.05;
+
+			// Measure the natural height of each group's content (set once after layout).
+			var groupContentHeight = yOffset;  // yOffset accumulated during text creation
+
+			// Per-group scroll Y (world-space top of the group container).
+			var scrollY = [textStartY, textStartY, textStartY];
+
+			// ----- Group reset -----
+			// Restores every group to its default transform and resets all
+			// animation state. Called on every mode change before mode-specific
+			// setup so no stale values carry over.
+			function resetGroups() {
+				var groups = [slugGroup, textGroup, bitmapGroup];
+				for (var gi = 0; gi < groups.length; gi++) {
+					var g = groups[gi];
+					g.x = colX[gi] + 10;
+					g.y = textStartY;
+					g.scale.set(1, 1);
+					g.rotation = 0;
+					g.pivot.set(0, 0);
+				}
+				// Reset oscillation clock.
+				elapsedSec = 0;
+				// Reset scroll positions to the natural start.
+				for (var i = 0; i < 3; i++) scrollY[i] = textStartY;
+			}
+
 			// Button handlers
 			var buttons = {
 				scale: document.getElementById('btnScale'),
 				move: document.getElementById('btnMove'),
 				rotate: document.getElementById('btnRotate'),
 				all: document.getElementById('btnAll'),
+				scroll: document.getElementById('btnScroll'),
 			};
 
 			function setMode(m) {
@@ -265,12 +301,19 @@
 				for (var k in buttons) {
 					buttons[k].classList.toggle('active', k === m);
 				}
+				// Always reset everything to defaults first, then apply
+				// any mode-specific initial state below.
+				resetGroups();
+				// (No mode-specific setup required currently — scroll state
+				// is already initialised by resetGroups, and oscillation
+				// modes derive all values from elapsedSec each frame.)
 			}
 
-			buttons.scale.onclick = function () { setMode('scale'); };
-			buttons.move.onclick = function () { setMode('move'); };
+			buttons.scale.onclick  = function () { setMode('scale'); };
+			buttons.move.onclick   = function () { setMode('move'); };
 			buttons.rotate.onclick = function () { setMode('rotate'); };
-			buttons.all.onclick = function () { setMode('all'); };
+			buttons.all.onclick    = function () { setMode('all'); };
+			buttons.scroll.onclick = function () { setMode('scroll'); };
 
 			document.getElementById('btnPause').onclick = function () {
 				paused = !paused;
@@ -284,7 +327,7 @@
 			app.ticker.maxFPS = 60;
 
 			document.getElementById('btnReset').onclick = function () {
-				elapsedSec = 0;
+				resetGroups();
 				applyTransform(0);
 			};
 
@@ -341,6 +384,35 @@
 				}
 			}
 
+			// ----- Scroll update -----
+			function updateScroll(dtSec) {
+				var groups = [slugGroup, textGroup, bitmapGroup];
+				var dy = SCROLL_SPEED * dtSec;
+
+				for (var gi = 0; gi < groups.length; gi++) {
+					scrollY[gi] += dy;
+
+					// The bottom edge of the content in world space.
+					var bottomEdge = scrollY[gi] + groupContentHeight;
+
+					// Once the entire bounding box has cleared the canvas bottom
+					// (plus safety margin), wrap back above the top.
+					if (bottomEdge > CANVAS_H + SCROLL_BOTTOM_MARGIN) {
+						// Place the top of the group above the canvas by the content
+						// height plus a gap, so the wrap is never visible.
+						scrollY[gi] = -(groupContentHeight + SCROLL_TOP_GAP);
+					}
+
+					// Apply — no rotation/scale in scroll mode.
+					var g = groups[gi];
+					g.x = colX[gi] + 10;
+					g.y = scrollY[gi];
+					g.scale.set(1, 1);
+					g.rotation = 0;
+					g.pivot.set(0, 0);
+				}
+			}
+
 			// ----- FPS counter -----
 			var fpsText = new PIXI.Text({
 				text: 'FPS: --',
@@ -354,10 +426,15 @@
 			var fpsTime = 0;
 
 			app.ticker.add(function (ticker) {
+				var dtSec = ticker.deltaMS / 1000;
 				if (!paused) {
-					elapsedSec += ticker.deltaMS / 1000;
+					if (mode === 'scroll') {
+						updateScroll(dtSec);
+					} else {
+						elapsedSec += dtSec;
+						applyTransform(elapsedSec);
+					}
 				}
-				applyTransform(elapsedSec);
 
 				fpsFrames++;
 				fpsTime += ticker.deltaMS;

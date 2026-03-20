@@ -18,6 +18,7 @@ flat in ivec4 vGlyph;
 
 uniform sampler2D uCurveTexture;
 uniform sampler2D uBandTexture;
+uniform int uSupersampling;
 
 uvec2 fetchBand(ivec2 coord)
 {
@@ -187,6 +188,29 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 
 void main()
 {
-	float coverage = SlugRender(vTexcoord, vBanding, vGlyph);
+	float coverage;
+
+	if (uSupersampling != 0)
+	{
+		// 4-sample rotated-grid supersampling (Rgss pattern).
+		// Offsets are in em-space, derived from screen-space derivatives so they
+		// scale correctly at any font size or transform.
+		// Each sample is a quarter-pixel step in a rotated grid to maximise
+		// diagonal edge coverage without axis-aligned bias.
+		vec2 dx = dFdx(vTexcoord) * 0.5;
+		vec2 dy = dFdy(vTexcoord) * 0.5;
+
+		float c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph);
+		float c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph);
+		float c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph);
+		float c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph);
+
+		coverage = (c0 + c1 + c2 + c3) * 0.25;
+	}
+	else
+	{
+		coverage = SlugRender(vTexcoord, vBanding, vGlyph);
+	}
+
 	fragColor = vColor * coverage;
 }

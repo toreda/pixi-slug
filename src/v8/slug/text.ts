@@ -1,4 +1,4 @@
-import { Buffer, BufferImageSource, BufferUsage, Container, Geometry, Mesh, Rectangle, Shader, Texture } from 'pixi.js';
+import { Buffer, BufferImageSource, BufferUsage, Container, Geometry, Mesh, Rectangle, Shader, Texture, UniformGroup } from 'pixi.js';
 import { Defaults } from '../../defaults';
 import { SlugFont } from '../../shared/slug/font';
 import { slugGlyphQuads } from '../../shared/slug/glyph/quad';
@@ -16,6 +16,8 @@ export class SlugText extends Container {
 	private _mesh: Mesh<Geometry, Shader> | null;
 	private _curveTexture: Texture | null;
 	private _bandTexture: Texture | null;
+	private _supersampling: boolean;
+	private _uniforms: UniformGroup | null;
 
 	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
 		super();
@@ -26,6 +28,8 @@ export class SlugText extends Container {
 		this._mesh = null;
 		this._curveTexture = null;
 		this._bandTexture = null;
+		this._supersampling = false;
+		this._uniforms = null;
 
 		this.rebuild();
 	}
@@ -71,6 +75,19 @@ export class SlugText extends Container {
 	public set color(value: [number, number, number, number]) {
 		this._color = value;
 		this.rebuild();
+	}
+
+	/** Enable 4-sample rotated-grid supersampling for smoother edges. */
+	public get supersampling(): boolean {
+		return this._supersampling;
+	}
+
+	public set supersampling(value: boolean) {
+		if (this._supersampling === value) return;
+		this._supersampling = value;
+		if (this._uniforms) {
+			this._uniforms.uniforms.uSupersampling = value ? 1 : 0;
+		}
 	}
 
 	/**
@@ -178,7 +195,9 @@ export class SlugText extends Container {
 			})
 		});
 
-		const shader = slugShader(this._curveTexture, this._bandTexture);
+		const { shader, uniforms } = slugShader(this._curveTexture, this._bandTexture);
+		this._uniforms = uniforms;
+		this._uniforms.uniforms.uSupersampling = this._supersampling ? 1 : 0;
 		const mesh = new Mesh({ geometry, shader });
 		this._mesh = mesh;
 		this.addChild(mesh);
