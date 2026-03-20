@@ -1,22 +1,23 @@
-import { Program, Shader, Texture, UniformGroup } from '@pixi/core';
-import { SlugFont } from '../../shared/slug/font';
+import { Program, Shader, Texture } from '@pixi/core';
 
-import vertSource from '../../shared/shader/slug/vert.glsl';
+import vertSource from '../shader/slug/vert.glsl';
 import fragSource from '../../shared/shader/slug/frag.glsl';
 
 /**
  * Creates a PixiJS v7 Shader configured for the Slug rendering algorithm.
- * Requires WebGL2 context for integer textures, texelFetch, and flat varyings.
+ * Uses v7-specific vertex shader (different uniform names from v8).
+ * Fragment shader is shared across versions.
+ *
+ * The uResolution uniform must be set manually before each render since
+ * PixiJS v7 does not provide a built-in viewport size uniform.
  */
-export function slugShader(font: SlugFont, curveTexture: Texture, bandTexture: Texture): Shader {
+export function slugShader(curveTexture: Texture, bandTexture: Texture, resolution: [number, number]): Shader {
 	const program = Program.from(vertSource, fragSource);
 
 	const uniforms = {
-		uSlugMatrix: new Float32Array(16),
-		uSlugViewport: new Float32Array(2),
-		uLogTextureWidth: Math.log2(font.textureWidth),
 		uCurveTexture: curveTexture,
-		uBandTexture: bandTexture
+		uBandTexture: bandTexture,
+		uResolution: new Float32Array(resolution),
 	};
 
 	return new Shader(program, uniforms);
