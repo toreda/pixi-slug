@@ -1,21 +1,24 @@
-import { Buffer, BufferImageSource, BufferUsage, Container, Geometry, Mesh, Rectangle, Shader, Texture, UniformGroup } from 'pixi.js';
-import { Defaults } from '../../defaults';
-import { SlugFont } from '../../shared/slug/font';
-import { slugGlyphQuads } from '../../shared/slug/glyph/quad';
-import { slugShader } from './shader';
+import {Buffer, BufferUsage, Container, Geometry, Mesh, Rectangle, Shader, UniformGroup} from 'pixi.js';
+import {Defaults} from '../../defaults';
+import {SlugFont} from '../../shared/slug/font';
+import {slugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugFontGpuV8} from './font/gpu';
+import {slugShader} from './shader';
 
 /**
  * Renderable text element using the Slug algorithm for PixiJS v8.
  * Renders font glyphs directly from quadratic Bezier curves on the GPU.
+ *
+ * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
+ * and shared across all SlugText instances using the same font. SlugText owns only
+ * its per-instance vertex/index buffers and mesh.
  */
 export class SlugText extends Container {
 	private _text: string;
-	private _font: SlugFont;
+	private _fontRef: WeakRef<SlugFont>;
 	private _fontSize: number;
 	private _color: [number, number, number, number];
 	private _mesh: Mesh<Geometry, Shader> | null;
-	private _curveTexture: Texture | null;
-	private _bandTexture: Texture | null;
 	private _supersampling: boolean;
 	private _supersampleCount: number;
 	private _uniforms: UniformGroup | null;
@@ -26,12 +29,10 @@ export class SlugText extends Container {
 	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
 		super();
 		this._text = text;
-		this._font = font;
+		this._fontRef = new WeakRef(font);
 		this._fontSize = fontSize;
 		this._color = [1, 1, 1, 1];
 		this._mesh = null;
-		this._curveTexture = null;
-		this._bandTexture = null;
 		this._supersampling = false;
 		this._supersampleCount = Defaults.SUPERSAMPLE_COUNT;
 		this._uniforms = null;
@@ -53,14 +54,17 @@ export class SlugText extends Container {
 		this.rebuild();
 	}
 
-	/** The Slug font used for rendering. */
-	public get font(): SlugFont {
-		return this._font;
+	/**
+	 * The Slug font used for rendering, or null if the font has been garbage collected.
+	 * Returns null only if the font was destroyed and no strong references remain.
+	 */
+	public get font(): SlugFont | null {
+		return this._fontRef.deref() ?? null;
 	}
 
 	public set font(value: SlugFont) {
-		if (this._font === value) return;
-		this._font = value;
+		if (this._fontRef.deref() === value) return;
+		this._fontRef = new WeakRef(value);
 		this.rebuild();
 	}
 
@@ -113,35 +117,33 @@ export class SlugText extends Container {
 	}
 
 	/**
-	 * Build mesh geometry and shader for current text + font.
-	 * Creates per-glyph quads with the 5 vertex attributes required by the Slug shaders,
-	 * creates separate curve and band GPU textures from the font data, and assembles a Mesh.
+	 * Build mesh geometry for current text + font.
+	 * Creates per-glyph quads with the 5 vertex attributes required by the Slug shaders.
+	 * Textures and shader program come from the font's shared GPU cache.
 	 */
 	private rebuild(): void {
 		this._rebuildCount++;
-		// Clean up previous mesh and textures
+
+		// Clean up previous mesh (per-instance resource).
 		if (this._mesh) {
 			this.removeChild(this._mesh);
 			this._mesh.destroy();
 			this._mesh = null;
 		}
-		this._curveTexture?.destroy();
-		this._curveTexture = null;
-		this._bandTexture?.destroy();
-		this._bandTexture = null;
 
-		if (this._text.length === 0 || this._font.glyphs.size === 0) {
+		const font = this._fontRef.deref();
+		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
 			return;
 		}
 
 		// Build per-glyph quads with all 5 vertex attributes
 		const quads = slugGlyphQuads(
 			this._text,
-			this._font.glyphs,
-			this._font.advances,
-			this._font.unitsPerEm,
+			font.glyphs,
+			font.advances,
+			font.unitsPerEm,
 			this._fontSize,
-			this._font.textureWidth,
+			font.textureWidth,
 			this._color
 		);
 
@@ -150,8 +152,6 @@ export class SlugText extends Container {
 		}
 
 		// Track GPU buffer sizes for memoryBytes() reporting.
-		// vertices: Float32Array → 4 bytes per element.
-		// indices: Uint16Array → 2 bytes per element.
 		this._vertexBytes = quads.vertices.byteLength;
 		this._indexBytes = quads.indices.byteLength;
 
@@ -165,11 +165,11 @@ export class SlugText extends Container {
 
 		const geometry = new Geometry({
 			attributes: {
-				aPositionNormal: { buffer: vertexBuffer, format: 'float32x4', stride, offset: 0 },
-				aTexcoord:       { buffer: vertexBuffer, format: 'float32x4', stride, offset: 4 * 4 },
-				aJacobian:       { buffer: vertexBuffer, format: 'float32x4', stride, offset: 8 * 4 },
-				aBanding:        { buffer: vertexBuffer, format: 'float32x4', stride, offset: 12 * 4 },
-				aColor:          { buffer: vertexBuffer, format: 'float32x4', stride, offset: 16 * 4 }
+				aPositionNormal: {buffer: vertexBuffer, format: 'float32x4', stride, offset: 0},
+				aTexcoord: {buffer: vertexBuffer, format: 'float32x4', stride, offset: 4 * 4},
+				aJacobian: {buffer: vertexBuffer, format: 'float32x4', stride, offset: 8 * 4},
+				aBanding: {buffer: vertexBuffer, format: 'float32x4', stride, offset: 12 * 4},
+				aColor: {buffer: vertexBuffer, format: 'float32x4', stride, offset: 16 * 4}
 			},
 			indexBuffer: quads.indices
 		});
@@ -188,45 +188,15 @@ export class SlugText extends Container {
 		}
 		this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 
-		const textureWidth = this._font.textureWidth;
+		// GPU resources from font cache (created once, shared across all SlugText instances).
+		const gpu = slugFontGpuV8(font);
 
-		// Curve texture: RGBA float32, one texel per 2 control points
-		const curveRows = Math.ceil(this._font.curveData.length / 4 / textureWidth) || 1;
-		this._curveTexture = new Texture({
-			source: new BufferImageSource({
-				resource: this._font.curveData,
-				width: textureWidth,
-				height: curveRows,
-				format: 'rgba32float',
-				autoGenerateMipmaps: false,
-				scaleMode: 'nearest',
-				alphaMode: 'no-premultiply-alpha'
-			})
-		});
-
-		// Band texture: Uint32 integer values converted to Float32 float values and uploaded
-		// as rgba32float. The shader recovers uint values via float-to-uint cast: uint(raw.x).
-		// This is a VALUE conversion (6 → 6.0), NOT a bit-pattern reinterpretation.
-		// Safe for all values < 2^24 (see port_risks.md JS-2).
-		// DO NOT change to bit-pattern reinterpretation without also changing fetchBand()
-		// in frag.glsl from uint() to floatBitsToUint().
-		const bandRows = Math.ceil(this._font.bandData.length / 4 / textureWidth) || 1;
-		this._bandTexture = new Texture({
-			source: new BufferImageSource({
-				resource: (() => { const f = new Float32Array(this._font.bandData.length); for (let i = 0; i < this._font.bandData.length; i++) f[i] = this._font.bandData[i]; return f; })(),
-				width: textureWidth,
-				height: bandRows,
-				format: 'rgba32float',
-				autoGenerateMipmaps: false,
-				scaleMode: 'nearest',
-				alphaMode: 'no-premultiply-alpha'
-			})
-		});
-
-		const { shader, uniforms } = slugShader(this._curveTexture, this._bandTexture);
+		// Per-instance shader: shares GlProgram + textures, owns its own UniformGroup.
+		const {shader, uniforms} = slugShader(gpu.glProgram, gpu.curveTexture, gpu.bandTexture);
 		this._uniforms = uniforms;
 		this._uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
-		const mesh = new Mesh({ geometry, shader });
+
+		const mesh = new Mesh({geometry, shader});
 		this._mesh = mesh;
 		this.addChild(mesh);
 	}
@@ -249,13 +219,14 @@ export class SlugText extends Container {
 	 * Use this when the font is not shared, or to get a complete per-instance total.
 	 */
 	public totalMemoryBytes(): number {
-		return this.meshMemoryBytes() + this._font.memoryBytes();
+		const font = this._fontRef.deref();
+		return this.meshMemoryBytes() + (font ? font.memoryBytes() : 0);
 	}
 
 	public override destroy(): void {
 		this._mesh?.destroy();
-		this._curveTexture?.destroy();
-		this._bandTexture?.destroy();
+		// DO NOT destroy textures — they belong to the font's GPU cache
+		// and are shared across all SlugText instances.
 		super.destroy();
 	}
 }

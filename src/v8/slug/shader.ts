@@ -1,7 +1,4 @@
-import { GlProgram, Shader, Texture, UniformGroup } from 'pixi.js';
-
-import vertSource from '../../shared/shader/slug/vert.glsl';
-import fragSource from '../../shared/shader/slug/frag.glsl';
+import {GlProgram, Shader, Texture, UniformGroup} from 'pixi.js';
 
 export interface SlugShader {
 	shader: Shader;
@@ -9,20 +6,18 @@ export interface SlugShader {
 }
 
 /**
- * Creates a PixiJS v8 Shader configured for the Slug rendering algorithm.
+ * Creates a per-instance PixiJS v8 Shader for the Slug rendering algorithm.
+ * The GlProgram and textures are shared across instances (from SlugFont's GPU cache).
+ * Only the UniformGroup is per-instance (holds uSupersampleCount).
+ *
  * Matrix and viewport uniforms (uProjectionMatrix, uWorldTransformMatrix, uResolution)
  * are auto-populated each frame by PixiJS v8's global uniform system.
  */
-export function slugShader(curveTexture: Texture, bandTexture: Texture): SlugShader {
-	const glProgram = GlProgram.from({
-		vertex: vertSource,
-		fragment: fragSource
-	});
-
+export function slugShader(glProgram: GlProgram, curveTexture: Texture, bandTexture: Texture): SlugShader {
 	// PixiJS v8 UniformGroup has no 'bool' type — use i32 (0/1).
 	// WebGL maps glUniform1i to GLSL bool uniforms correctly.
 	const uniforms = new UniformGroup({
-		uSupersampleCount: { value: 0, type: 'i32' }
+		uSupersampleCount: {value: 0, type: 'i32'}
 	});
 
 	const shader = new Shader({
@@ -34,5 +29,5 @@ export function slugShader(curveTexture: Texture, bandTexture: Texture): SlugSha
 		}
 	});
 
-	return { shader, uniforms };
+	return {shader, uniforms};
 }

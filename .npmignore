@@ -1,0 +1,37 @@
+# Reference materials & documentation
+_references/
+_docs/
+docs/
+examples/
+CLAUDE.md
+
+# Workspace files
+*.code-workspace
+
+# Source & build config
+src/
+tests/
+scripts/
+tsconfig.json
+tsconfig.v6.json
+tsconfig.v7.json
+tsconfig.v8.json
+webpack.config.ts
+eslint.config.js
+jest.config.ts
+
+# CI/CD
+.github/
+
+# Package manager
+pnpm-lock.yaml
+node_modules/
+
+# Editor & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

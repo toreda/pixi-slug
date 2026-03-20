@@ -14,6 +14,12 @@ export class SlugFont {
 	public curveData: Float32Array;
 	/** Band texture data: hierarchical band index (uint RGBA) */
 	public bandData: Uint32Array;
+	/**
+	 * Band data pre-converted from uint32 to float32 for GPU upload.
+	 * Computed once in load() to avoid repeating the conversion per SlugText instance.
+	 * Safe for all values < 2^24 (see webgl-requirements.md Section 5).
+	 */
+	public bandDataFloat32: Float32Array;
 	/** Texture width (must be power of 2). Smaller fonts can use smaller textures to save memory. */
 	public readonly textureWidth: number;
 	/** Preprocessed glyph data indexed by Unicode code point. */
@@ -23,6 +29,16 @@ export class SlugFont {
 	/** Font units per em (used to normalize coordinates). */
 	public unitsPerEm: number;
 
+	/**
+	 * Version-specific GPU resources (textures, shader program) cached for sharing
+	 * across all SlugText instances. Populated lazily by version-specific code
+	 * (e.g. slugFontGpuV8). SlugFont itself never imports or knows about PixiJS.
+	 */
+	public gpuCache: unknown;
+
+	/** Cleanup function for gpuCache, set by the version-specific factory. */
+	private _gpuDestroy: (() => void) | null;
+
 	constructor(textureWidth: number = Defaults.TEXTURE_SIZE) {
 		if (textureWidth <= 0 || (textureWidth & (textureWidth - 1)) !== 0) {
 			throw new Error(`textureWidth must be a power of 2, got ${textureWidth}`);
@@ -31,18 +47,34 @@ export class SlugFont {
 		this.textureWidth = textureWidth;
 		this.curveData = new Float32Array(0);
 		this.bandData = new Uint32Array(0);
+		this.bandDataFloat32 = new Float32Array(0);
 		this.glyphs = new Map();
 		this.advances = new Map();
 		this.unitsPerEm = 0;
+		this.gpuCache = null;
+		this._gpuDestroy = null;
 	}
 
 	/**
-	 * Load and preprocess a font file into curve and band texture data.
-	 * Extracts glyph outlines as quadratic Bezier curves and packs them
-	 * into the format expected by the Slug shaders.
-	 *
-	 * @param fontData		ArrayBuffer containing the font file (TTF/OTF)
+	 * Set the GPU cache cleanup function. Called by version-specific factories
+	 * (e.g. slugFontGpuV8) when they populate gpuCache.
 	 */
+	public setGpuDestroy(fn: () => void): void {
+		this._gpuDestroy = fn;
+	}
+
+	/**
+	 * Destroy GPU resources (textures, etc.) owned by this font.
+	 * Call only after all SlugText instances using this font are destroyed.
+	 */
+	public destroyGpu(): void {
+		if (this._gpuDestroy) {
+			this._gpuDestroy();
+			this._gpuDestroy = null;
+		}
+		this.gpuCache = null;
+	}
+
 	/**
 	 * GPU memory consumed by this font's curve and band textures, in bytes.
 	 * Both textures use rgba32float (4 channels × 4 bytes per texel).
@@ -118,5 +150,16 @@ export class SlugFont {
 		const packed = slugTexturePack(glyphList, this.textureWidth);
 		this.curveData = packed.curveData;
 		this.bandData = packed.bandData;
+
+		// Pre-convert band data from uint32 to float32 once.
+		// This is a VALUE conversion (6 → 6.0), NOT a bit-pattern reinterpretation.
+		// Safe for all values < 2^24 (see webgl-requirements.md Section 5).
+		this.bandDataFloat32 = new Float32Array(this.bandData.length);
+		for (let i = 0; i < this.bandData.length; i++) {
+			this.bandDataFloat32[i] = this.bandData[i];
+		}
+
+		// Invalidate any existing GPU cache since font data changed.
+		this.destroyGpu();
 	}
 }
