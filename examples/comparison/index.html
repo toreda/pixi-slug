@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>pixi-slug — Font Rendering Comparison</title>
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			background: #0a0a1a;
+			font-family: sans-serif;
+			color: #eee;
+		}
+		h1 {
+			text-align: center;
+			padding: 12px;
+			font-size: 1.2rem;
+			background: #16213e;
+		}
+		#controls {
+			display: flex;
+			gap: 12px;
+			padding: 10px 20px;
+			background: #1a1a2e;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+		#controls button {
+			padding: 6px 14px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			cursor: pointer;
+			border-radius: 4px;
+			font-size: 13px;
+		}
+		#controls button:hover { background: #3a3a6e; }
+		#controls button.active { background: #4a6aae; border-color: #6a8ade; }
+		#controls span { font-size: 13px; color: #aaa; }
+		#status { font-size: 12px; color: #888; margin-left: auto; }
+		canvas { display: block; }
+	</style>
+</head>
+<body>
+	<h1>Font Rendering Comparison — pixi-slug vs Text vs BitmapText</h1>
+	<div id="controls">
+		<button id="btnScale" class="active">Scale</button>
+		<button id="btnMove">Move</button>
+		<button id="btnRotate">Rotate</button>
+		<button id="btnAll">All Combined</button>
+		<button id="btnPause">Pause</button>
+		<span>|</span>
+		<button id="btnReset">Reset</button>
+		<span id="status">Loading...</span>
+	</div>
+	<div id="app"></div>
+
+	<!-- PixiJS v8 via CDN -->
+	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+
+	<!-- pixi-slug v8 bundle -->
+	<script src="../../dist/v8/index.js"></script>
+
+	<script>
+		(async function () {
+			// ----- App setup -----
+			var app = new PIXI.Application();
+			await app.init({
+				width: 1200,
+				height: 800,
+				backgroundColor: 0x16213e,
+				preferWebGLVersion: 2,
+				antialias: false,
+				resolution: 1,
+			});
+			document.getElementById('app').appendChild(app.canvas);
+
+			var gl = app.renderer.gl;
+			if (!gl || !(gl instanceof WebGL2RenderingContext)) {
+				document.getElementById('status').textContent = 'WebGL2 required but not available.';
+				return;
+			}
+
+			// ----- Load font -----
+			var fontResponse = await fetch('/examples/comparison/font.ttf');
+			if (!fontResponse.ok) {
+				document.getElementById('status').textContent = 'Place font.ttf in examples/comparison/';
+				return;
+			}
+
+			var fontData = await fontResponse.arrayBuffer();
+
+			// Load font for pixi-slug
+			var slugFont = new pixiSlug.SlugFont(4096);
+			await slugFont.load(fontData);
+
+			// Load font for BitmapFont — generate from the same TTF at a fixed size
+			// PixiJS v8 BitmapFont.from() creates a bitmap font from a CSS font.
+			// We need the font loaded as a CSS font first.
+			var fontBlob = new Blob([fontData], { type: 'font/ttf' });
+			var fontUrl = URL.createObjectURL(fontBlob);
+			var fontFace = new FontFace('ComparisonFont', 'url(' + fontUrl + ')');
+			await fontFace.load();
+			document.fonts.add(fontFace);
+
+			// Install BitmapFont at a specific size for bitmap text comparison
+			var bitmapFont = PIXI.BitmapFont.install({
+				name: 'ComparisonBitmap',
+				style: {
+					fontFamily: 'ComparisonFont',
+					fontSize: 48,
+					fill: '#ffffff',
+				}
+			});
+
+			document.getElementById('status').textContent = 'Ready';
+
+			// ----- Column layout -----
+			var colWidth = 400;
+			var colX = [0, 400, 800];
+			var headerY = 10;
+			var textStartY = 60;
+			var sampleText = 'The quick brown\nfox jumps over\nthe lazy dog.';
+			var sizes = [16, 24, 32, 48];
+
+			// ----- Column headers (static) -----
+			var headers = [
+				{ label: 'pixi-slug (GPU Bezier)', x: colX[0] },
+				{ label: 'PIXI.Text (Canvas 2D)', x: colX[1] },
+				{ label: 'PIXI.BitmapText (Bitmap)', x: colX[2] },
+			];
+
+			for (var h of headers) {
+				var hdr = new PIXI.Text({
+					text: h.label,
+					style: { fill: '#ffcc00', fontSize: 14, fontFamily: 'sans-serif' }
+				});
+				hdr.x = h.x + 10;
+				hdr.y = headerY;
+				app.stage.addChild(hdr);
+			}
+
+			// Divider lines
+			for (var i = 1; i < 3; i++) {
+				var line = new PIXI.Graphics();
+				line.rect(colX[i] - 1, 0, 2, 800);
+				line.fill({ color: 0x333355 });
+				app.stage.addChild(line);
+			}
+
+			// ----- Create text groups -----
+			// Each group is a Container that holds multiple text sizes.
+			// All three groups are animated together.
+
+			var slugGroup = new PIXI.Container();
+			var textGroup = new PIXI.Container();
+			var bitmapGroup = new PIXI.Container();
+
+			slugGroup.x = colX[0] + 10;
+			slugGroup.y = textStartY;
+			textGroup.x = colX[1] + 10;
+			textGroup.y = textStartY;
+			bitmapGroup.x = colX[2] + 10;
+			bitmapGroup.y = textStartY;
+
+			var yOffset = 0;
+			for (var si = 0; si < sizes.length; si++) {
+				var sz = sizes[si];
+
+				// Size label
+				var labelStyle = { fill: '#888888', fontSize: 11, fontFamily: 'sans-serif' };
+
+				var slugLabel = new PIXI.Text({ text: sz + 'px', style: labelStyle });
+				slugLabel.y = yOffset;
+				slugGroup.addChild(slugLabel);
+
+				var textLabel = new PIXI.Text({ text: sz + 'px', style: labelStyle });
+				textLabel.y = yOffset;
+				textGroup.addChild(textLabel);
+
+				var bitmapLabel = new PIXI.Text({ text: sz + 'px', style: labelStyle });
+				bitmapLabel.y = yOffset;
+				bitmapGroup.addChild(bitmapLabel);
+
+				yOffset += 16;
+
+				// pixi-slug text
+				var slugText = new pixiSlug.SlugText(sampleText.replace(/\n/g, ' '), slugFont, sz);
+				slugText.y = yOffset;
+				slugGroup.addChild(slugText);
+
+				// PIXI.Text (Canvas 2D rendered)
+				var pixiText = new PIXI.Text({
+					text: sampleText.replace(/\n/g, ' '),
+					style: {
+						fontFamily: 'ComparisonFont',
+						fontSize: sz,
+						fill: '#ffffff',
+						wordWrap: true,
+						wordWrapWidth: colWidth - 20,
+					}
+				});
+				pixiText.y = yOffset;
+				textGroup.addChild(pixiText);
+
+				// BitmapText
+				var bmpText = new PIXI.BitmapText({
+					text: sampleText.replace(/\n/g, ' '),
+					style: {
+						fontFamily: 'ComparisonBitmap',
+						fontSize: sz,
+					}
+				});
+				bmpText.y = yOffset;
+				bitmapGroup.addChild(bmpText);
+
+				yOffset += sz * 1.8 + 20;
+			}
+
+			app.stage.addChild(slugGroup);
+			app.stage.addChild(textGroup);
+			app.stage.addChild(bitmapGroup);
+
+			// ----- Animation state -----
+			var mode = 'scale';  // 'scale', 'move', 'rotate', 'all'
+			var paused = false;
+			var elapsed = 0;
+
+			// Button handlers
+			var buttons = {
+				scale: document.getElementById('btnScale'),
+				move: document.getElementById('btnMove'),
+				rotate: document.getElementById('btnRotate'),
+				all: document.getElementById('btnAll'),
+			};
+
+			function setMode(m) {
+				mode = m;
+				for (var k in buttons) {
+					buttons[k].classList.toggle('active', k === m);
+				}
+			}
+
+			buttons.scale.onclick = function () { setMode('scale'); };
+			buttons.move.onclick = function () { setMode('move'); };
+			buttons.rotate.onclick = function () { setMode('rotate'); };
+			buttons.all.onclick = function () { setMode('all'); };
+
+			document.getElementById('btnPause').onclick = function () {
+				paused = !paused;
+				this.textContent = paused ? 'Resume' : 'Pause';
+				this.classList.toggle('active', paused);
+			};
+
+			document.getElementById('btnReset').onclick = function () {
+				elapsed = 0;
+				applyTransform(0);
+			};
+
+			// ----- Animation loop -----
+			function applyTransform(t) {
+				var groups = [slugGroup, textGroup, bitmapGroup];
+
+				for (var gi = 0; gi < groups.length; gi++) {
+					var g = groups[gi];
+					var baseX = colX[gi] + 10;
+					var baseY = textStartY;
+
+					// Reset
+					g.x = baseX;
+					g.y = baseY;
+					g.scale.set(1, 1);
+					g.rotation = 0;
+					g.pivot.set(0, 0);
+
+					var doScale = (mode === 'scale' || mode === 'all');
+					var doMove = (mode === 'move' || mode === 'all');
+					var doRotate = (mode === 'rotate' || mode === 'all');
+
+					if (doScale) {
+						// Oscillate scale between 0.3 and 2.0
+						var s = 1.0 + 0.7 * Math.sin(t * 0.8);
+						g.scale.set(s, s);
+						// Scale from center of column
+						g.pivot.set((colWidth - 20) / 2, 300);
+						g.x = baseX + (colWidth - 20) / 2;
+						g.y = baseY + 300;
+					}
+
+					if (doMove) {
+						// Oscillate Y position
+						var moveY = 80 * Math.sin(t * 1.2);
+						var moveX = 30 * Math.sin(t * 0.7);
+						g.y += moveY;
+						g.x += moveX;
+					}
+
+					if (doRotate) {
+						// Gentle rotation ±15 degrees
+						var angle = 0.26 * Math.sin(t * 0.6);
+						g.rotation = angle;
+						if (!doScale) {
+							// Set pivot for rotation if not already set by scale
+							g.pivot.set((colWidth - 20) / 2, 300);
+							g.x = baseX + (colWidth - 20) / 2;
+							g.y = baseY + 300;
+						}
+					}
+				}
+			}
+
+			app.ticker.add(function (ticker) {
+				if (!paused) {
+					elapsed += ticker.deltaTime / 60;
+				}
+				applyTransform(elapsed);
+			});
+		})();
+	</script>
+</body>
+</html>
