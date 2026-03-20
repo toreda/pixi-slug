@@ -22,8 +22,6 @@ export class SlugFont {
 	public readonly advances: Map<number, number>;
 	/** Font units per em (used to normalize coordinates). */
 	public unitsPerEm: number;
-	/** Font ascender in em-space units (distance from baseline to top of tallest glyph). */
-	public ascender: number;
 
 	constructor(textureWidth: number = Defaults.TEXTURE_SIZE) {
 		if (textureWidth <= 0 || (textureWidth & (textureWidth - 1)) !== 0) {
@@ -36,7 +34,6 @@ export class SlugFont {
 		this.glyphs = new Map();
 		this.advances = new Map();
 		this.unitsPerEm = 0;
-		this.ascender = 0;
 	}
 
 	/**
@@ -46,10 +43,22 @@ export class SlugFont {
 	 *
 	 * @param fontData		ArrayBuffer containing the font file (TTF/OTF)
 	 */
+	/**
+	 * GPU memory consumed by this font's curve and band textures, in bytes.
+	 * Both textures use rgba32float (4 channels × 4 bytes per texel).
+	 * This is shared across all SlugText instances that use this font.
+	 */
+	public memoryBytes(): number {
+		const bytesPerTexel = 4 * 4; // rgba32float
+		const textureWidth = this.textureWidth;
+		const curveRows = Math.ceil(this.curveData.length / 4 / textureWidth) || 1;
+		const bandRows = Math.ceil(this.bandData.length / 4 / textureWidth) || 1;
+		return (curveRows + bandRows) * textureWidth * bytesPerTexel;
+	}
+
 	public async load(fontData: ArrayBuffer): Promise<void> {
 		const font = opentype.parse(fontData);
 		this.unitsPerEm = font.unitsPerEm;
-		this.ascender = font.ascender;
 
 		const glyphList: SlugGlyphData[] = [];
 

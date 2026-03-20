@@ -18,6 +18,9 @@ export class SlugText extends Container {
 	private _bandTexture: Texture | null;
 	private _supersampling: boolean;
 	private _uniforms: UniformGroup | null;
+	private _vertexBytes: number;
+	private _indexBytes: number;
+	private _rebuildCount: number;
 
 	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
 		super();
@@ -30,6 +33,9 @@ export class SlugText extends Container {
 		this._bandTexture = null;
 		this._supersampling = false;
 		this._uniforms = null;
+		this._vertexBytes = 0;
+		this._indexBytes = 0;
+		this._rebuildCount = 0;
 
 		this.rebuild();
 	}
@@ -96,6 +102,7 @@ export class SlugText extends Container {
 	 * creates separate curve and band GPU textures from the font data, and assembles a Mesh.
 	 */
 	private rebuild(): void {
+		this._rebuildCount++;
 		// Clean up previous mesh and textures
 		if (this._mesh) {
 			this.removeChild(this._mesh);
@@ -117,7 +124,6 @@ export class SlugText extends Container {
 			this._font.glyphs,
 			this._font.advances,
 			this._font.unitsPerEm,
-			this._font.ascender,
 			this._fontSize,
 			this._font.textureWidth,
 			this._color
@@ -126,6 +132,12 @@ export class SlugText extends Container {
 		if (quads.quadCount === 0) {
 			return;
 		}
+
+		// Track GPU buffer sizes for memoryBytes() reporting.
+		// vertices: Float32Array → 4 bytes per element.
+		// indices: Uint16Array → 2 bytes per element.
+		this._vertexBytes = quads.vertices.byteLength;
+		this._indexBytes = quads.indices.byteLength;
 
 		// Create geometry with 5 interleaved vec4 attributes
 		const stride = 20 * 4; // 20 floats * 4 bytes per float
@@ -201,6 +213,27 @@ export class SlugText extends Container {
 		const mesh = new Mesh({ geometry, shader });
 		this._mesh = mesh;
 		this.addChild(mesh);
+	}
+
+	/** Number of times rebuild() has been called on this instance. */
+	public get rebuildCount(): number {
+		return this._rebuildCount;
+	}
+
+	/**
+	 * GPU memory consumed by this text object's vertex and index buffers, in bytes.
+	 * Does not include the font textures — those are shared and reported by SlugFont.memoryBytes().
+	 */
+	public meshMemoryBytes(): number {
+		return this._vertexBytes + this._indexBytes;
+	}
+
+	/**
+	 * Total GPU memory for this text object plus its font's textures, in bytes.
+	 * Use this when the font is not shared, or to get a complete per-instance total.
+	 */
+	public totalMemoryBytes(): number {
+		return this.meshMemoryBytes() + this._font.memoryBytes();
 	}
 
 	public override destroy(): void {

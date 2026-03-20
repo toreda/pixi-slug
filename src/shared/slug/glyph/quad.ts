@@ -62,7 +62,6 @@ function packBandMax(low16_vBandMax: number, high16_hBandMax: number): number {
  * @param glyphs		Glyph data map from SlugFont (keyed by char code).
  * @param advances		Advance width map for all glyphs (including empty ones like space).
  * @param unitsPerEm	Font units per em for coordinate normalization.
- * @param ascender		Font ascender in em-space units (baseline to top of ascender line).
  * @param fontSize		Desired font size in pixels.
  * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
@@ -72,7 +71,6 @@ export function slugGlyphQuads(
 	glyphs: Map<number, SlugGlyphData>,
 	advances: Map<number, number>,
 	unitsPerEm: number,
-	ascender: number,
 	fontSize: number,
 	textureWidth: number,
 	color: [number, number, number, number] = [1, 1, 1, 1]
@@ -115,7 +113,7 @@ export function slugGlyphQuads(
 			continue;
 		}
 
-		const { bounds, hBandCount, vBandCount, bandOffset, curveOffset } = glyph;
+		const { bounds, hBandCount, vBandCount, bandOffset } = glyph;
 
 		// Glyph quad corners in pixel space.
 		// Font Y is up (ascenders positive), screen Y is down.
