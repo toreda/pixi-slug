@@ -682,6 +682,106 @@
 		}
 
 		// ================================================================
+		//  GPU timer queries (EXT_disjoint_timer_query_webgl2)
+		// ================================================================
+
+		/**
+		 * Try to get the WebGL2 context and disjoint timer query extension
+		 * from a PixiJS v8 Application. Returns null if unavailable.
+		 */
+		function getGpuTimer(app) {
+			var gl = null;
+			try {
+				// PixiJS v8: renderer.gl is public
+				gl = app.renderer && app.renderer.gl;
+			} catch (e) {}
+			if (!gl) return null;
+
+			var ext = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+			if (!ext) return null;
+
+			return { gl: gl, ext: ext };
+		}
+
+		/**
+		 * Create a GPU timer query object.
+		 */
+		function gpuQueryCreate(timer) {
+			return timer.gl.createQuery();
+		}
+
+		/**
+		 * Begin a GPU time elapsed query. Only one TIME_ELAPSED query
+		 * can be active at a time — end the previous one first.
+		 */
+		function gpuQueryBegin(timer, query) {
+			timer.gl.beginQuery(timer.ext.TIME_ELAPSED_EXT, query);
+		}
+
+		/**
+		 * End the active GPU time elapsed query.
+		 */
+		function gpuQueryEnd(timer) {
+			timer.gl.endQuery(timer.ext.TIME_ELAPSED_EXT);
+		}
+
+		/**
+		 * Check if a query result is available (non-blocking).
+		 */
+		function gpuQueryAvailable(timer, query) {
+			return timer.gl.getQueryParameter(query, timer.gl.QUERY_RESULT_AVAILABLE);
+		}
+
+		/**
+		 * Read query result in nanoseconds. Only call after gpuQueryAvailable returns true.
+		 * Returns time in milliseconds, or -1 if the GPU was disjoint (result unreliable).
+		 */
+		function gpuQueryResult(timer, query) {
+			// Check for disjoint — GPU may have been reset (e.g. driver TDR)
+			var disjoint = timer.gl.getParameter(timer.ext.GPU_DISJOINT_EXT);
+			if (disjoint) return -1;
+			var ns = timer.gl.getQueryParameter(query, timer.gl.QUERY_RESULT);
+			return ns / 1e6; // nanoseconds → milliseconds
+		}
+
+		/**
+		 * Wait for a query result to become available (async polling).
+		 * Returns time in ms, or -1 if disjoint/unavailable.
+		 */
+		function gpuQueryWait(timer, query) {
+			return new Promise(function (resolve) {
+				function poll() {
+					if (gpuQueryAvailable(timer, query)) {
+						resolve(gpuQueryResult(timer, query));
+					} else {
+						setTimeout(poll, 1);
+					}
+				}
+				poll();
+			});
+		}
+
+		/**
+		 * Drain all completed queries from a pending queue into a results array.
+		 * Returns the number of queries still pending.
+		 */
+		function gpuQueryDrain(timer, pending, gpuTimes) {
+			var remaining = [];
+			for (var i = 0; i < pending.length; i++) {
+				if (gpuQueryAvailable(timer, pending[i])) {
+					var ms = gpuQueryResult(timer, pending[i]);
+					if (ms >= 0) gpuTimes.push(ms);
+					timer.gl.deleteQuery(pending[i]);
+				} else {
+					remaining.push(pending[i]);
+				}
+			}
+			pending.length = 0;
+			for (var j = 0; j < remaining.length; j++) pending.push(remaining[j]);
+			return pending.length;
+		}
+
+		// ================================================================
 		//  Settings helpers
 		// ================================================================
 
@@ -1410,9 +1510,11 @@
 			});
 		}
 
-		function timedRun(app, scenario, ctx, durationMs) {
+		function timedRun(app, scenario, ctx, durationMs, gpuTimer) {
 			return new Promise(function (resolve) {
 				var frameTimes = [];
+				var gpuTimes = [];
+				var gpuPending = [];
 				var t0 = performance.now();
 				var startTime = t0;
 
@@ -1426,10 +1528,56 @@
 						scenario.tick(ctx, now - startTime, dt);
 					}
 
-					if (cancelled || now - startTime >= durationMs) {
-						app.ticker.remove(onTick);
-						resolve(frameTimes);
+					// Drain completed GPU queries from previous frames
+					if (gpuTimer) {
+						gpuQueryDrain(gpuTimer, gpuPending, gpuTimes);
+
+						// Begin a new GPU query for this frame's render.
+						// The ticker fires before PixiJS renders, so we bracket
+						// the render by starting here and ending next tick.
+						// Instead, use a query per frame: begin before render,
+						// end after render. We hook into postrender for the end.
+						var q = gpuQueryCreate(gpuTimer);
+						gpuPending.push(q);
+						gpuQueryBegin(gpuTimer, q);
 					}
+
+					if (cancelled || now - startTime >= durationMs) {
+						// End any active query before stopping
+						if (gpuTimer && gpuPending.length > 0) {
+							gpuQueryEnd(gpuTimer);
+						}
+						app.ticker.remove(onTick);
+						if (app.renderer && app.renderer.off) {
+							app.renderer.off('postrender', onPostRender);
+						}
+
+						// Wait for remaining GPU queries to complete
+						if (gpuTimer && gpuPending.length > 0) {
+							(async function () {
+								for (var i = 0; i < gpuPending.length; i++) {
+									var ms = await gpuQueryWait(gpuTimer, gpuPending[i]);
+									if (ms >= 0) gpuTimes.push(ms);
+									gpuTimer.gl.deleteQuery(gpuPending[i]);
+								}
+								resolve({ frameTimes: frameTimes, gpuTimes: gpuTimes });
+							})();
+						} else {
+							resolve({ frameTimes: frameTimes, gpuTimes: gpuTimes });
+						}
+					}
+				}
+
+				function onPostRender() {
+					// End the GPU query after PixiJS has submitted all draw calls
+					if (gpuTimer && gpuPending.length > 0) {
+						gpuQueryEnd(gpuTimer);
+					}
+				}
+
+				// Listen for postrender to end the query after draw calls
+				if (gpuTimer && app.renderer && app.renderer.on) {
+					app.renderer.on('postrender', onPostRender);
 				}
 
 				app.ticker.add(onTick);
@@ -1484,6 +1632,9 @@
 				canvasWrap.innerHTML = '';
 				canvasWrap.appendChild(app.canvas);
 
+				// Try to get GPU timer extension for this app's context
+				var gpuTimer = getGpuTimer(app);
+
 				// Load fonts
 				var resources = {};
 				await sys.loadFont(fontData, resources, settings);
@@ -1522,8 +1673,10 @@
 					var gpuMem = sys.measureMemory(ctx.objects, resources);
 					var heapAfterSetup = heapNow();
 
-					// Timed run
-					var frameTimes = await timedRun(app, scenario, ctx, settings.durationMs);
+					// Timed run — with GPU timing if extension is available
+					var runResult = await timedRun(app, scenario, ctx, settings.durationMs, gpuTimer);
+					var frameTimes = runResult.frameTimes;
+					var gpuTimes = runResult.gpuTimes;
 
 					var heapAfterRun = heapNow();
 
@@ -1541,7 +1694,7 @@
 					app.render();
 					var destroyMs = performance.now() - destroyT0;
 
-					results[sys.key][scenario.name] = {
+					var result = {
 						timing: computeStats(frameTimes),
 						frameTimes: frameTimes,
 						gpuMemory: gpuMem,
@@ -1551,6 +1704,14 @@
 						createMs: createMs,
 						destroyMs: destroyMs
 					};
+
+					// Add GPU timing if we got measurements
+					if (gpuTimes.length > 0) {
+						result.gpuTiming = computeStats(gpuTimes);
+						result.gpuTimes = gpuTimes;
+					}
+
+					results[sys.key][scenario.name] = result;
 
 					// Let GPU reclaim freed buffers
 					tryGC();
@@ -1657,12 +1818,18 @@
 					heapsAfterSetup.push(heapNow());
 				}
 
+				// Get GPU timers per app (parallel mode: each app has its own GL context)
+				var gpuTimers = [];
+				for (var si = 0; si < apps.length; si++) {
+					gpuTimers.push(getGpuTimer(apps[si].app));
+				}
+
 				// Run all in parallel
 				var runPromises = [];
 				for (var si = 0; si < apps.length; si++) {
-					runPromises.push(timedRun(apps[si].app, scenario, contexts[si], settings.durationMs));
+					runPromises.push(timedRun(apps[si].app, scenario, contexts[si], settings.durationMs, gpuTimers[si]));
 				}
-				var allFrameTimes = await Promise.all(runPromises);
+				var allRunResults = await Promise.all(runPromises);
 
 				// Cleanup all — time destruction per system
 				var destroyMsList = [];
@@ -1682,9 +1849,10 @@
 				// Collect results
 				for (var si = 0; si < apps.length; si++) {
 					var heapAfterRun = heapNow();
-					results[apps[si].sys.key][scenario.name] = {
-						timing: computeStats(allFrameTimes[si]),
-						frameTimes: allFrameTimes[si],
+					var runRes = allRunResults[si];
+					var result = {
+						timing: computeStats(runRes.frameTimes),
+						frameTimes: runRes.frameTimes,
 						gpuMemory: gpuMems[si],
 						heapSetup: (heapsBefore[si] !== null && heapsAfterSetup[si] !== null) ? heapsAfterSetup[si] - heapsBefore[si] : null,
 						heapRun: (heapsAfterSetup[si] !== null && heapAfterRun !== null) ? heapAfterRun - heapsAfterSetup[si] : null,
@@ -1692,6 +1860,11 @@
 						createMs: createMsList[si],
 						destroyMs: destroyMsList[si]
 					};
+					if (runRes.gpuTimes.length > 0) {
+						result.gpuTiming = computeStats(runRes.gpuTimes);
+						result.gpuTimes = runRes.gpuTimes;
+					}
+					results[apps[si].sys.key][scenario.name] = result;
 				}
 				tryGC();
 				await sleep(50);
@@ -1950,6 +2123,22 @@
 
 						// Frame count
 						html += '<div class="row-line"><span class="sl">Frames: </span><span class="sv">' + t.frames + '</span></div>';
+
+						// GPU render timing (from EXT_disjoint_timer_query_webgl2)
+						if (r.gpuTiming) {
+							var gt = r.gpuTiming;
+							html += '<div class="row-line" style="margin-top:4px;border-top:1px solid #334;padding-top:4px">' +
+								'<span class="sl">GPU render: </span><span class="sv">' +
+								gt.avg.toFixed(3) + ' ms avg, ' +
+								gt.median.toFixed(3) + ' ms med, ' +
+								gt.p95.toFixed(3) + ' ms p95</span></div>';
+							html += '<div class="row-line"><span class="sl">GPU min/max: </span><span class="sv">' +
+								gt.min.toFixed(3) + ' / ' + gt.max.toFixed(3) + ' ms</span></div>';
+							html += '<div class="row-line"><span class="sl">GPU samples: </span><span class="sv">' + gt.frames + '</span></div>';
+						} else {
+							html += '<div class="row-line" style="margin-top:4px;border-top:1px solid #334;padding-top:4px">' +
+								'<span class="sl">GPU render: </span><span class="sv" style="color:#666">N/A (no timer query ext)</span></div>';
+						}
 
 						// Object lifecycle
 						html += '<div class="row-line"><span class="sl">Objects: </span><span class="sv">' + r.objectCount + '</span></div>';

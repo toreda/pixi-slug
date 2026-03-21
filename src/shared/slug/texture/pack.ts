@@ -135,7 +135,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 
 		// Pack curves using shared-endpoint layout.
 		// Track each curve's p12 texel index for band references below.
-		const curveTexels: number[] = new Array(glyph.curves.length);
+		const curveTexels = new Uint32Array(glyph.curves.length);
 		const starts = glyph.contourStarts;
 
 		for (let c = 0; c < starts.length; c++) {
