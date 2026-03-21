@@ -43,12 +43,17 @@ export function slugFontGpuV8(font: SlugFont): SlugFontGpuV8 {
 		})
 	});
 
-	// Band texture: uint32 values pre-converted to float32 in SlugFont.load().
-	// Uploaded as rgba32float; shader recovers uint via float-to-uint cast.
-	const bandRows = Math.ceil(font.bandDataFloat32.length / 4 / textureWidth) || 1;
+	// Band texture: uint32 data uploaded as rgba32float via bit-pattern reinterpretation.
+	// PixiJS v8 has a bug in mapFormatToGlFormat that maps rgba32uint → gl.RGBA instead
+	// of gl.RGBA_INTEGER, causing GL_INVALID_OPERATION on upload. Workaround: share the
+	// ArrayBuffer between Uint32Array and Float32Array so the exact bit patterns are
+	// preserved without value conversion. The shader uses floatBitsToUint() to recover
+	// the original uint32 values losslessly.
+	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
+	const bandDataAsFloat = new Float32Array(font.bandData.buffer, font.bandData.byteOffset, font.bandData.length);
 	const bandTexture = new Texture({
 		source: new BufferImageSource({
-			resource: font.bandDataFloat32,
+			resource: bandDataAsFloat,
 			width: textureWidth,
 			height: bandRows,
 			format: 'rgba32float',

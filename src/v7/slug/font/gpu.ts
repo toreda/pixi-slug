@@ -34,9 +34,11 @@ export function slugFontGpuV7(font: SlugFont): SlugFontGpuV7 {
 	});
 	const curveTexture = new Texture(curveBase);
 
-	// Band texture: pre-converted float32 from SlugFont.load()
-	const bandRows = Math.ceil(font.bandDataFloat32.length / 4 / textureWidth) || 1;
-	const bandBase = BaseTexture.fromBuffer(font.bandDataFloat32, textureWidth, bandRows, {
+	// Band texture: uint32 data uploaded as float32 via bit-pattern reinterpretation.
+	// The shader uses floatBitsToUint() to recover exact uint32 values losslessly.
+	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
+	const bandDataAsFloat = new Float32Array(font.bandData.buffer, font.bandData.byteOffset, font.bandData.length);
+	const bandBase = BaseTexture.fromBuffer(bandDataAsFloat, textureWidth, bandRows, {
 		format: FORMATS.RGBA,
 		type: TYPES.FLOAT
 	});

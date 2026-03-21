@@ -20,10 +20,12 @@ uniform sampler2D uCurveTexture;
 uniform sampler2D uBandTexture;
 uniform int uSupersampleCount;
 
+// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).
+// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.
 uvec2 fetchBand(ivec2 coord)
 {
 	vec2 raw = texelFetch(uBandTexture, coord, 0).xy;
-	return uvec2(uint(raw.x + 0.5), uint(raw.y + 0.5));
+	return uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));
 }
 
 ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
