@@ -12,6 +12,14 @@ const VERTICES_PER_QUAD = 4;
 /** Number of indices per glyph quad (2 triangles). */
 const INDICES_PER_QUAD = 6;
 
+/** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
+const _packBuf = new ArrayBuffer(4);
+const _packU32 = new Uint32Array(_packBuf);
+const _packF32 = new Float32Array(_packBuf);
+
+/** Shared buffer for float32 round-trips (band scale/offset precision matching). */
+const _f32 = new Float32Array(4);
+
 /**
  * Packed vertex data for rendering glyph quads with the Slug shaders.
  * Contains interleaved attribute buffers and an index buffer.
@@ -30,12 +38,8 @@ export interface SlugGlyphQuads {
  * Used to pass packed integer data through float vertex attributes.
  */
 function packUint16Pair(low: number, high: number): number {
-	const uint32 = ((high & 0xFFFF) << 16) | (low & 0xFFFF);
-
-	// Reinterpret uint32 bits as float32
-	const buf = new ArrayBuffer(4);
-	new Uint32Array(buf)[0] = uint32;
-	return new Float32Array(buf)[0];
+	_packU32[0] = ((high & 0xFFFF) << 16) | (low & 0xFFFF);
+	return _packF32[0];
 }
 
 /**
@@ -76,6 +80,12 @@ export function slugGlyphQuads(
 	color: [number, number, number, number] = [1, 1, 1, 1]
 ): SlugGlyphQuads {
 	const scale = fontSize / unitsPerEm;
+	const invScale = 1 / scale;
+	const negInvScale = -invScale;
+	const cr = color[0];
+	const cg = color[1];
+	const cb = color[2];
+	const ca = color[3];
 
 	// Count renderable glyphs and find the tallest glyph's top in em-space.
 	// We use the actual max bounds.maxY (not the font's typographic ascender)
@@ -132,7 +142,7 @@ export function slugGlyphQuads(
 		const v1 = bounds.maxY;
 
 		// Band transform: maps em-space coord to band index.
-		// Use a Float32Array round-trip to match GPU float32 precision exactly —
+		// Use module-level _f32 for float32 round-trip to match GPU precision exactly —
 		// the shader receives these as float32 vertex attributes, so the band
 		// boundary arithmetic must agree with the CPU-side band assignment in bands.ts.
 		//
@@ -142,7 +152,6 @@ export function slugGlyphQuads(
 		const glyphHeight = bounds.maxY - bounds.minY;
 		const maxDim = Math.max(glyphWidth, glyphHeight);
 		const bandCount = Math.max(hBandCount, vBandCount);
-		const _f32 = new Float32Array(4);
 		_f32[0] = maxDim > 0 ? bandCount / maxDim : 0;  // shared scale
 		const bandScale = _f32[0];
 		_f32[1] = -bounds.minX * bandScale;              // vBandOffset (X → vertical band)
@@ -161,54 +170,103 @@ export function slugGlyphQuads(
 		// and high-16 as bandMax.y (clamps horizontal bandIndex.y + header offset → needs hBandMax).
 		const packedBands = packBandMax(vBandCount - 1, hBandCount - 1);
 
-		// Quad corners with screen-space positions and font-space texcoords.
-		// Screen: y0 = top (font maxY), y1 = bottom (font minY).
-		// Font: v0 = minY (bottom), v1 = maxY (top).
-		const corners = [
-			{ px: x0, py: y0, nx: -1, ny: -1, eu: u0, ev: v1 },  // screen top-left = font (minX, maxY)
-			{ px: x1, py: y0, nx: 1, ny: -1, eu: u1, ev: v1 },   // screen top-right = font (maxX, maxY)
-			{ px: x1, py: y1, nx: 1, ny: 1, eu: u1, ev: v0 },    // screen bottom-right = font (maxX, minY)
-			{ px: x0, py: y1, nx: -1, ny: 1, eu: u0, ev: v0 }
-		];
-
+		// Write 4 vertices directly — inlined to avoid per-glyph corner object allocation.
+		// Layout per corner:
+		//   Screen: y0 = top (font maxY), y1 = bottom (font minY)
+		//   Font:   v0 = minY (bottom), v1 = maxY (top)
 		const baseVertex = quadIdx * VERTICES_PER_QUAD;
 
-		for (let c = 0; c < 4; c++) {
-			const corner = corners[c];
-			const offset = (baseVertex + c) * FLOATS_PER_VERTEX;
+		// Corner 0: screen top-left = font (minX, maxY)
+		let off = baseVertex * FLOATS_PER_VERTEX;
+		vertices[off]      = x0;          // posX
+		vertices[off + 1]  = y0;          // posY
+		vertices[off + 2]  = -1;          // normalX
+		vertices[off + 3]  = -1;          // normalY
+		vertices[off + 4]  = u0;          // emU
+		vertices[off + 5]  = v1;          // emV
+		vertices[off + 6]  = packedLocation;
+		vertices[off + 7]  = packedBands;
+		vertices[off + 8]  = invScale;    // jac.x
+		vertices[off + 9]  = 0;           // jac.y
+		vertices[off + 10] = 0;           // jac.z
+		vertices[off + 11] = negInvScale; // jac.w
+		vertices[off + 12] = bandScaleX;
+		vertices[off + 13] = bandScaleY;
+		vertices[off + 14] = bandOffsetX;
+		vertices[off + 15] = bandOffsetY;
+		vertices[off + 16] = cr;
+		vertices[off + 17] = cg;
+		vertices[off + 18] = cb;
+		vertices[off + 19] = ca;
 
-			// aPositionNormal (vec4): position xy + normal zw
-			vertices[offset] = corner.px;
-			vertices[offset + 1] = corner.py;
-			vertices[offset + 2] = corner.nx;
-			vertices[offset + 3] = corner.ny;
+		// Corner 1: screen top-right = font (maxX, maxY)
+		off += FLOATS_PER_VERTEX;
+		vertices[off]      = x1;
+		vertices[off + 1]  = y0;
+		vertices[off + 2]  = 1;
+		vertices[off + 3]  = -1;
+		vertices[off + 4]  = u1;
+		vertices[off + 5]  = v1;
+		vertices[off + 6]  = packedLocation;
+		vertices[off + 7]  = packedBands;
+		vertices[off + 8]  = invScale;
+		vertices[off + 9]  = 0;
+		vertices[off + 10] = 0;
+		vertices[off + 11] = negInvScale;
+		vertices[off + 12] = bandScaleX;
+		vertices[off + 13] = bandScaleY;
+		vertices[off + 14] = bandOffsetX;
+		vertices[off + 15] = bandOffsetY;
+		vertices[off + 16] = cr;
+		vertices[off + 17] = cg;
+		vertices[off + 18] = cb;
+		vertices[off + 19] = ca;
 
-			// aTexcoord (vec4): em-space uv + packed glyph location + packed bands
-			vertices[offset + 4] = corner.eu;
-			vertices[offset + 5] = corner.ev;
-			vertices[offset + 6] = packedLocation;
-			vertices[offset + 7] = packedBands;
+		// Corner 2: screen bottom-right = font (maxX, minY)
+		off += FLOATS_PER_VERTEX;
+		vertices[off]      = x1;
+		vertices[off + 1]  = y1;
+		vertices[off + 2]  = 1;
+		vertices[off + 3]  = 1;
+		vertices[off + 4]  = u1;
+		vertices[off + 5]  = v0;
+		vertices[off + 6]  = packedLocation;
+		vertices[off + 7]  = packedBands;
+		vertices[off + 8]  = invScale;
+		vertices[off + 9]  = 0;
+		vertices[off + 10] = 0;
+		vertices[off + 11] = negInvScale;
+		vertices[off + 12] = bandScaleX;
+		vertices[off + 13] = bandScaleY;
+		vertices[off + 14] = bandOffsetX;
+		vertices[off + 15] = bandOffsetY;
+		vertices[off + 16] = cr;
+		vertices[off + 17] = cg;
+		vertices[off + 18] = cb;
+		vertices[off + 19] = ca;
 
-			// aJacobian (vec4): inverse Jacobian mapping screen-space dilation back to em-space.
-			// Screen coords: x = fontX * scale, y = -fontY * scale (Y-flipped).
-			// So: d_emX = d_screenX / scale, d_emY = -d_screenY / scale.
-			vertices[offset + 8] = 1 / scale;   // jac.x: d(emX)/d(screenX)
-			vertices[offset + 9] = 0;            // jac.y: d(emX)/d(screenY)
-			vertices[offset + 10] = 0;           // jac.z: d(emY)/d(screenX)
-			vertices[offset + 11] = -1 / scale;  // jac.w: d(emY)/d(screenY) — negative due to Y-flip
-
-			// aBanding (vec4): band scale xy + band offset xy
-			vertices[offset + 12] = bandScaleX;
-			vertices[offset + 13] = bandScaleY;
-			vertices[offset + 14] = bandOffsetX;
-			vertices[offset + 15] = bandOffsetY;
-
-			// aColor (vec4): vertex color RGBA
-			vertices[offset + 16] = color[0];
-			vertices[offset + 17] = color[1];
-			vertices[offset + 18] = color[2];
-			vertices[offset + 19] = color[3];
-		}
+		// Corner 3: screen bottom-left = font (minX, minY)
+		off += FLOATS_PER_VERTEX;
+		vertices[off]      = x0;
+		vertices[off + 1]  = y1;
+		vertices[off + 2]  = -1;
+		vertices[off + 3]  = 1;
+		vertices[off + 4]  = u0;
+		vertices[off + 5]  = v0;
+		vertices[off + 6]  = packedLocation;
+		vertices[off + 7]  = packedBands;
+		vertices[off + 8]  = invScale;
+		vertices[off + 9]  = 0;
+		vertices[off + 10] = 0;
+		vertices[off + 11] = negInvScale;
+		vertices[off + 12] = bandScaleX;
+		vertices[off + 13] = bandScaleY;
+		vertices[off + 14] = bandOffsetX;
+		vertices[off + 15] = bandOffsetY;
+		vertices[off + 16] = cr;
+		vertices[off + 17] = cg;
+		vertices[off + 18] = cb;
+		vertices[off + 19] = ca;
 
 		// Two triangles: [0,1,2] and [0,2,3]
 		const idxOffset = quadIdx * INDICES_PER_QUAD;
