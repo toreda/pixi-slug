@@ -4,6 +4,7 @@ import {SlugFont} from '../../shared/slug/font';
 import {slugGlyphQuads} from '../../shared/slug/glyph/quad';
 import {slugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
+import {numberValue} from '@toreda/strong-types';
 
 /**
  * Renderable text element using the Slug algorithm for PixiJS v8.
@@ -25,6 +26,7 @@ export class SlugText extends Container {
 	private _vertexBytes: number;
 	private _indexBytes: number;
 	private _rebuildCount: number;
+	public wordWrap: boolean;
 
 	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
 		super();
@@ -39,6 +41,7 @@ export class SlugText extends Container {
 		this._vertexBytes = 0;
 		this._indexBytes = 0;
 		this._rebuildCount = 0;
+		this.wordWrap = false;
 
 		this.rebuild();
 	}
@@ -177,7 +180,10 @@ export class SlugText extends Container {
 		// Compute local bounding box from vertex positions and set boundsArea so
 		// PixiJS v8 can cull/inspect this container without needing an aPosition attribute.
 		const floatsPerVertex = 20;
-		let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+		let minX = Infinity,
+			minY = Infinity,
+			maxX = -Infinity,
+			maxY = -Infinity;
 		for (let i = 0; i < quads.vertices.length; i += floatsPerVertex) {
 			const vx = quads.vertices[i];
 			const vy = quads.vertices[i + 1];

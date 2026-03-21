@@ -4443,7 +4443,7 @@ const uniforms=new pixi_js_1.UniformGroup({uSupersampleCount:{value:0,type:"i32"
  * and shared across all SlugText instances using the same font. SlugText owns only
  * its per-instance vertex/index buffers and mesh.
  */
-class SlugText extends pixi_js_1.Container{constructor(text,font,fontSize=defaults_1.Defaults.FONT_SIZE){super(),this._text=text,this._fontRef=new WeakRef(font),this._fontSize=fontSize,this._color=[1,1,1,1],this._mesh=null,this._supersampling=!1,this._supersampleCount=defaults_1.Defaults.SUPERSAMPLE_COUNT,this._uniforms=null,this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0,this.rebuild()}
+class SlugText extends pixi_js_1.Container{constructor(text,font,fontSize=defaults_1.Defaults.FONT_SIZE){super(),this._text=text,this._fontRef=new WeakRef(font),this._fontSize=fontSize,this._color=[1,1,1,1],this._mesh=null,this._supersampling=!1,this._supersampleCount=defaults_1.Defaults.SUPERSAMPLE_COUNT,this._uniforms=null,this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0,this.wordWrap=!1,this.rebuild()}
 /** The text string to render. */get text(){return this._text}set text(value){this._text!==value&&(this._text=value,this.rebuild())}
 /**
      * The Slug font used for rendering, or null if the font has been garbage collected.

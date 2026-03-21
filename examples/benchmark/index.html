@@ -2358,7 +2358,7 @@
 			document.getElementById('progressFill').style.width = '0%';
 
 			// Load font data
-			var fontResponse = await fetch('/examples/comparison/font.ttf');
+			var fontResponse = await fetch('../comparison/font.ttf');
 			if (!fontResponse.ok) {
 				document.getElementById('statusText').textContent = 'Error: font.ttf not found in examples/comparison/';
 				resetUI();

@@ -155,7 +155,7 @@
 			}
 
 			// ----- Load font -----
-			var fontResponse = await fetch('./font.ttf');
+			var fontResponse = await fetch('font.ttf');
 			if (!fontResponse.ok) {
 				document.getElementById('status').textContent = 'Place font.ttf in examples/comparison/';
 				return;

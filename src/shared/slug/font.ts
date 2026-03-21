@@ -4,7 +4,6 @@ import type {SlugGlyphData} from './glyph/data';
 import {slugGlyphCurves} from './glyph/curves';
 import {slugGlyphBands} from './glyph/bands';
 import {slugTexturePack} from './texture/pack';
-
 /**
  * Preprocesses font glyph outlines into GPU-ready curve and band textures
  * for the Slug rendering algorithm.

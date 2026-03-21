@@ -70,7 +70,7 @@
 			document.getElementById('app').appendChild(app.view);
 
 			// Load a font file
-			var fontResponse = await fetch('./font.ttf');
+			var fontResponse = await fetch('font.ttf');
 			if (!fontResponse.ok) {
 				console.warn('No font.ttf found in examples/v7/. Place a .ttf file there to see rendered text.');
 				var info = new PIXI.Text('Place a font.ttf file in examples/v7/ to see Slug rendering.', {
