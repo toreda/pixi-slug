@@ -4152,9 +4152,9 @@ return((Math.ceil(this.curveData.length/4/textureWidth)||1)+(Math.ceil(this.band
 // Store advance width for all glyphs (including space/empty)
 void 0!==charCode&&glyph.advanceWidth&&this.advances.set(charCode,glyph.advanceWidth),!glyph.path||0===glyph.path.commands.length)continue;if(void 0===charCode)continue;
 // Extract quadratic Bezier curves from glyph path
-const curves=(0,curves_1.slugGlyphCurves)(glyph.path.commands);if(0===curves.length)continue;
+const{curves,contourStarts}=(0,curves_1.slugGlyphCurves)(glyph.path.commands);if(0===curves.length)continue;
 // Compute bounding box from glyph metrics
-const bounds=glyph.getBoundingBox(),bandResult=(0,bands_1.slugGlyphBands)(curves,bounds.x1,bounds.y1,bounds.x2,bounds.y2),glyphData={charCode,curves,bounds:{minX:bounds.x1,minY:bounds.y1,maxX:bounds.x2,maxY:bounds.y2},advanceWidth:glyph.advanceWidth??0,lsb:glyph.leftSideBearing??0,hBandCount:bandResult.hBandCount,vBandCount:bandResult.vBandCount,hBands:bandResult.hBands,vBands:bandResult.vBands,curveOffset:0,bandOffset:0};
+const bounds=glyph.getBoundingBox(),bandResult=(0,bands_1.slugGlyphBands)(curves,bounds.x1,bounds.y1,bounds.x2,bounds.y2),glyphData={charCode,curves,contourStarts,bounds:{minX:bounds.x1,minY:bounds.y1,maxX:bounds.x2,maxY:bounds.y2},advanceWidth:glyph.advanceWidth??0,lsb:glyph.leftSideBearing??0,hBandCount:bandResult.hBandCount,vBandCount:bandResult.vBandCount,hBands:bandResult.hBands,vBands:bandResult.vBands,curveOffset:0,bandOffset:0};
 // Compute band assignments
 glyphList.push(glyphData),this.glyphs.set(charCode,glyphData)}
 // Pack all glyph data into GPU textures
@@ -4238,9 +4238,12 @@ const q0x=.5*(x0+x1),q0y=.5*(y0+y1),mx=.5*(x1+x2),my=.5*(y1+y2),q2x=.5*(x2+x3),q
  * Extract quadratic Bezier curves from an opentype.js path command list.
  * Converts lines and cubic Beziers to quadratics so the Slug shader
  * only needs to handle one curve type.
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.lineToQuadratic=lineToQuadratic,exports.slugGlyphCurves=function(commands){const curves=[];let curX=0,curY=0,subpathStartX=0,subpathStartY=0;for(const cmd of commands)switch(cmd.type){case"M":curX=cmd.x,curY=cmd.y,subpathStartX=cmd.x,subpathStartY=cmd.y;break;case"L":curves.push(lineToQuadratic(curX,curY,cmd.x,cmd.y)),curX=cmd.x,curY=cmd.y;break;case"Q":curves.push({p1x:curX,p1y:curY,p2x:cmd.x1,p2y:cmd.y1,p3x:cmd.x,p3y:cmd.y}),curX=cmd.x,curY=cmd.y;break;case"C":curves.push(...cubicToQuadratics(curX,curY,cmd.x1,cmd.y1,cmd.x2,cmd.y2,cmd.x,cmd.y)),curX=cmd.x,curY=cmd.y;break;case"Z":
+ *
+ * Returns both the curves and contour boundary indices for shared-endpoint
+ * texture packing.
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.lineToQuadratic=lineToQuadratic,exports.slugGlyphCurves=function(commands){const curves=[],contourStarts=[];let curX=0,curY=0,subpathStartX=0,subpathStartY=0;for(const cmd of commands)switch(cmd.type){case"M":contourStarts.push(curves.length),curX=cmd.x,curY=cmd.y,subpathStartX=cmd.x,subpathStartY=cmd.y;break;case"L":curves.push(lineToQuadratic(curX,curY,cmd.x,cmd.y)),curX=cmd.x,curY=cmd.y;break;case"Q":curves.push({p1x:curX,p1y:curY,p2x:cmd.x1,p2y:cmd.y1,p3x:cmd.x,p3y:cmd.y}),curX=cmd.x,curY=cmd.y;break;case"C":curves.push(...cubicToQuadratics(curX,curY,cmd.x1,cmd.y1,cmd.x2,cmd.y2,cmd.x,cmd.y)),curX=cmd.x,curY=cmd.y;break;case"Z":
 // Close path: add closing line if the current position is not already at the subpath start.
-(Math.abs(curX-subpathStartX)>1e-6||Math.abs(curY-subpathStartY)>1e-6)&&curves.push(lineToQuadratic(curX,curY,subpathStartX,subpathStartY)),curX=subpathStartX,curY=subpathStartY}return curves}
+(Math.abs(curX-subpathStartX)>1e-6||Math.abs(curY-subpathStartY)>1e-6)&&curves.push(lineToQuadratic(curX,curY,subpathStartX,subpathStartY)),curX=subpathStartX,curY=subpathStartY}return{curves,contourStarts}}
 /***/},
 /***/727(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugGlyphQuads=
 /**
@@ -4262,7 +4265,7 @@ const q0x=.5*(x0+x1),q0y=.5*(y0+y1),mx=.5*(x1+x2),my=.5*(y1+y2),q2x=.5*(x2+x3),q
  * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
  */
-function(text,glyphs,advances,unitsPerEm,fontSize,textureWidth,color=[1,1,1,1]){const scale=fontSize/unitsPerEm;
+function(text,glyphs,advances,unitsPerEm,fontSize,textureWidth,color=[1,1,1,1]){const scale=fontSize/unitsPerEm,invScale=1/scale,negInvScale=-invScale,cr=color[0],cg=color[1],cb=color[2],ca=color[3];
 // Count renderable glyphs and find the tallest glyph's top in em-space.
 // We use the actual max bounds.maxY (not the font's typographic ascender)
 // so that position(0,0) aligns the top of the tallest rendered glyph to y=0,
@@ -4270,7 +4273,7 @@ function(text,glyphs,advances,unitsPerEm,fontSize,textureWidth,color=[1,1,1,1]){
 // includes extra line-gap space that would produce a visible offset.
 let quadCount=0,maxGlyphTop=0;for(let i=0;i<text.length;i++){const g=glyphs.get(text.charCodeAt(i));g&&(quadCount++,g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY))}const baselineY=maxGlyphTop*scale,vertices=new Float32Array(4*quadCount*20),indices=new Uint32Array(6*quadCount);let cursorX=0,quadIdx=0;for(let i=0;i<text.length;i++){const charCode=text.charCodeAt(i),glyph=glyphs.get(charCode);if(!glyph){
 // No curves for this char (e.g. space) — advance cursor using advance width
-const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds,hBandCount,vBandCount,bandOffset}=glyph,x0=cursorX+bounds.minX*scale,y0=-bounds.maxY*scale+baselineY,x1=cursorX+bounds.maxX*scale,y1=-bounds.minY*scale+baselineY,u0=bounds.minX,v0=bounds.minY,u1=bounds.maxX,v1=bounds.maxY,glyphWidth=bounds.maxX-bounds.minX,glyphHeight=bounds.maxY-bounds.minY,maxDim=Math.max(glyphWidth,glyphHeight),bandCount=Math.max(hBandCount,vBandCount),_f32=new Float32Array(4);
+const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds,hBandCount,vBandCount,bandOffset}=glyph,x0=cursorX+bounds.minX*scale,y0=-bounds.maxY*scale+baselineY,x1=cursorX+bounds.maxX*scale,y1=-bounds.minY*scale+baselineY,u0=bounds.minX,v0=bounds.minY,u1=bounds.maxX,v1=bounds.maxY,glyphWidth=bounds.maxX-bounds.minX,glyphHeight=bounds.maxY-bounds.minY,maxDim=Math.max(glyphWidth,glyphHeight),bandCount=Math.max(hBandCount,vBandCount);
 // Glyph quad corners in pixel space.
 // Font Y is up (ascenders positive), screen Y is down.
 // Negate Y to flip, then add baselineY so that position(0,0)
@@ -4278,48 +4281,58 @@ const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds
 _f32[0]=maxDim>0?bandCount/maxDim:0;// shared scale
 const bandScale=_f32[0];_f32[1]=-bounds.minX*bandScale,// vBandOffset (X → vertical band)
 _f32[2]=-bounds.minY*bandScale;// hBandOffset (Y → horizontal band)
-const bandScaleX=bandScale,bandScaleY=bandScale,bandOffsetX=_f32[1],bandOffsetY=_f32[2],packedLocation=packUint16Pair(bandOffset%textureWidth,Math.floor(bandOffset/textureWidth)),packedBands=packBandMax(vBandCount-1,hBandCount-1),corners=[{px:x0,py:y0,nx:-1,ny:-1,eu:u0,ev:v1},// screen top-left = font (minX, maxY)
-{px:x1,py:y0,nx:1,ny:-1,eu:u1,ev:v1},// screen top-right = font (maxX, maxY)
-{px:x1,py:y1,nx:1,ny:1,eu:u1,ev:v0},// screen bottom-right = font (maxX, minY)
-{px:x0,py:y1,nx:-1,ny:1,eu:u0,ev:v0}],baseVertex=4*quadIdx;for(let c=0;c<4;c++){const corner=corners[c],offset=20*(baseVertex+c);
-// aPositionNormal (vec4): position xy + normal zw
-vertices[offset]=corner.px,vertices[offset+1]=corner.py,vertices[offset+2]=corner.nx,vertices[offset+3]=corner.ny,
-// aTexcoord (vec4): em-space uv + packed glyph location + packed bands
-vertices[offset+4]=corner.eu,vertices[offset+5]=corner.ev,vertices[offset+6]=packedLocation,vertices[offset+7]=packedBands,
-// aJacobian (vec4): inverse Jacobian mapping screen-space dilation back to em-space.
-// Screen coords: x = fontX * scale, y = -fontY * scale (Y-flipped).
-// So: d_emX = d_screenX / scale, d_emY = -d_screenY / scale.
-vertices[offset+8]=1/scale,// jac.x: d(emX)/d(screenX)
-vertices[offset+9]=0,// jac.y: d(emX)/d(screenY)
-vertices[offset+10]=0,// jac.z: d(emY)/d(screenX)
-vertices[offset+11]=-1/scale,// jac.w: d(emY)/d(screenY) — negative due to Y-flip
-// aBanding (vec4): band scale xy + band offset xy
-vertices[offset+12]=bandScaleX,vertices[offset+13]=bandScaleY,vertices[offset+14]=bandOffsetX,vertices[offset+15]=bandOffsetY,
-// aColor (vec4): vertex color RGBA
-vertices[offset+16]=color[0],vertices[offset+17]=color[1],vertices[offset+18]=color[2],vertices[offset+19]=color[3]}
+const bandScaleX=bandScale,bandScaleY=bandScale,bandOffsetX=_f32[1],bandOffsetY=_f32[2],packedLocation=packUint16Pair(bandOffset%textureWidth,Math.floor(bandOffset/textureWidth)),packedBands=packBandMax(vBandCount-1,hBandCount-1),baseVertex=4*quadIdx;
+// Corner 0: screen top-left = font (minX, maxY)
+let off=20*baseVertex;vertices[off]=x0,// posX
+vertices[off+1]=y0,// posY
+vertices[off+2]=-1,// normalX
+vertices[off+3]=-1,// normalY
+vertices[off+4]=u0,// emU
+vertices[off+5]=v1,// emV
+vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,// jac.x
+vertices[off+9]=0,// jac.y
+vertices[off+10]=0,// jac.z
+vertices[off+11]=negInvScale,// jac.w
+vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
+// Corner 1: screen top-right = font (maxX, maxY)
+off+=20,vertices[off]=x1,vertices[off+1]=y0,vertices[off+2]=1,vertices[off+3]=-1,vertices[off+4]=u1,vertices[off+5]=v1,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
+// Corner 2: screen bottom-right = font (maxX, minY)
+off+=20,vertices[off]=x1,vertices[off+1]=y1,vertices[off+2]=1,vertices[off+3]=1,vertices[off+4]=u1,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
+// Corner 3: screen bottom-left = font (minX, minY)
+off+=20,vertices[off]=x0,vertices[off+1]=y1,vertices[off+2]=-1,vertices[off+3]=1,vertices[off+4]=u0,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca;
 // Two triangles: [0,1,2] and [0,2,3]
 const idxOffset=6*quadIdx;indices[idxOffset]=baseVertex,indices[idxOffset+1]=baseVertex+1,indices[idxOffset+2]=baseVertex+2,indices[idxOffset+3]=baseVertex,indices[idxOffset+4]=baseVertex+2,indices[idxOffset+5]=baseVertex+3,cursorX+=glyph.advanceWidth*scale,quadIdx++}return{vertices,indices,quadCount}}
 /***/;
 /**
+ * Number of floats per vertex for each attribute.
+ * All 5 attributes are vec4 (4 floats each), totaling 20 floats per vertex.
+ */
+const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
+/** Number of vertices per glyph quad. */
+/**
  * Pack a float into a uint32 bit pattern, stored as a float.
  * Used to pass packed integer data through float vertex attributes.
  */
-function packUint16Pair(low,high){const uint32=(65535&high)<<16|65535&low,buf=new ArrayBuffer(4);
-// Reinterpret uint32 bits as float32
-return new Uint32Array(buf)[0]=uint32,new Float32Array(buf)[0]}
+function packUint16Pair(low,high){return _packU32[0]=(65535&high)<<16|65535&low,_packF32[0]}
 /**
  * Pack band max indices into a single float via uint32 reinterpretation.
  * low16 becomes glyphData.z (bandMax.x) in the shader → clamps vertical bandIndex.x.
  * high16 becomes glyphData.w (bandMax.y) in the shader → clamps horizontal bandIndex.y.
  */function packBandMax(low16_vBandMax,high16_hBandMax){return packUint16Pair(low16_vBandMax,high16_hBandMax)}},
-/***/238(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugTexturePack=// 4096
+/***/238(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugTexturePack=
 /**
  * Pack preprocessed glyph data into curve and band textures.
  *
  * **Curve texture layout** (float RGBA, `textureWidth` wide):
- * Each curve occupies 2 consecutive texels:
- *   texel 0: [p1.x, p1.y, p2.x, p2.y]
- *   texel 1: [p3.x, p3.y, 0, 0]
+ * Uses the shared-endpoint optimization: within each contour of N curves,
+ * consecutive curves share endpoints (curve K's p3 == curve K+1's p1).
+ * Each curve occupies 1 texel [p1.x, p1.y, p2.x, p2.y], and a sentinel
+ * texel [p3.x, p3.y, 0, 0] follows the last curve in each contour.
+ * The shader reads p3 as texelFetch(curveLoc.x + 1, curveLoc.y).xy,
+ * which naturally reads the next curve's p1 or the sentinel — no shader
+ * change required.
+ *
+ * For a contour of N curves this uses N+1 texels instead of 2N (~45% savings).
  *
  * **Band texture layout** (uint RGBA, `textureWidth` wide):
  * Per glyph, a contiguous block containing:
@@ -4331,50 +4344,57 @@ return new Uint32Array(buf)[0]=uint32,new Float32Array(buf)[0]}
  *      curveTexelX/Y are the 2D coordinates of the curve's p12 texel in uCurveTexture.
  *      Each list is row-aligned so it never straddles a row boundary.
  */
-function(glyphs,textureWidth){if(4096!==textureWidth)throw new Error(`textureWidth must be 4096 to match kLogBandTextureWidth=12 in frag.glsl, got ${textureWidth}`);
-// First pass: compute total sizes, simulating row alignment for curve lists.
+function(glyphs,textureWidth){if(4096!==textureWidth)throw new Error(`textureWidth must be 4096 to match kLogBandTextureWidth=12 in frag.glsl, got ${textureWidth}`);const widthMask=textureWidth-1;// 0xFFF for bitwise mod
+// First pass: compute total sizes, simulating row alignment.
 let totalCurveTexels=0,totalBandTexels=0;for(const glyph of glyphs){
-// 2 texels per curve; each pair must be on the same row so the shader can
-// read p3 as curveLoc.x + 1 without crossing a row boundary.
-for(let i=0;i<glyph.curves.length;i++)totalCurveTexels%textureWidth===textureWidth-1&&totalCurveTexels++,totalCurveTexels+=2;
-// Band headers must all fit on one row (shader accesses them with a fixed row).
-// Simulate the same padding the second pass applies.
-const hcount=glyph.hBandCount+glyph.vBandCount,hcol=totalBandTexels%textureWidth;hcol+hcount>textureWidth&&(totalBandTexels+=textureWidth-hcol),totalBandTexels+=hcount;
-// Curve reference lists — simulate row alignment so the size estimate matches
-// the actual layout produced in the second pass.
-for(const band of glyph.hBands){if(band.length>0){const col=totalBandTexels%textureWidth;col+band.length>textureWidth&&(totalBandTexels+=textureWidth-col)}totalBandTexels+=band.length}for(const band of glyph.vBands){if(band.length>0){const col=totalBandTexels%textureWidth;col+band.length>textureWidth&&(totalBandTexels+=textureWidth-col)}totalBandTexels+=band.length}}
+// Shared-endpoint curve texels per contour
+const starts=glyph.contourStarts;for(let c=0;c<starts.length;c++){const contourBegin=starts[c],contourSize=(c+1<starts.length?starts[c+1]:glyph.curves.length)-contourBegin;0!==contourSize&&(totalCurveTexels+=countContourTexels(contourSize,totalCurveTexels,textureWidth))}
+// Band headers must all fit on one row.
+const hcount=glyph.hBandCount+glyph.vBandCount,hcol=totalBandTexels&widthMask;hcol+hcount>textureWidth&&(totalBandTexels+=textureWidth-hcol),totalBandTexels+=hcount;
+// Curve reference lists — simulate row alignment.
+for(const band of glyph.hBands){if(band.length>0){const col=totalBandTexels&widthMask;col+band.length>textureWidth&&(totalBandTexels+=textureWidth-col)}totalBandTexels+=band.length}for(const band of glyph.vBands){if(band.length>0){const col=totalBandTexels&widthMask;col+band.length>textureWidth&&(totalBandTexels+=textureWidth-col)}totalBandTexels+=band.length}}
 // Compute texture height from texel count (round up to full rows)
 const curveRows=Math.ceil(totalCurveTexels/textureWidth)||1,bandRows=Math.ceil(totalBandTexels/textureWidth)||1,curveData=new Float32Array(curveRows*textureWidth*4),bandData=new Uint32Array(bandRows*textureWidth*4);
 // Second pass: pack data
 let curveTexelIdx=0,bandTexelIdx=0;for(const glyph of glyphs){glyph.curveOffset=curveTexelIdx;
-// Pack curves into curve texture.
-// Each curve occupies 2 consecutive texels; skip the last column of a row
-// if needed so p12 and p3 are always on the same row (shader reads p3 as
-// curveLoc.x + 1 with no row-wrapping).
-// Track each curve's actual p12 texel index for band references below.
-const curveTexels=new Array(glyph.curves.length);for(let i=0;i<glyph.curves.length;i++){curveTexelIdx%textureWidth===textureWidth-1&&curveTexelIdx++,curveTexels[i]=curveTexelIdx;const curve=glyph.curves[i],base0=4*curveTexelIdx;curveData[base0]=curve.p1x,curveData[base0+1]=curve.p1y,curveData[base0+2]=curve.p2x,curveData[base0+3]=curve.p2y,curveTexelIdx++;const base1=4*curveTexelIdx;curveData[base1]=curve.p3x,curveData[base1+1]=curve.p3y,curveData[base1+2]=0,curveData[base1+3]=0,curveTexelIdx++}
-// The shader fetches all band headers using a fixed row (glyphLoc.y) with
-// glyphLoc.x + bandIndex as the column — no row-wrapping. So all headers
-// must fit within one texture row. Pad to next row if they would overflow.
-const headerCount=glyph.hBandCount+glyph.vBandCount,headerCol=bandTexelIdx%textureWidth;headerCol+headerCount>textureWidth&&(bandTexelIdx+=textureWidth-headerCol),
-// Record band offset for this glyph
-glyph.bandOffset=bandTexelIdx;
-// Reserve header space
-const headerStart=bandTexelIdx;bandTexelIdx+=headerCount;
+// Pack curves using shared-endpoint layout.
+// Track each curve's p12 texel index for band references below.
+const curveTexels=new Array(glyph.curves.length),starts=glyph.contourStarts;for(let c=0;c<starts.length;c++){const contourBegin=starts[c],contourEnd=c+1<starts.length?starts[c+1]:glyph.curves.length;if(0===contourEnd-contourBegin)continue;
+// Pack each curve's p12 texel. The shader reads p3 from curveLoc.x+1,
+// which is the next curve's p12 texel (whose .xy == current curve's p3).
+for(let i=contourBegin;i<contourEnd;i++){
+// Ensure this texel and the +1 texel are on the same row.
+(curveTexelIdx&widthMask)===widthMask&&curveTexelIdx++,curveTexels[i]=curveTexelIdx;const curve=glyph.curves[i],base=4*curveTexelIdx;curveData[base]=curve.p1x,curveData[base+1]=curve.p1y,curveData[base+2]=curve.p2x,curveData[base+3]=curve.p2y,curveTexelIdx++}
+// Sentinel texel: holds the last curve's p3 so the shader's
+// curveLoc.x+1 read works for the final curve in the contour.
+// Row-alignment: the last curve's texel was placed such that +1
+// is on the same row (handled by the skip above). The sentinel
+// itself also needs its +1 neighbor check skipped since nothing
+// reads sentinel+1, but we still must not leave curveTexelIdx
+// on the last column for the next contour's first curve.
+const lastCurve=glyph.curves[contourEnd-1],sentBase=4*curveTexelIdx;curveData[sentBase]=lastCurve.p3x,curveData[sentBase+1]=lastCurve.p3y,curveData[sentBase+2]=0,curveData[sentBase+3]=0,curveTexelIdx++}
+// --- Band texture packing (unchanged logic) ---
+// Pad to next row if band headers would straddle a row boundary.
+const headerCount=glyph.hBandCount+glyph.vBandCount,headerCol=bandTexelIdx&widthMask;headerCol+headerCount>textureWidth&&(bandTexelIdx+=textureWidth-headerCol),glyph.bandOffset=bandTexelIdx;const headerStart=bandTexelIdx;bandTexelIdx+=headerCount;
 // Pack horizontal band headers + curve lists
-for(let b=0;b<glyph.hBandCount;b++){const band=glyph.hBands[b],headerBase=4*(headerStart+b);
-// Align curve list to avoid straddling a row boundary.
-// frag.glsl accesses the list as fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y))
-// with a fixed row, so the entire list must fit within one row.
-if(band.length>0){const col=bandTexelIdx%textureWidth;col+band.length>textureWidth&&(bandTexelIdx+=textureWidth-col)}bandData[headerBase]=band.length,
-// Offset is relative to glyph.bandOffset — CalcBandLoc in frag.glsl
-// adds it to glyphLoc and handles row wrapping.
-bandData[headerBase+1]=bandTexelIdx-glyph.bandOffset,bandData[headerBase+2]=0,bandData[headerBase+3]=0;for(const curveIdx of band){const refBase=4*bandTexelIdx,absCurveTexel=curveTexels[curveIdx];
-// 2D texel coordinates of p12 in uCurveTexture.
-bandData[refBase]=absCurveTexel%textureWidth,bandData[refBase+1]=Math.floor(absCurveTexel/textureWidth),bandData[refBase+2]=0,bandData[refBase+3]=0,bandTexelIdx++}}
+for(let b=0;b<glyph.hBandCount;b++){const band=glyph.hBands[b],headerBase=4*(headerStart+b);if(band.length>0){const col=bandTexelIdx&widthMask;col+band.length>textureWidth&&(bandTexelIdx+=textureWidth-col)}bandData[headerBase]=band.length,bandData[headerBase+1]=bandTexelIdx-glyph.bandOffset,bandData[headerBase+2]=0,bandData[headerBase+3]=0;for(const curveIdx of band){const refBase=4*bandTexelIdx,absCurveTexel=curveTexels[curveIdx];bandData[refBase]=absCurveTexel&widthMask,bandData[refBase+1]=absCurveTexel>>>12,bandData[refBase+2]=0,bandData[refBase+3]=0,bandTexelIdx++}}
 // Pack vertical band headers + curve lists
-for(let b=0;b<glyph.vBandCount;b++){const band=glyph.vBands[b],headerBase=4*(headerStart+glyph.hBandCount+b);if(band.length>0){const col=bandTexelIdx%textureWidth;col+band.length>textureWidth&&(bandTexelIdx+=textureWidth-col)}bandData[headerBase]=band.length,bandData[headerBase+1]=bandTexelIdx-glyph.bandOffset,bandData[headerBase+2]=0,bandData[headerBase+3]=0;for(const curveIdx of band){const refBase=4*bandTexelIdx,absCurveTexel=curveTexels[curveIdx];bandData[refBase]=absCurveTexel%textureWidth,bandData[refBase+1]=Math.floor(absCurveTexel/textureWidth),bandData[refBase+2]=0,bandData[refBase+3]=0,bandTexelIdx++}}}return{curveData,bandData}}
-/***/},
+for(let b=0;b<glyph.vBandCount;b++){const band=glyph.vBands[b],headerBase=4*(headerStart+glyph.hBandCount+b);if(band.length>0){const col=bandTexelIdx&widthMask;col+band.length>textureWidth&&(bandTexelIdx+=textureWidth-col)}bandData[headerBase]=band.length,bandData[headerBase+1]=bandTexelIdx-glyph.bandOffset,bandData[headerBase+2]=0,bandData[headerBase+3]=0;for(const curveIdx of band){const refBase=4*bandTexelIdx,absCurveTexel=curveTexels[curveIdx];bandData[refBase]=absCurveTexel&widthMask,bandData[refBase+1]=absCurveTexel>>>12,bandData[refBase+2]=0,bandData[refBase+3]=0,bandTexelIdx++}}}return{curveData,bandData}}
+/***/;// 4096
+/**
+ * Compute the number of curve texels needed per contour using the
+ * shared-endpoint layout. Within a contour of N curves, each curve
+ * gets 1 texel [p1x,p1y,p2x,p2y], plus 1 sentinel texel at the end
+ * holding the last curve's p3 as [p3x,p3y,0,0]. The shader reads p3
+ * via curveLoc.x+1, which naturally hits the next curve's p1 (== current
+ * curve's p3) or the sentinel for the last curve.
+ *
+ * Row alignment: each curve's texel and the texel at +1 must share
+ * a row. If a texel would land on the last column, skip to the next row.
+ */
+function countContourTexels(contourSize,startIdx,textureWidth){let idx=startIdx;
+// N curve texels + 1 sentinel, each needing its +1 neighbor on the same row
+const totalTexels=contourSize+1;for(let i=0;i<totalTexels;i++)idx%textureWidth===textureWidth-1&&idx++,idx++;return idx-startIdx}},
 /***/976(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugFontGpuV8=
 /**
  * Create or retrieve cached V8 GPU resources for a SlugFont.

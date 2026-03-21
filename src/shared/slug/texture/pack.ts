@@ -33,7 +33,7 @@ function countContourTexels(contourSize: number, startIdx: number, textureWidth:
 	// N curve texels + 1 sentinel, each needing its +1 neighbor on the same row
 	const totalTexels = contourSize + 1;
 	for (let i = 0; i < totalTexels; i++) {
-		if (idx % textureWidth === textureWidth - 1) {
+		if ((idx & (textureWidth - 1)) === textureWidth - 1) {
 			idx++; // skip last column to keep pair on same row
 		}
 		idx++;
@@ -174,8 +174,6 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			const sentBase = curveTexelIdx * 4;
 			curveData[sentBase]     = lastCurve.p3x;
 			curveData[sentBase + 1] = lastCurve.p3y;
-			curveData[sentBase + 2] = 0;
-			curveData[sentBase + 3] = 0;
 			curveTexelIdx++;
 		}
 
@@ -189,6 +187,11 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 		}
 
 		glyph.bandOffset = bandTexelIdx;
+
+		// NOTE: Band headers, curve references, and curve sentinels only write
+		// channels 0-1 (xy). Channels 2-3 (zw) are left at zero from the typed
+		// array allocation. The shader only reads .xy (fetchBand, texelFetch .xy).
+		// If the shader or band format ever reads .zw, add explicit writes back.
 
 		const headerStart = bandTexelIdx;
 		bandTexelIdx += headerCount;
@@ -207,16 +210,12 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 
 			bandData[headerBase]     = band.length;
 			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
-			bandData[headerBase + 2] = 0;
-			bandData[headerBase + 3] = 0;
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
 				const absCurveTexel = curveTexels[curveIdx];
 				bandData[refBase]     = absCurveTexel & widthMask;
 				bandData[refBase + 1] = (absCurveTexel >>> 12);
-				bandData[refBase + 2] = 0;
-				bandData[refBase + 3] = 0;
 				bandTexelIdx++;
 			}
 		}
@@ -235,16 +234,12 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 
 			bandData[headerBase]     = band.length;
 			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
-			bandData[headerBase + 2] = 0;
-			bandData[headerBase + 3] = 0;
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
 				const absCurveTexel = curveTexels[curveIdx];
 				bandData[refBase]     = absCurveTexel & widthMask;
 				bandData[refBase + 1] = (absCurveTexel >>> 12);
-				bandData[refBase + 2] = 0;
-				bandData[refBase + 3] = 0;
 				bandTexelIdx++;
 			}
 		}
