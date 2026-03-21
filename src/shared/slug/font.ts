@@ -112,7 +112,7 @@ export class SlugFont {
 			}
 
 			// Extract quadratic Bezier curves from glyph path
-			const curves = slugGlyphCurves(glyph.path.commands);
+			const {curves, contourStarts} = slugGlyphCurves(glyph.path.commands);
 			if (curves.length === 0) {
 				continue;
 			}
@@ -126,6 +126,7 @@ export class SlugFont {
 			const glyphData: SlugGlyphData = {
 				charCode,
 				curves,
+				contourStarts,
 				bounds: {
 					minX: bounds.x1,
 					minY: bounds.y1,

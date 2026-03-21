@@ -18,12 +18,42 @@ export interface SlugTexturePack {
 const BAND_TEXTURE_WIDTH = 1 << 12; // 4096
 
 /**
+ * Compute the number of curve texels needed per contour using the
+ * shared-endpoint layout. Within a contour of N curves, each curve
+ * gets 1 texel [p1x,p1y,p2x,p2y], plus 1 sentinel texel at the end
+ * holding the last curve's p3 as [p3x,p3y,0,0]. The shader reads p3
+ * via curveLoc.x+1, which naturally hits the next curve's p1 (== current
+ * curve's p3) or the sentinel for the last curve.
+ *
+ * Row alignment: each curve's texel and the texel at +1 must share
+ * a row. If a texel would land on the last column, skip to the next row.
+ */
+function countContourTexels(contourSize: number, startIdx: number, textureWidth: number): number {
+	let idx = startIdx;
+	// N curve texels + 1 sentinel, each needing its +1 neighbor on the same row
+	const totalTexels = contourSize + 1;
+	for (let i = 0; i < totalTexels; i++) {
+		if (idx % textureWidth === textureWidth - 1) {
+			idx++; // skip last column to keep pair on same row
+		}
+		idx++;
+	}
+	return idx - startIdx;
+}
+
+/**
  * Pack preprocessed glyph data into curve and band textures.
  *
  * **Curve texture layout** (float RGBA, `textureWidth` wide):
- * Each curve occupies 2 consecutive texels:
- *   texel 0: [p1.x, p1.y, p2.x, p2.y]
- *   texel 1: [p3.x, p3.y, 0, 0]
+ * Uses the shared-endpoint optimization: within each contour of N curves,
+ * consecutive curves share endpoints (curve K's p3 == curve K+1's p1).
+ * Each curve occupies 1 texel [p1.x, p1.y, p2.x, p2.y], and a sentinel
+ * texel [p3.x, p3.y, 0, 0] follows the last curve in each contour.
+ * The shader reads p3 as texelFetch(curveLoc.x + 1, curveLoc.y).xy,
+ * which naturally reads the next curve's p1 or the sentinel — no shader
+ * change required.
+ *
+ * For a contour of N curves this uses N+1 texels instead of 2N (~45% savings).
  *
  * **Band texture layout** (uint RGBA, `textureWidth` wide):
  * Per glyph, a contiguous block containing:
@@ -42,34 +72,35 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 		);
 	}
 
-	// First pass: compute total sizes, simulating row alignment for curve lists.
+	const widthMask = textureWidth - 1; // 0xFFF for bitwise mod
+
+	// First pass: compute total sizes, simulating row alignment.
 	let totalCurveTexels = 0;
 	let totalBandTexels = 0;
 
 	for (const glyph of glyphs) {
-		// 2 texels per curve; each pair must be on the same row so the shader can
-		// read p3 as curveLoc.x + 1 without crossing a row boundary.
-		for (let i = 0; i < glyph.curves.length; i++) {
-			if (totalCurveTexels % textureWidth === textureWidth - 1) {
-				totalCurveTexels++; // skip last column, keep pairs row-aligned
-			}
-			totalCurveTexels += 2;
+		// Shared-endpoint curve texels per contour
+		const starts = glyph.contourStarts;
+		for (let c = 0; c < starts.length; c++) {
+			const contourBegin = starts[c];
+			const contourEnd = c + 1 < starts.length ? starts[c + 1] : glyph.curves.length;
+			const contourSize = contourEnd - contourBegin;
+			if (contourSize === 0) continue;
+			totalCurveTexels += countContourTexels(contourSize, totalCurveTexels, textureWidth);
 		}
 
-		// Band headers must all fit on one row (shader accesses them with a fixed row).
-		// Simulate the same padding the second pass applies.
+		// Band headers must all fit on one row.
 		const hcount = glyph.hBandCount + glyph.vBandCount;
-		const hcol = totalBandTexels % textureWidth;
+		const hcol = totalBandTexels & widthMask;
 		if (hcol + hcount > textureWidth) {
 			totalBandTexels += textureWidth - hcol;
 		}
 		totalBandTexels += hcount;
 
-		// Curve reference lists — simulate row alignment so the size estimate matches
-		// the actual layout produced in the second pass.
+		// Curve reference lists — simulate row alignment.
 		for (const band of glyph.hBands) {
 			if (band.length > 0) {
-				const col = totalBandTexels % textureWidth;
+				const col = totalBandTexels & widthMask;
 				if (col + band.length > textureWidth) {
 					totalBandTexels += textureWidth - col;
 				}
@@ -78,7 +109,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 		}
 		for (const band of glyph.vBands) {
 			if (band.length > 0) {
-				const col = totalBandTexels % textureWidth;
+				const col = totalBandTexels & widthMask;
 				if (col + band.length > textureWidth) {
 					totalBandTexels += textureWidth - col;
 				}
@@ -102,48 +133,63 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 	for (const glyph of glyphs) {
 		glyph.curveOffset = curveTexelIdx;
 
-		// Pack curves into curve texture.
-		// Each curve occupies 2 consecutive texels; skip the last column of a row
-		// if needed so p12 and p3 are always on the same row (shader reads p3 as
-		// curveLoc.x + 1 with no row-wrapping).
-		// Track each curve's actual p12 texel index for band references below.
+		// Pack curves using shared-endpoint layout.
+		// Track each curve's p12 texel index for band references below.
 		const curveTexels: number[] = new Array(glyph.curves.length);
-		for (let i = 0; i < glyph.curves.length; i++) {
-			if (curveTexelIdx % textureWidth === textureWidth - 1) {
-				curveTexelIdx++; // pad past last column of row
+		const starts = glyph.contourStarts;
+
+		for (let c = 0; c < starts.length; c++) {
+			const contourBegin = starts[c];
+			const contourEnd = c + 1 < starts.length ? starts[c + 1] : glyph.curves.length;
+			const contourSize = contourEnd - contourBegin;
+			if (contourSize === 0) continue;
+
+			// Pack each curve's p12 texel. The shader reads p3 from curveLoc.x+1,
+			// which is the next curve's p12 texel (whose .xy == current curve's p3).
+			for (let i = contourBegin; i < contourEnd; i++) {
+				// Ensure this texel and the +1 texel are on the same row.
+				if ((curveTexelIdx & widthMask) === widthMask) {
+					curveTexelIdx++; // skip last column
+				}
+
+				curveTexels[i] = curveTexelIdx;
+				const curve = glyph.curves[i];
+
+				const base = curveTexelIdx * 4;
+				curveData[base]     = curve.p1x;
+				curveData[base + 1] = curve.p1y;
+				curveData[base + 2] = curve.p2x;
+				curveData[base + 3] = curve.p2y;
+				curveTexelIdx++;
 			}
 
-			curveTexels[i] = curveTexelIdx;
-			const curve = glyph.curves[i];
-
-			const base0 = curveTexelIdx * 4;
-			curveData[base0]     = curve.p1x;
-			curveData[base0 + 1] = curve.p1y;
-			curveData[base0 + 2] = curve.p2x;
-			curveData[base0 + 3] = curve.p2y;
-			curveTexelIdx++;
-
-			const base1 = curveTexelIdx * 4;
-			curveData[base1]     = curve.p3x;
-			curveData[base1 + 1] = curve.p3y;
-			curveData[base1 + 2] = 0;
-			curveData[base1 + 3] = 0;
+			// Sentinel texel: holds the last curve's p3 so the shader's
+			// curveLoc.x+1 read works for the final curve in the contour.
+			// Row-alignment: the last curve's texel was placed such that +1
+			// is on the same row (handled by the skip above). The sentinel
+			// itself also needs its +1 neighbor check skipped since nothing
+			// reads sentinel+1, but we still must not leave curveTexelIdx
+			// on the last column for the next contour's first curve.
+			const lastCurve = glyph.curves[contourEnd - 1];
+			const sentBase = curveTexelIdx * 4;
+			curveData[sentBase]     = lastCurve.p3x;
+			curveData[sentBase + 1] = lastCurve.p3y;
+			curveData[sentBase + 2] = 0;
+			curveData[sentBase + 3] = 0;
 			curveTexelIdx++;
 		}
 
-		// The shader fetches all band headers using a fixed row (glyphLoc.y) with
-		// glyphLoc.x + bandIndex as the column — no row-wrapping. So all headers
-		// must fit within one texture row. Pad to next row if they would overflow.
+		// --- Band texture packing (unchanged logic) ---
+
+		// Pad to next row if band headers would straddle a row boundary.
 		const headerCount = glyph.hBandCount + glyph.vBandCount;
-		const headerCol = bandTexelIdx % textureWidth;
+		const headerCol = bandTexelIdx & widthMask;
 		if (headerCol + headerCount > textureWidth) {
 			bandTexelIdx += textureWidth - headerCol;
 		}
 
-		// Record band offset for this glyph
 		glyph.bandOffset = bandTexelIdx;
 
-		// Reserve header space
 		const headerStart = bandTexelIdx;
 		bandTexelIdx += headerCount;
 
@@ -152,29 +198,23 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			const band = glyph.hBands[b];
 			const headerBase = (headerStart + b) * 4;
 
-			// Align curve list to avoid straddling a row boundary.
-			// frag.glsl accesses the list as fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y))
-			// with a fixed row, so the entire list must fit within one row.
 			if (band.length > 0) {
-				const col = bandTexelIdx % textureWidth;
+				const col = bandTexelIdx & widthMask;
 				if (col + band.length > textureWidth) {
 					bandTexelIdx += textureWidth - col;
 				}
 			}
 
 			bandData[headerBase]     = band.length;
-			// Offset is relative to glyph.bandOffset — CalcBandLoc in frag.glsl
-			// adds it to glyphLoc and handles row wrapping.
 			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
 			bandData[headerBase + 2] = 0;
 			bandData[headerBase + 3] = 0;
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
-				// 2D texel coordinates of p12 in uCurveTexture.
 				const absCurveTexel = curveTexels[curveIdx];
-				bandData[refBase]     = absCurveTexel % textureWidth;
-				bandData[refBase + 1] = Math.floor(absCurveTexel / textureWidth);
+				bandData[refBase]     = absCurveTexel & widthMask;
+				bandData[refBase + 1] = (absCurveTexel >>> 12);
 				bandData[refBase + 2] = 0;
 				bandData[refBase + 3] = 0;
 				bandTexelIdx++;
@@ -187,7 +227,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			const headerBase = (headerStart + glyph.hBandCount + b) * 4;
 
 			if (band.length > 0) {
-				const col = bandTexelIdx % textureWidth;
+				const col = bandTexelIdx & widthMask;
 				if (col + band.length > textureWidth) {
 					bandTexelIdx += textureWidth - col;
 				}
@@ -201,8 +241,8 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
 				const absCurveTexel = curveTexels[curveIdx];
-				bandData[refBase]     = absCurveTexel % textureWidth;
-				bandData[refBase + 1] = Math.floor(absCurveTexel / textureWidth);
+				bandData[refBase]     = absCurveTexel & widthMask;
+				bandData[refBase + 1] = (absCurveTexel >>> 12);
 				bandData[refBase + 2] = 0;
 				bandData[refBase + 3] = 0;
 				bandTexelIdx++;

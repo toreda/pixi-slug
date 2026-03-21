@@ -12,11 +12,13 @@ function makeGlyph(
 	charCode: number,
 	curves: SlugGlyphCurve[],
 	hBands: number[][] = [[...Array(curves.length).keys()]],
-	vBands: number[][] = [[...Array(curves.length).keys()]]
+	vBands: number[][] = [[...Array(curves.length).keys()]],
+	contourStarts: number[] = [0]
 ): SlugGlyphData {
 	return {
 		charCode,
 		curves,
+		contourStarts: curves.length > 0 ? contourStarts : [],
 		bounds: { minX: 0, minY: 0, maxX: 20, maxY: 10 },
 		advanceWidth: 22,
 		lsb: 0,
@@ -70,7 +72,7 @@ describe('slugTexturePack', () => {
 	// ============================================================
 
 	describe('curve texture layout', () => {
-		it('should pack a single curve into 2 texels (8 floats)', () => {
+		it('should pack a single curve as p12 texel + sentinel (2 texels)', () => {
 			const curve = makeCurve(1, 2, 3, 4, 5, 6);
 			const glyph = makeGlyph(65, [curve]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
@@ -81,29 +83,36 @@ describe('slugTexturePack', () => {
 			expect(result.curveData[2]).toBe(3);
 			expect(result.curveData[3]).toBe(4);
 
-			// Texel 1: [p3x, p3y, 0, 0]
+			// Texel 1 (sentinel): [p3x, p3y, 0, 0]
 			expect(result.curveData[4]).toBe(5);
 			expect(result.curveData[5]).toBe(6);
 			expect(result.curveData[6]).toBe(0);
 			expect(result.curveData[7]).toBe(0);
 		});
 
-		it('should pack multiple curves sequentially', () => {
+		it('should pack contiguous curves with shared endpoints', () => {
+			// c1.p3 == c2.p1 (shared endpoint within contour)
 			const c1 = makeCurve(10, 20, 30, 40, 50, 60);
-			const c2 = makeCurve(70, 80, 90, 100, 110, 120);
+			const c2 = makeCurve(50, 60, 90, 100, 110, 120);
 			const glyph = makeGlyph(65, [c1, c2]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			// Second curve starts at texel index 2 (2 texels per curve)
-			// Texel 2: [p1x, p1y, p2x, p2y] of c2
-			expect(result.curveData[8]).toBe(70);
-			expect(result.curveData[9]).toBe(80);
-			expect(result.curveData[10]).toBe(90);
-			expect(result.curveData[11]).toBe(100);
+			// Texel 0: c1's p12
+			expect(result.curveData[0]).toBe(10);
+			expect(result.curveData[1]).toBe(20);
+			expect(result.curveData[2]).toBe(30);
+			expect(result.curveData[3]).toBe(40);
 
-			// Texel 3: [p3x, p3y, 0, 0] of c2
-			expect(result.curveData[12]).toBe(110);
-			expect(result.curveData[13]).toBe(120);
+			// Texel 1: c2's p12 (c2.p1x == c1.p3x, c2.p1y == c1.p3y — shared endpoint)
+			// Shader reads curveLoc.x+1 for c1's p3 and gets this texel's .xy = (50,60) ✓
+			expect(result.curveData[4]).toBe(50);
+			expect(result.curveData[5]).toBe(60);
+			expect(result.curveData[6]).toBe(90);
+			expect(result.curveData[7]).toBe(100);
+
+			// Texel 2 (sentinel): c2's p3
+			expect(result.curveData[8]).toBe(110);
+			expect(result.curveData[9]).toBe(120);
 		});
 
 		it('should preserve negative and fractional curve coordinates', () => {
@@ -126,7 +135,7 @@ describe('slugTexturePack', () => {
 		});
 
 		it('should set sequential curveOffsets for multiple glyphs', () => {
-			const g1 = makeGlyph(65, [makeCurve(0, 0, 5, 10, 10, 0)]); // 1 curve = 2 texels
+			const g1 = makeGlyph(65, [makeCurve(0, 0, 5, 10, 10, 0)]); // 1 curve, 1 contour = 2 texels (1 p12 + 1 sentinel)
 			const g2 = makeGlyph(66, [makeCurve(0, 0, 5, 10, 10, 0)]);
 			slugTexturePack([g1, g2], TEX_WIDTH);
 			expect(g1.curveOffset).toBe(0);
@@ -139,23 +148,11 @@ describe('slugTexturePack', () => {
 	// ============================================================
 
 	describe('curve row alignment', () => {
-		it('should skip last column to keep curve pairs on the same row', () => {
-			// Fill up to TEX_WIDTH - 1 texels, then next curve should skip to new row.
-			// Each curve takes 2 texels, so (TEX_WIDTH/2 - 1) curves fills TEX_WIDTH - 2 texels.
-			// One more curve would start at col TEX_WIDTH-2, pair at TEX_WIDTH-1 — fine.
-			// TWO more curves: second pair would start at col TEX_WIDTH (new row) — no skip.
-			// To trigger the skip, we need the curveTexelIdx to land on TEX_WIDTH-1.
-			// That happens with (TEX_WIDTH - 1) / 2 curves if TEX_WIDTH is odd,
-			// but TEX_WIDTH=4096 is even, so we manually verify the padding logic.
-
-			// Create enough curves to fill a row minus one texel.
-			// 2047 curves = 4094 texels, next curve at col 4094 → pair at 4095 → fine.
-			// 2048 curves = 4096 texels → exactly fills row, no skip needed.
-			// The skip triggers when curveTexelIdx % TEX_WIDTH === TEX_WIDTH - 1 (col 4095).
-			// So we need an odd number of texels consumed before the curve pair.
-			// This happens if a previous glyph used an odd texel count due to skipping.
-
-			// Simplest test: verify that two glyphs' curve data doesn't overlap
+		it('should skip last column to keep curve+neighbor on the same row', () => {
+			// With shared endpoints, each curve needs its texel and the +1 texel
+			// (next curve or sentinel) on the same row. The skip triggers when
+			// curveTexelIdx lands on the last column (TEX_WIDTH - 1).
+			// Verify that two glyphs' curve data doesn't overlap
 			// even in pathological alignment cases.
 			const curvesA: SlugGlyphCurve[] = [];
 			for (let i = 0; i < 2048; i++) {
@@ -423,9 +420,10 @@ describe('slugTexturePack', () => {
 	// ============================================================
 
 	describe('curve reference round-trip', () => {
-		it('should allow reading curve data back via band references', () => {
+		it('should allow reading curve data back via band references (shared endpoints)', () => {
+			// Contiguous curves: c0.p3 == c1.p1 (shared endpoint)
 			const c0 = makeCurve(100, 200, 300, 400, 500, 600);
-			const c1 = makeCurve(700, 800, 900, 1000, 1100, 1200);
+			const c1 = makeCurve(500, 600, 900, 1000, 1100, 1200);
 			const glyph = makeGlyph(65, [c0, c1], [[0, 1]], [[0]]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
@@ -448,7 +446,7 @@ describe('slugTexturePack', () => {
 				expect(result.curveData[curveBase + 2]).toBe(expectedCurve.p2x);
 				expect(result.curveData[curveBase + 3]).toBe(expectedCurve.p2y);
 
-				// p3 is at texX+1, same row
+				// p3 is at texX+1, same row (shared endpoint: next curve's p1, or sentinel)
 				const p3Base = (texY * TEX_WIDTH + texX + 1) * 4;
 				expect(result.curveData[p3Base]).toBe(expectedCurve.p3x);
 				expect(result.curveData[p3Base + 1]).toBe(expectedCurve.p3y);
@@ -626,33 +624,54 @@ describe('slugTexturePack', () => {
 	});
 
 	// ============================================================
-	// Spec invariants: p3 texel padding (INV-CURVE-11/12)
-	// p3 texel format: [p3x, p3y, 0, 0]
+	// Spec invariants: sentinel texel padding (INV-SENTINEL)
+	// Sentinel texel format: [p3x, p3y, 0, 0]
+	// With shared endpoints, only the sentinel at the end of each
+	// contour has the dedicated [p3x, p3y, 0, 0] layout.
 	// ============================================================
 
-	describe('p3 texel padding', () => {
-		it('should set channels 2 and 3 of every p3 texel to zero', () => {
+	describe('sentinel texel padding', () => {
+		it('should set channels 2 and 3 of sentinel texels to zero', () => {
+			// Two contours: contour 0 has 2 curves, contour 1 has 1 curve
 			const curves = [
 				makeCurve(1, 2, 3, 4, 5, 6),
-				makeCurve(7, 8, 9, 10, 11, 12)
+				makeCurve(5, 6, 9, 10, 11, 12),
+				makeCurve(20, 21, 22, 23, 24, 25)
 			];
-			const glyph = makeGlyph(65, curves);
+			const glyph = makeGlyph(65, curves, [[0, 1, 2]], [[0, 1, 2]], [0, 2]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			// For each curve, the p3 texel is at curveOffset + 2*i + 1
-			for (let i = 0; i < curves.length; i++) {
-				// Walk via band refs to find actual texel positions
-				const hdr = glyph.bandOffset * 4;
-				const listOffset = result.bandData[hdr + 1];
-				const refBase = (glyph.bandOffset + listOffset + i) * 4;
-				const texX = result.bandData[refBase];
-				const texY = result.bandData[refBase + 1];
+			// Contour 0: curves 0,1 → sentinel at texel 2 (0-indexed: curve0, curve1, sentinel)
+			// Contour 1: curve 2 → sentinel at texel 4 (curve2, sentinel)
+			// Find sentinel positions: after last curve in each contour
+			const contourEnds = [2, 3]; // curve indices at end of each contour
+			const sentinelPositions: number[] = [];
 
-				// p3 texel is at (texX+1, texY)
-				const p3Base = (texY * TEX_WIDTH + texX + 1) * 4;
-				expect(result.curveData[p3Base + 2]).toBe(0);
-				expect(result.curveData[p3Base + 3]).toBe(0);
-			}
+			// Walk band refs to get curve texel positions, then sentinels follow
+			const hdr = glyph.bandOffset * 4;
+			const listOffset = result.bandData[hdr + 1];
+
+			// Sentinel for contour 0 is at (last curve of contour 0).texel + 1
+			// Last curve of contour 0 is curve index 1
+			const ref1Base = (glyph.bandOffset + listOffset + 1) * 4;
+			const tex1X = result.bandData[ref1Base];
+			const tex1Y = result.bandData[ref1Base + 1];
+			const sent0Base = (tex1Y * TEX_WIDTH + tex1X + 1) * 4;
+			expect(result.curveData[sent0Base]).toBe(11); // c1.p3x
+			expect(result.curveData[sent0Base + 1]).toBe(12); // c1.p3y
+			expect(result.curveData[sent0Base + 2]).toBe(0);
+			expect(result.curveData[sent0Base + 3]).toBe(0);
+
+			// Sentinel for contour 1 is at (last curve of contour 1).texel + 1
+			// Last curve of contour 1 is curve index 2
+			const ref2Base = (glyph.bandOffset + listOffset + 2) * 4;
+			const tex2X = result.bandData[ref2Base];
+			const tex2Y = result.bandData[ref2Base + 1];
+			const sent1Base = (tex2Y * TEX_WIDTH + tex2X + 1) * 4;
+			expect(result.curveData[sent1Base]).toBe(24); // c2.p3x
+			expect(result.curveData[sent1Base + 1]).toBe(25); // c2.p3y
+			expect(result.curveData[sent1Base + 2]).toBe(0);
+			expect(result.curveData[sent1Base + 3]).toBe(0);
 		});
 	});
 

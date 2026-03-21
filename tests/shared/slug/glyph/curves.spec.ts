@@ -86,12 +86,12 @@ describe('slugGlyphCurves', () => {
 
 	describe('empty and trivial inputs', () => {
 		it('should return empty array for empty commands', () => {
-			expect(slugGlyphCurves([])).toEqual([]);
+			expect(slugGlyphCurves([]).curves).toEqual([]);
 		});
 
 		it('should return empty array for move-only path', () => {
 			const commands: PathCommand[] = [{ type: 'M', x: 0, y: 0 }];
-			expect(slugGlyphCurves(commands)).toEqual([]);
+			expect(slugGlyphCurves(commands).curves).toEqual([]);
 		});
 
 		it('should return empty array for multiple consecutive moves', () => {
@@ -100,7 +100,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 10, y: 10 },
 				{ type: 'M', x: 20, y: 20 }
 			];
-			expect(slugGlyphCurves(commands)).toEqual([]);
+			expect(slugGlyphCurves(commands).curves).toEqual([]);
 		});
 	});
 
@@ -112,7 +112,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'L', x: 10, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(1);
 			expect(curves[0].p1x).toBe(0);
 			expect(curves[0].p1y).toBe(0);
@@ -128,7 +128,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 10, y: 0 },
 				{ type: 'L', x: 10, y: 10 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(2);
 			// First line
 			expect(curves[0].p1x).toBe(0);
@@ -150,7 +150,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'Q', x1: 5, y1: 10, x: 10, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(1);
 			expect(curves[0]).toEqual({
 				p1x: 0, p1y: 0,
@@ -165,7 +165,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'Q', x1: 5, y1: 10, x: 10, y: 0 },
 				{ type: 'Q', x1: 15, y1: -10, x: 20, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(2);
 			expect(curves[0].p3x).toBe(10);
 			expect(curves[1].p1x).toBe(10);
@@ -184,7 +184,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'C', x1: 3, y1: 10, x2: 7, y2: 10, x: 10, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(2);
 		});
 
@@ -193,7 +193,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 100, y: 200 },
 				{ type: 'C', x1: 130, y1: 260, x2: 170, y2: 260, x: 200, y: 200 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves[0].p1x).toBe(100);
 			expect(curves[0].p1y).toBe(200);
 			expect(curves[1].p3x).toBe(200);
@@ -205,7 +205,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'C', x1: 10, y1: 30, x2: 20, y2: 30, x: 30, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves[0].p3x).toBe(curves[1].p1x);
 			expect(curves[0].p3y).toBe(curves[1].p1y);
 		});
@@ -217,7 +217,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'C', x1: 0, y1: 40, x2: 40, y2: 40, x: 40, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// The split point is the endpoint of first / start of second
 			expect(curves[0].p3x).toBeCloseTo(20);
 			expect(curves[0].p3y).toBeCloseTo(30);
@@ -228,7 +228,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'C', x1: 3, y1: 0, x2: 7, y2: 0, x: 10, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(2);
 			// Both quadratic halves should remain collinear (y=0 for all points)
 			expect(curves[0].p1y).toBe(0);
@@ -244,7 +244,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'C', x1: 5, y1: 5, x2: 5, y2: 5, x: 10, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(2);
 			expect(curves[0].p1x).toBe(0);
 			expect(curves[1].p3x).toBe(10);
@@ -261,7 +261,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 10, y: 10 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// Two explicit lines + one closing line back to origin
 			expect(curves).toHaveLength(3);
 			expect(curves[2].p1x).toBe(10);
@@ -277,7 +277,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 0, y: 0 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// Two explicit lines, no closing line needed
 			expect(curves).toHaveLength(2);
 		});
@@ -289,7 +289,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'Z' },
 				{ type: 'L', x: 5, y: 5 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// First line + close line (10,0 -> 0,0) + line from origin to 5,5
 			expect(curves).toHaveLength(3);
 			// The line after Z should start at (0,0)
@@ -304,7 +304,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 5, y: 5 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(0);
 		});
 	});
@@ -322,7 +322,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 30, y: 20 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// First subpath: 2 lines + 1 close = 3
 			// Second subpath: 1 line + 1 close = 2
 			expect(curves).toHaveLength(5);
@@ -339,7 +339,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 400, y: 300 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// First line: (100,100)->(200,100), no close
 			// Second line: (300,300)->(400,300), close back to (300,300)
 			expect(curves).toHaveLength(3);
@@ -359,7 +359,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'Q', x1: 15, y1: 5, x: 20, y: 0 },
 				{ type: 'C', x1: 23, y1: 10, x2: 27, y2: 10, x: 30, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// 1 line + 1 quadratic + 2 from cubic = 4
 			expect(curves).toHaveLength(4);
 			// Verify chain continuity
@@ -377,7 +377,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 50, y: 10 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// Verify every consecutive pair is connected
 			for (let i = 1; i < curves.length; i++) {
 				expect(curves[i].p1x).toBeCloseTo(curves[i - 1].p3x);
@@ -394,7 +394,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'L', x: 0, y: 0 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(1);
 			expect(curves[0].p1x).toBe(0);
 			expect(curves[0].p2x).toBe(0);
@@ -407,7 +407,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: -5, y: -10 },
 				{ type: 'Q', x1: 0, y1: 0, x: 5, y: -10 }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			expect(curves).toHaveLength(2);
 			expect(curves[0].p1x).toBe(-10);
 			expect(curves[0].p1y).toBe(-20);
@@ -420,7 +420,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 1e-7, y: 1e-7 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// The line brings us within epsilon of start, so Z should not add another curve
 			expect(curves).toHaveLength(1);
 		});
@@ -431,7 +431,7 @@ describe('slugGlyphCurves', () => {
 				{ type: 'L', x: 1, y: 0 },
 				{ type: 'Z' }
 			];
-			const curves = slugGlyphCurves(commands);
+			const {curves} = slugGlyphCurves(commands);
 			// Line (0,0)->(1,0) + close (1,0)->(0,0) = 2
 			expect(curves).toHaveLength(2);
 		});

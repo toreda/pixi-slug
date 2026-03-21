@@ -82,12 +82,33 @@ export function lineToQuadratic(x0: number, y0: number, x1: number, y1: number):
 }
 
 /**
+ * Result of extracting curves from a glyph path.
+ */
+export interface SlugGlyphCurvesResult {
+	/** All quadratic Bezier curves for the glyph. */
+	curves: SlugGlyphCurve[];
+	/**
+	 * Starting curve index for each contour.
+	 * contourStarts[i] is the index into `curves` where contour i begins.
+	 * Used by texture packing for the shared-endpoint optimization:
+	 * within a contour, consecutive curves share endpoints (curve N's p3
+	 * equals curve N+1's p1), so only one texel per curve is needed plus
+	 * a sentinel texel at the end of each contour.
+	 */
+	contourStarts: number[];
+}
+
+/**
  * Extract quadratic Bezier curves from an opentype.js path command list.
  * Converts lines and cubic Beziers to quadratics so the Slug shader
  * only needs to handle one curve type.
+ *
+ * Returns both the curves and contour boundary indices for shared-endpoint
+ * texture packing.
  */
-export function slugGlyphCurves(commands: PathCommand[]): SlugGlyphCurve[] {
+export function slugGlyphCurves(commands: PathCommand[]): SlugGlyphCurvesResult {
 	const curves: SlugGlyphCurve[] = [];
+	const contourStarts: number[] = [];
 	let curX = 0;
 	let curY = 0;
 	let subpathStartX = 0;
@@ -96,6 +117,7 @@ export function slugGlyphCurves(commands: PathCommand[]): SlugGlyphCurve[] {
 	for (const cmd of commands) {
 		switch (cmd.type) {
 			case 'M':
+				contourStarts.push(curves.length);
 				curX = cmd.x;
 				curY = cmd.y;
 				subpathStartX = cmd.x;
@@ -138,5 +160,5 @@ export function slugGlyphCurves(commands: PathCommand[]): SlugGlyphCurve[] {
 		}
 	}
 
-	return curves;
+	return {curves, contourStarts};
 }

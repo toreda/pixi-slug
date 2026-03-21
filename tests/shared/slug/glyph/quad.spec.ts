@@ -5,6 +5,7 @@ function makeGlyph(charCode: number): SlugGlyphData {
 	return {
 		charCode,
 		curves: [{ p1x: 0, p1y: 0, p2x: 5, p2y: 10, p3x: 10, p3y: 0 }],
+		contourStarts: [0],
 		bounds: { minX: 0, minY: 0, maxX: 10, maxY: 10 },
 		advanceWidth: 12,
 		lsb: 0,

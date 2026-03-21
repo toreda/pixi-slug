@@ -23,6 +23,12 @@ export interface SlugGlyphData {
 	charCode: number;
 	/** All quadratic Bezier curves for this glyph */
 	curves: SlugGlyphCurve[];
+	/**
+	 * Starting curve index for each contour. Used by texture packing for
+	 * shared-endpoint optimization. Within a contour, curve N's p3 equals
+	 * curve N+1's p1.
+	 */
+	contourStarts: number[];
 	/** Bounding box in em-space */
 	bounds: {
 		minX: number;
