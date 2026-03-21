@@ -62,10 +62,6 @@ Eric Lengyel created the patented slug algorithm in 2016. He graciously released
 
 [MIT](LICENSE) &copy; Toreda, Inc.
 
-## Copyright
-
-Copyright &copy; 2026 Toreda, Inc. All Rights Reserved.
-
 ## Website
 
 Toreda's website can be found at [toreda.com](https://www.toreda.com)

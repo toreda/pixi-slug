@@ -445,6 +445,8 @@
 					<select id="canvasResolution">
 						<option value="1" selected>1×</option>
 						<option value="2">2×</option>
+						<option value="4">4×</option>
+						<option value="8">8×</option>
 					</select>
 				</div>
 			</div>
@@ -1240,6 +1242,90 @@
 			};
 		}
 
+		function makeScaleScenario(count) {
+			var cols = count <= 10 ? 2 : count <= 100 ? 4 : count <= 1000 ? 8 : 12;
+			var colW = Math.floor(780 / cols);
+			var rowH = 36;
+			return {
+				name: 'Scale ' + count + ' objects',
+				category: 'Transform',
+				description: count + ' objects, oscillate scale 0.5× to 2.0×',
+				setup: function (ctx) {
+					for (var j = 0; j < count; j++) {
+						var t = ctx.createText(sampleTexts[j % sampleTexts.length], 16);
+						t.x = 10 + (j % cols) * colW;
+						t.y = 10 + Math.floor(j / cols) * rowH;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+					}
+				},
+				tick: function (ctx, elapsedMs) {
+					var s = 1.25 + 0.75 * Math.sin(elapsedMs / 1500 * Math.PI);
+					for (var j = 0; j < ctx.objects.length; j++) {
+						ctx.objects[j].scale.set(s, s);
+					}
+				}
+			};
+		}
+
+		function makeRotationScenario(count) {
+			var cols = count <= 10 ? 2 : count <= 100 ? 4 : count <= 1000 ? 8 : 12;
+			var colW = Math.floor(780 / cols);
+			var rowH = 48;
+			return {
+				name: 'Rotation ' + count + ' objects',
+				category: 'Transform',
+				description: count + ' objects, rotating ±30°',
+				setup: function (ctx) {
+					for (var j = 0; j < count; j++) {
+						var t = ctx.createText(sampleTexts[j % sampleTexts.length], 16);
+						t.x = 60 + (j % cols) * colW;
+						t.y = 30 + Math.floor(j / cols) * rowH;
+						t.pivot.set(50, 8);
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+					}
+				},
+				tick: function (ctx, elapsedMs) {
+					var angle = 0.52 * Math.sin(elapsedMs / 2000 * Math.PI);
+					for (var j = 0; j < ctx.objects.length; j++) {
+						ctx.objects[j].rotation = angle;
+					}
+				}
+			};
+		}
+
+		function makeTextChangeScenario(count) {
+			var cols = count <= 10 ? 2 : count <= 100 ? 4 : count <= 1000 ? 8 : 12;
+			var colW = Math.floor(780 / cols);
+			var rowH = 28;
+			return {
+				name: 'Text change ' + count + ' objects',
+				category: 'Content',
+				description: count + ' objects, change text every 200 ms',
+				setup: function (ctx) {
+					ctx._lastChange = 0;
+					ctx._changeIdx = 0;
+					for (var j = 0; j < count; j++) {
+						var t = ctx.createText(sampleTexts[j % sampleTexts.length], 16);
+						t.x = 10 + (j % cols) * colW;
+						t.y = 10 + Math.floor(j / cols) * rowH;
+						ctx.app.stage.addChild(t);
+						ctx.objects.push(t);
+					}
+				},
+				tick: function (ctx, elapsedMs) {
+					if (elapsedMs - ctx._lastChange > 200) {
+						ctx._changeIdx = (ctx._changeIdx + 1) % sampleTexts.length;
+						for (var j = 0; j < ctx.objects.length; j++) {
+							ctx.objects[j].text = sampleTexts[(ctx._changeIdx + j) % sampleTexts.length];
+						}
+						ctx._lastChange = elapsedMs;
+					}
+				}
+			};
+		}
+
 		// ---- Build scenario list from selected tiers ----
 
 		function buildScenarios(tiers, enabledTests) {
@@ -1286,56 +1372,16 @@
 				}
 			}
 
-			// Transform (fixed, not tier-dependent)
+			// Transform variations (from tiers)
 			if (on['scale'] !== false) {
-				list.push({
-					name: 'Scale up/down',
-					category: 'Transform',
-					description: 'Oscillate scale 0.5× to 2.0×',
-					setup: function (ctx) {
-						var sizes = [16, 24, 32, 48];
-						var y = 20;
-						for (var j = 0; j < sizes.length; j++) {
-							var t = ctx.createText(sampleText, sizes[j]);
-							t.x = 10; t.y = y;
-							ctx.app.stage.addChild(t);
-							ctx.objects.push(t);
-							y += sizes[j] * 2 + 16;
-						}
-					},
-					tick: function (ctx, elapsedMs) {
-						var s = 1.25 + 0.75 * Math.sin(elapsedMs / 1500 * Math.PI);
-						for (var j = 0; j < ctx.objects.length; j++) {
-							ctx.objects[j].scale.set(s, s);
-						}
-					}
-				});
+				for (var i = 0; i < tiers.length; i++) {
+					list.push(makeScaleScenario(tiers[i]));
+				}
 			}
 			if (on['rotation'] !== false) {
-				list.push({
-					name: 'Rotation',
-					category: 'Transform',
-					description: 'Rotating ±30° oscillation',
-					setup: function (ctx) {
-						var sizes = [16, 24, 32, 48];
-						var y = 80;
-						for (var j = 0; j < sizes.length; j++) {
-							var t = ctx.createText(sampleText, sizes[j]);
-							t.x = ctx.settings.canvasW / 2;
-							t.y = y;
-							t.pivot.set(150, sizes[j] / 2);
-							ctx.app.stage.addChild(t);
-							ctx.objects.push(t);
-							y += sizes[j] * 2.5 + 20;
-						}
-					},
-					tick: function (ctx, elapsedMs) {
-						var angle = 0.52 * Math.sin(elapsedMs / 2000 * Math.PI);
-						for (var j = 0; j < ctx.objects.length; j++) {
-							ctx.objects[j].rotation = angle;
-						}
-					}
-				});
+				for (var i = 0; i < tiers.length; i++) {
+					list.push(makeRotationScenario(tiers[i]));
+				}
 			}
 
 			// Scroll variations (from tiers)
@@ -1345,28 +1391,11 @@
 				}
 			}
 
-			// Content change (fixed, not tier-dependent)
+			// Content change (from tiers)
 			if (on['text-change'] !== false) {
-				list.push({
-					name: 'Rapid text change',
-					category: 'Content',
-					description: 'Change text content every 200 ms',
-					setup: function (ctx) {
-						var t = ctx.createText(sampleText, 32);
-						t.x = 10; t.y = 50;
-						ctx.app.stage.addChild(t);
-						ctx.objects.push(t);
-						ctx._lastChange = 0;
-						ctx._changeIdx = 0;
-					},
-					tick: function (ctx, elapsedMs) {
-						if (elapsedMs - ctx._lastChange > 200) {
-							ctx._changeIdx = (ctx._changeIdx + 1) % sampleTexts.length;
-							ctx.objects[0].text = sampleTexts[ctx._changeIdx];
-							ctx._lastChange = elapsedMs;
-						}
-					}
-				});
+				for (var i = 0; i < tiers.length; i++) {
+					list.push(makeTextChangeScenario(tiers[i]));
+				}
 			}
 
 			// Mixed stress (from tiers)
@@ -1376,12 +1405,10 @@
 				}
 			}
 
-			// Create/destroy — cap at 200 to avoid context loss from rapid GPU churn
+			// Create/destroy (from tiers)
 			if (on['create-destroy'] !== false) {
 				for (var i = 0; i < tiers.length; i++) {
-					if (tiers[i] <= 200) {
-						list.push(makeCreateDestroyScenario(tiers[i]));
-					}
+					list.push(makeCreateDestroyScenario(tiers[i]));
 				}
 			}
 
@@ -1514,9 +1541,13 @@
 			return new Promise(function (resolve) {
 				var frameTimes = [];
 				var gpuTimes = [];
-				var gpuPending = [];
+				// Queries that have been ended and can be polled for results.
+				var gpuEnded = [];
+				// The single query currently between beginQuery/endQuery (or null).
+				var gpuActiveQuery = null;
 				var t0 = performance.now();
 				var startTime = t0;
+				var stopping = false;
 
 				function onTick() {
 					var now = performance.now();
@@ -1528,37 +1559,38 @@
 						scenario.tick(ctx, now - startTime, dt);
 					}
 
-					// Drain completed GPU queries from previous frames
 					if (gpuTimer) {
-						gpuQueryDrain(gpuTimer, gpuPending, gpuTimes);
+						// Drain ended queries whose results are now available
+						gpuQueryDrain(gpuTimer, gpuEnded, gpuTimes);
 
-						// Begin a new GPU query for this frame's render.
-						// The ticker fires before PixiJS renders, so we bracket
-						// the render by starting here and ending next tick.
-						// Instead, use a query per frame: begin before render,
-						// end after render. We hook into postrender for the end.
-						var q = gpuQueryCreate(gpuTimer);
-						gpuPending.push(q);
-						gpuQueryBegin(gpuTimer, q);
+						// Only begin a new query if none is currently active
+						if (!gpuActiveQuery) {
+							gpuActiveQuery = gpuQueryCreate(gpuTimer);
+							gpuQueryBegin(gpuTimer, gpuActiveQuery);
+						}
 					}
 
 					if (cancelled || now - startTime >= durationMs) {
-						// End any active query before stopping
-						if (gpuTimer && gpuPending.length > 0) {
-							gpuQueryEnd(gpuTimer);
-						}
+						stopping = true;
 						app.ticker.remove(onTick);
 						if (app.renderer && app.renderer.off) {
 							app.renderer.off('postrender', onPostRender);
 						}
 
-						// Wait for remaining GPU queries to complete
-						if (gpuTimer && gpuPending.length > 0) {
+						// End any active query before stopping
+						if (gpuTimer && gpuActiveQuery) {
+							gpuQueryEnd(gpuTimer);
+							gpuEnded.push(gpuActiveQuery);
+							gpuActiveQuery = null;
+						}
+
+						// Wait for all ended queries to return results
+						if (gpuTimer && gpuEnded.length > 0) {
 							(async function () {
-								for (var i = 0; i < gpuPending.length; i++) {
-									var ms = await gpuQueryWait(gpuTimer, gpuPending[i]);
+								for (var i = 0; i < gpuEnded.length; i++) {
+									var ms = await gpuQueryWait(gpuTimer, gpuEnded[i]);
 									if (ms >= 0) gpuTimes.push(ms);
-									gpuTimer.gl.deleteQuery(gpuPending[i]);
+									gpuTimer.gl.deleteQuery(gpuEnded[i]);
 								}
 								resolve({ frameTimes: frameTimes, gpuTimes: gpuTimes });
 							})();
@@ -1569,13 +1601,15 @@
 				}
 
 				function onPostRender() {
-					// End the GPU query after PixiJS has submitted all draw calls
-					if (gpuTimer && gpuPending.length > 0) {
+					// End the GPU query after PixiJS has submitted all draw calls.
+					// Move it to the ended list so it can be polled for results.
+					if (gpuTimer && gpuActiveQuery && !stopping) {
 						gpuQueryEnd(gpuTimer);
+						gpuEnded.push(gpuActiveQuery);
+						gpuActiveQuery = null;
 					}
 				}
 
-				// Listen for postrender to end the query after draw calls
 				if (gpuTimer && app.renderer && app.renderer.on) {
 					app.renderer.on('postrender', onPostRender);
 				}

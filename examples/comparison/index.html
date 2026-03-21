@@ -88,6 +88,11 @@
 		<a href="/examples/benchmark/">Benchmark</a>
 	</nav>
 	<h1>Live Rendering Comparison</h1>
+	<div style="padding:8px 20px;background:#1a1a2e;border-bottom:1px solid #333">
+		<label for="sampleTextInput" style="font-size:13px;color:#aaa;margin-right:8px">Text:</label>
+		<input type="text" id="sampleTextInput" value="The quick brown fox"
+			style="width:500px;padding:5px 8px;border:1px solid #444;background:#2a2a4e;color:#eee;border-radius:4px;font-size:14px">
+	</div>
 	<div id="controls">
 		<button id="btnScale" class="active">Scale</button>
 		<button id="btnMove">Move</button>
@@ -242,6 +247,7 @@
 
 			var slugTexts = [];
 			var pixiTexts = [];
+			var bitmapTexts = [];
 			var yOffset = 0;
 			for (var si = 0; si < sizes.length; si++) {
 				var sz = sizes[si];
@@ -292,6 +298,7 @@
 				});
 				bmpText.y = yOffset;
 				bitmapGroup.addChild(bmpText);
+				bitmapTexts.push(bmpText);
 
 				yOffset += sz * 1.8 + 20;
 			}
@@ -299,6 +306,20 @@
 			app.stage.addChild(slugGroup);
 			app.stage.addChild(textGroup);
 			app.stage.addChild(bitmapGroup);
+
+			// ----- Text input binding -----
+			document.getElementById('sampleTextInput').oninput = function () {
+				var val = this.value;
+				for (var i = 0; i < slugTexts.length; i++) {
+					slugTexts[i].text = val;
+				}
+				for (var i = 0; i < pixiTexts.length; i++) {
+					pixiTexts[i].text = val;
+				}
+				for (var i = 0; i < bitmapTexts.length; i++) {
+					bitmapTexts[i].text = val;
+				}
+			};
 
 			// ----- Memory + rebuild stats -----
 			function formatBytes(bytes) {
