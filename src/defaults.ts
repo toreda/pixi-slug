@@ -22,9 +22,12 @@ export class Defaults {
 		/** Fill color default (white, fully opaque). */
 		FillColor: [1, 1, 1, 1] as readonly [number, number, number, number],
 
-		/** Stroke defaults (matches PIXI.Text). Width 0 = disabled. */
+		/** Stroke defaults. Width 0 = disabled. */
 		StrokeWidth: 0,
 		StrokeColor: [0, 0, 0, 1] as readonly [number, number, number, number],
+		StrokeAlphaMode: 'uniform' as const,
+		StrokeAlphaStart: 1,
+		StrokeAlphaRate: 0,
 
 		/** Drop shadow defaults (matches PIXI.Text). */
 		DropShadowAlpha: 1,

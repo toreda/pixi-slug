@@ -19,7 +19,9 @@ flat in ivec4 vGlyph;
 uniform sampler2D uCurveTexture;
 uniform sampler2D uBandTexture;
 uniform int uSupersampleCount;
-uniform float uStrokeExpand; // Stroke expansion in pixels. 0 = normal fill.
+uniform float uStrokeExpand;     // Stroke expansion in pixels. 0 = normal fill.
+uniform float uStrokeAlphaStart; // Starting alpha at inner stroke edge. @default 1.0
+uniform float uStrokeAlphaRate;  // Alpha change per pixel outward. 0 = uniform. @default 0.0
 
 // Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).
 // floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.
@@ -54,7 +56,11 @@ float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 
 out vec4 fragColor;
 
-float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)
+// Returns vec2(coverage, minBoundaryDist).
+// minBoundaryDist is the minimum absolute distance (in pixels) from this
+// pixel to any curve crossing — an approximation of the distance to the
+// nearest glyph boundary. Used for stroke alpha gradient.
+vec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)
 {
 	vec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),
 	                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));
@@ -71,6 +77,7 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float st
 
 	float xcov = 0.0;
 	float xwgt = 0.0;
+	float minDist = 1e10;
 
 	// ---------------------------------------------------------------
 	// Horizontal ray (+X direction)
@@ -115,9 +122,12 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float st
 			x1 *= pixelsPerEm.x;
 			x2 *= pixelsPerEm.x;
 
-			// Stroke dilation: shift entry crossings inward (+strokePx)
-			// and exit crossings outward (-strokePx) to expand the glyph
-			// boundary uniformly on all sides.
+			// Track minimum distance to any curve crossing (unsigned).
+			if ((code & 1u) != 0u) minDist = min(minDist, abs(x1));
+			if (code > 1u) minDist = min(minDist, abs(x2));
+
+			// Stroke dilation: entry crossings shift inward (+strokePx),
+			// exit crossings shift outward (-strokePx).
 			if ((code & 1u) != 0u)
 			{
 				float sx1 = x1 + strokePx;
@@ -181,9 +191,12 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float st
 			y1 *= pixelsPerEm.y;
 			y2 *= pixelsPerEm.y;
 
-			// Vertical ray stroke dilation: signs are flipped from horizontal
-			// because the vertical ray's +Y direction is up in em-space but
-			// down in screen space. Entry subtracts strokePx, exit adds it.
+			// Track minimum distance to any curve crossing (unsigned).
+			if ((code & 1u) != 0u) minDist = min(minDist, abs(y1));
+			if (code > 1u) minDist = min(minDist, abs(y2));
+
+			// Vertical stroke dilation: signs flipped from horizontal
+			// because +Y em-space is up but +Y screen-space is down.
 			if ((code & 1u) != 0u)
 			{
 				float sy1 = y1 - strokePx;
@@ -200,7 +213,14 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float st
 		}
 	}
 
-	return CalcCoverage(xcov, ycov, xwgt, ywgt);
+	float coverage = CalcCoverage(xcov, ycov, xwgt, ywgt);
+	return vec2(coverage, minDist);
+}
+
+// Convenience wrapper that returns only coverage (used by fill pass and supersampling).
+float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)
+{
+	return SlugRenderEx(renderCoord, bandTransform, glyphData, strokePx).x;
 }
 
 void main()
@@ -208,6 +228,24 @@ void main()
 	float coverage;
 	int sampleCount = min(uSupersampleCount, 16);
 	float strokePx = uStrokeExpand;
+	bool useGradientAlpha = (strokePx > 0.0 && uStrokeAlphaRate != 0.0);
+
+	// When gradient alpha is active and no supersampling, use SlugRenderEx
+	// to get both coverage and boundary distance in a single pass.
+	if (useGradientAlpha && sampleCount <= 1)
+	{
+		vec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);
+		coverage = result.x;
+
+		// minDist is the distance from the pixel to the nearest original
+		// glyph boundary (before stroke expansion). Pixels at the inner
+		// stroke edge have minDist ≈ 0, outer edge have minDist ≈ strokePx.
+		// The per-pixel alpha is: alphaStart + alphaRate * minDist
+		float dist = clamp(result.y, 0.0, strokePx);
+		float alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);
+		fragColor = vColor * coverage * alpha;
+		return;
+	}
 
 	if (sampleCount <= 1)
 	{
@@ -274,5 +312,7 @@ void main()
 		}
 	}
 
-	fragColor = vColor * coverage;
+	// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)
+	// uStrokeAlphaStart defaults to 1.0, so this is a no-op.
+	fragColor = vColor * coverage * uStrokeAlphaStart;
 }

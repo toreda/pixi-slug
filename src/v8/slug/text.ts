@@ -149,7 +149,10 @@ export class SlugText extends SlugTextV8Base {
 			);
 
 			if (strokeQuads.quadCount > 0) {
-				const {mesh} = this._buildMesh(strokeQuads, gpu, this._strokeWidth);
+				const {mesh, uniforms: strokeUniforms} = this._buildMesh(strokeQuads, gpu, this._strokeWidth);
+				strokeUniforms.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
+				strokeUniforms.uniforms.uStrokeAlphaRate =
+					this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
 				this.addChild(mesh);
 				this._meshes.push(mesh);
 			}

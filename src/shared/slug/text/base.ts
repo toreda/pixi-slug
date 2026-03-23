@@ -1,6 +1,7 @@
 import {Defaults} from '../../../defaults';
 import {SlugFont} from '../font';
 import type {SlugDropShadow, SlugStroke, SlugTextInit} from './init';
+import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
 import {booleanValue, numberValue, stringValue} from '@toreda/strong-types';
 
 /**
@@ -55,6 +56,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		// Stroke state (enabled when _strokeWidth > 0)
 		_strokeWidth!: number;
 		_strokeColor!: [number, number, number, number];
+		_strokeAlphaMode!: SlugStrokeAlphaMode;
+		_strokeAlphaStart!: number;
+		_strokeAlphaRate!: number;
 
 		// Drop shadow state (enabled when _dropShadow is not null)
 		_dropShadow!: SlugDropShadow | null;
@@ -87,6 +91,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._strokeColor = stroke?.color
 				? [stroke.color[0], stroke.color[1], stroke.color[2], stroke.color[3]]
 				: [...Defaults.SlugText.StrokeColor] as [number, number, number, number];
+			this._strokeAlphaMode = stroke?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
+			this._strokeAlphaStart = numberValue(stroke?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
+			this._strokeAlphaRate = numberValue(stroke?.alphaRate, Defaults.SlugText.StrokeAlphaRate);
 
 			// Drop shadow — presence of the object enables it
 			const ds = init.options?.dropShadow;
@@ -207,10 +214,49 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._strokeWidth > 0) this.rebuild();
 		}
 
+		/** Stroke alpha mode: 'uniform' for uniform, 'gradient' for per-pixel fade. */
+		public get strokeAlphaMode(): SlugStrokeAlphaMode {
+			return this._strokeAlphaMode;
+		}
+
+		public set strokeAlphaMode(value: SlugStrokeAlphaMode) {
+			if (this._strokeAlphaMode === value) return;
+			this._strokeAlphaMode = value;
+			if (this._strokeWidth > 0) this.rebuild();
+		}
+
+		/** Starting alpha for gradient mode (innermost stroke pixel). */
+		public get strokeAlphaStart(): number {
+			return this._strokeAlphaStart;
+		}
+
+		public set strokeAlphaStart(value: number) {
+			if (this._strokeAlphaStart === value) return;
+			this._strokeAlphaStart = value;
+			if (this._strokeWidth > 0 && this._strokeAlphaMode === 'gradient') this.rebuild();
+		}
+
+		/** Alpha change per pixel outward in gradient mode. */
+		public get strokeAlphaRate(): number {
+			return this._strokeAlphaRate;
+		}
+
+		public set strokeAlphaRate(value: number) {
+			if (this._strokeAlphaRate === value) return;
+			this._strokeAlphaRate = value;
+			if (this._strokeWidth > 0 && this._strokeAlphaMode === 'gradient') this.rebuild();
+		}
+
 		/** Stroke configuration object, or null if disabled. */
 		public get stroke(): SlugStroke | null {
 			if (this._strokeWidth <= 0) return null;
-			return {color: this._strokeColor, width: this._strokeWidth};
+			return {
+				color: this._strokeColor,
+				width: this._strokeWidth,
+				alphaMode: this._strokeAlphaMode,
+				alphaStart: this._strokeAlphaStart,
+				alphaRate: this._strokeAlphaRate
+			};
 		}
 
 		public set stroke(value: SlugStroke | null) {
@@ -218,11 +264,20 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			const newColor: [number, number, number, number] = value?.color
 				? [value.color[0], value.color[1], value.color[2], value.color[3]]
 				: [...Defaults.SlugText.StrokeColor] as [number, number, number, number];
+			const newAlphaMode = value?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
+			const newAlphaStart = numberValue(value?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
+			const newAlphaRate = numberValue(value?.alphaRate, Defaults.SlugText.StrokeAlphaRate);
 			const changed = this._strokeWidth !== newWidth ||
 				this._strokeColor[0] !== newColor[0] || this._strokeColor[1] !== newColor[1] ||
-				this._strokeColor[2] !== newColor[2] || this._strokeColor[3] !== newColor[3];
+				this._strokeColor[2] !== newColor[2] || this._strokeColor[3] !== newColor[3] ||
+				this._strokeAlphaMode !== newAlphaMode ||
+				this._strokeAlphaStart !== newAlphaStart ||
+				this._strokeAlphaRate !== newAlphaRate;
 			this._strokeWidth = newWidth;
 			this._strokeColor = newColor;
+			this._strokeAlphaMode = newAlphaMode;
+			this._strokeAlphaStart = newAlphaStart;
+			this._strokeAlphaRate = newAlphaRate;
 			if (changed) this.rebuild();
 		}
 

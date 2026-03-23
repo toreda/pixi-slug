@@ -18,7 +18,9 @@ export function slugShader(glProgram: GlProgram, curveTexture: Texture, bandText
 	// WebGL maps glUniform1i to GLSL bool uniforms correctly.
 	const uniforms = new UniformGroup({
 		uSupersampleCount: {value: 0, type: 'i32'},
-		uStrokeExpand: {value: 0, type: 'f32'}
+		uStrokeExpand: {value: 0, type: 'f32'},
+		uStrokeAlphaStart: {value: 1, type: 'f32'},
+		uStrokeAlphaRate: {value: 0, type: 'f32'}
 	});
 
 	const shader = new Shader({
