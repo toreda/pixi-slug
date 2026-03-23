@@ -67,7 +67,10 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._text = stringValue(init.text, Defaults.SlugText.Text);
 			this._fontRef = new WeakRef(init.slugFont);
 			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
-			this._color = [1, 1, 1, 1];
+			const fill = init.options?.fill;
+			this._color = fill
+				? [fill[0], fill[1], fill[2], fill[3]]
+				: [...Defaults.SlugText.FillColor] as [number, number, number, number];
 			this._supersampling = booleanValue(init.supersampling, Defaults.SlugText.Supersampling);
 			this._supersampleCount = numberValue(init.supersampleCount, Defaults.SlugText.SupersampleCount);
 			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);

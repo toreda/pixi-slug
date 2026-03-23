@@ -36,6 +36,8 @@ export interface SlugStroke {
  */
 export interface SlugTextStyleOptions {
 	fontSize?: number | null;
+	/** Fill color as [r,g,b,a] in 0-1 range. @default [1,1,1,1] (white) */
+	fill?: [number, number, number, number] | null;
 	wordWrap?: boolean | null;
 	wordWrapWidth?: number | null;
 	align?: SlugTextStyleAlign;

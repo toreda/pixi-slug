@@ -19,6 +19,9 @@ export class Defaults {
 		/** Default number of supersamples when supersampling is enabled. */
 		SupersampleCount: 4 as const,
 
+		/** Fill color default (white, fully opaque). */
+		FillColor: [1, 1, 1, 1] as readonly [number, number, number, number],
+
 		/** Stroke defaults (matches PIXI.Text). Width 0 = disabled. */
 		StrokeWidth: 0,
 		StrokeColor: [0, 0, 0, 1] as readonly [number, number, number, number],

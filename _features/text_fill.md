@@ -6,6 +6,6 @@ Apply fill color or gradient to `SlugText`, matching the `PIXI.TextStyle` fill o
 
 | Done | Option | Type | Description |
 |------|--------|------|-------------|
-| [ ] | `fill` | `string \| Array<string> \| number \| Array<number> \| CanvasGradient \| CanvasPattern` | A canvas fillstyle that will be used on the text e.g `'red'`, `'#00FF00'`. |
+| [x] | `fill` | `[number, number, number, number]` | Fill color as [r,g,b,a] in 0-1 range. Default `[1,1,1,1]` (white). |
 | [ ] | `fillGradientStops` | `number[]` | Gradient stop positions. |
 | [ ] | `fillGradientType` | `PIXI.TEXT_GRADIENT` | If fill is an array of colours to create a gradient, this can change the type/direction of the gradient. |
