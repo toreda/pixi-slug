@@ -40,6 +40,7 @@ type Constructor<T = ContainerLike> = new (...args: any[]) => T;
 export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 	abstract class SlugTextBase extends Base {
 		_text!: string;
+		_font!: SlugFont;
 		_fontRef!: WeakRef<SlugFont>;
 		_fontSize!: number;
 		_color!: [number, number, number, number];
@@ -65,6 +66,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		 */
 		public initBase(init: SlugTextInit): void {
 			this._text = stringValue(init.text, Defaults.SlugText.Text);
+			this._font = init.slugFont;
 			this._fontRef = new WeakRef(init.slugFont);
 			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
 			const fill = init.options?.fill;
@@ -135,7 +137,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		}
 
 		public set font(value: SlugFont) {
-			if (this._fontRef?.deref() === value) return;
+			if (this._font === value) return;
+			this._font = value;
 			this._fontRef = new WeakRef(value);
 			this.rebuild();
 		}
@@ -155,6 +158,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		}
 
 		public set color(value: [number, number, number, number]) {
+			if (this._color[0] === value[0] && this._color[1] === value[1] &&
+				this._color[2] === value[2] && this._color[3] === value[3]) return;
 			this._color = value;
 			this.rebuild();
 		}

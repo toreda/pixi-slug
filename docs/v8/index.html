@@ -302,10 +302,7 @@
 			}
 
 			document.getElementById('ctrlFillColor').oninput = function () {
-				clearTimeout(_rebuildTimer);
-				_rebuildTimer = setTimeout(function () {
-					slugText.color = hexToRGBA(document.getElementById('ctrlFillColor').value);
-				}, 30);
+				slugText.color = hexToRGBA(document.getElementById('ctrlFillColor').value);
 			};
 
 			document.getElementById('ctrlStroke').onchange = applyStroke;
