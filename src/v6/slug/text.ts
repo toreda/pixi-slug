@@ -111,19 +111,15 @@ export class SlugText extends SlugTextV6Base {
 		}
 
 		if (hasStroke) {
-			const strokeScale = (this._fontSize + this._strokeWidth * 2) / this._fontSize;
-			const strokeFontSize = this._fontSize * strokeScale;
 			const strokeQuads = slugGlyphQuads(
 				this._text, font.glyphs, font.advances,
-				font.unitsPerEm, strokeFontSize, font.textureWidth,
-				this._strokeColor
+				font.unitsPerEm, this._fontSize, font.textureWidth,
+				this._strokeColor, this._strokeWidth
 			);
 
 			if (strokeQuads.quadCount > 0) {
-				const {mesh} = this._buildMesh(strokeQuads, gpu);
-				const offset = this._strokeWidth;
-				mesh.x = -offset;
-				mesh.y = -offset;
+				const {mesh, shader} = this._buildMesh(strokeQuads, gpu);
+				shader.uniforms.uStrokeExpand = this._strokeWidth;
 				this.addChild(mesh);
 				this._meshes.push(mesh);
 			}

@@ -156,6 +156,10 @@ MIT-licensed GitHub repository available with:
 - Dynamic dilation provides excellent antialiasing
 - Minimal overhead compared to benefits
 
+## Development Workflow
+
+**Build new features for PixiJS v8 first.** Port or adapt for v6/v7 only after the feature is complete and verified working in v8. Do not modify v6/v7 code during active feature development unless explicitly asked.
+
 ## File Organization
 
 Following project conventions:

@@ -29,7 +29,7 @@ export class SlugText extends SlugTextV7Base {
 	private _buildMesh(
 		quads: SlugGlyphQuads,
 		gpu: ReturnType<typeof slugFontGpuV7>
-	): Mesh<Shader> {
+	): {mesh: Mesh<Shader>; shader: Shader} {
 		const stride = 20 * 4;
 		const vertexBuffer = new Buffer(quads.vertices.buffer as ArrayBuffer, true);
 		const geometry = new Geometry();
@@ -47,8 +47,9 @@ export class SlugText extends SlugTextV7Base {
 		geometry.addIndex(indices16 as any);
 
 		const shader = slugShader(gpu.program, gpu.curveTexture, gpu.bandTexture, [800, 400]);
+		shader.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 
-		return new Mesh(geometry, shader);
+		return {mesh: new Mesh(geometry, shader), shader};
 	}
 
 	public rebuild(): void {
@@ -82,7 +83,7 @@ export class SlugText extends SlugTextV7Base {
 			);
 
 			if (shadowQuads.quadCount > 0) {
-				const mesh = this._buildMesh(shadowQuads, gpu);
+				const {mesh} = this._buildMesh(shadowQuads, gpu);
 				const angle = ds.angle ?? Math.PI / 6;
 				const dist = ds.distance ?? 5;
 				mesh.x = Math.cos(angle) * dist;
@@ -93,19 +94,15 @@ export class SlugText extends SlugTextV7Base {
 		}
 
 		if (hasStroke) {
-			const strokeScale = (this._fontSize + this._strokeWidth * 2) / this._fontSize;
-			const strokeFontSize = this._fontSize * strokeScale;
 			const strokeQuads = slugGlyphQuads(
 				this._text, font.glyphs, font.advances,
-				font.unitsPerEm, strokeFontSize, font.textureWidth,
-				this._strokeColor
+				font.unitsPerEm, this._fontSize, font.textureWidth,
+				this._strokeColor, this._strokeWidth
 			);
 
 			if (strokeQuads.quadCount > 0) {
-				const mesh = this._buildMesh(strokeQuads, gpu);
-				const offset = this._strokeWidth;
-				mesh.x = -offset;
-				mesh.y = -offset;
+				const {mesh, shader} = this._buildMesh(strokeQuads, gpu);
+				shader.uniforms.uStrokeExpand = this._strokeWidth;
 				this.addChild(mesh);
 				this._meshes.push(mesh);
 			}
@@ -118,7 +115,7 @@ export class SlugText extends SlugTextV7Base {
 		);
 
 		if (fillQuads.quadCount > 0) {
-			const mesh = this._buildMesh(fillQuads, gpu);
+			const {mesh} = this._buildMesh(fillQuads, gpu);
 			this.addChild(mesh);
 			this._meshes.push(mesh);
 

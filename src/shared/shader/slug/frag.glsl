@@ -19,6 +19,7 @@ flat in ivec4 vGlyph;
 uniform sampler2D uCurveTexture;
 uniform sampler2D uBandTexture;
 uniform int uSupersampleCount;
+uniform float uStrokeExpand; // Stroke expansion in pixels. 0 = normal fill.
 
 // Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).
 // floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.
@@ -53,10 +54,14 @@ float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 
 out vec4 fragColor;
 
-float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
+float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)
 {
 	vec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),
 	                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));
+
+	// Early-out threshold: expanded by stroke so curves within stroke range
+	// are not skipped. When strokePx is 0 this reduces to the original -0.5.
+	float earlyOutBias = -0.5 - strokePx;
 
 	ivec2 bandMax = glyphData.zw;
 	bandMax.y &= 0x00FF;
@@ -81,7 +86,7 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 		vec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);
 		vec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;
 
-		if (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < -0.5) break;
+		if (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;
 
 		uint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +
 		        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;
@@ -110,16 +115,21 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			x1 *= pixelsPerEm.x;
 			x2 *= pixelsPerEm.x;
 
+			// Stroke dilation: shift entry crossings inward (+strokePx)
+			// and exit crossings outward (-strokePx) to expand the glyph
+			// boundary uniformly on all sides.
 			if ((code & 1u) != 0u)
 			{
-				xcov += clamp(x1 + 0.5, 0.0, 1.0);
-				xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0));
+				float sx1 = x1 + strokePx;
+				xcov += clamp(sx1 + 0.5, 0.0, 1.0);
+				xwgt = max(xwgt, clamp(1.0 - abs(sx1) * 2.0, 0.0, 1.0));
 			}
 
 			if (code > 1u)
 			{
-				xcov -= clamp(x2 + 0.5, 0.0, 1.0);
-				xwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0));
+				float sx2 = x2 - strokePx;
+				xcov -= clamp(sx2 + 0.5, 0.0, 1.0);
+				xwgt = max(xwgt, clamp(1.0 - abs(sx2) * 2.0, 0.0, 1.0));
 			}
 		}
 	}
@@ -142,7 +152,7 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 		vec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);
 		vec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;
 
-		if (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < -0.5) break;
+		if (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;
 
 		uint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +
 		        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;
@@ -171,16 +181,21 @@ float SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 			y1 *= pixelsPerEm.y;
 			y2 *= pixelsPerEm.y;
 
+			// Vertical ray stroke dilation: signs are flipped from horizontal
+			// because the vertical ray's +Y direction is up in em-space but
+			// down in screen space. Entry subtracts strokePx, exit adds it.
 			if ((code & 1u) != 0u)
 			{
-				ycov += clamp(y1 + 0.5, 0.0, 1.0);
-				ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0));
+				float sy1 = y1 - strokePx;
+				ycov += clamp(sy1 + 0.5, 0.0, 1.0);
+				ywgt = max(ywgt, clamp(1.0 - abs(sy1) * 2.0, 0.0, 1.0));
 			}
 
 			if (code > 1u)
 			{
-				ycov -= clamp(y2 + 0.5, 0.0, 1.0);
-				ywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0));
+				float sy2 = y2 + strokePx;
+				ycov -= clamp(sy2 + 0.5, 0.0, 1.0);
+				ywgt = max(ywgt, clamp(1.0 - abs(sy2) * 2.0, 0.0, 1.0));
 			}
 		}
 	}
@@ -192,10 +207,11 @@ void main()
 {
 	float coverage;
 	int sampleCount = min(uSupersampleCount, 16);
+	float strokePx = uStrokeExpand;
 
 	if (sampleCount <= 1)
 	{
-		coverage = SlugRender(vTexcoord, vBanding, vGlyph);
+		coverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);
 	}
 	else
 	{
@@ -208,52 +224,52 @@ void main()
 		if (sampleCount <= 2)
 		{
 			// 2-sample: diagonal pair
-			float c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph);
-			float c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph);
+			float c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);
+			float c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);
 			coverage = (c0 + c1) * 0.5;
 		}
 		else if (sampleCount <= 4)
 		{
 			// 4-sample rotated-grid supersampling (RGSS pattern).
-			float c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph);
-			float c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph);
-			float c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph);
-			float c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph);
+			float c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);
+			float c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);
+			float c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);
+			float c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);
 			coverage = (c0 + c1 + c2 + c3) * 0.25;
 		}
 		else if (sampleCount <= 8)
 		{
 			// 8-sample: 8-queens pattern (good spatial distribution)
-			float c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph);
-			float c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph);
-			float c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph);
-			float c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph);
-			float c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph);
-			float c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph);
-			float c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph);
-			float c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph);
+			float c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);
+			float c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);
+			float c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph, strokePx);
+			float c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph, strokePx);
+			float c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);
+			float c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph, strokePx);
+			float c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph, strokePx);
+			float c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph, strokePx);
 			coverage = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7) * 0.125;
 		}
 		else
 		{
 			// 16-sample: 4x4 jittered grid for maximum quality
 			float sum = 0.0;
-			sum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph);
-			sum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph);
+			sum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph, strokePx);
+			sum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph, strokePx);
 			coverage = sum * 0.0625;
 		}
 	}

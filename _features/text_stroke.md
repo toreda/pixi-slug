@@ -6,5 +6,5 @@ Render an outline stroke around `SlugText` glyphs, matching the `PIXI.TextStyle`
 
 | Done | Option | Type | Default | Description |
 |------|--------|------|---------|-------------|
-| [ ] | `stroke` | `string \| number` | | A canvas fillstyle that will be used on the text stroke e.g `'blue'`, `'#FCFF00'`. |
-| [ ] | `strokeThickness` | `number` | `0` | A number that represents the thickness of the stroke. |
+| [x] | `stroke` | `SlugStroke` | `null` | Stroke config with `color` as `[r,g,b,a]` in 0-1 range and `width` in pixels. |
+| [x] | `strokeThickness` | `number` | `0` | Stroke width in pixels (via `strokeWidth` property or `stroke.width`). |
