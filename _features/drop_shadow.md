@@ -6,9 +6,9 @@ Render a configurable drop shadow behind `SlugText`, matching the `PIXI.TextStyl
 
 | Done | Option | Type | Description |
 |------|--------|------|-------------|
-| [ ] | `dropShadow` | `boolean` | Set a drop shadow for the text. |
-| [ ] | `dropShadowAlpha` | `number` | Set alpha for the drop shadow. |
-| [ ] | `dropShadowAngle` | `number` | Set a angle of the drop shadow. |
-| [ ] | `dropShadowBlur` | `number` | Set a shadow blur radius. |
-| [ ] | `dropShadowColor` | `number \| string` | A fill style to be used on the dropshadow e.g `'red'`, `'#00FF00'`. |
-| [ ] | `dropShadowDistance` | `number` | Set a distance of the drop shadow. |
+| [x] | `dropShadow` | `SlugDropShadow \| null` | Presence of the object enables the drop shadow. Set to `null` to disable. |
+| [x] | `dropShadowAlpha` | `number` | Shadow opacity (0-1). Baked into the alpha channel of the shadow color. @default `1` |
+| [x] | `dropShadowAngle` | `number` | Shadow angle in radians. 0=right, PI/2=down. @default `Math.PI / 6` |
+| [x] | `dropShadowBlur` | `number` | Shadow blur radius in pixels. 0=sharp. Implemented via stroke dilation with alpha fade. @default `0` |
+| [x] | `dropShadowColor` | `[r,g,b,a]` | Shadow color in 0-1 range. @default `[0,0,0,1]` |
+| [x] | `dropShadowDistance` | `number` | Shadow offset distance in pixels. @default `5` |

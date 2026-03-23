@@ -114,18 +114,26 @@ export class SlugText extends SlugTextV8Base {
 		// --- Drop shadow pass ---
 		if (hasShadow) {
 			const ds = this._dropShadow!;
+			const shadowAlpha = ds.alpha ?? 1;
 			const shadowColor: [number, number, number, number] = ds.color
-				? [ds.color[0], ds.color[1], ds.color[2], (ds.alpha ?? 1)]
-				: [0, 0, 0, (ds.alpha ?? 1)];
+				? [ds.color[0], ds.color[1], ds.color[2], shadowAlpha]
+				: [0, 0, 0, shadowAlpha];
+			const blur = ds.blur ?? 0;
 
 			const shadowQuads = slugGlyphQuads(
 				this._text, font.glyphs, font.advances,
 				font.unitsPerEm, this._fontSize, font.textureWidth,
-				shadowColor
+				shadowColor, blur
 			);
 
 			if (shadowQuads.quadCount > 0) {
-				const {mesh} = this._buildMesh(shadowQuads, gpu);
+				const {mesh, uniforms: shadowUniforms} = this._buildMesh(shadowQuads, gpu, blur);
+				// Blur reuses stroke dilation: expand by blur radius,
+				// fade alpha from full at glyph edge to 0 at outer edge.
+				if (blur > 0) {
+					shadowUniforms.uniforms.uStrokeAlphaStart = shadowAlpha;
+					shadowUniforms.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
+				}
 				// Offset shadow by angle + distance
 				const angle = ds.angle ?? Math.PI / 6;
 				const dist = ds.distance ?? 5;
