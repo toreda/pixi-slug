@@ -72,18 +72,25 @@ export class SlugText extends SlugTextV7Base {
 
 		if (hasShadow) {
 			const ds = this._dropShadow!;
+			const shadowAlpha = ds.alpha ?? 1;
 			const shadowColor: [number, number, number, number] = ds.color
-				? [ds.color[0], ds.color[1], ds.color[2], (ds.alpha ?? 1)]
-				: [0, 0, 0, (ds.alpha ?? 1)];
+				? [ds.color[0], ds.color[1], ds.color[2], shadowAlpha]
+				: [0, 0, 0, shadowAlpha];
+			const blur = ds.blur ?? 0;
 
 			const shadowQuads = slugGlyphQuads(
 				this._text, font.glyphs, font.advances,
 				font.unitsPerEm, this._fontSize, font.textureWidth,
-				shadowColor
+				shadowColor, blur
 			);
 
 			if (shadowQuads.quadCount > 0) {
-				const {mesh} = this._buildMesh(shadowQuads, gpu);
+				const {mesh, shader} = this._buildMesh(shadowQuads, gpu);
+				shader.uniforms.uStrokeExpand = blur;
+				if (blur > 0) {
+					shader.uniforms.uStrokeAlphaStart = shadowAlpha;
+					shader.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
+				}
 				const angle = ds.angle ?? Math.PI / 6;
 				const dist = ds.distance ?? 5;
 				mesh.x = Math.cos(angle) * dist;
@@ -103,6 +110,9 @@ export class SlugText extends SlugTextV7Base {
 			if (strokeQuads.quadCount > 0) {
 				const {mesh, shader} = this._buildMesh(strokeQuads, gpu);
 				shader.uniforms.uStrokeExpand = this._strokeWidth;
+				shader.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
+				shader.uniforms.uStrokeAlphaRate =
+					this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
 				this.addChild(mesh);
 				this._meshes.push(mesh);
 			}

@@ -21,7 +21,9 @@ export function slugShader(
 		uBandTexture: bandTexture,
 		uResolution: new Float32Array(resolution),
 		uSupersampleCount: 0,
-		uStrokeExpand: 0
+		uStrokeExpand: 0,
+		uStrokeAlphaStart: 1,
+		uStrokeAlphaRate: 0
 	};
 
 	return new Shader(program, uniforms);
