@@ -1,165 +1,71 @@
-import {Buffer, BufferUsage, Container, Geometry, Mesh, Rectangle, Shader, UniformGroup} from 'pixi.js';
-import {Defaults} from '../../defaults';
-import {SlugFont} from '../../shared/slug/font';
+import {
+	Buffer,
+	BufferUsage,
+	Container,
+	Geometry,
+	Mesh,
+	Rectangle,
+	Shader,
+	UniformGroup
+} from 'pixi.js';
 import {slugGlyphQuads} from '../../shared/slug/glyph/quad';
+import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
 import {slugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
-import {numberValue} from '@toreda/strong-types';
+import {SlugTextInit} from '../../shared/slug/text/init';
+import {SlugTextMixin} from '../../shared/slug/text/base';
+import type {SlugFont} from '../../shared/slug/font';
+
+const SlugTextV8Base = SlugTextMixin(Container);
 
 /**
  * Renderable text element using the Slug algorithm for PixiJS v8.
- * Renders font glyphs directly from quadratic Bezier curves on the GPU.
+ * Extends Container (via SlugTextMixin) for scene graph compatibility.
+ *
+ * Supports multi-pass rendering for stroke and drop shadow effects:
+ * - Drop shadow: rendered first (behind) with shadow color and offset
+ * - Stroke: rendered second with stroke color and extra dilation
+ * - Fill: rendered last (on top) with the normal text color
  *
  * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
- * and shared across all SlugText instances using the same font. SlugText owns only
- * its per-instance vertex/index buffers and mesh.
+ * and shared across all SlugText instances using the same font.
  */
-export class SlugText extends Container {
-	private _text: string;
-	private _fontRef: WeakRef<SlugFont>;
-	private _fontSize: number;
-	private _color: [number, number, number, number];
-	private _mesh: Mesh<Geometry, Shader> | null;
-	private _supersampling: boolean;
-	private _supersampleCount: number;
+export class SlugText extends SlugTextV8Base {
+	/** All meshes for the current text (shadow + stroke + fill). */
+	private _meshes: Mesh<Geometry, Shader>[];
+	/** Uniforms for the fill pass (controls supersampling). */
 	private _uniforms: UniformGroup | null;
-	private _vertexBytes: number;
-	private _indexBytes: number;
-	private _rebuildCount: number;
-	public wordWrap: boolean;
 
-	constructor(text: string, font: SlugFont, fontSize: number = Defaults.FONT_SIZE) {
+	constructor(init: SlugTextInit) {
 		super();
-		this._text = text;
-		this._fontRef = new WeakRef(font);
-		this._fontSize = fontSize;
-		this._color = [1, 1, 1, 1];
-		this._mesh = null;
-		this._supersampling = false;
-		this._supersampleCount = Defaults.SUPERSAMPLE_COUNT;
+		this.initBase(init);
+		this._meshes = [];
 		this._uniforms = null;
-		this._vertexBytes = 0;
-		this._indexBytes = 0;
-		this._rebuildCount = 0;
-		this.wordWrap = false;
 
 		this.rebuild();
 	}
 
-	/** The text string to render. */
-	public get text(): string {
-		return this._text;
-	}
-
-	public set text(value: string) {
-		if (this._text === value) return;
-		this._text = value;
-		this.rebuild();
-	}
-
-	/**
-	 * The Slug font used for rendering, or null if the font has been garbage collected.
-	 * Returns null only if the font was destroyed and no strong references remain.
-	 */
-	public get font(): SlugFont | null {
-		return this._fontRef.deref() ?? null;
-	}
-
-	public set font(value: SlugFont) {
-		if (this._fontRef.deref() === value) return;
-		this._fontRef = new WeakRef(value);
-		this.rebuild();
-	}
-
-	/** Font size in pixels. */
-	public get fontSize(): number {
-		return this._fontSize;
-	}
-
-	public set fontSize(value: number) {
-		if (this._fontSize === value) return;
-		this._fontSize = value;
-		this.rebuild();
-	}
-
-	/** Text color as [r, g, b, a] in 0-1 range. */
-	public get color(): [number, number, number, number] {
-		return this._color;
-	}
-
-	public set color(value: [number, number, number, number]) {
-		this._color = value;
-		this.rebuild();
-	}
-
-	/** Enable supersampling for smoother edges. */
-	public get supersampling(): boolean {
-		return this._supersampling;
-	}
-
-	public set supersampling(value: boolean) {
-		if (this._supersampling === value) return;
-		this._supersampling = value;
+	public onSupersamplingChanged(): void {
 		if (this._uniforms) {
-			this._uniforms.uniforms.uSupersampleCount = value ? this._supersampleCount : 0;
+			this._uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		}
 	}
 
-	/** Number of supersamples (2, 4, 8, or 16). Only used when supersampling is true. */
-	public get supersampleCount(): number {
-		return this._supersampleCount;
-	}
-
-	public set supersampleCount(value: number) {
-		const clamped = Math.min(Math.max(value, 1), Defaults.MAX_SUPERSAMPLE_COUNT);
-		if (this._supersampleCount === clamped) return;
-		this._supersampleCount = clamped;
+	public onSupersampleCountChanged(): void {
 		if (this._uniforms && this._supersampling) {
-			this._uniforms.uniforms.uSupersampleCount = clamped;
+			this._uniforms.uniforms.uSupersampleCount = this._supersampleCount;
 		}
 	}
 
 	/**
-	 * Build mesh geometry for current text + font.
-	 * Creates per-glyph quads with the 5 vertex attributes required by the Slug shaders.
-	 * Textures and shader program come from the font's shared GPU cache.
+	 * Build a Mesh from quad data with optional stroke expansion.
 	 */
-	private rebuild(): void {
-		this._rebuildCount++;
-
-		// Clean up previous mesh (per-instance resource).
-		if (this._mesh) {
-			this.removeChild(this._mesh);
-			this._mesh.destroy();
-			this._mesh = null;
-		}
-
-		const font = this._fontRef.deref();
-		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
-			return;
-		}
-
-		// Build per-glyph quads with all 5 vertex attributes
-		const quads = slugGlyphQuads(
-			this._text,
-			font.glyphs,
-			font.advances,
-			font.unitsPerEm,
-			this._fontSize,
-			font.textureWidth,
-			this._color
-		);
-
-		if (quads.quadCount === 0) {
-			return;
-		}
-
-		// Track GPU buffer sizes for memoryBytes() reporting.
-		this._vertexBytes = quads.vertices.byteLength;
-		this._indexBytes = quads.indices.byteLength;
-
-		// Create geometry with 5 interleaved vec4 attributes
-		const stride = 20 * 4; // 20 floats * 4 bytes per float
+	private _buildMesh(
+		quads: SlugGlyphQuads,
+		gpu: ReturnType<typeof slugFontGpuV8>,
+		strokeExpand: number = 0
+	): {mesh: Mesh<Geometry, Shader>; uniforms: UniformGroup} {
+		const stride = 20 * 4;
 		const vertexBuffer = new Buffer({
 			data: quads.vertices,
 			label: 'slug-vertex-buffer',
@@ -177,62 +83,115 @@ export class SlugText extends Container {
 			indexBuffer: quads.indices
 		});
 
-		// Compute local bounding box from vertex positions and set boundsArea so
-		// PixiJS v8 can cull/inspect this container without needing an aPosition attribute.
-		const floatsPerVertex = 20;
-		let minX = Infinity,
-			minY = Infinity,
-			maxX = -Infinity,
-			maxY = -Infinity;
-		for (let i = 0; i < quads.vertices.length; i += floatsPerVertex) {
-			const vx = quads.vertices[i];
-			const vy = quads.vertices[i + 1];
-			if (vx < minX) minX = vx;
-			if (vx > maxX) maxX = vx;
-			if (vy < minY) minY = vy;
-			if (vy > maxY) maxY = vy;
-		}
-		this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
-
-		// GPU resources from font cache (created once, shared across all SlugText instances).
-		const gpu = slugFontGpuV8(font);
-
-		// Per-instance shader: shares GlProgram + textures, owns its own UniformGroup.
 		const {shader, uniforms} = slugShader(gpu.glProgram, gpu.curveTexture, gpu.bandTexture);
-		this._uniforms = uniforms;
-		this._uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
+		uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
+		uniforms.uniforms.uStrokeExpand = strokeExpand;
 
-		const mesh = new Mesh({geometry, shader});
-		this._mesh = mesh;
-		this.addChild(mesh);
+		return {mesh: new Mesh({geometry, shader}), uniforms};
 	}
 
-	/** Number of times rebuild() has been called on this instance. */
-	public get rebuildCount(): number {
-		return this._rebuildCount;
+	public rebuild(): void {
+		this._rebuildCount++;
+
+		// Remove all previous meshes from display list.
+		// Don't call mesh.destroy() — it can interfere with shared GlProgram
+		// resources when multiple meshes use the same shader program.
+		for (const mesh of this._meshes) {
+			this.removeChild(mesh);
+		}
+		this._meshes = [];
+		this._uniforms = null;
+
+		const font = this._fontRef?.deref();
+		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
+			return;
+		}
+
+		const gpu = slugFontGpuV8(font);
+		const hasShadow = this._dropShadow !== null;
+		const hasStroke = this._strokeWidth > 0;
+
+		// --- Drop shadow pass ---
+		if (hasShadow) {
+			const ds = this._dropShadow!;
+			const shadowColor: [number, number, number, number] = ds.color
+				? [ds.color[0], ds.color[1], ds.color[2], (ds.alpha ?? 1)]
+				: [0, 0, 0, (ds.alpha ?? 1)];
+
+			const shadowQuads = slugGlyphQuads(
+				this._text, font.glyphs, font.advances,
+				font.unitsPerEm, this._fontSize, font.textureWidth,
+				shadowColor
+			);
+
+			if (shadowQuads.quadCount > 0) {
+				const {mesh} = this._buildMesh(shadowQuads, gpu);
+				// Offset shadow by angle + distance
+				const angle = ds.angle ?? Math.PI / 6;
+				const dist = ds.distance ?? 5;
+				mesh.x = Math.cos(angle) * dist;
+				mesh.y = Math.sin(angle) * dist;
+				this.addChild(mesh);
+				this._meshes.push(mesh);
+			}
+		}
+
+		// --- Stroke pass ---
+		// Same font size as fill but with expanded quads (extraExpand = strokeWidth).
+		// Each glyph quad is pushed outward by strokeWidth pixels on all sides,
+		// and em-space texcoords expand to match, so the shader renders the
+		// wider glyph area in the stroke color behind the fill.
+		if (hasStroke) {
+			const strokeQuads = slugGlyphQuads(
+				this._text, font.glyphs, font.advances,
+				font.unitsPerEm, this._fontSize, font.textureWidth,
+				this._strokeColor, this._strokeWidth
+			);
+
+			if (strokeQuads.quadCount > 0) {
+				const {mesh} = this._buildMesh(strokeQuads, gpu, this._strokeWidth);
+				this.addChild(mesh);
+				this._meshes.push(mesh);
+			}
+		}
+
+		// --- Fill pass ---
+		const fillQuads = slugGlyphQuads(
+			this._text, font.glyphs, font.advances,
+			font.unitsPerEm, this._fontSize, font.textureWidth,
+			this._color
+		);
+
+		if (fillQuads.quadCount > 0) {
+			const {mesh, uniforms} = this._buildMesh(fillQuads, gpu);
+			this._uniforms = uniforms;
+			this.addChild(mesh);
+			this._meshes.push(mesh);
+
+			// Track memory for the fill pass (representative of total)
+			this._vertexBytes = fillQuads.vertices.byteLength;
+			this._indexBytes = fillQuads.indices.byteLength;
+
+			// Bounds from fill pass vertices
+			const floatsPerVertex = 20;
+			let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+			for (let i = 0; i < fillQuads.vertices.length; i += floatsPerVertex) {
+				const vx = fillQuads.vertices[i];
+				const vy = fillQuads.vertices[i + 1];
+				if (vx < minX) minX = vx;
+				if (vx > maxX) maxX = vx;
+				if (vy < minY) minY = vy;
+				if (vy > maxY) maxY = vy;
+			}
+			this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+		}
 	}
 
-	/**
-	 * GPU memory consumed by this text object's vertex and index buffers, in bytes.
-	 * Does not include the font textures — those are shared and reported by SlugFont.memoryBytes().
-	 */
-	public meshMemoryBytes(): number {
-		return this._vertexBytes + this._indexBytes;
-	}
-
-	/**
-	 * Total GPU memory for this text object plus its font's textures, in bytes.
-	 * Use this when the font is not shared, or to get a complete per-instance total.
-	 */
-	public totalMemoryBytes(): number {
-		const font = this._fontRef.deref();
-		return this.meshMemoryBytes() + (font ? font.memoryBytes() : 0);
-	}
-
-	public override destroy(): void {
-		this._mesh?.destroy();
-		// DO NOT destroy textures — they belong to the font's GPU cache
-		// and are shared across all SlugText instances.
+	override destroy(): void {
+		for (const mesh of this._meshes) {
+			mesh.destroy();
+		}
+		this._meshes = [];
 		super.destroy();
 	}
 }

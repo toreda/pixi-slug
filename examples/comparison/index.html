@@ -270,7 +270,7 @@
 				yOffset += 16;
 
 				// pixi-slug text
-				var slugText = new pixiSlug.SlugText(sampleText, slugFont, sz);
+				var slugText = new pixiSlug.SlugText({text: sampleText, slugFont: slugFont, options: {fontSize: sz}});
 				slugText.y = yOffset;
 				slugGroup.addChild(slugText);
 				slugTexts.push(slugText);

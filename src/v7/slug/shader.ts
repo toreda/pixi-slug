@@ -16,7 +16,8 @@ export function slugShader(
 	const uniforms = {
 		uCurveTexture: curveTexture,
 		uBandTexture: bandTexture,
-		uResolution: new Float32Array(resolution)
+		uResolution: new Float32Array(resolution),
+		uExtraDilation: 0
 	};
 
 	return new Shader(program, uniforms);

@@ -69,6 +69,7 @@ function packBandMax(low16_vBandMax: number, high16_hBandMax: number): number {
  * @param fontSize		Desired font size in pixels.
  * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
+ * @param extraExpand	Extra outward expansion in pixels per side (e.g. stroke width). Default 0.
  */
 export function slugGlyphQuads(
 	text: string,
@@ -77,7 +78,8 @@ export function slugGlyphQuads(
 	unitsPerEm: number,
 	fontSize: number,
 	textureWidth: number,
-	color: [number, number, number, number] = [1, 1, 1, 1]
+	color: [number, number, number, number] = [1, 1, 1, 1],
+	extraExpand: number = 0
 ): SlugGlyphQuads {
 	const scale = fontSize / unitsPerEm;
 	const invScale = 1 / scale;
@@ -129,17 +131,21 @@ export function slugGlyphQuads(
 		// Font Y is up (ascenders positive), screen Y is down.
 		// Negate Y to flip, then add baselineY so that position(0,0)
 		// places the ascender line at screen y=0.
-		const x0 = cursorX + bounds.minX * scale;
-		const y0 = -bounds.maxY * scale + baselineY;
-		const x1 = cursorX + bounds.maxX * scale;
-		const y1 = -bounds.minY * scale + baselineY;
+		// extraExpand pushes each edge outward by N pixels (for stroke).
+		const x0 = cursorX + bounds.minX * scale - extraExpand;
+		const y0 = -bounds.maxY * scale + baselineY - extraExpand;
+		const x1 = cursorX + bounds.maxX * scale + extraExpand;
+		const y1 = -bounds.minY * scale + baselineY + extraExpand;
 
 		// Em-space texcoords (used by fragment shader for curve evaluation).
-		// These stay in font coordinate space (Y-up).
-		const u0 = bounds.minX;
-		const v0 = bounds.minY;
-		const u1 = bounds.maxX;
-		const v1 = bounds.maxY;
+		// These stay in font coordinate space (Y-up). Expand to match
+		// the pixel-space expansion so the shader samples the wider area.
+		// extraExpand is in pixels; convert to em-space via invScale.
+		const emExpand = extraExpand * invScale;
+		const u0 = bounds.minX - emExpand;
+		const v0 = bounds.minY - emExpand;
+		const u1 = bounds.maxX + emExpand;
+		const v1 = bounds.maxY + emExpand;
 
 		// Band transform: maps em-space coord to band index.
 		// Use module-level _f32 for float32 round-trip to match GPU precision exactly —

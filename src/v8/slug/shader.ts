@@ -17,7 +17,8 @@ export function slugShader(glProgram: GlProgram, curveTexture: Texture, bandText
 	// PixiJS v8 UniformGroup has no 'bool' type — use i32 (0/1).
 	// WebGL maps glUniform1i to GLSL bool uniforms correctly.
 	const uniforms = new UniformGroup({
-		uSupersampleCount: {value: 0, type: 'i32'}
+		uSupersampleCount: {value: 0, type: 'i32'},
+		uStrokeExpand: {value: 0, type: 'f32'}
 	});
 
 	const shader = new Shader({

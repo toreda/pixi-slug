@@ -322,11 +322,11 @@
 </head>
 <body>
 	<nav id="nav">
-		<a href="../v8/">V8</a>
-		<a href="../v7/">V7</a>
-		<a href="../v6/">V6</a>
-		<a href="../comparison/">Live Rendering Comparison</a>
-		<a href="../benchmark/" class="active">Benchmark</a>
+		<a href="/examples/v8/">V8</a>
+		<a href="/examples/v7/">V7</a>
+		<a href="/examples/v6/">V6</a>
+		<a href="/examples/comparison/">Live Rendering Comparison</a>
+		<a href="/examples/benchmark/" class="active">Benchmark</a>
 	</nav>
 	<h1>pixi-slug Benchmark</h1>
 
@@ -623,7 +623,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
 
 	<!-- pixi-slug v8 bundle -->
-	<script src="../dist/v8/index.js"></script>
+	<script src="../../dist/v8/index.js"></script>
 
 	<script>
 	(function () {
@@ -1426,7 +1426,7 @@
 				color: '#4a9aff',
 				enableId: 'enableSlug',
 				factory: function (text, size, resources, settings) {
-					var t = new pixiSlug.SlugText(text, resources.slugFont, size);
+					var t = new pixiSlug.SlugText({text: text, slugFont: resources.slugFont, options: {fontSize: size}});
 					t.supersampling = settings.slugSupersampling;
 					t.supersampleCount = settings.slugSamples;
 					return t;

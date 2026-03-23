@@ -1,0 +1,288 @@
+import {Defaults} from '../../../defaults';
+import {SlugFont} from '../font';
+import type {SlugDropShadow, SlugStroke, SlugTextInit} from './init';
+import {booleanValue, numberValue, stringValue} from '@toreda/strong-types';
+
+/**
+ * Minimal Container shape — the subset of PixiJS Container that
+ * SlugTextBase needs. Avoids importing from any specific PixiJS package.
+ */
+interface ContainerLike {
+	addChild(child: any): any;
+	removeChild(child: any): void;
+	destroy(...args: any[]): void;
+}
+
+type Constructor<T = ContainerLike> = new (...args: any[]) => T;
+
+/**
+ * Mixin that adds shared SlugText state and property accessors to a
+ * Container base class. Each PixiJS version passes its own Container:
+ *
+ * ```typescript
+ * // v8
+ * import {Container} from 'pixi.js';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ *
+ * // v6/v7
+ * import {Container} from '@pixi/display';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ * ```
+ *
+ * The returned class manages text, font, fontSize, color, wordWrap,
+ * supersampling, memory tracking, and rebuild lifecycle. Subclasses
+ * implement `rebuild()` with version-specific GPU APIs.
+ *
+ * Fields use public `_` prefix instead of `protected` to avoid TS4094
+ * ("Property of exported anonymous class type may not be private or
+ * protected"). The `_` convention signals internal use.
+ */
+export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
+	abstract class SlugTextBase extends Base {
+		_text!: string;
+		_fontRef!: WeakRef<SlugFont>;
+		_fontSize!: number;
+		_color!: [number, number, number, number];
+		_supersampling!: boolean;
+		_supersampleCount!: number;
+		_wordWrap!: boolean;
+		_wordWrapWidth!: number;
+		_vertexBytes!: number;
+		_indexBytes!: number;
+		_rebuildCount!: number;
+
+		// Stroke state (enabled when _strokeWidth > 0)
+		_strokeWidth!: number;
+		_strokeColor!: [number, number, number, number];
+
+		// Drop shadow state (enabled when _dropShadow is not null)
+		_dropShadow!: SlugDropShadow | null;
+
+		/**
+		 * Initialize shared fields from a SlugTextInit object.
+		 * Called by the subclass constructor after super().
+		 * Subclass must call rebuild() separately after version-specific init.
+		 */
+		public initBase(init: SlugTextInit): void {
+			this._text = stringValue(init.text, Defaults.SlugText.Text);
+			this._fontRef = new WeakRef(init.slugFont);
+			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
+			this._color = [1, 1, 1, 1];
+			this._supersampling = booleanValue(init.supersampling, Defaults.SlugText.Supersampling);
+			this._supersampleCount = numberValue(init.supersampleCount, Defaults.SlugText.SupersampleCount);
+			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
+			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapwidth);
+			this._vertexBytes = 0;
+			this._indexBytes = 0;
+			this._rebuildCount = 0;
+
+			// Stroke
+			const stroke = init.options?.stroke;
+			this._strokeWidth = numberValue(stroke?.width, Defaults.SlugText.StrokeWidth);
+			this._strokeColor = stroke?.color
+				? [stroke.color[0], stroke.color[1], stroke.color[2], stroke.color[3]]
+				: [...Defaults.SlugText.StrokeColor] as [number, number, number, number];
+
+			// Drop shadow — presence of the object enables it
+			const ds = init.options?.dropShadow;
+			if (ds) {
+				this._dropShadow = {
+					alpha: numberValue(ds.alpha, Defaults.SlugText.DropShadowAlpha),
+					angle: numberValue(ds.angle, Defaults.SlugText.DropShadowAngle),
+					blur: numberValue(ds.blur, Defaults.SlugText.DropShadowBlur),
+					color: ds.color
+						? [ds.color[0], ds.color[1], ds.color[2], ds.color[3]]
+						: [...Defaults.SlugText.DropShadowColor] as [number, number, number, number],
+					distance: numberValue(ds.distance, Defaults.SlugText.DropShadowDistance)
+				};
+			} else {
+				this._dropShadow = null;
+			}
+		}
+
+		/** Version-specific rebuild. Subclasses implement with their PixiJS APIs. */
+		public abstract rebuild(): void;
+
+		/**
+		 * Called when supersampling is toggled. Override to update shader
+		 * uniforms without a full rebuild.
+		 */
+		public onSupersamplingChanged(): void {}
+
+		/**
+		 * Called when supersample count changes. Override to update shader
+		 * uniforms without a full rebuild.
+		 */
+		public onSupersampleCountChanged(): void {}
+
+		// --- Property accessors ---
+
+		public get text(): string {
+			return this._text;
+		}
+
+		public set text(value: string) {
+			if (this._text === value) return;
+			this._text = value;
+			this.rebuild();
+		}
+
+		public get font(): SlugFont | null {
+			return this._fontRef?.deref() ?? null;
+		}
+
+		public set font(value: SlugFont) {
+			if (this._fontRef?.deref() === value) return;
+			this._fontRef = new WeakRef(value);
+			this.rebuild();
+		}
+
+		public get fontSize(): number {
+			return this._fontSize;
+		}
+
+		public set fontSize(value: number) {
+			if (this._fontSize === value) return;
+			this._fontSize = value;
+			this.rebuild();
+		}
+
+		public get color(): [number, number, number, number] {
+			return this._color;
+		}
+
+		public set color(value: [number, number, number, number]) {
+			this._color = value;
+			this.rebuild();
+		}
+
+		public get wordWrap(): boolean {
+			return this._wordWrap;
+		}
+
+		public set wordWrap(value: boolean) {
+			if (this._wordWrap === value) return;
+			this._wordWrap = value;
+			this.rebuild();
+		}
+
+		public get wordWrapWidth(): number {
+			return this._wordWrapWidth;
+		}
+
+		public set wordWrapWidth(value: number) {
+			if (this._wordWrapWidth === value) return;
+			this._wordWrapWidth = value;
+			this.rebuild();
+		}
+
+		// --- Stroke ---
+
+		/** Stroke width in pixels. 0 = no stroke. */
+		public get strokeWidth(): number {
+			return this._strokeWidth;
+		}
+
+		public set strokeWidth(value: number) {
+			if (this._strokeWidth === value) return;
+			this._strokeWidth = value;
+			this.rebuild();
+		}
+
+		/** Stroke color as [r, g, b, a] in 0-1 range. */
+		public get strokeColor(): [number, number, number, number] {
+			return this._strokeColor;
+		}
+
+		public set strokeColor(value: [number, number, number, number]) {
+			this._strokeColor = value;
+			if (this._strokeWidth > 0) this.rebuild();
+		}
+
+		/** Stroke configuration object, or null if disabled. */
+		public get stroke(): SlugStroke | null {
+			if (this._strokeWidth <= 0) return null;
+			return {color: this._strokeColor, width: this._strokeWidth};
+		}
+
+		public set stroke(value: SlugStroke | null) {
+			const newWidth = numberValue(value?.width, 0);
+			const newColor: [number, number, number, number] = value?.color
+				? [value.color[0], value.color[1], value.color[2], value.color[3]]
+				: [...Defaults.SlugText.StrokeColor] as [number, number, number, number];
+			const changed = this._strokeWidth !== newWidth ||
+				this._strokeColor[0] !== newColor[0] || this._strokeColor[1] !== newColor[1] ||
+				this._strokeColor[2] !== newColor[2] || this._strokeColor[3] !== newColor[3];
+			this._strokeWidth = newWidth;
+			this._strokeColor = newColor;
+			if (changed) this.rebuild();
+		}
+
+		// --- Drop shadow ---
+
+		/**
+		 * Drop shadow configuration, or null if disabled.
+		 * Setting to a partial object fills missing fields with defaults.
+		 * Setting to null disables the shadow.
+		 */
+		public get dropShadow(): SlugDropShadow | null {
+			return this._dropShadow;
+		}
+
+		public set dropShadow(value: SlugDropShadow | null) {
+			if (value === null) {
+				if (this._dropShadow === null) return;
+				this._dropShadow = null;
+			} else {
+				this._dropShadow = {
+					alpha: numberValue(value.alpha, Defaults.SlugText.DropShadowAlpha),
+					angle: numberValue(value.angle, Defaults.SlugText.DropShadowAngle),
+					blur: numberValue(value.blur, Defaults.SlugText.DropShadowBlur),
+					color: value.color
+						? [value.color[0], value.color[1], value.color[2], value.color[3]]
+						: [...Defaults.SlugText.DropShadowColor] as [number, number, number, number],
+					distance: numberValue(value.distance, Defaults.SlugText.DropShadowDistance)
+				};
+			}
+			this.rebuild();
+		}
+
+		// --- Supersampling ---
+
+		public get supersampling(): boolean {
+			return this._supersampling;
+		}
+
+		public set supersampling(value: boolean) {
+			if (this._supersampling === value) return;
+			this._supersampling = value;
+			this.onSupersamplingChanged();
+		}
+
+		public get supersampleCount(): number {
+			return this._supersampleCount;
+		}
+
+		public set supersampleCount(value: number) {
+			const clamped = Math.min(Math.max(value, 1), Defaults.MAX_SUPERSAMPLE_COUNT);
+			if (this._supersampleCount === clamped) return;
+			this._supersampleCount = clamped;
+			this.onSupersampleCountChanged();
+		}
+
+		public get rebuildCount(): number {
+			return this._rebuildCount;
+		}
+
+		public meshMemoryBytes(): number {
+			return this._vertexBytes + this._indexBytes;
+		}
+
+		public totalMemoryBytes(): number {
+			const font = this._fontRef?.deref();
+			return this.meshMemoryBytes() + (font ? font.memoryBytes() : 0);
+		}
+	}
+
+	return SlugTextBase;
+}
