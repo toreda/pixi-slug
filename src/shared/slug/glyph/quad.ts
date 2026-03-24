@@ -289,3 +289,97 @@ export function slugGlyphQuads(
 
 	return { vertices, indices, quadCount };
 }
+
+/**
+ * Build quads for multiple lines of text with vertical line spacing.
+ * Each line is laid out at a Y offset of `lineIndex * lineHeight` pixels.
+ * All lines share a single vertex/index buffer for efficient rendering.
+ *
+ * @param lines			Array of text strings, one per line.
+ * @param glyphs		Glyph data map from SlugFont.
+ * @param advances		Advance width map for all glyphs.
+ * @param unitsPerEm	Font units per em.
+ * @param fontSize		Desired font size in pixels.
+ * @param textureWidth	Width of the curve/band textures.
+ * @param lineHeight	Vertical distance between lines in pixels.
+ * @param color			Text color as [r, g, b, a] in 0-1 range.
+ * @param extraExpand	Extra outward expansion in pixels per side.
+ */
+export function slugGlyphQuadsMultiline(
+	lines: string[],
+	glyphs: Map<number, SlugGlyphData>,
+	advances: Map<number, number>,
+	unitsPerEm: number,
+	fontSize: number,
+	textureWidth: number,
+	lineHeight: number,
+	color: [number, number, number, number] = [1, 1, 1, 1],
+	extraExpand: number = 0
+): SlugGlyphQuads {
+	if (lines.length <= 1) {
+		return slugGlyphQuads(
+			lines[0] || '', glyphs, advances, unitsPerEm,
+			fontSize, textureWidth, color, extraExpand
+		);
+	}
+
+	// Build quads per line, then merge into a single buffer.
+	const perLine: SlugGlyphQuads[] = [];
+	let totalQuads = 0;
+
+	for (let l = 0; l < lines.length; l++) {
+		const q = slugGlyphQuads(
+			lines[l], glyphs, advances, unitsPerEm,
+			fontSize, textureWidth, color, extraExpand
+		);
+		perLine.push(q);
+		totalQuads += q.quadCount;
+	}
+
+	if (totalQuads === 0) {
+		return {vertices: new Float32Array(0), indices: new Uint32Array(0), quadCount: 0};
+	}
+
+	const totalVerts = totalQuads * VERTICES_PER_QUAD * FLOATS_PER_VERTEX;
+	const totalIdxs = totalQuads * INDICES_PER_QUAD;
+	const vertices = new Float32Array(totalVerts);
+	const indices = new Uint32Array(totalIdxs);
+
+	let vertOffset = 0;
+	let idxOffset = 0;
+	let baseVertex = 0;
+
+	for (let l = 0; l < perLine.length; l++) {
+		const q = perLine[l];
+		if (q.quadCount === 0) continue;
+
+		const yShift = l * lineHeight;
+		const srcVerts = q.vertices;
+		const srcIdxs = q.indices;
+
+		// Copy vertices with Y offset applied to position (float index 1 per vertex)
+		for (let v = 0; v < q.quadCount * VERTICES_PER_QUAD; v++) {
+			const srcOff = v * FLOATS_PER_VERTEX;
+			const dstOff = vertOffset + srcOff;
+
+			// Copy all 20 floats
+			for (let f = 0; f < FLOATS_PER_VERTEX; f++) {
+				vertices[dstOff + f] = srcVerts[srcOff + f];
+			}
+
+			// Shift posY (index 1) by line offset
+			vertices[dstOff + 1] += yShift;
+		}
+
+		// Copy indices with base vertex offset
+		for (let j = 0; j < srcIdxs.length; j++) {
+			indices[idxOffset + j] = srcIdxs[j] + baseVertex;
+		}
+
+		vertOffset += q.quadCount * VERTICES_PER_QUAD * FLOATS_PER_VERTEX;
+		idxOffset += srcIdxs.length;
+		baseVertex += q.quadCount * VERTICES_PER_QUAD;
+	}
+
+	return {vertices, indices, quadCount: totalQuads};
+}

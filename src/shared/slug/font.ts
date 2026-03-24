@@ -21,6 +21,10 @@ export class SlugFont {
 	public readonly advances: Map<number, number>;
 	/** Font units per em (used to normalize coordinates). */
 	public unitsPerEm: number;
+	/** Typographic ascender in font units (positive, above baseline). */
+	public ascender: number;
+	/** Typographic descender in font units (negative, below baseline). */
+	public descender: number;
 
 	/**
 	 * Version-specific GPU resources (textures, shader program) cached for sharing
@@ -43,6 +47,8 @@ export class SlugFont {
 		this.glyphs = new Map();
 		this.advances = new Map();
 		this.unitsPerEm = 0;
+		this.ascender = 0;
+		this.descender = 0;
 		this.gpuCache = null;
 		this._gpuDestroy = null;
 	}
@@ -84,6 +90,8 @@ export class SlugFont {
 	public async load(fontData: ArrayBuffer): Promise<void> {
 		const font = opentype.parse(fontData);
 		this.unitsPerEm = font.unitsPerEm;
+		this.ascender = font.ascender;
+		this.descender = font.descender;
 
 		const glyphList: SlugGlyphData[] = [];
 

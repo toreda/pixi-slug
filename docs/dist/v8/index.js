@@ -1,5 +1,4862 @@
-!function(root,factory){"object"==typeof exports&&"object"==typeof module?module.exports=factory(require("pixi.js")):"function"==typeof define&&define.amd?define([],factory):"object"==typeof exports?exports.pixiSlug=factory(require("pixi.js")):root.pixiSlug=factory(root.PIXI)}(this,__WEBPACK_EXTERNAL_MODULE__0__=>/******/(()=>{// webpackBootstrap
+!function(root,factory){"object"==typeof exports&&"object"==typeof module?module.exports=factory(require("pixi.js")):"function"==typeof define&&define.amd?define([],factory):"object"==typeof exports?exports.pixiSlug=factory(require("pixi.js")):root.pixiSlug=factory(root.PIXI)}(this,__WEBPACK_EXTERNAL_MODULE__3000__=>/******/(()=>{// webpackBootstrap
 /******/var __webpack_modules__={
+/***/9452(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.archAliases=void 0,
+/**
+ * Common architecture aliases mappe dto full arch IDs.
+ *
+ * @category System Info
+ */
+exports.archAliases={
+/** BSD & Some linux distributions refer to arm64 as aarch64. */
+aarch64:"arm64",
+/** Specifically the instruction set for arm64, but sometimes used coloqualiiy */
+a64:"arm64",
+/** Some Windows versions and Linux distributions identify both AMD64 and Intel 64 as 'amd64'. */
+/** Hyphen vs underscore in x86_64 varies by implementation. Strong Types
+     * supports x86_64 as the arch type, but includes this alias to support
+     * mapping it on systems which use the hyphen. */
+"x86-64":"x86_64",
+/** Technically valid architecture identifier on its own, but commonly used to shorthand x86_64.*/
+x64:"x86_64"}},
+/***/4488(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.archSet=void 0,
+/**
+ * All supported target architecture keys. This is not an
+ * exhaustive list, only those currently supported.
+ *
+ * @category System Info
+ */
+exports.archSet=new Set(["arc","arm","arm64","itanium","mips","powerpc","sparc","x86_64","x86"])},
+/***/5106(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.archValid=void 0;const set_1=__webpack_require__(4488);
+/**
+ * Check whether provided key identifies a supported architecture.
+ * @param value
+ * @returns
+ *
+ * @category System Info
+ */exports.archValid=function(key){return!!key&&set_1.archSet.has(key)}},
+/***/1411(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.arrayMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938);exports.arrayMake=
+/**
+ *
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Collections
+ */
+function(fallback,initial){const rules=new rules_1.Rules;rules.add().must.match.type.array();const value=void 0!==initial?initial:[];return(0,type_1.createType)(fallback,value,rules,"Array")}},
+/***/7962(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.arrayNullValue=void 0,exports.arrayNullValue=
+/**
+ * Check if `value` is an array and return it when true. Otherwise returns
+ * `fallback`. Guarantees return type without additional checks.
+ *
+ * @param value			`value` to validate as an Array.
+ * @param fallback		Returned when `value` not an Array.
+ * @returns				`value` if it's an Array, otherwise `fallback`.
+ *
+ * @category Collections
+ */
+function(value,fallback){return Array.isArray(value)?value:fallback}},
+/***/5084(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.arrayValue=void 0,exports.arrayValue=
+/**
+ * Check whether provided `value` is an Array and return it if so,
+ * otherwise return provided `fallback`.
+ * @param value			`value` to validate as an Array.
+ * @param fallback		Returned when `value` is not an Array.
+ * @returns				`value` if it's an Array, otherwise `fallback`.
+ *
+ * @category Collections
+ */
+function(value,fallback){return Array.isArray(value)?value:fallback}},
+/***/5143(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.awsArnMake=void 0;const make_1=__webpack_require__(275);
+/**
+ * Make an Amazon Resource Name ID.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Unique Identifiers
+ */exports.awsArnMake=function(fallback,value){
+// Length constants specified at: https://docs.aws.amazon.com/IAM/latest/APIReference/API_Policy.html
+return(0,make_1.idMake)(fallback,value,{minLength:20,maxLength:2048,contains:["arn::"],typeId:"AwsArn"})}},
+/***/4546(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.bigMake=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369);exports.bigMake=
+/**
+ * Wraps Big object creation with try/catch and returns null when
+ * Big constructor throws. Performs no validation on value.
+ * @param value
+ *
+ * @category Maths
+ */
+function(value){if(null==value)return null;if((0,match_1.typeMatch)(value,big_js_1.default))return value;let result=null;try{result=(0,big_js_1.default)(value)}catch(e){console.error(`Bad bigMake: ${e}.`),result=null}return result}},
+/***/4356(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.boolMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.boolMake=
+/**
+ * Factory function to create a StrongType Bool object.
+ * @param fallback
+ * @param value
+ * @returns
+ *
+ * @category Bool
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.boolean(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Bool")}},
+/***/669(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.booleanNullValue=void 0;const value_1=__webpack_require__(9501);
+/**
+ * Check if `value` is a valid boolean and return it if so, otherwise
+ * returns `fallback`.
+ * @param value
+ * @param fallback
+ * @returns
+ *
+ * @category Bool
+ */exports.booleanNullValue=function(value,fallback){return(0,value_1.typeValue)("boolean",value,fallback)}},
+/***/1825(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.booleanValue=void 0;const value_1=__webpack_require__(9501);
+/**
+ * Return `value` if it's a valid boolean, otherwise returns `fallback`.
+ *
+ * @param value
+ * @param fallback
+ * @returns
+ *
+ * @category Bool
+ */exports.booleanValue=function(value,fallback){return(0,value_1.typeValue)("boolean",value,fallback)}},
+/***/4125(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.canConvertFromBig=void 0;
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */
+const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369),BIG_MAX_SAFE_INT=(0,big_js_1.default)(Number.MAX_SAFE_INTEGER),BIG_MIN_SAFE_INT=(0,big_js_1.default)(Number.MIN_SAFE_INTEGER);exports.canConvertFromBig=
+/**
+ * Convert from common numeric types to the `Big` data type.
+ * @param value
+ * @returns
+ *
+ * @category Strong Helpers
+ */
+function(value){return null!=value&&(!!(0,match_1.typeMatch)(value,big_js_1.default)&&(!value.gt(BIG_MAX_SAFE_INT)&&!value.lt(BIG_MIN_SAFE_INT)))}},
+/***/5938(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.createType=void 0;const data_1=__webpack_require__(2503);
+/**
+ * Create a StrongType.
+ * @param fallbackArg
+ * @param initial
+ * @param rules
+ * @returns
+ *
+ * @category Core
+ */exports.createType=function(fallbackDefault,initial,rules,typeId){const instance=new data_1.StrongData(fallbackDefault,initial,rules,typeId);return Object.assign(value=>(void 0!==value&&instance.set(value),instance.get(instance.fallbackDefault)),{
+/**
+         * Get current value and return provided fallback if
+         * @param fallback
+         * @returns
+         */
+get:fallback=>instance.get(fallback),
+/**
+         * Get current value, or null if there isn't one.
+         * @returns		Current value when set, otherwise null.
+         */
+getNull:()=>instance.getNull(),
+/**
+         * Reset instance properties to their starting values.
+         */
+reset:()=>{instance.reset(),void 0!==initial&&instance.set(initial)},
+/**
+         * Read-only check to determine if provided value passes
+         * rule validation for this instance.
+         * @param value
+         * @returns
+         */
+check:target=>instance.check(target),typeId,baseType:"StrongType",_data:instance})}},
+/***/9446(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.CSSFont=void 0;const defaults_1=__webpack_require__(7141),rules_1=__webpack_require__(3756),map_1=__webpack_require__(5753),make_1=__webpack_require__(1293),make_2=__webpack_require__(9853);
+/**
+ * @category CSS
+ */
+class CSSFont extends map_1.StrongMap{constructor(){super();(new rules_1.Rules).add().must.match.pattern.hexColor(),this.color=(0,make_1.hexColorCodeMake)(defaults_1.Defaults.CSS.Font.Color),this.family=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Family),this.lineHeight=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.LineHeight),this.size=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Size),this.stretch=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Stretch),this.variant=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Variant),this.weight=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Weight)}reset(){this.color.reset(),this.family.reset(),this.lineHeight.reset(),this.size.reset(),this.stretch.reset(),this.variant.reset(),this.weight.reset()}}exports.CSSFont=CSSFont},
+/***/6980(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.CSSText=void 0;const map_1=__webpack_require__(5753),make_1=__webpack_require__(4837);
+/**
+ * @category CSS
+ */
+class CSSText extends map_1.StrongMap{constructor(){super(),this.decoration=(0,make_1.textMake)("none"),this.shadow=(0,make_1.textMake)("0")}reset(){this.decoration.reset(),this.shadow.reset()}}exports.CSSText=CSSText},
+/***/3366(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.dblMake=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),big_1=__webpack_require__(518),float_1=__webpack_require__(6255),BIG_ZERO=(0,big_js_1.default)(0),BIG_ONE=(0,big_js_1.default)(1);exports.dblMake=
+/**
+ * Make instance of arbitrary precision decimal type.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Maths
+ */
+function(fallback,initial){const rules=new rules_1.Rules;rules.add().must.match.type.big();const bigFallback=(0,big_1.toDblBig)(fallback),bigInitial=(0,big_1.toDblBig)(initial),strong=(0,type_1.createType)(null!=bigFallback?bigFallback:BIG_ZERO,bigInitial,rules,"Dbl");return Object.assign(strong,{increment:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.add(BIG_ONE);return strong._data.set(result)?result:null},decrement:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.minus((0,big_js_1.default)(1));return strong._data.set(result)?result:null},mul:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toDblBig)(input);if(null===value)return null;const result=curr.mul(value);return strong._data.set(result)?result:null},pow:exponent=>{const curr=strong._data.getNull(),value=(0,float_1.toFloat)(exponent);if(null===curr||null===value)return null;const result=curr.pow(value);return strong._data.set(result)?result:null},div:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toDblBig)(input);if(null===curr||null===value)return null;if(value===BIG_ZERO||curr===BIG_ZERO)return null;const result=curr.div(value);return strong._data.set(result)?result:null},add:input=>{const value=(0,big_1.toDblBig)(input),curr=strong.getNull();if(null===value)return null;if(null===curr)return null;const result=curr.add(value);return strong._data.set(result)?result:null},sub:input=>{const value=(0,big_1.toDblBig)(input),curr=strong.getNull();if(null===value||null===curr)return null;const result=curr.minus(value);return strong._data.set(result)?result:null}})}},
+/***/7141(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Defaults=void 0;
+/**
+ * Default values used across the library.
+ *
+ * @category Core
+ */
+class Defaults{}exports.Defaults=Defaults,Defaults.Vec={X:0,Y:0,Z:0,W:0},Defaults.CSS={Font:{Color:"#FFFFFF",Size:"12px",Family:"sans-serif",Weight:"normal",Stretch:"normal",Variant:"normal",LineHeight:"normal"}}},
+/***/5748(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2010 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.emailMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.emailMake=
+/**
+ * Create Strong Email object with fallback and optional initial value.
+ * @param fallback	Value returned when none is set.
+ * @param initial	Starting value.
+ * @returns			New strong Email object.
+ *
+ * @category Email
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.email(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Email")}},
+/***/5582(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.floatMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.floatMake=
+/**
+ *
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Maths
+ */
+function(fallback,value){const rules=new rules_1.Rules;rules.add().must.match.type.float();const strong=(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Float");return Object.assign(strong,{increment:()=>strong._data.add(1),decrement:()=>{const curr=strong._data.getNull();return null===curr||0===curr?null:strong._data.add(-1)},mul:amt=>strong._data.mul(amt),pow:exponent=>strong._data.pow(exponent),div:amt=>strong._data.div(amt),add:amt=>strong._data.add(amt),sub:amt=>strong._data.add(-1*amt)})}},
+/***/5678(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasCharMake=exports.hasChar=void 0;const node_1=__webpack_require__(8248),text_1=__webpack_require__(3841);
+/**
+ *
+ * @param text
+ * @param char
+ * @returns
+ *
+ * @category Validators
+ */
+function hasChar(text,char){return"string"==typeof text&&"string"==typeof char&&(0!==text.length&&0!==char.length&&(1===char.length&&(0,text_1.hasText)(text,char)))}exports.hasChar=hasChar,exports.hasCharMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_CHAR",1/* CMP */,curr=>hasChar(curr,target),mods);return rule.add(node),caller}}},
+/***/3387(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasCharTimesMake=exports.hasCharTimes=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param text
+ * @param char
+ * @param count
+ * @returns
+ *
+ * @category Validators
+ */function hasCharTimes(text,targetChar,count){if("string"!=typeof text||"string"!=typeof targetChar)return!1;if(!text.length||!targetChar.length)return!1;if(1!==targetChar.length)return!1;if(count<0)return!1;let findCount=0;
+// O(n) search for matching characters. Doesn't work for greater
+for(const char of text)char===targetChar&&findCount++;return findCount>=count}exports.hasCharTimes=hasCharTimes,exports.hasCharTimesMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return(char,count)=>{const node=new node_1.RuleNode("HAS_CHAR_TIMES",1/* CMP */,curr=>hasCharTimes(curr,char,count),mods);return rule.add(node),caller}}},
+/***/2477(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthEqualMake=exports.hasLengthEqual=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param value
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */function hasLengthEqual(value,target){if(null==value)return!1;if("number"!=typeof target)return!1;if("string"==typeof value)return value.length===target;if(Array.isArray(value))return value.length===target;const obj=value;return"number"==typeof obj.length&&obj.length===target}exports.hasLengthEqual=hasLengthEqual,exports.hasLengthEqualMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_EQ",1/* CMP */,curr=>hasLengthEqual(curr,target),mods);return rule.add(node),caller}}},
+/***/5078(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthGTMake=exports.hasLengthGreaterThan=void 0;const node_1=__webpack_require__(8248),gt_1=__webpack_require__(6041);
+/**
+ *
+ * @param curr
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */
+function hasLengthGreaterThan(curr,target){return"number"==typeof curr.length&&(!(curr.length<0)&&(0,gt_1.isGT)(curr.length,target))}exports.hasLengthGreaterThan=hasLengthGreaterThan,exports.hasLengthGTMake=
+/**
+ * Create hasLengthGT validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_GT",1/* CMP */,curr=>hasLengthGreaterThan(curr,target),mods);return rule.add(node),caller}}},
+/***/2751(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthGTEMake=exports.hasLengthGTE=void 0;const node_1=__webpack_require__(8248),gte_1=__webpack_require__(3994);
+/**
+ *
+ * @param curr
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */
+function hasLengthGTE(value,target){return"number"==typeof value.length&&(!(value.length<0)&&(0,gte_1.isGTE)(value.length,target))}exports.hasLengthGTE=hasLengthGTE,exports.hasLengthGTEMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_GRT_OR_EQL",1/* CMP */,curr=>hasLengthGTE(curr,target),mods);return rule.add(node),caller}}},
+/***/5193(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ *
+ * CSS Property descriptions from w3 schools:
+ * https://www.w3schools.com/cssref/pr_pos_clip.asp
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthLTMake=exports.hasLengthLT=void 0;const node_1=__webpack_require__(8248),lt_1=__webpack_require__(3622);
+/**
+ *
+ * @param curr
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */
+function hasLengthLT(curr,target){return"number"==typeof curr.length&&(!(curr.length<0)&&(0,lt_1.isLT)(curr.length,target))}exports.hasLengthLT=hasLengthLT,exports.hasLengthLTMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_LT",1/* CMP */,curr=>hasLengthLT(curr,target),mods);return rule.add(node),caller}}},
+/***/8042(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ *
+ * CSS Property descriptions from w3 schools:
+ * https://www.w3schools.com/cssref/pr_pos_clip.asp
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthLTEMake=exports.hasLengthLTE=void 0;const node_1=__webpack_require__(8248),lte_1=__webpack_require__(5727);
+/**
+ *
+ * @param curr
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */
+function hasLengthLTE(value,target){return"number"==typeof value.length&&(!(value.length<0)&&(0,lte_1.isLTE)(value.length,target))}exports.hasLengthLTE=hasLengthLTE,exports.hasLengthLTEMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_LTE",1/* CMP */,curr=>hasLengthLTE(curr,target),mods);return rule.add(node),caller}}},
+/***/5105(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasPropertyWithTypeMake=exports.hasPropertyWithType=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param o
+ * @param propName
+ * @param typeName
+ * @returns
+ *
+ * @category Validators
+ */function hasPropertyWithType(o,propName,typeName){if("string"!=typeof propName||"string"!==typeName)return!1;if(null==o)return!1;if(!propName.trim()||!typeName.trim())return!1;const obj=o;return!("function"!=typeof obj.hasOwnProperty||!obj.hasOwnProperty(propName))&&typeof obj[propName]===typeName}exports.hasPropertyWithType=hasPropertyWithType,exports.hasPropertyWithTypeMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return(propName,typeName)=>{const node=new node_1.RuleNode("HAS_PROP_W_TYPE",1/* CMP */,obj=>hasPropertyWithType(obj,propName,typeName),mods);return rule.add(node),caller}}},
+/***/7199(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasPropertyMake=exports.hasProperty=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param o
+ * @param propName
+ * @returns
+ *
+ * @category Validators
+ */function hasProperty(o,propName){if(null==o)return!1;return void 0!==o[propName]}exports.hasProperty=hasProperty,exports.hasPropertyMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return propName=>{const node=new node_1.RuleNode("HAS_PROPERTY",1/* CMP */,obj=>hasProperty(obj,propName),mods);return rule.add(node),caller}}},
+/***/3841(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasTextMake=exports.hasText=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param data
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */function hasText(value,target){let mustMatch;if("string"!=typeof value||""===value)return!1;if(mustMatch=Array.isArray(target)?target:"string"==typeof target?[target]:[],0===mustMatch.length)return!1;let matches=0;for(const match of mustMatch)-1!==value.indexOf(match)&&matches++;
+// All substrings in target must be present.
+return matches===mustMatch.length}exports.hasText=hasText,exports.hasTextMake=
+/**
+ *
+ * @param caller
+ * @param data
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_TEXT",1/* CMP */,value=>hasText(value,target),mods);return rule.add(node),caller}}},
+/***/7768(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasTextTimesMake=exports.hasTextTimes=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param curr
+ * @param target
+ * @param count
+ * @returns
+ *
+ * @category Validators
+ */exports.hasTextTimes=(curr,target,count)=>"string"==typeof curr&&"string"==typeof target&&curr.includes(target),exports.hasTextTimesMake=
+/**
+ *
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return(target,count)=>{const node=new node_1.RuleNode("HAS_TEXT_TIMES",1/* CMP */,curr=>(0,exports.hasTextTimes)(curr,target,count),mods);return rule.add(node),caller}}},
+/***/1293(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hexColorCodeMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.hexColorCodeMake=
+/**
+ * Create new strong hex color code object.
+ * @param fallback
+ * @param initial
+ * @returns
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.hexColorCode(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"HexColorCode")}},
+/***/5159(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpAuthHeaderValid=void 0;const headers_1=__webpack_require__(6341);
+/**
+ * Check whether provided string identifies a supported HTTP
+ * Auth header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpAuthHeaderValid=function(key){return"string"==typeof key&&headers_1.httpAuthHeaders.has(key)}},
+/***/6341(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpAuthHeaders=void 0,
+/**
+ * Header set used to identify valid HTTP Auth header keys.
+ *
+ * @category HTTP
+ */
+exports.httpAuthHeaders=new Set(["WWW-Authenticate","Authorization","Proxy-Authenticate","Proxy-Authorization"])},
+/***/2925(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCacheHeaderValid=void 0;const headers_1=__webpack_require__(8571);
+/**
+ * Check whether provided string identifies a supported HTTP
+ * Cache header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpCacheHeaderValid=function(key){return"string"==typeof key&&headers_1.httpCacheHeaders.has(key)}},
+/***/8571(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCacheHeaders=void 0,
+/**
+ * Set used to check & validate Http Cache header keys.
+ *
+ * @category HTTP
+ */
+exports.httpCacheHeaders=new Set(["Age","Cache-Control","Clear-Site-Data","Expires","Pragma","Warning"])},
+/***/2318(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCorsHeaderValid=void 0;const headers_1=__webpack_require__(5870);
+/**
+ * Check whether provided string identifies a supported HTTP
+ * CORS header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpCorsHeaderValid=function(key){return"string"==typeof key&&headers_1.httpCorsHeaders.has(key)}},
+/***/5870(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCorsHeaders=void 0,
+/**
+ * Set used to check & validate HTTP CORS header keys.
+ *
+ * @category HTTP
+ */
+exports.httpCorsHeaders=new Set(["Access-Control-Allow-Origin","Access-Control-Allow-Credentials","Access-Control-Allow-Headers","Access-Control-Allow-Methods","Access-Control-Expose-Headers","Access-Control-Max-Age","Access-Control-Request-Headers","Access-Control-Request-Method","Origin","Timing-Allow-Origin"])},
+/***/3675(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpFetchHeaderValid=void 0;const headers_1=__webpack_require__(5057);
+/**
+ * Check whether provided string identifies a supported HTTP
+ * fetch header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpFetchHeaderValid=function(key){return"string"==typeof key&&headers_1.httpFetchHeaders.has(key)}},
+/***/5057(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpFetchHeaders=void 0,
+/**
+ * Set used to check & validate HTTP Fetch header keys.
+ *
+ * @category HTTP
+ */
+exports.httpFetchHeaders=new Set(["Sec-Fetch-Site","Sec-Fetch-Mode","Sec-Fetch-User","Sec-Fetch-Dest"])},
+/***/1130(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpMethodValid=void 0;const methods_1=__webpack_require__(8178);
+/**
+ * Check whether provided string is a supported HTTP request method.
+ * @param method
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpMethodValid=function(method){return!!method&&("string"==typeof method&&methods_1.httpMethods.has(method))}},
+/***/8178(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpMethods=void 0,
+/**
+ * Set of supported HTTP request methods.
+ *
+ * @category HTTP
+ */
+exports.httpMethods=new Set(["CONNECT","DELETE","GET","HEAD","OPTIONS","PATCH","POST","PUT","TRACE"])},
+/***/4531(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpProxyHeaderValid=void 0;const headers_1=__webpack_require__(5465);
+/**
+ * Check whether provided string identifies a supported HTTP
+ * proxy header name.w
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpProxyHeaderValid=function(key){return"string"==typeof key&&headers_1.httpProxyHeaders.has(key)}},
+/***/5465(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpProxyHeaders=void 0,
+/**
+ * Set used to check & validate HTTP Proxy header keys.
+ *
+ * @category HTTP
+ */
+exports.httpProxyHeaders=new Set(["Forwarded","X-Forwarded-For","X-Forwarded-Host","X-Forwarded-Proto","Via"])},
+/***/7644(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpRequestHeaderValid=void 0;const headers_1=__webpack_require__(3692);
+/**
+ * Check whether provided string identifies a Valid HTTP
+ * Request header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpRequestHeaderValid=function(key){return"string"==typeof key&&headers_1.httpRequestHeaders.has(key)}},
+/***/3692(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpRequestHeaders=void 0,
+/**
+ * Set used to check & validate common HTTP Request header keys.
+ *
+ * @category HTTP
+ */
+exports.httpRequestHeaders=new Set(["Accept-Encoding","Accept-Language","Accept","Cache-Control","Connection","Host","If-Modified-Since","If-None-Match","Referer","Upgrade-Insecure-Requests","User-Agent"])},
+/***/1120(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpResponseHeaderValid=void 0;const headers_1=__webpack_require__(3976);
+/**
+ * Check whether provided string identifies a Valid HTTP
+ * Response header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpResponseHeaderValid=function(key){return"string"==typeof key&&headers_1.httpResponseHeaders.has(key)}},
+/***/3976(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpResponseHeaders=void 0,
+/**
+ * Set used to check & validate common HTTP Request header keys.
+ *
+ * @category HTTP
+ */
+exports.httpResponseHeaders=new Set(["Access-Control-Allow-Origin","Connection","Content-Encoding","Content-Type","Date","ETag","Keep-Alive","Last-Modified","Server","Set-Cookie","Transfer-Encoding","Vary","X-Backend-Server","X-Cache-Info","X-kuma-revision","x-frame-options"])},
+/***/4507(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpSecurityHeaderValid=void 0;const headers_1=__webpack_require__(4801);
+/**
+ * Check whether provided string identifies a valid HTTP
+ * Security header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpSecurityHeaderValid=function(key){return"string"==typeof key&&headers_1.httpSecurityHeaders.has(key)}},
+/***/4801(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpSecurityHeaders=void 0,
+/**
+ * Set used to check & validate HTTP Security header keys.
+ *
+ * @category HTTP
+ */
+exports.httpSecurityHeaders=new Set(["Content-Security-Policy-Report-Only","Content-Security-Policy","Cross-Origin-Embedder-Policy","Cross-Origin-Opener-Policy","Cross-Origin-Resource-Policy","Expect-CT","Feature-Policy","Origin-Isolation","Strict-Transport-Security","Upgrade-Insecure-Requests","X-Content-Type-Options","X-Download-Options","X-Frame-Options","X-Permitted-Cross-Domain-Policies","X-Powered-By","X-XSS-Protection"])},
+/***/4453(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpWebsocketHeaderValid=void 0;const headers_1=__webpack_require__(474);
+/**
+ * Check whether provided string identifies a valid HTTP
+ * Websocket header name.
+ * @param key
+ * @returns
+ *
+ * @category HTTP
+ */exports.httpWebsocketHeaderValid=function(key){return"string"==typeof key&&headers_1.httpWebsocketHeaders.has(key)}},
+/***/474(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpWebsocketHeaders=void 0,
+/**
+ * Set used to check & validate HTTP Websocket header keys.
+ *
+ * @category HTTP
+ */
+exports.httpWebsocketHeaders=new Set(["Sec-WebSocket-Key","Sec-WebSocket-Extensions","Sec-WebSocket-Accept","Sec-WebSocket-Protocol","Sec-WebSocket-Version"])},
+/***/275(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.idMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.idMake=
+/**
+ * Create a Strong Id type.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Strings
+ */
+function(fallback,value,options){const rules=new rules_1.Rules;options&&("number"==typeof options.maxLength&&rules.add().must.have.length.lessThanOrEqualTo(options.maxLength),"number"==typeof options.minLength&&rules.add().must.have.length.greaterThanOrEqualTo(options.minLength),("string"==typeof options.contains||Array.isArray(options.contains))&&rules.add().must.contain.text(options.contains)),rules.add().must.match.type.string();const typeId=options&&"string"==typeof options.typeId?options.typeId:"Id";return(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,typeId)}},
+/***/6859(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.Range=exports.MapParserState=exports.MapParser=exports.MapJsonifier=exports.StrongMap=exports.httpWebsocketHeaderValid=exports.httpWebsocketHeaders=exports.httpSecurityHeaderValid=exports.httpSecurityHeaders=exports.httpResponseHeaderValid=exports.httpResponseHeaders=exports.httpRequestHeaderValid=exports.httpRequestHeaders=exports.httpProxyHeaderValid=exports.httpProxyHeaders=exports.httpMethodValid=exports.httpMethods=exports.httpFetchHeaderValid=exports.httpFetchHeaders=exports.httpCorsHeaderValid=exports.httpCorsHeaders=exports.httpCacheHeaderValid=exports.httpCacheHeaders=exports.httpAuthHeaderValid=exports.httpAuthHeaders=exports.CSSText=exports.CSSFont=exports.awsArnMake=exports.semVerMake=exports.uIntMake=exports.textMake=exports.safeMoneyMake=exports.intMake=exports.idMake=exports.floatMake=exports.emailMake=exports.dblMake=exports.boolMake=exports.arrayMake=exports.typeMatch=exports.StrongData=exports.createType=exports.strongMake=exports.bigMake=exports.canConvertFromBig=exports.osValid=exports.osSet=exports.archAliases=exports.archValid=exports.archSet=void 0,exports.isBigMake=exports.isBig=exports.isGTEMake=exports.isGT=exports.isGTMake=exports.isEqualMake=exports.isEqual=exports.isEmptyMake=exports.isEmpty=exports.isEmailMake=exports.isEmail=exports.isFloatMake=exports.isFloat=exports.isDblMake=exports.isDbl=exports.isDateTimeMake=exports.isDateTime=exports.isDateMake=exports.isDate=exports.isBooleanMake=exports.isBoolean=exports.isArrayMake=exports.hasTextTimesMake=exports.hasTextTimes=exports.hasTextMake=exports.hasText=exports.hasPropertyWithTypeMake=exports.hasPropertyWithType=exports.hasPropertyMake=exports.hasProperty=exports.hasLengthLTEMake=exports.hasLengthLTE=exports.hasLengthLTMake=exports.hasLengthLT=exports.hasLengthGTMake=exports.hasLengthGreaterThan=exports.hasCharTimesMake=exports.hasCharTimes=exports.hasCharMake=exports.hasChar=exports.hasLengthGTEMake=exports.hasLengthGTE=exports.hasLengthEqualMake=exports.hasLengthEqual=exports.swapPop=exports.Vec4=exports.Vec3=exports.Vec2=exports.Vec1=exports.Size=void 0,exports.RuleOr=exports.RuleNot=exports.RuleNodeType=exports.RuleNode=exports.RuleMust=exports.RuleMatch=exports.RuleLength=exports.RuleHave=exports.RuleContains=exports.RuleBe=exports.RuleA=exports.Rule=exports.systemPortMake=exports.portMake=exports.Pattern=exports.toIntNumber=exports.toIntBig=exports.toDblBig=exports.toFloat=exports.isUIntMake=exports.isUInt=exports.isUrlMake=exports.isUrl=exports.isUndefinedMake=exports.isUndefined=exports.isTimeMake=exports.isTime=exports.isTextMake=exports.isSystemPort=exports.isSystemPortMake=exports.isPortMake=exports.isPort=exports.isNullMake=exports.isNull=exports.isLTEMake=exports.isLTE=exports.isLTMake=exports.isLT=exports.isLengthMake=exports.isLength=exports.isIpv6Addr=exports.isIpv6AddrMake=exports.isIpv4AddrMake=exports.isIpv4Addr=exports.isIntMake=exports.isInt=exports.isHexColorCodeMake=exports.isHexColorCode=exports.isBigIntMake=exports.isBigInt=void 0,exports.urlMake=exports.timeMake=exports.Transforms=exports.TransformNB=exports.Transform=exports.typeValue=exports.stringNullValue=exports.stringValue=exports.numberNullValue=exports.numberValue=exports.booleanNullValue=exports.booleanValue=exports.arrayNullValue=exports.arrayValue=exports.RuleType=exports.Rules=void 0;var set_1=__webpack_require__(4488);Object.defineProperty(exports,"archSet",{enumerable:!0,get:function(){return set_1.archSet}});var valid_1=__webpack_require__(5106);Object.defineProperty(exports,"archValid",{enumerable:!0,get:function(){return valid_1.archValid}});var aliases_1=__webpack_require__(9452);Object.defineProperty(exports,"archAliases",{enumerable:!0,get:function(){return aliases_1.archAliases}});var set_2=__webpack_require__(3758);Object.defineProperty(exports,"osSet",{enumerable:!0,get:function(){return set_2.osSet}});var valid_2=__webpack_require__(8144);Object.defineProperty(exports,"osValid",{enumerable:!0,get:function(){return valid_2.osValid}});var big_1=__webpack_require__(4125);Object.defineProperty(exports,"canConvertFromBig",{enumerable:!0,get:function(){return big_1.canConvertFromBig}});var make_1=__webpack_require__(4546);Object.defineProperty(exports,"bigMake",{enumerable:!0,get:function(){return make_1.bigMake}});var make_2=__webpack_require__(9853);Object.defineProperty(exports,"strongMake",{enumerable:!0,get:function(){return make_2.strongMake}});var type_1=__webpack_require__(5938);Object.defineProperty(exports,"createType",{enumerable:!0,get:function(){return type_1.createType}});var data_1=__webpack_require__(2503);Object.defineProperty(exports,"StrongData",{enumerable:!0,get:function(){return data_1.StrongData}});var match_1=__webpack_require__(2369);Object.defineProperty(exports,"typeMatch",{enumerable:!0,get:function(){return match_1.typeMatch}});
+// General Types
+var make_3=__webpack_require__(1411);Object.defineProperty(exports,"arrayMake",{enumerable:!0,get:function(){return make_3.arrayMake}});var make_4=__webpack_require__(4356);Object.defineProperty(exports,"boolMake",{enumerable:!0,get:function(){return make_4.boolMake}});var make_5=__webpack_require__(3366);Object.defineProperty(exports,"dblMake",{enumerable:!0,get:function(){return make_5.dblMake}});var make_6=__webpack_require__(5748);Object.defineProperty(exports,"emailMake",{enumerable:!0,get:function(){return make_6.emailMake}});var make_7=__webpack_require__(5582);Object.defineProperty(exports,"floatMake",{enumerable:!0,get:function(){return make_7.floatMake}});var make_8=__webpack_require__(275);Object.defineProperty(exports,"idMake",{enumerable:!0,get:function(){return make_8.idMake}});var make_9=__webpack_require__(1167);Object.defineProperty(exports,"intMake",{enumerable:!0,get:function(){return make_9.intMake}});var make_10=__webpack_require__(6834);Object.defineProperty(exports,"safeMoneyMake",{enumerable:!0,get:function(){return make_10.safeMoneyMake}});var make_11=__webpack_require__(4837);Object.defineProperty(exports,"textMake",{enumerable:!0,get:function(){return make_11.textMake}});var make_12=__webpack_require__(884);Object.defineProperty(exports,"uIntMake",{enumerable:!0,get:function(){return make_12.uIntMake}});var make_13=__webpack_require__(6047);Object.defineProperty(exports,"semVerMake",{enumerable:!0,get:function(){return make_13.semVerMake}});var make_14=__webpack_require__(5143);Object.defineProperty(exports,"awsArnMake",{enumerable:!0,get:function(){return make_14.awsArnMake}});var font_1=__webpack_require__(9446);Object.defineProperty(exports,"CSSFont",{enumerable:!0,get:function(){return font_1.CSSFont}});var text_1=__webpack_require__(6980);Object.defineProperty(exports,"CSSText",{enumerable:!0,get:function(){return text_1.CSSText}});var headers_1=__webpack_require__(6341);Object.defineProperty(exports,"httpAuthHeaders",{enumerable:!0,get:function(){return headers_1.httpAuthHeaders}});var valid_3=__webpack_require__(5159);Object.defineProperty(exports,"httpAuthHeaderValid",{enumerable:!0,get:function(){return valid_3.httpAuthHeaderValid}});var headers_2=__webpack_require__(8571);Object.defineProperty(exports,"httpCacheHeaders",{enumerable:!0,get:function(){return headers_2.httpCacheHeaders}});var valid_4=__webpack_require__(2925);Object.defineProperty(exports,"httpCacheHeaderValid",{enumerable:!0,get:function(){return valid_4.httpCacheHeaderValid}});var headers_3=__webpack_require__(5870);Object.defineProperty(exports,"httpCorsHeaders",{enumerable:!0,get:function(){return headers_3.httpCorsHeaders}});var valid_5=__webpack_require__(2318);Object.defineProperty(exports,"httpCorsHeaderValid",{enumerable:!0,get:function(){return valid_5.httpCorsHeaderValid}});var headers_4=__webpack_require__(5057);Object.defineProperty(exports,"httpFetchHeaders",{enumerable:!0,get:function(){return headers_4.httpFetchHeaders}});var valid_6=__webpack_require__(3675);Object.defineProperty(exports,"httpFetchHeaderValid",{enumerable:!0,get:function(){return valid_6.httpFetchHeaderValid}});var methods_1=__webpack_require__(8178);Object.defineProperty(exports,"httpMethods",{enumerable:!0,get:function(){return methods_1.httpMethods}});var valid_7=__webpack_require__(1130);Object.defineProperty(exports,"httpMethodValid",{enumerable:!0,get:function(){return valid_7.httpMethodValid}});var headers_5=__webpack_require__(5465);Object.defineProperty(exports,"httpProxyHeaders",{enumerable:!0,get:function(){return headers_5.httpProxyHeaders}});var valid_8=__webpack_require__(4531);Object.defineProperty(exports,"httpProxyHeaderValid",{enumerable:!0,get:function(){return valid_8.httpProxyHeaderValid}});var headers_6=__webpack_require__(3692);Object.defineProperty(exports,"httpRequestHeaders",{enumerable:!0,get:function(){return headers_6.httpRequestHeaders}});var valid_9=__webpack_require__(7644);Object.defineProperty(exports,"httpRequestHeaderValid",{enumerable:!0,get:function(){return valid_9.httpRequestHeaderValid}});var headers_7=__webpack_require__(3976);Object.defineProperty(exports,"httpResponseHeaders",{enumerable:!0,get:function(){return headers_7.httpResponseHeaders}});var valid_10=__webpack_require__(1120);Object.defineProperty(exports,"httpResponseHeaderValid",{enumerable:!0,get:function(){return valid_10.httpResponseHeaderValid}});var headers_8=__webpack_require__(4801);Object.defineProperty(exports,"httpSecurityHeaders",{enumerable:!0,get:function(){return headers_8.httpSecurityHeaders}});var valid_11=__webpack_require__(4507);Object.defineProperty(exports,"httpSecurityHeaderValid",{enumerable:!0,get:function(){return valid_11.httpSecurityHeaderValid}});var headers_9=__webpack_require__(474);Object.defineProperty(exports,"httpWebsocketHeaders",{enumerable:!0,get:function(){return headers_9.httpWebsocketHeaders}});var valid_12=__webpack_require__(4453);Object.defineProperty(exports,"httpWebsocketHeaderValid",{enumerable:!0,get:function(){return valid_12.httpWebsocketHeaderValid}});
+// Map
+var map_1=__webpack_require__(5753);Object.defineProperty(exports,"StrongMap",{enumerable:!0,get:function(){return map_1.StrongMap}});var jsonifier_1=__webpack_require__(4909);Object.defineProperty(exports,"MapJsonifier",{enumerable:!0,get:function(){return jsonifier_1.MapJsonifier}});var parser_1=__webpack_require__(6267);Object.defineProperty(exports,"MapParser",{enumerable:!0,get:function(){return parser_1.MapParser}});var state_1=__webpack_require__(3269);Object.defineProperty(exports,"MapParserState",{enumerable:!0,get:function(){return state_1.MapParserState}});var range_1=__webpack_require__(8862);Object.defineProperty(exports,"Range",{enumerable:!0,get:function(){return range_1.Range}});var size_1=__webpack_require__(8954);Object.defineProperty(exports,"Size",{enumerable:!0,get:function(){return size_1.Size}});var vec1_1=__webpack_require__(2858);Object.defineProperty(exports,"Vec1",{enumerable:!0,get:function(){return vec1_1.Vec1}});var vec2_1=__webpack_require__(4311);Object.defineProperty(exports,"Vec2",{enumerable:!0,get:function(){return vec2_1.Vec2}});var vec3_1=__webpack_require__(4592);Object.defineProperty(exports,"Vec3",{enumerable:!0,get:function(){return vec3_1.Vec3}});var vec4_1=__webpack_require__(8389);Object.defineProperty(exports,"Vec4",{enumerable:!0,get:function(){return vec4_1.Vec4}});var pop_1=__webpack_require__(9168);Object.defineProperty(exports,"swapPop",{enumerable:!0,get:function(){return pop_1.swapPop}});
+// Validator functions for is & has
+var equal_1=__webpack_require__(2477);Object.defineProperty(exports,"hasLengthEqual",{enumerable:!0,get:function(){return equal_1.hasLengthEqual}}),Object.defineProperty(exports,"hasLengthEqualMake",{enumerable:!0,get:function(){return equal_1.hasLengthEqualMake}});var gte_1=__webpack_require__(2751);Object.defineProperty(exports,"hasLengthGTE",{enumerable:!0,get:function(){return gte_1.hasLengthGTE}}),Object.defineProperty(exports,"hasLengthGTEMake",{enumerable:!0,get:function(){return gte_1.hasLengthGTEMake}});var char_1=__webpack_require__(5678);Object.defineProperty(exports,"hasChar",{enumerable:!0,get:function(){return char_1.hasChar}}),Object.defineProperty(exports,"hasCharMake",{enumerable:!0,get:function(){return char_1.hasCharMake}});var times_1=__webpack_require__(3387);Object.defineProperty(exports,"hasCharTimes",{enumerable:!0,get:function(){return times_1.hasCharTimes}}),Object.defineProperty(exports,"hasCharTimesMake",{enumerable:!0,get:function(){return times_1.hasCharTimesMake}});var gt_1=__webpack_require__(5078);Object.defineProperty(exports,"hasLengthGreaterThan",{enumerable:!0,get:function(){return gt_1.hasLengthGreaterThan}}),Object.defineProperty(exports,"hasLengthGTMake",{enumerable:!0,get:function(){return gt_1.hasLengthGTMake}});var lt_1=__webpack_require__(5193);Object.defineProperty(exports,"hasLengthLT",{enumerable:!0,get:function(){return lt_1.hasLengthLT}}),Object.defineProperty(exports,"hasLengthLTMake",{enumerable:!0,get:function(){return lt_1.hasLengthLTMake}});var lte_1=__webpack_require__(8042);Object.defineProperty(exports,"hasLengthLTE",{enumerable:!0,get:function(){return lte_1.hasLengthLTE}}),Object.defineProperty(exports,"hasLengthLTEMake",{enumerable:!0,get:function(){return lte_1.hasLengthLTEMake}});var property_1=__webpack_require__(7199);Object.defineProperty(exports,"hasProperty",{enumerable:!0,get:function(){return property_1.hasProperty}}),Object.defineProperty(exports,"hasPropertyMake",{enumerable:!0,get:function(){return property_1.hasPropertyMake}});var property_with_type_1=__webpack_require__(5105);Object.defineProperty(exports,"hasPropertyWithType",{enumerable:!0,get:function(){return property_with_type_1.hasPropertyWithType}}),Object.defineProperty(exports,"hasPropertyWithTypeMake",{enumerable:!0,get:function(){return property_with_type_1.hasPropertyWithTypeMake}});var text_2=__webpack_require__(3841);Object.defineProperty(exports,"hasText",{enumerable:!0,get:function(){return text_2.hasText}}),Object.defineProperty(exports,"hasTextMake",{enumerable:!0,get:function(){return text_2.hasTextMake}});var times_2=__webpack_require__(7768);Object.defineProperty(exports,"hasTextTimes",{enumerable:!0,get:function(){return times_2.hasTextTimes}}),Object.defineProperty(exports,"hasTextTimesMake",{enumerable:!0,get:function(){return times_2.hasTextTimesMake}});var array_1=__webpack_require__(1841);Object.defineProperty(exports,"isArrayMake",{enumerable:!0,get:function(){return array_1.isArrayMake}});var boolean_1=__webpack_require__(964);Object.defineProperty(exports,"isBoolean",{enumerable:!0,get:function(){return boolean_1.isBoolean}}),Object.defineProperty(exports,"isBooleanMake",{enumerable:!0,get:function(){return boolean_1.isBooleanMake}});var date_1=__webpack_require__(3298);Object.defineProperty(exports,"isDate",{enumerable:!0,get:function(){return date_1.isDate}}),Object.defineProperty(exports,"isDateMake",{enumerable:!0,get:function(){return date_1.isDateMake}});var time_1=__webpack_require__(4288);Object.defineProperty(exports,"isDateTime",{enumerable:!0,get:function(){return time_1.isDateTime}}),Object.defineProperty(exports,"isDateTimeMake",{enumerable:!0,get:function(){return time_1.isDateTimeMake}});var dbl_1=__webpack_require__(7646);Object.defineProperty(exports,"isDbl",{enumerable:!0,get:function(){return dbl_1.isDbl}}),Object.defineProperty(exports,"isDblMake",{enumerable:!0,get:function(){return dbl_1.isDblMake}});var float_1=__webpack_require__(5190);Object.defineProperty(exports,"isFloat",{enumerable:!0,get:function(){return float_1.isFloat}}),Object.defineProperty(exports,"isFloatMake",{enumerable:!0,get:function(){return float_1.isFloatMake}});var email_1=__webpack_require__(5308);Object.defineProperty(exports,"isEmail",{enumerable:!0,get:function(){return email_1.isEmail}}),Object.defineProperty(exports,"isEmailMake",{enumerable:!0,get:function(){return email_1.isEmailMake}});var empty_1=__webpack_require__(4897);Object.defineProperty(exports,"isEmpty",{enumerable:!0,get:function(){return empty_1.isEmpty}}),Object.defineProperty(exports,"isEmptyMake",{enumerable:!0,get:function(){return empty_1.isEmptyMake}});var equal_2=__webpack_require__(7364);Object.defineProperty(exports,"isEqual",{enumerable:!0,get:function(){return equal_2.isEqual}}),Object.defineProperty(exports,"isEqualMake",{enumerable:!0,get:function(){return equal_2.isEqualMake}});var gt_2=__webpack_require__(6041);Object.defineProperty(exports,"isGTMake",{enumerable:!0,get:function(){return gt_2.isGTMake}}),Object.defineProperty(exports,"isGT",{enumerable:!0,get:function(){return gt_2.isGT}});var gte_2=__webpack_require__(3994);Object.defineProperty(exports,"isGTEMake",{enumerable:!0,get:function(){return gte_2.isGTEMake}});var big_2=__webpack_require__(8442);Object.defineProperty(exports,"isBig",{enumerable:!0,get:function(){return big_2.isBig}}),Object.defineProperty(exports,"isBigMake",{enumerable:!0,get:function(){return big_2.isBigMake}});var big_int_1=__webpack_require__(5046);Object.defineProperty(exports,"isBigInt",{enumerable:!0,get:function(){return big_int_1.isBigInt}}),Object.defineProperty(exports,"isBigIntMake",{enumerable:!0,get:function(){return big_int_1.isBigIntMake}});var hex_color_code_1=__webpack_require__(6489);Object.defineProperty(exports,"isHexColorCode",{enumerable:!0,get:function(){return hex_color_code_1.isHexColorCode}}),Object.defineProperty(exports,"isHexColorCodeMake",{enumerable:!0,get:function(){return hex_color_code_1.isHexColorCodeMake}});var int_1=__webpack_require__(9001);Object.defineProperty(exports,"isInt",{enumerable:!0,get:function(){return int_1.isInt}}),Object.defineProperty(exports,"isIntMake",{enumerable:!0,get:function(){return int_1.isIntMake}});var addr_1=__webpack_require__(5979);Object.defineProperty(exports,"isIpv4Addr",{enumerable:!0,get:function(){return addr_1.isIpv4Addr}});var make_15=__webpack_require__(7232);Object.defineProperty(exports,"isIpv4AddrMake",{enumerable:!0,get:function(){return make_15.isIpv4AddrMake}});var make_16=__webpack_require__(2046);Object.defineProperty(exports,"isIpv6AddrMake",{enumerable:!0,get:function(){return make_16.isIpv6AddrMake}});var addr_2=__webpack_require__(6957);Object.defineProperty(exports,"isIpv6Addr",{enumerable:!0,get:function(){return addr_2.isIpv6Addr}});var length_1=__webpack_require__(5526);Object.defineProperty(exports,"isLength",{enumerable:!0,get:function(){return length_1.isLength}}),Object.defineProperty(exports,"isLengthMake",{enumerable:!0,get:function(){return length_1.isLengthMake}});var lt_2=__webpack_require__(3622);Object.defineProperty(exports,"isLT",{enumerable:!0,get:function(){return lt_2.isLT}}),Object.defineProperty(exports,"isLTMake",{enumerable:!0,get:function(){return lt_2.isLTMake}});var lte_2=__webpack_require__(5727);Object.defineProperty(exports,"isLTE",{enumerable:!0,get:function(){return lte_2.isLTE}}),Object.defineProperty(exports,"isLTEMake",{enumerable:!0,get:function(){return lte_2.isLTEMake}});var null_1=__webpack_require__(6483);Object.defineProperty(exports,"isNull",{enumerable:!0,get:function(){return null_1.isNull}}),Object.defineProperty(exports,"isNullMake",{enumerable:!0,get:function(){return null_1.isNullMake}});var port_1=__webpack_require__(105);Object.defineProperty(exports,"isPort",{enumerable:!0,get:function(){return port_1.isPort}}),Object.defineProperty(exports,"isPortMake",{enumerable:!0,get:function(){return port_1.isPortMake}});var port_2=__webpack_require__(7213);Object.defineProperty(exports,"isSystemPortMake",{enumerable:!0,get:function(){return port_2.isSystemPortMake}}),Object.defineProperty(exports,"isSystemPort",{enumerable:!0,get:function(){return port_2.isSystemPort}});var text_3=__webpack_require__(6105);Object.defineProperty(exports,"isTextMake",{enumerable:!0,get:function(){return text_3.isTextMake}});var time_2=__webpack_require__(731);Object.defineProperty(exports,"isTime",{enumerable:!0,get:function(){return time_2.isTime}}),Object.defineProperty(exports,"isTimeMake",{enumerable:!0,get:function(){return time_2.isTimeMake}});var undefined_1=__webpack_require__(5576);Object.defineProperty(exports,"isUndefined",{enumerable:!0,get:function(){return undefined_1.isUndefined}}),Object.defineProperty(exports,"isUndefinedMake",{enumerable:!0,get:function(){return undefined_1.isUndefinedMake}});var url_1=__webpack_require__(1113);Object.defineProperty(exports,"isUrl",{enumerable:!0,get:function(){return url_1.isUrl}}),Object.defineProperty(exports,"isUrlMake",{enumerable:!0,get:function(){return url_1.isUrlMake}});var uint_1=__webpack_require__(1562);Object.defineProperty(exports,"isUInt",{enumerable:!0,get:function(){return uint_1.isUInt}}),Object.defineProperty(exports,"isUIntMake",{enumerable:!0,get:function(){return uint_1.isUIntMake}});var float_2=__webpack_require__(6255);Object.defineProperty(exports,"toFloat",{enumerable:!0,get:function(){return float_2.toFloat}});var big_3=__webpack_require__(518);Object.defineProperty(exports,"toDblBig",{enumerable:!0,get:function(){return big_3.toDblBig}});var big_4=__webpack_require__(8301);Object.defineProperty(exports,"toIntBig",{enumerable:!0,get:function(){return big_4.toIntBig}});var number_1=__webpack_require__(4046);Object.defineProperty(exports,"toIntNumber",{enumerable:!0,get:function(){return number_1.toIntNumber}});
+// Patterns
+var pattern_1=__webpack_require__(8317);Object.defineProperty(exports,"Pattern",{enumerable:!0,get:function(){return pattern_1.Pattern}});var make_17=__webpack_require__(6377);Object.defineProperty(exports,"portMake",{enumerable:!0,get:function(){return make_17.portMake}});var make_18=__webpack_require__(2283);Object.defineProperty(exports,"systemPortMake",{enumerable:!0,get:function(){return make_18.systemPortMake}});
+// Rules
+var rule_1=__webpack_require__(521);Object.defineProperty(exports,"Rule",{enumerable:!0,get:function(){return rule_1.Rule}});var a_1=__webpack_require__(2137);Object.defineProperty(exports,"RuleA",{enumerable:!0,get:function(){return a_1.RuleA}});var be_1=__webpack_require__(6749);Object.defineProperty(exports,"RuleBe",{enumerable:!0,get:function(){return be_1.RuleBe}});var contains_1=__webpack_require__(7725);Object.defineProperty(exports,"RuleContains",{enumerable:!0,get:function(){return contains_1.RuleContains}});var have_1=__webpack_require__(2678);Object.defineProperty(exports,"RuleHave",{enumerable:!0,get:function(){return have_1.RuleHave}});var length_2=__webpack_require__(7576);Object.defineProperty(exports,"RuleLength",{enumerable:!0,get:function(){return length_2.RuleLength}});var match_2=__webpack_require__(515);Object.defineProperty(exports,"RuleMatch",{enumerable:!0,get:function(){return match_2.RuleMatch}});var must_1=__webpack_require__(7029);Object.defineProperty(exports,"RuleMust",{enumerable:!0,get:function(){return must_1.RuleMust}});var node_1=__webpack_require__(8248);Object.defineProperty(exports,"RuleNode",{enumerable:!0,get:function(){return node_1.RuleNode}});var type_2=__webpack_require__(8211);Object.defineProperty(exports,"RuleNodeType",{enumerable:!0,get:function(){return type_2.RuleNodeType}});var not_1=__webpack_require__(7419);Object.defineProperty(exports,"RuleNot",{enumerable:!0,get:function(){return not_1.RuleNot}});var or_1=__webpack_require__(29);Object.defineProperty(exports,"RuleOr",{enumerable:!0,get:function(){return or_1.RuleOr}});var rules_1=__webpack_require__(3756);Object.defineProperty(exports,"Rules",{enumerable:!0,get:function(){return rules_1.Rules}});var type_3=__webpack_require__(2528);Object.defineProperty(exports,"RuleType",{enumerable:!0,get:function(){return type_3.RuleType}});var value_1=__webpack_require__(5084);Object.defineProperty(exports,"arrayValue",{enumerable:!0,get:function(){return value_1.arrayValue}});var value_2=__webpack_require__(7962);Object.defineProperty(exports,"arrayNullValue",{enumerable:!0,get:function(){return value_2.arrayNullValue}});var value_3=__webpack_require__(1825);Object.defineProperty(exports,"booleanValue",{enumerable:!0,get:function(){return value_3.booleanValue}});var value_4=__webpack_require__(669);Object.defineProperty(exports,"booleanNullValue",{enumerable:!0,get:function(){return value_4.booleanNullValue}});var value_5=__webpack_require__(8376);Object.defineProperty(exports,"numberValue",{enumerable:!0,get:function(){return value_5.numberValue}});var value_6=__webpack_require__(8934);Object.defineProperty(exports,"numberNullValue",{enumerable:!0,get:function(){return value_6.numberNullValue}});var value_7=__webpack_require__(6984);Object.defineProperty(exports,"stringValue",{enumerable:!0,get:function(){return value_7.stringValue}});var value_8=__webpack_require__(9254);Object.defineProperty(exports,"stringNullValue",{enumerable:!0,get:function(){return value_8.stringNullValue}});var value_9=__webpack_require__(9501);Object.defineProperty(exports,"typeValue",{enumerable:!0,get:function(){return value_9.typeValue}});
+// Transforms
+var transform_1=__webpack_require__(667);Object.defineProperty(exports,"Transform",{enumerable:!0,get:function(){return transform_1.Transform}});var nb_1=__webpack_require__(7542);Object.defineProperty(exports,"TransformNB",{enumerable:!0,get:function(){return nb_1.TransformNB}});var transforms_1=__webpack_require__(5406);Object.defineProperty(exports,"Transforms",{enumerable:!0,get:function(){return transforms_1.Transforms}});var make_19=__webpack_require__(8583);Object.defineProperty(exports,"timeMake",{enumerable:!0,get:function(){return make_19.timeMake}});var make_20=__webpack_require__(8383);Object.defineProperty(exports,"urlMake",{enumerable:!0,get:function(){return make_20.urlMake}})},
+/***/3369(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.initialValue=void 0,exports.initialValue=function(initial){return void 0!==initial?initial:null}},
+/***/1167(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.intMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.intMake=
+/**
+ *
+ * @param fallback
+ * @param value
+ * @returns
+ *
+ * @category Maths
+ */
+function(fallback,value){const rules=new rules_1.Rules;rules.add().must.match.type.int();const strong=(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Int");return Object.assign(strong,{increment:()=>strong._data.add(1),decrement:()=>strong._data.add(-1),mul:amt=>strong._data.mul(amt),pow:exponent=>strong._data.pow(exponent),div:amt=>strong._data.div(amt),add:amt=>strong._data.add(amt),sub:amt=>strong._data.add(-1*amt)})}},
+/***/1841(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isArrayMake=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Factory to create isArray validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */exports.isArrayMake=function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_ARRAY",1/* CMP */,curr=>Array.isArray(curr),mods);return rule.add(node),caller}}},
+/***/5046(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isBigIntMake=exports.isBigInt=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether provided value is a valid bigint, and if so
+ * whether it's an integer.
+ * @param value		Number to check
+ * @returns
+ *
+ * @category Validators
+ */function isBigInt(target){return"bigint"==typeof target}exports.isBigInt=isBigInt,exports.isBigIntMake=
+/**
+ * Factory function to create isInteger validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_BIG_INT",1/* CMP */,value=>isBigInt(value),mods);return rule.add(node),caller}}},
+/***/8442(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.isBigMake=exports.isBig=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),node_1=__webpack_require__(8248),match_1=__webpack_require__(2369);
+/**
+ * Check if provided value is a valid Big.
+ *
+ * @param value		Number to check
+ * @returns
+ *
+ * @category Validators
+ */
+function isBig(target){return(0,match_1.typeMatch)(target,big_js_1.default)}exports.isBig=isBig,exports.isBigMake=
+/**
+ * Factory function to create isBig validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_BIG",1/* CMP */,value=>isBig(value),mods);return rule.add(node),caller}}},
+/***/964(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isBooleanMake=exports.isBoolean=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Determine if provided value is a boolean with strict true or
+ * false value. All non-booleans return false, regardless of truthyness.
+ * @param value
+ * @returns
+ *
+ * @category Validators
+ */function isBoolean(value){return!0===value||!1===value}exports.isBoolean=isBoolean,exports.isBooleanMake=
+/**
+ * Factory to create isBoolean validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_BOOLEAN",1/* CMP */,value=>isBoolean(value),mods);return rule.add(node),caller}}},
+/***/3298(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isDateMake=exports.isDate=void 0;const node_1=__webpack_require__(8248);
+// eslint-disable-next-line
+/**
+ * Check if provided value is a valid Date string. Accepts most ISO
+ * Date strings as valid.
+ * @param value
+ * @returns
+ *
+ * @category Validators
+ */
+function isDate(value){if("string"!=typeof value)return!1;const result=Date.parse(value);return!(isNaN(result)||value.match("T([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]")||value.match("T([01]?[0-9]|2[0-3]):[0-5][0-9]")||value.match("T([01]?[0-9]|2[0-3])"))}exports.isDate=isDate,exports.isDateMake=
+/**
+ * Factory function to create isDate validator function. Once created, the validator function can
+ * be invoked with a value.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_DATE",1/* CMP */,curr=>isDate(curr),mods);return rule.add(node),caller}}},
+/***/4288(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isDateTimeMake=exports.isDateTime=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param value
+ * @returns
+ *
+ * @category Date & Time Validators
+ */function isDateTime(value){if("string"!=typeof value)return!1;if(!value.trim())return!1;if(value.includes("T")&&!value.includes("GMT")){const pieces=value.split("T");if(2!==pieces.length)return!1;const date=pieces[0].split("-"),time=pieces[1].split(":");if(3!==date.length)return!1;if(time.length>=4)return!1}if(!value.includes("T")){const segments=value.split(/(\s+)/);if(3!==segments.length)return!1;const dateSeg=segments[0].split("."),emptySeg=segments[1].trim(),timeSeg=segments[2].split(":");if(3!==dateSeg.length)return!1;if(""!==emptySeg)return!1;if(timeSeg.length>=4)return!1}if(value.includes("GMT")){const section=value.split("GMT");if(section.length>=3)return!1;if(9!==section[0].toString().trim().split(/(\s+)/).length)return!1}return!0}exports.isDateTime=isDateTime,exports.isDateTimeMake=
+/**
+ * Factory to create isDatetTime validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_DATE_TIME",1/* CMP */,curr=>isDateTime(curr),mods);return rule.add(node),caller}}},
+/***/7646(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isDblMake=exports.isDbl=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether value is a valid Double.
+ *
+ * @category Validators
+ */function isDbl(value){return"number"==typeof value&&!isNaN(value)}exports.isDbl=isDbl,exports.isDblMake=
+/**
+ * Factory to create isDbl validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_DBL",1/* CMP */,value=>isDbl(value),mods);return rule.add(node),caller}}},
+/***/5308(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isEmailMake=exports.isEmail=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Determine if provided value is a validly formatted email address.
+ * @param value
+ * @returns
+ *
+ * @category Email Validators
+ */function isEmail(value){if("string"!=typeof value)return!1;if(!value.trim())return!1;const pieces=value.split("@");if(2!==pieces.length)return!1;const name=pieces[0],domain=pieces[1];return-1!==domain.indexOf(".")&&(!(domain.length>252)&&(!!name.trim()&&(!(name.length>64)&&!(name.length+domain.length+1>254))))}exports.isEmail=isEmail,exports.isEmailMake=
+/**
+ * Factory to create isEmail validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_EMAIL",1/* CMP */,curr=>isEmail(curr),mods);return rule.add(node),caller}}},
+/***/4897(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isEmptyMake=exports.isEmpty=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Determine if value is an empty array or empty string. Arrays & strings with
+ * length > 0 and all other types return false.
+ * @param value		Array or string to validate.
+ * @returns			true	-	value is an empty string or empty array.
+ *					false	-	value is either not a string, not an array,
+ *								or not not empty.
+ *
+ * @category Validators
+ */function isEmpty(value){return!(!Array.isArray(value)&&"string"!=typeof value)&&("string"==typeof value?""===value:0===value.length)}exports.isEmpty=isEmpty,exports.isEmptyMake=
+/**
+ * Factory to create isEmpty validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_EMPTY",1/* CMP */,curr=>isEmpty(curr),mods);return rule.add(node),caller}}},
+/***/7364(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isEqualMake=exports.isEqual=void 0;const node_1=__webpack_require__(8248);
+/**
+ *
+ * @param curr
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */function isEqual(value,target){if(void 0===target||void 0===value)return!1;if(Array.isArray(value)&&Array.isArray(target)){if(value.length!==target.length)return!1;
+// Naive check for equality. Will produce false negative
+// if the arrays have the same contents in a different order.
+for(let i=0;i<value.length;i++)if(value[i]!==target[i])return!1;return!0}return value===target}exports.isEqual=isEqual,exports.isEqualMake=
+/**
+ * Factory to create isEqual validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_EQ",1/* CMP */,value=>isEqual(value,target),mods);return rule.add(node),caller}}},
+/***/5190(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isFloatMake=exports.isFloat=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether value is a valid Double.
+ *
+ * @category Validators
+ */function isFloat(value){return"number"==typeof value&&!isNaN(value)}exports.isFloat=isFloat,exports.isFloatMake=
+/**
+ * Factory to create isFloat validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_FLOAT",1/* CMP */,value=>isFloat(value),mods);return rule.add(node),caller}}},
+/***/6041(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isGTMake=exports.isGT=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check if target number is strictly greater than value.
+ * @param value
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */function isGT(value,target){return"number"==typeof value&&"number"==typeof target&&value>target}exports.isGT=isGT,exports.isGTMake=
+/**
+ * Factory function to create an isGT validation function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_GT",1/* CMP */,curr=>isGT(curr,target),mods);return rule.add(node),caller}}},
+/***/3994(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isGTEMake=exports.isGTE=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Validate whether target number is greater than or equal to current value.
+ * @param value
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */function isGTE(value,target){return"number"==typeof value&&"number"==typeof target&&value>=target}exports.isGTE=isGTE,exports.isGTEMake=
+/**
+ * Factory function to create a greaterThanorEqual validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_GTE",1/* CMP */,curr=>isGTE(curr,target),mods);return rule.add(node),caller}}},
+/***/6489(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isHexColorCodeMake=exports.isHexColorFn=exports.isHexColorCodeStr=exports.isHexColorCode=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Accepts a number value and returns whether value is
+ * a valid hex color code value.
+ * @param value
+ * @returns
+ *
+ * @category Validators
+ */
+function isHexColorCode(value){return!isNaN(value)&&(value>=0&&value<=16777215)}
+/**
+ * Accepts a string value and returns whether value is
+ * a valid hex color code string.
+ * @param value
+ * @returns
+ *
+ * @category Validators
+ */
+function isHexColorCodeStr(value){if("string"!=typeof value)return!1;
+// Necessary trim to guarantee the # character check
+// succeeds if present.
+const trimmed=value.trim().toLowerCase();if(!trimmed)return!1;if(value.length>=9)return!1;
+// Remove first character when it's #, usually do to string values like #FF0000.
+const cleaned="#"===trimmed[0]?trimmed.substring(1):trimmed;let hexStr;return hexStr=cleaned.startsWith("0x")?cleaned:`0x${cleaned}`,isHexColorCode(Number(hexStr))}
+/**
+ * Accepts a string or number value and returns whether provided
+ * value is a valid hex color code.
+ * @param curr
+ * @returns
+ *
+ * @category Validators
+ */
+function isHexColorFn(curr){return"string"==typeof curr?isHexColorCodeStr(curr):"number"==typeof curr&&isHexColorCode(curr)}exports.isHexColorCode=isHexColorCode,exports.isHexColorCodeStr=isHexColorCodeStr,exports.isHexColorFn=isHexColorFn,exports.isHexColorCodeMake=
+/**
+ * Factory to create isHexColorCode validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_HEX_COLOR_CODE",1/* CMP */,curr=>isHexColorFn(curr),mods);return rule.add(node),caller}}},
+/***/9001(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIntMake=exports.isInt=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether provided value is a valid number, and if so
+ * whether it's an integer.
+ * @param value		Number to check
+ * @returns
+ *
+ * @category Validators
+ */function isInt(target){return"number"==typeof target&&(!isNaN(target)&&Math.floor(target)===target)}exports.isInt=isInt,exports.isIntMake=
+/**
+ * Factory function to create isInteger validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_INT",1/* CMP */,value=>isInt(value),mods);return rule.add(node),caller}}},
+/***/5979(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIpv4Addr=void 0,exports.isIpv4Addr=function(addr){
+//Always a string.
+if("string"!=typeof addr)return!1;
+//Is valid if it has whitespace which can be trimmed with .trim()
+//Invalid if it contains any other whitespace which cannot be trimmed with .trim()
+const pieces=addr.trim().split(".");
+//Always has exactly four quads, and 3 periods.
+if(4!==pieces.length)return!1;const firstQuad=parseInt(pieces[0]),secondQuad=parseInt(pieces[1]),thirdQuad=parseInt(pieces[2]),fourthQuad=parseInt(pieces[3]);
+//The first quad must be an integer between 1  and 255  (cannot be 0)
+//All other quads must be an integer between 0 and 255
+//Integers cannot have leading 0s
+return!(firstQuad<=0||firstQuad>255)&&!(secondQuad<0||secondQuad>255||thirdQuad<0||thirdQuad>255||fourthQuad<0||firstQuad>255)}},
+/***/7232(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIpv4AddrMake=void 0;const addr_1=__webpack_require__(5979),node_1=__webpack_require__(8248);exports.isIpv4AddrMake=
+/**
+ * Factory to create isIpv4Addr validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_IPV4_ADDR",1/* CMP */,curr=>(0,addr_1.isIpv4Addr)(curr),mods);return rule.add(node),caller}}},
+/***/6957(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isValidSegment=exports.isIpv6Addr=void 0,exports.isIpv6Addr=function(current){if("string"!=typeof current)return!1;const trimmed=current.trim();if(!trimmed)return!1;const sections=trimmed.split(":"),doubleColonSegment=trimmed.split("::");if(!sections.length)return!1;if(sections.length>8)return!1;const validatedSegment=sections.every(exports.isValidSegment);return!(8===sections.length&&!validatedSegment&&current.includes("::"))&&!(sections.length<=7&&!validatedSegment&&doubleColonSegment.length>=3)};exports.isValidSegment=segment=>{if("string"!=typeof segment)return!1;const hex=parseInt(segment,16);return!isNaN(hex)&&(hex>=0&&hex<=65535)}},
+/***/2046(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIpv6AddrMake=void 0;const addr_1=__webpack_require__(6957),node_1=__webpack_require__(8248);exports.isIpv6AddrMake=
+/**
+ * Factory to create isIpv6Addr validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_IPV6_ADDR",1/* CMP */,curr=>(0,addr_1.isIpv6Addr)(curr),mods);return rule.add(node),caller}}},
+/***/5526(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isLengthMake=exports.isLength=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether current value is a string or array matching target length.
+ * @param value
+ * @param expectedLength
+ * @returns
+ *
+ * @category Validators
+ */function isLength(value,expectedLength){return!(!Array.isArray(value)&&"number"!=typeof value&&"string"!=typeof value)&&("string"==typeof value?value.length===expectedLength:"number"==typeof value?value===expectedLength:value.length===expectedLength)}exports.isLength=isLength,exports.isLengthMake=
+/**
+ * Factory to create isLength validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return expectedLength=>{const node=new node_1.RuleNode("IS_LENGTH",1/* CMP */,curr=>isLength(curr,expectedLength),mods);return rule.add(node),caller}}},
+/***/3622(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isLTMake=exports.isLT=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether target number is strictly less than value.
+ * @param value
+ * @param target
+ * @returns
+ *
+ * @category Validators
+ */function isLT(value,target){return"number"==typeof value&&("number"==typeof target&&value<target)}exports.isLT=isLT,exports.isLTMake=
+/**
+ * Factory to create isLT validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_LT",1/* CMP */,curr=>isLT(curr,target),mods);return rule.add(node),caller}}},
+/***/5727(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isLTEMake=exports.isLTE=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether target number is less than or equal to current value.
+ * @param value		Strong Type's current value.
+ * @param target	Target number to compare.
+ * @returns
+ *
+ * @category Validators
+ */function isLTE(value,target){return"number"==typeof value&&"number"==typeof target&&value<=target}exports.isLTE=isLTE,exports.isLTEMake=
+/**
+ * Factory to create a isLTE validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_LT_OR_EQT",1/* CMP */,curr=>isLTE(curr,target),mods);return rule.add(node),caller}}},
+/***/6483(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isNullMake=exports.isNull=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Determine if value is strictly null.
+ * @param value
+ * @returns
+ *
+ * @category Validators
+ */exports.isNull=function(value){return null===value},exports.isNullMake=
+/**
+ * Factory to create isNull validator function used in rule chains.
+ * @param caller		Rule node calling this function.
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_NULL",1/* CMP */,curr=>null===curr,mods);return rule.add(node),caller}}},
+/***/105(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isPortMake=exports.isPort=void 0;const node_1=__webpack_require__(8248),int_1=__webpack_require__(9001);
+/**
+ * Check if provided value is a valid port number. Does not differentiate
+ * between reserved system ports (root only)and non-reserved ports, only that
+ * the port is in the valid port range.
+ * @param value
+ * @returns
+ *
+ * @category System Info Validators
+ */
+function isPort(value){return"number"==typeof value&&(!(value<0)&&(!(value>65353)&&(0,int_1.isInt)(value)))}exports.isPort=isPort,exports.isPortMake=
+//Must be an unsigned int (whole number).
+//Must be from 0 to 65353 .
+//port > 65353 is invalid.
+//port < 0 is invalid.
+/**
+ * Factory to create isPort validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_PORT",1/* CMP */,curr=>isPort(curr),mods);return rule.add(node),caller}}},
+/***/6828(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.isSafeMoney=void 0,exports.isSafeMoney=function(o){return null!=o&&"SafeMoney"===o.typeId}},
+/***/7213(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isSystemPortMake=exports.isSystemPort=void 0;const node_1=__webpack_require__(8248),port_1=__webpack_require__(105);
+/**
+ * Check if provided value is a valid port system port number in the
+ * range of 1 - 1024 which requires root/admin access to use.
+ * @param value
+ * @returns
+ *
+ * @category System Info Validators
+ */
+function isSystemPort(value){return!!(0,port_1.isPort)(value)&&value<1024}exports.isSystemPort=isSystemPort,exports.isSystemPortMake=
+/**
+ * Factory to create isSystemPort validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_SYS_PORT",1/* CMP */,curr=>isSystemPort(curr),mods);return rule.add(node),caller}}},
+/***/6105(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isTextMake=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Factory to create isString validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */exports.isTextMake=function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_STR",1/* CMP */,value=>"string"==typeof value,mods);return rule.add(node),caller}}},
+/***/731(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isTimeMake=exports.isTime=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether `value` is a valid time string.
+ * @param value
+ * @returns
+ *
+ * @category Date & Time Validators
+ */
+function isTime(value){return"string"==typeof value&&!value.match("^([12]d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]d|3[01]))T([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")&&!value.match("^([12]d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]d|3[01]))$")&&("string"!=typeof value||!(!value.match("^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")&&!value.match("^([01]?[0-9]|2[0-3]):[0-5][0-9]$")))}exports.isTime=isTime,exports.isTimeMake=
+/**
+ * Factory to create isTime validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Date & Time Validators
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_TIME",1/* CMP */,curr=>isTime(curr),mods);return rule.add(node),caller}}},
+/***/1562(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isUIntMake=exports.isUInt=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check whether provided value is a valid number, and if so
+ * whether it's an unsigned integer.
+ * @param value		Number to check
+ * @returns
+ *
+ * @category Validators
+ */function isUInt(value){return"number"==typeof value&&(!isNaN(value)&&(!(value<0)&&Math.floor(value)===value))}exports.isUInt=isUInt,exports.isUIntMake=
+/**
+ * Factory function to create isInteger validator function.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_U_INT",1/* CMP */,value=>isUInt(value),mods);return rule.add(node),caller}}},
+/***/5576(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isUndefinedMake=exports.isUndefined=void 0;const node_1=__webpack_require__(8248);
+/**
+ * Check if provided value is undefined.
+ * @param value
+ * @returns
+ *
+ * @category Validators
+ */function isUndefined(value){return void 0===value}exports.isUndefined=isUndefined,exports.isUndefinedMake=
+/**
+ * Factory to create isUndefined validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_UNDEFINED",1/* CMP */,curr=>isUndefined(curr),mods);return rule.add(node),caller}}},
+/***/1113(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isUrlMake=exports.isUrl=void 0;const node_1=__webpack_require__(8248),url_1=__webpack_require__(8835);
+/**
+ * Check whether value is a valid URL.
+ *
+ * @category Validators
+ */
+function isUrl(value){if("string"!=typeof value)return!1;const pieces=value.split("http://"),segment=value.split("https://");if(""===pieces[1]||""===segment[1])return!1;let result=!1;try{new url_1.URL(value);result=!0}catch(e){result=!1}return result}exports.isUrl=isUrl,exports.isUrlMake=
+/**
+ * Factory to create isUrl validator function used in rule chains.
+ * @param caller
+ * @param rule
+ * @param mods
+ * @returns
+ *
+ * @category Validator Factory Functions
+ */
+function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_URL",1/* CMP */,curr=>isUrl(curr),mods);return rule.add(node),caller}}},
+/***/5753(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.StrongMap=void 0;const jsonifier_1=__webpack_require__(4909),parser_1=__webpack_require__(6267);exports.StrongMap=
+/**
+ * Map data structure for Strong Types. Supports recursive parsing of
+ * JSON objects into the map, with property type matching and conversion
+ * from Strong Map to json object.
+ *
+ * @category Strong Map
+ */
+class{constructor(){this.typeId="StrongMap",this.baseType="StrongMap"}parse(data){if(!data)return;(new parser_1.MapParser).parse(this,data)}jsonify(){return(new jsonifier_1.MapJsonifier).jsonify(this)}}},
+/***/4909(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.MapJsonifier=void 0;const map_1=__webpack_require__(5753);
+/**
+ * @category Strong Map
+ */exports.MapJsonifier=class{jsonify(map){if(!map)throw Error("Bad MapJsonifier.jsonify attempt - map arg missing.");return this.jsonifyMap(map)}jsonifyMap(map){var _a;const result={},keys=Object.keys(map);for(const keyName of keys){const child=map[keyName];void 0!==child&&(null===child?result[keyName]=null:child instanceof map_1.StrongMap?result[keyName]=this.jsonifyMap(child):"StrongType"===child.baseType||"object"!=typeof child||Array.isArray(child)||null!=(null===(_a=child)||void 0===_a?void 0:_a.nodeType)?result[keyName]=this.jsonifyKey(child):result[keyName]=this.jsonifyMap(child))}return result}jsonifyKey(key){if(void 0===key)return;if(null===key)return null;const assumeKeyIsStrongType=key;return"StrongType"===(null==assumeKeyIsStrongType?void 0:assumeKeyIsStrongType.baseType)?assumeKeyIsStrongType():key}}},
+/***/6267(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.MapParser=void 0;const map_1=__webpack_require__(5753),state_1=__webpack_require__(3269);exports.MapParser=
+/**
+ * Recursively parse provided object properties.
+ *
+ * @category Strong Map
+ */
+class{parse(map,data,options){if(!map)return!1;if(!data)return!1;const parseState=new state_1.MapParserState(options);return this.parseMap(map,data,parseState)}parseStrongKey(key,value,_parseState){if(!key||void 0===value)return;if("StrongType"!==key.baseType)return;const strongValue=value;
+// When value is also a StrongType invoke it to get its value. Otherwise set
+// the strong key with value.
+null!=strongValue&&"StrongType"===strongValue.baseType?key(strongValue()):key(value)}parseKey(map,keyName,value,_parseState){if(!map)return!1;if(void 0===value)return!1;if("string"!=typeof keyName||!keyName)return!1;if(null===value)return map[keyName]=null,!0;let result;const strongValue=value;return result=strongValue.hasOwnProperty("typeId")&&"StrongType"===strongValue.baseType?strongValue():value,typeof map[keyName]==typeof result&&(map[keyName]=result,!0)}
+/**
+     * Recursively parse map and children.
+     * @param map			Map to match properties against and store parsed values.
+     * @param json			Object to parse into map.
+     * @param parseState	Internal state for current parse.
+     * @returns				Boolean indicating success or failure.
+     *						true	- 	Map parse successful.
+     *						false	-	Map parse not successful.
+     */parseMap(map,data,parseState){var _a;if(!map)return!1;if(void 0===data||data==={})return!1;const keys=Object.keys(map);for(const keyName of keys){const child=map[keyName],keyValue=data[keyName];
+// Skip built-in properties.
+map.hasOwnProperty(keyName)&&(
+// Child is also a StrongMap. Parse it recursively.
+child instanceof map_1.StrongMap?this.parseMap(child,keyValue,parseState):"StrongType"===(null===(_a=child)||void 0===_a?void 0:_a.baseType)?
+// Child is a StrongType.
+this.parseStrongKey(child,keyValue,parseState):"object"!=typeof child&&
+// Child is not a StrongType and not an object.
+this.parseKey(map,keyName,keyValue,parseState))}return!0}}},
+/***/3269(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.MapParserState=void 0;exports.MapParserState=
+/**
+ * Internal state used while parsing.
+ *
+ * @category Strong Map
+ */
+class{constructor(_options){
+// empty constructor
+}}},
+/***/8934(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.numberNullValue=void 0;const value_1=__webpack_require__(9501);
+/**
+ * Check if `value` is a valid number or null and return if true. Otherwise
+ * returns `fallback`.
+ * @param value
+ * @param fallback
+ * @returns
+ *
+ * @category Numbers
+ */exports.numberNullValue=function(value,fallback){return(0,value_1.typeValue)("number",value,fallback)}},
+/***/8376(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.numberValue=void 0;const value_1=__webpack_require__(9501);
+/**
+ * Test and return value if it's number, otherwise return fallback.
+ * Guarantees number return type without additional checks.
+ * @param value
+ * @param fallback
+ * @returns
+ *
+ * @category Numbers
+ */exports.numberValue=function(value,fallback){return(0,value_1.typeValue)("number",value,fallback)}},
+/***/3758(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.osSet=void 0,
+/**
+ * @category System Info
+ */
+exports.osSet=new Set(["android","darwin","linux","windows","all","none"])},
+/***/8144(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.osValid=void 0;const set_1=__webpack_require__(3758);
+/**
+ * Check whether target key identifies a supported OS.
+ * @param value
+ * @returns
+ *
+ * @category System Info
+ */exports.osValid=function(key){return!!key&&set_1.osSet.has(key)}},
+/***/8317(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Pattern=void 0;const hex_color_code_1=__webpack_require__(6489);
+/**
+ * @category Rules
+ */exports.Pattern=class{constructor(rule,mods){this.hexColor=(0,hex_color_code_1.isHexColorCodeMake)(this,rule,mods)}}},
+/***/6377(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.portMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.portMake=
+/**
+ *
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category System Info
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.int(),rules.add().must.be.lessThanOrEqual(65535),rules.add().must.be.greaterThanOrEqual(1),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Port")}},
+/***/8862(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Range=void 0;const map_1=__webpack_require__(5753),make_1=__webpack_require__(5582);
+/**
+ * General numeric range with min and max value.
+ *
+ * @category Maths
+ */
+class Range extends map_1.StrongMap{constructor(defaultMin,defaultMax){super(),this.min=(0,make_1.floatMake)("number"==typeof defaultMin?defaultMin:0),this.max=(0,make_1.floatMake)("number"==typeof defaultMax?defaultMax:0),this.typeId="Range"}
+/**
+     * Check if provided value exists between min and max range values (inclusive).
+     * @param value
+     * @returns
+     */in(value,exclusive){return"number"==typeof value&&(
+// Value must be strict greater than range min and strictly less than the
+// range max in exclusive mode.
+!0===exclusive?value>this.min()&&value<this.max():value>=this.min()&&value<=this.max())}
+/**
+     * Reset min and max to initial values.
+     */reset(){this.max.reset(),this.min.reset()}}exports.Range=Range},
+/***/521(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Rule=void 0;exports.Rule=
+/**
+ * Single rule applied to a node. Can be modified by other rules, matches,
+ * specifiers, and flags such as invert.
+ *
+ * @category Rules
+ */
+class{constructor(){this.nodes=[]}add(node){1/* CMP */===node.type&&this.nodes.push(node)}run(value){if(!this.nodes.length)return!1;let trueCount=0;for(const node of this.nodes){node.execute(value)&&trueCount++}
+// Require at least comparison in set of
+// OR operators to be true.
+return trueCount>0}reset(){this.nodes.length=0}}},
+/***/2137(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleA=void 0;exports.RuleA=
+/**
+ * @category Rules
+ */
+class{}},
+/***/6749(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleBe=void 0;const date_1=__webpack_require__(3298),time_1=__webpack_require__(4288),email_1=__webpack_require__(5308),empty_1=__webpack_require__(4897),equal_1=__webpack_require__(7364),gt_1=__webpack_require__(6041),gte_1=__webpack_require__(3994),hex_color_code_1=__webpack_require__(6489),lt_1=__webpack_require__(3622),lte_1=__webpack_require__(5727),null_1=__webpack_require__(6483),port_1=__webpack_require__(105),port_2=__webpack_require__(7213),time_2=__webpack_require__(731),undefined_1=__webpack_require__(5576),url_1=__webpack_require__(1113),make_1=__webpack_require__(7232),make_2=__webpack_require__(2046);exports.RuleBe=
+/**
+ * Rule chain matcher node with equality and type validation operations
+ *
+ * @category Rules
+ */
+class{constructor(rule,mods){this.greaterThan=(0,gt_1.isGTMake)(this,rule,mods),this.greaterThanOrEqual=(0,gte_1.isGTEMake)(this,rule,mods),this.lessThan=(0,lt_1.isLTMake)(this,rule,mods),this.lessThanOrEqual=(0,lte_1.isLTEMake)(this,rule,mods),this.equalTo=(0,equal_1.isEqualMake)(this,rule,mods),this.undefined=(0,undefined_1.isUndefinedMake)(this,rule,mods),this.null=(0,null_1.isNullMake)(this,rule,mods),this.empty=(0,empty_1.isEmptyMake)(this,rule,mods),this.date=(0,date_1.isDateMake)(this,rule,mods),this.time=(0,time_2.isTimeMake)(this,rule,mods),this.hexColorCode=(0,hex_color_code_1.isHexColorCodeMake)(this,rule,mods),this.email=(0,email_1.isEmailMake)(this,rule,mods),this.url=(0,url_1.isUrlMake)(this,rule,mods),this.dateTime=(0,time_1.isDateTimeMake)(this,rule,mods),this.portNumber=(0,port_1.isPortMake)(this,rule,mods),this.systemPortNumber=(0,port_2.isSystemPortMake)(this,rule,mods),this.ipv4Addr=(0,make_1.isIpv4AddrMake)(this,rule,mods),this.ipv6Addr=(0,make_2.isIpv6AddrMake)(this,rule,mods)}}},
+/***/7725(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleContains=void 0;const char_1=__webpack_require__(5678),times_1=__webpack_require__(3387),text_1=__webpack_require__(3841),times_2=__webpack_require__(7768);exports.RuleContains=
+/**
+ * @category Rules
+ */
+class{constructor(rule,mods){this.text=(0,text_1.hasTextMake)(this,rule,mods),this.textTimes=(0,times_2.hasTextTimesMake)(this,rule,mods),this.char=(0,char_1.hasCharMake)(this,rule,mods),this.charTimes=(0,times_1.hasCharTimesMake)(this,rule,mods)}}},
+/***/2678(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleHave=void 0;const property_1=__webpack_require__(7199),text_1=__webpack_require__(3841),times_1=__webpack_require__(7768),length_1=__webpack_require__(7576);exports.RuleHave=
+/**
+ * @category Rules
+ */
+class{constructor(rule,mods){this.length=new length_1.RuleLength(rule,mods),this.property=(0,property_1.hasPropertyMake)(this,rule,mods),this.text=(0,text_1.hasTextMake)(this,rule,mods),this.textTimes=(0,times_1.hasTextTimesMake)(this,rule,mods)}}},
+/***/7576(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleLength=void 0;const equal_1=__webpack_require__(2477),gt_1=__webpack_require__(5078),gte_1=__webpack_require__(2751),lt_1=__webpack_require__(5193),lte_1=__webpack_require__(8042);exports.RuleLength=
+/**
+ * @category Rules
+ */
+class{constructor(rule,mods){this.equalTo=(0,equal_1.hasLengthEqualMake)(this,rule,mods),this.greaterThan=(0,gt_1.hasLengthGTMake)(this,rule,mods),this.greaterThanOrEqualTo=(0,gte_1.hasLengthGTEMake)(this,rule,mods),this.lessThan=(0,lt_1.hasLengthLTMake)(this,rule,mods),this.lessThanOrEqualTo=(0,lte_1.hasLengthLTEMake)(this,rule,mods)}}},
+/***/515(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleMatch=void 0;const pattern_1=__webpack_require__(8317),or_1=__webpack_require__(29),type_1=__webpack_require__(2528);exports.RuleMatch=
+/**
+ * Source must match the comparator immediately following a match.
+ *
+ * @category Rules
+ */
+class{constructor(rule,parentMods){const mods={invert:parentMods.invert,target:parentMods.target};this.or=new or_1.RuleOr(rule,mods),this.type=new type_1.RuleType(rule,mods),this.pattern=new pattern_1.Pattern(rule,mods)}}},
+/***/7029(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleMust=void 0;const equal_1=__webpack_require__(7364),rule_1=__webpack_require__(521),be_1=__webpack_require__(6749),contains_1=__webpack_require__(7725),have_1=__webpack_require__(2678),match_1=__webpack_require__(515),not_1=__webpack_require__(7419);exports.RuleMust=
+/**
+ * Begins a new statement within a rule.
+ *
+ * @category Rules
+ */
+class{constructor(rules,parentRule){const rule=parentRule||new rule_1.Rule;parentRule||rules.push(rule);
+// Each must begins a new rule and resets all preceding mods.
+const mods={invert:!1,target:"value"};this.be=new be_1.RuleBe(rule,mods),this.have=new have_1.RuleHave(rule,mods),this.not=new not_1.RuleNot(rule,mods),this.equal=(0,equal_1.isEqualMake)(this,rule,mods),this.match=new match_1.RuleMatch(rule,mods),this.contain=new contains_1.RuleContains(rule,mods)}}},
+/***/8248(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleNode=void 0;exports.RuleNode=
+/**
+ * @category Rules
+ */
+class{constructor(id,type,fn,mods){if(this.id=id,"function"!=typeof fn)throw new Error("Bad rule init - fn arg is not a function.");this.type=type,this.children=[],this.fn=fn,this.target=mods.target,this.invertResult=!0===mods.invert}execute(value){const result=this.fn(value);return this.invertResult?!result:result}}},
+/***/8211(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleNodeType=void 0,function(RuleNodeType){RuleNodeType[RuleNodeType.OP=0]="OP",RuleNodeType[RuleNodeType.CMP=1]="CMP"}(exports.RuleNodeType||(exports.RuleNodeType={}))},
+/***/7419(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleNot=void 0;const equal_1=__webpack_require__(7364),be_1=__webpack_require__(6749),contains_1=__webpack_require__(7725);exports.RuleNot=
+/**
+ * Inverts the operation immediately following it.
+ *
+ * @category Rules
+ */
+class{constructor(rule,parentMods){const mods={invert:!parentMods.invert,target:parentMods.target};this.be=new be_1.RuleBe(rule,mods),this.contain=new contains_1.RuleContains(rule,mods),this.equalTo=(0,equal_1.isEqualMake)(this,rule,mods)}}},
+/***/29(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleOr=void 0;const type_1=__webpack_require__(2528);
+/**
+ * Rule chain operator which requires either the proceeding or following
+ * operation node return true.
+ *
+ * @category Rules
+ */exports.RuleOr=class{constructor(rule,parentMods){this.type=new type_1.RuleType(rule,parentMods)}}},
+/***/2528(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleType=void 0;const array_1=__webpack_require__(1841),big_1=__webpack_require__(8442),big_int_1=__webpack_require__(5046),boolean_1=__webpack_require__(964),dbl_1=__webpack_require__(7646),float_1=__webpack_require__(5190),int_1=__webpack_require__(9001),null_1=__webpack_require__(6483),text_1=__webpack_require__(6105),uint_1=__webpack_require__(1562);exports.RuleType=
+/**
+ * @category Rules
+ */
+class{constructor(rule,mods){this.array=(0,array_1.isArrayMake)(this,rule,mods),this.big=(0,big_1.isBigMake)(this,rule,mods),this.bigInt=(0,big_int_1.isBigIntMake)(this,rule,mods),this.boolean=(0,boolean_1.isBooleanMake)(this,rule,mods),this.dbl=(0,dbl_1.isDblMake)(this,rule,mods),this.float=(0,float_1.isFloatMake)(this,rule,mods),this.int=(0,int_1.isIntMake)(this,rule,mods),this.null=(0,null_1.isNullMake)(this,rule,mods),this.string=(0,text_1.isTextMake)(this,rule,mods),this.text=(0,text_1.isTextMake)(this,rule,mods),this.uint=(0,uint_1.isUIntMake)(this,rule,mods)}}},
+/***/3756(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Rules=void 0;const must_1=__webpack_require__(7029);
+/**
+ * Container for rules applied to a node.
+ *
+ * @category Rules
+ */exports.Rules=class{constructor(){this.rules=[]}add(){return{must:new must_1.RuleMust(this.rules,null)}}run(value){if(!this.rules||!this.rules.length)return!0;for(const rule of this.rules)if(!rule.run(value))return!1;return!0}}},
+/***/6834(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.safeMoneyMake=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),big_1=__webpack_require__(9046),BIG_ZERO=(0,big_js_1.default)(0),BIG_ONE=(0,big_js_1.default)(1);exports.safeMoneyMake=
+/**
+ *
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Maths
+ */
+function(fallback,initial){const rules=new rules_1.Rules;rules.add().must.match.type.big();const bigFallback=(0,big_1.toSafeMoneyBig)(fallback),bigInitial=(0,big_1.toSafeMoneyBig)(initial),strong=(0,type_1.createType)(null!=bigFallback?bigFallback:BIG_ZERO,bigInitial,rules,"SafeMoney");return Object.assign(strong,{increment:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.add(BIG_ONE);return strong._data.set(result)?result:null},decrement:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.minus(BIG_ONE);return strong._data.set(result)?result:null},mul:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toSafeMoneyBig)(input);if(null===value||null===curr)return null;const result=curr.mul(value);return strong._data.set(result)?result:null},pow:exponent=>{const curr=strong._data.getNull(),value=(0,big_1.toSafeMoneyBig)(exponent);if(null===curr||null===value)return null;const result=curr.pow(value.toNumber());return strong._data.set(result)?result:null},div:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toSafeMoneyBig)(input);if(null===curr||null===value)return null;if(value===BIG_ZERO||curr===BIG_ZERO)return null;const result=curr.div(value);return strong._data.set(result)?result:null},add:input=>{const value=(0,big_1.toSafeMoneyBig)(input),curr=strong.getNull();if(null===value||null===curr)return null;const result=curr.add(value);return strong._data.set(result)?result:null},sub:input=>{const value=(0,big_1.toSafeMoneyBig)(input),curr=strong.getNull();if(null===value||null===curr)return null;const result=curr.minus(value);return strong._data.set(result)?result:null},round:_input=>null,typeId:"SafeMoney",baseType:"StrongType"})}},
+/***/6047(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.semVerMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.semVerMake=
+/**
+ * Create new strong hex color code object.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Strings
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.contain.charTimes(".",3),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"SemVer")}},
+/***/8954(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Size=void 0;const map_1=__webpack_require__(5753),make_1=__webpack_require__(5582);
+/**
+ * Size object containing width & height properties as strong doubles.
+ *
+ * @category Maths
+ */
+class Size extends map_1.StrongMap{constructor(defaultWidth,defaultHeight){super(),this.width=(0,make_1.floatMake)("number"==typeof defaultWidth?defaultWidth:0),this.height=(0,make_1.floatMake)("number"==typeof defaultHeight?defaultHeight:0),this.typeId="Size",this.baseType="StrongMap"}}exports.Size=Size},
+/***/9254(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.stringNullValue=void 0;const value_1=__webpack_require__(9501);
+/**
+ * Check if `value` is a valid string and return it if so, otherwise
+ * returns `fallback`.
+ * @param value
+ * @param fallback
+ * @returns
+ *
+ * @category Strings
+ */exports.stringNullValue=function(value,fallback){return(0,value_1.typeValue)("string",value,fallback)}},
+/***/6984(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.stringValue=void 0;const value_1=__webpack_require__(9501);
+/**
+ * Check if `value` is a valid string and return it if so, otherwise
+ * returns `fallback`.
+ * @param value
+ * @param fallback
+ * @returns
+ *
+ * @category Strings
+ */exports.stringValue=function(value,fallback){return(0,value_1.typeValue)("string",value,fallback)}},
+/***/2503(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.StrongData=void 0;const transforms_1=__webpack_require__(5406);
+/**
+ * @category Core
+ */exports.StrongData=class{constructor(fallbackDefault,value,rules,typeId){this.value=null,this.fallbackDefault=fallbackDefault,this.transforms=new transforms_1.Transforms(fallbackDefault),this.rules=rules,this.typeId=typeId,this.baseType="StrongData",this.initial=value,this.set(value)}
+/**
+     * Check if value passes this instance's rule validation.
+     * @param value
+     * @returns
+     */check(value){return void 0!==value&&this.rules.run(value)}get(fallback){return null===this.value?null==fallback?this.fallbackDefault:fallback:this.value}set(value){if(void 0===value)return!1;if(null===value)return this.value=null,!0;const transformed=value;return!!this.check(value)&&(this.value=transformed,!0)}getNull(){return void 0===this.value||null===this.value?null:this.value}reset(){this.value=this.initial}
+/**
+     * Divide current `value` by `divisor`. Result is zero when
+     * `divisor` or `value` are zero.
+     * @param divisor
+     * @returns
+     */div(divisor){const curr=this.getNull();if("number"!=typeof divisor||"number"!=typeof curr)return null;if(0===divisor||0===curr)return this.set(0),0;const result=curr/divisor;return isNaN(result)?null:(this.set(result),result)}mul(value){const curr=this.getNull();if("number"!=typeof value||"number"!=typeof curr)return null;if(0===value||0===curr)return this.set(0),0;const result=value*curr;return this.set(result)?result:null}
+/**
+     *
+     * @param exponent
+     * @returns
+     */pow(exponent){const curr=this.getNull();if("number"!=typeof curr||null===curr)return null;const result=Math.pow(curr,exponent);return isNaN(result)||result>=Number.MAX_SAFE_INTEGER?null:(this.set(result),result)}
+/**
+     * Add value to Strong Type's current value, if it is a numeric type. Operation
+     * ignored for non-numeric types.
+     * @param value
+     * @returns
+     */add(value){const curr=this.getNull();if("number"!=typeof value||"number"!=typeof curr)return null;const result=value+curr;return isNaN(result)||result<Number.MIN_SAFE_INTEGER||result>Number.MAX_SAFE_INTEGER?null:this.set(result)?result:null}}},
+/***/9853(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.strongMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.strongMake=
+/**
+ * Create Strong object using provided arguments. Should generally be called
+ * by helper functions or factories which create the desired type and pass in
+ * type rules consistently.
+ * @param fallback		Value returned when type's current `value` is null.
+ * @param initial		(Optional) Initial value for type. When not provided, type's
+ *						initial value is `fallback` instead. When reset is called, value
+ *						is automatically set to initial if it was provided, or fallback if not.
+ * @param rules			Automatic type validation rules applied to any value used with `set`.
+ * @returns
+ *
+ * @category Core
+ */
+function(fallback,initial,rules){const rulesValue=rules instanceof rules_1.Rules?rules:new rules_1.Rules;return(0,type_1.createType)(fallback,(0,value_1.initialValue)(initial),rulesValue,"StrongType")}},
+/***/9168(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.swapPop=void 0,exports.swapPop=
+/**
+ * Remove an array element in O(1) time if element ndx is known.
+ * Works only with unordered arrays.
+ * @param array
+ * @param ndx
+ *
+ * @category Collections
+ */
+function(array,ndx){if(!array.length)
+// pop always returns a value if the length is greater
+// than zero. This check prevents pop from returning a
+// value of undefined.
+return null;if(ndx>=array.length||ndx<0)return null;if(1===array.length||ndx===array.length-1){const result=array.pop();return void 0===result?null:result}
+// Save the element at ndx in the array to
+// keep it safe while we overwrite the slot.
+const element=array[ndx];
+// Move the last element into ndx slot.
+return array[ndx]=array[array.length-1],
+// Pop the last element off the array
+array.pop(),element}},
+/***/2283(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.systemPortMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.systemPortMake=
+/**
+ *
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category System Info
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.int(),rules.add().must.be.systemPortNumber(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"SystemPort")}},
+/***/4837(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.textMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.textMake=
+/**
+ *
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Strings
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Text")}},
+/***/8583(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.timeMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.timeMake=
+/**
+ * ISO Time string.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Date & Time
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.time(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Time")}},
+/***/518(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toDblBig=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),make_1=__webpack_require__(4546),match_1=__webpack_require__(2369);exports.toDblBig=
+/**
+ * Convert from common numeric types to the `Big` data type.
+ * @param value
+ * @returns
+ *
+ * @category Strong Helpers
+ */
+function(value){return null==value?null:
+// No conversion needed if type is already a Big.
+(0,match_1.typeMatch)(value,big_js_1.default)?value:"string"==typeof value?(0,make_1.bigMake)(value):
+// All other accepted types have been processed. If type is not number,
+// value type cannot be handled.
+"number"!=typeof value||isNaN(value)||value>=Number.POSITIVE_INFINITY||value<=Number.NEGATIVE_INFINITY||value>Number.MAX_SAFE_INTEGER||value<Number.MIN_SAFE_INTEGER?null:(0,make_1.bigMake)(value)}},
+/***/6255(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toFloat=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369);
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */exports.toFloat=
+/**
+ * Convert a Big, string, or number to standard float (`number`). Returns `null` when
+ * input value is `undefined`, `null`, or a `Big` value which cannot be safely converted
+ * to `number`. Useful for working with `Big` values but small types, such as a small exponent,
+ * which must be in number form to use with a `Big`.
+ * @param value
+ * @returns
+ *
+ * @category Strong Helpers
+ */
+function(value){if(null==value)return null;if((0,match_1.typeMatch)(value,big_js_1.default))return value.gt(Number.MAX_SAFE_INTEGER)||value.lt(Number.MIN_SAFE_INTEGER)?null:value.toNumber();if("string"==typeof value){const result=parseFloat(value);return!isNaN(result)&&isFinite(result)?result:null}return value}},
+/***/8301(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toIntBig=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),make_1=__webpack_require__(4546),match_1=__webpack_require__(2369);exports.toIntBig=
+/**
+ * Convert from common numeric types to the `Big` data type.
+ * @param value
+ * @returns
+ *
+ * @category Strong Helpers
+ */
+function(value){try{if(null==value)return null;if((0,match_1.typeMatch)(value,big_js_1.default))return value;if("string"==typeof value){const result=(0,make_1.bigMake)(value);if(null===result)return null;
+// String values converted to Big can be larger than JavaScript `number`,
+// meaning common JavaScript math functions cannot be used to check result.
+// Values with decimal values are rejected.
+const rounded=result.round(4);return isNaN(rounded.cmp(result))?null:rounded}
+// All other supported types have been processed. If value is not
+// a number, we don't support it. Bail out.
+if("number"!=typeof value)return null;if(isNaN(value)||value>=Number.POSITIVE_INFINITY||value<=Number.NEGATIVE_INFINITY)return null;if(value>Number.MAX_SAFE_INTEGER||value<Number.MIN_SAFE_INTEGER)return null;if(Math.floor(value)!==value)return null}catch(e){}return(0,make_1.bigMake)(value)}},
+/***/4046(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toIntNumber=void 0;
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */
+const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369);exports.toIntNumber=
+/**
+ * Convert from common numeric types to JavaScript `number` type.
+ * @param value
+ * @returns
+ *
+ * @category Strong Helpers
+ */
+function(value){if(null==value)return null;let result;
+// Converting Big -> number is generally as precision may be lost.
+// Support for Big values is provided for ease of use in cases where
+// the caller would have to convert input before calling.
+if((0,match_1.typeMatch)(value,big_js_1.default))
+// Throws when Big value will not fit in number.
+try{result=value.toNumber()}catch(e){result=null}else result="string"==typeof value?parseFloat(value):"number"==typeof value?value:null;return null===result||isNaN(result)||result>=Number.POSITIVE_INFINITY||result<=Number.NEGATIVE_INFINITY||result<Number.MIN_SAFE_INTEGER||result>Number.MAX_SAFE_INTEGER||Math.floor(result)!==result?null:result}},
+/***/9046(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.toSafeMoneyBig=void 0;const money_1=__webpack_require__(6828),big_1=__webpack_require__(518);exports.toSafeMoneyBig=
+/**
+ * Convert from common numeric types to the `Big` data type.
+ * @param value
+ * @returns
+ *
+ * @category Strong Helpers
+ */
+function(input){if(null==input)return null;let value=null;if((0,money_1.isSafeMoney)(input)){const sm=input;value="function"==typeof sm.getNull?sm.getNull():null}else value=input;return(0,big_1.toDblBig)(value)}},
+/***/667(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Transform=void 0;exports.Transform=
+/**
+ * @category Transforms
+ */
+class{constructor(fn,options){if(!fn)throw new Error("Bad Transform init - fn arg missing.");this.fn=fn,this.id=options&&"string"==typeof options.id?options.id:"tf",this.label=`filter_${this.id}`}run(value){let result=value;try{result=this.fn(value)}catch(e){console.error(`[${this.label}]`)}return result}}},
+/***/7542(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.TransformNB=void 0;exports.TransformNB=
+/**
+ * @category Transforms
+ */
+class{constructor(fn,options){if(!fn)throw new Error("Bad TransformNB init - fn arg missing.");this.fn=fn,this.id=options&&"string"==typeof options.id?options.id:"tf",this.label=`filter_${this.id}`}run(value){let result=value;try{result=this.fn(value)}catch(e){console.error(`[${this.label}]`)}return result}}},
+/***/5406(__unused_webpack_module,exports){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Transforms=void 0;exports.Transforms=
+/**
+ * Container holding the transform function chain used to transform
+ * values before saving. Transforms are applied in the order they are
+ * stored in the transforms or transformsNB array.
+ *
+ * @category Transforms
+ */
+class{constructor(fallbackDefault){this.transforms=[],this.transformsNB=[],this.fallbackDefault=fallbackDefault}
+/**
+     * Add nullable transform function to chain.
+     * @param transform		Nullable transform fn to be added to chain.
+     * @returns				Boolean indicating add success or failure.
+     *						true	-	Transform fn added to chain successfully.
+     *						false	-	Transform fn not added to chain.
+     */addNB(transform){return!!transform&&(this.transformsNB.push(transform),!0)}
+/**
+     * Add transform function to chain.
+     * @param transform		Transform fn to be added to chain.
+     * @returns				Boolean indicating add success or failure.
+     *						true	-	Transform fn added to chain successfully.
+     *						false	-	Transform fn not added to chain.
+     */add(transform){return!!transform&&(
+// todo: add sorted insert here based on filter.sortOrder
+this.transforms.push(transform),!0)}
+/**
+     * Run transform chain, applying each transforms once the order added to
+     * the chain.
+     * @param value
+     * @returns
+     */run(value){if(null==value)return this.fallbackDefault;let transformed=value;const transforms=this.transforms;for(const transform of transforms){const input=transformed;transformed=transform.run(input)}return transformed}
+/**
+     * Run transform chain, applying each transforms once the order added to
+     * the chain.
+     * @param value
+     * @returns
+     */runNB(value){if(null==value)return null;let transformed=value;const transformsNB=this.transformsNB;for(const transform of transformsNB){const input=transformed;transformed=transform.run(input)}return transformed}
+/**
+     * Remove all transform functions from chain. Fallback value
+     * remains the same.
+     */reset(){this.transforms.length=0,this.transformsNB.length=0}}},
+/***/2369(__unused_webpack_module,exports){"use strict";
+/**
+ * Determine whether object is an instance of provided type or className.
+ * @param o
+ * @param className
+ * @returns
+ *
+ * @category Validators
+ */
+function typeMatch(o,className){return"string"==typeof className?typeof o===className:o instanceof className}Object.defineProperty(exports,"__esModule",{value:!0}),exports.isType=exports.typeMatch=void 0,exports.typeMatch=typeMatch,
+/**
+ * Alias for typeMatch for backwards compat.
+ *
+ * @category Validators
+ */
+exports.isType=typeMatch},
+/***/9501(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.typeValue=void 0,exports.typeValue=
+/**
+ * Validate `value` a valid type_T and return it if valid, otherwise
+ * return `fallback`. Quick and easy way to validate configs, maps, and
+ * other objects with a guaranteed return type.
+ * @param typeName		JavaScript type name for expected type.
+ * @param value			Value to be validated as `typeName`.
+ * @param fallback		Value returned when `value` is not a valid type_T.
+ * @returns
+ *
+ * @category Core
+ */
+function(typeName,value,fallback){return typeof value!==typeName?fallback:value}},
+/***/884(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.uIntMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.uIntMake=
+/**
+ * Create new strong unsigned integer.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Maths
+ */
+function(fallback,value){const rules=new rules_1.Rules;rules.add().must.match.type.int(),rules.add().must.be.greaterThanOrEqual(0);const strong=(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"UInt");return Object.assign(strong,{increment:()=>strong._data.add(1),decrement:()=>strong._data.add(-1),mul:amt=>strong._data.mul(amt),pow:exponent=>strong._data.pow(exponent),div:amt=>strong._data.div(amt),add:amt=>strong._data.add(amt),sub:amt=>strong._data.add(-1*amt)})}},
+/***/8383(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.urlMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.urlMake=
+/**
+ * Create new strong Url object. Only valid Urls can be set.
+ * @param fallback
+ * @param initial
+ * @returns
+ *
+ * @category Strings
+ */
+function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.url(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Url")}},
+/***/2858(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec1=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec1=
+/**
+ * Map for passing coodinates in 1-dimensional
+ * coordinate systems.
+ *
+ * @category Maths
+ */
+class{constructor(x){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x)}
+/**
+     * Reset all coordinate properties to default values.
+     */reset(){this.x.reset()}}},
+/***/4311(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec2=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec2=
+/**
+ * Map for passing coodinates in 2-dimensional
+ * coordinate systems.
+ *
+ * @category Maths
+ */
+class{constructor(x,y){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x),this.y=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Y,y)}
+/**
+     * Reset all coordinate properties to default values.
+     */reset(){this.x.reset(),this.y.reset()}}},
+/***/4592(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec3=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec3=
+/**
+ * Map for passing coodinates in 3-dimensional
+ * coordinate systems.
+ *
+ * @category Maths
+ */
+class{constructor(x,y,z){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x),this.y=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Y,y),this.z=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Z,z)}
+/**
+     * Reset all coordinate properties to default values.
+     */reset(){this.x.reset(),this.y.reset(),this.z.reset()}}},
+/***/8389(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/**
+ *	MIT License
+ *
+ *	Copyright (c) 2019 - 2021 Toreda, Inc.
+ *
+ *	Permission is hereby granted, free of charge, to any person obtaining a copy
+ *	of this software and associated documentation files (the "Software"), to deal
+ *	in the Software without restriction, including without limitation the rights
+ *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *	copies of the Software, and to permit persons to whom the Software is
+ *	furnished to do so, subject to the following conditions:
+
+ * 	The above copyright notice and this permission notice shall be included in all
+ * 	copies or substantial portions of the Software.
+ *
+ * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * 	SOFTWARE.
+ *
+ */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec4=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec4=
+/**
+ * Map for passing coodinates in 4-dimensional
+ * coordinate systems.
+ *
+ * @category Maths
+ */
+class{constructor(x,y,z,w){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x),this.y=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Y,y),this.z=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Z,z),this.w=(0,make_1.floatMake)(defaults_1.Defaults.Vec.W,w)}
+/**
+     * Reset all coordinate properties to default values.
+     */reset(){this.x.reset(),this.y.reset(),this.z.reset(),this.w.reset()}}},
+/***/9900(module,exports,__webpack_require__){var __WEBPACK_AMD_DEFINE_RESULT__;
+/*
+ *  big.js v6.2.2
+ *  A small, fast, easy-to-use library for arbitrary-precision decimal arithmetic.
+ *  Copyright (c) 2024 Michael Mclaughlin
+ *  https://github.com/MikeMcl/big.js/LICENCE.md
+ */!function(){"use strict";var Big,// true or false
+/**************************************************************************************************/
+// Error messages.
+NAME="[big.js] ",INVALID=NAME+"Invalid ",INVALID_DP=INVALID+"decimal places",INVALID_RM=INVALID+"rounding mode",DIV_BY_ZERO=NAME+"Division by zero",
+// The shared prototype object.
+P={},NUMERIC=/^-?(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i;
+/*
+   * Create and return a Big constructor.
+   */
+/*
+   * Round Big x to a maximum of sd significant digits using rounding mode rm.
+   *
+   * x {Big} The Big to round.
+   * sd {number} Significant digits: integer, 0 to MAX_DP inclusive.
+   * rm {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
+   * [more] {boolean} Whether the result of division was truncated.
+   */
+function round(x,sd,rm,more){var xc=x.c;if(void 0===rm&&(rm=x.constructor.RM),0!==rm&&1!==rm&&2!==rm&&3!==rm)throw Error(INVALID_RM);if(sd<1)more=3===rm&&(more||!!xc[0])||0===sd&&(1===rm&&xc[0]>=5||2===rm&&(xc[0]>5||5===xc[0]&&(more||void 0!==xc[1]))),xc.length=1,more?(
+// 1, 0.1, 0.01, 0.001, 0.0001 etc.
+x.e=x.e-sd+1,xc[0]=1):
+// Zero.
+xc[0]=x.e=0;else if(sd<xc.length){
+// Round up?
+if(
+// xc[sd] is the digit after the digit that may be rounded up.
+more=1===rm&&xc[sd]>=5||2===rm&&(xc[sd]>5||5===xc[sd]&&(more||void 0!==xc[sd+1]||1&xc[sd-1]))||3===rm&&(more||!!xc[0]),
+// Remove any digits after the required precision.
+xc.length=sd,more)
+// Rounding up may mean the previous digit has to be rounded up.
+for(;++xc[--sd]>9;)if(xc[sd]=0,0===sd){++x.e,xc.unshift(1);break}
+// Remove trailing zeros.
+for(sd=xc.length;!xc[--sd];)xc.pop()}return x}
+/*
+   * Return a string representing the value of Big x in normal or exponential notation.
+   * Handles P.toExponential, P.toFixed, P.toJSON, P.toPrecision, P.toString and P.valueOf.
+   */function stringify(x,doExponential,isNonzero){var e=x.e,s=x.c.join(""),n=s.length;
+// Exponential notation?
+if(doExponential)s=s.charAt(0)+(n>1?"."+s.slice(1):"")+(e<0?"e":"e+")+e;
+// Normal notation.
+else if(e<0){for(;++e;)s="0"+s;s="0."+s}else if(e>0)if(++e>n)for(e-=n;e--;)s+="0";else e<n&&(s=s.slice(0,e)+"."+s.slice(e));else n>1&&(s=s.charAt(0)+"."+s.slice(1));return x.s<0&&isNonzero?"-"+s:s}
+// Prototype/instance methods
+/*
+   * Return a new Big whose value is the absolute value of this Big.
+   */P.abs=function(){var x=new this.constructor(this);return x.s=1,x},
+/*
+   * Return 1 if the value of this Big is greater than the value of Big y,
+   *       -1 if the value of this Big is less than the value of Big y, or
+   *        0 if they have the same value.
+   */
+P.cmp=function(y){var isneg,x=this,xc=x.c,yc=(y=new x.constructor(y)).c,i=x.s,j=y.s,k=x.e,l=y.e;
+// Either zero?
+if(!xc[0]||!yc[0])return xc[0]?i:yc[0]?-j:0;
+// Signs differ?
+if(i!=j)return i;
+// Compare exponents.
+if(isneg=i<0,k!=l)return k>l^isneg?1:-1;
+// Compare digit by digit.
+for(j=(k=xc.length)<(l=yc.length)?k:l,i=-1;++i<j;)if(xc[i]!=yc[i])return xc[i]>yc[i]^isneg?1:-1;
+// Compare lengths.
+return k==l?0:k>l^isneg?1:-1},
+/*
+   * Return a new Big whose value is the value of this Big divided by the value of Big y, rounded,
+   * if necessary, to a maximum of Big.DP decimal places using rounding mode Big.RM.
+   */
+P.div=function(y){var x=this,Big=x.constructor,a=x.c,// dividend
+b=(y=new Big(y)).c,// divisor
+k=x.s==y.s?1:-1,dp=Big.DP;if(dp!==~~dp||dp<0||dp>1e6)throw Error(INVALID_DP);
+// Divisor is zero?
+if(!b[0])throw Error(DIV_BY_ZERO);
+// Dividend is 0? Return +-0.
+if(!a[0])return y.s=k,y.c=[y.e=0],y;var bl,bt,n,cmp,ri,bz=b.slice(),ai=bl=b.length,al=a.length,r=a.slice(0,bl),// remainder
+rl=r.length,q=y,// quotient
+qc=q.c=[],qi=0,p=dp+(q.e=x.e-y.e)+1;// precision of the result
+// Add zeros to make remainder as long as divisor.
+for(q.s=k,k=p<0?0:p,
+// Create version of divisor with leading zero.
+bz.unshift(0);rl++<bl;)r.push(0);do{
+// n is how many times the divisor goes into current remainder.
+for(n=0;n<10;n++){
+// Compare divisor and remainder.
+if(bl!=(rl=r.length))cmp=bl>rl?1:-1;else for(ri=-1,cmp=0;++ri<bl;)if(b[ri]!=r[ri]){cmp=b[ri]>r[ri]?1:-1;break}
+// If divisor < remainder, subtract divisor from remainder.
+if(!(cmp<0))break;
+// Remainder can't be more than 1 digit longer than divisor.
+// Equalise lengths using divisor with extra leading zero?
+for(bt=rl==bl?b:bz;rl;){if(r[--rl]<bt[rl]){for(ri=rl;ri&&!r[--ri];)r[ri]=9;--r[ri],r[rl]+=10}r[rl]-=bt[rl]}for(;!r[0];)r.shift()}
+// Add the digit n to the result array.
+qc[qi++]=cmp?n:++n,
+// Update the remainder.
+r[0]&&cmp?r[rl]=a[ai]||0:r=[a[ai]]}while((ai++<al||void 0!==r[0])&&k--);
+// Leading zero? Do not remove if result is simply zero (qi == 1).
+return qc[0]||1==qi||(
+// There can't be more than one zero.
+qc.shift(),q.e--,p--),
+// Round?
+qi>p&&round(q,p,Big.RM,void 0!==r[0]),q},
+/*
+   * Return true if the value of this Big is equal to the value of Big y, otherwise return false.
+   */
+P.eq=function(y){return 0===this.cmp(y)},
+/*
+   * Return true if the value of this Big is greater than the value of Big y, otherwise return
+   * false.
+   */
+P.gt=function(y){return this.cmp(y)>0},
+/*
+   * Return true if the value of this Big is greater than or equal to the value of Big y, otherwise
+   * return false.
+   */
+P.gte=function(y){return this.cmp(y)>-1},
+/*
+   * Return true if the value of this Big is less than the value of Big y, otherwise return false.
+   */
+P.lt=function(y){return this.cmp(y)<0},
+/*
+   * Return true if the value of this Big is less than or equal to the value of Big y, otherwise
+   * return false.
+   */
+P.lte=function(y){return this.cmp(y)<1},
+/*
+   * Return a new Big whose value is the value of this Big minus the value of Big y.
+   */
+P.minus=P.sub=function(y){var i,j,t,xlty,x=this,Big=x.constructor,a=x.s,b=(y=new Big(y)).s;
+// Signs differ?
+if(a!=b)return y.s=-b,x.plus(y);var xc=x.c.slice(),xe=x.e,yc=y.c,ye=y.e;
+// Either zero?
+if(!xc[0]||!yc[0])return yc[0]?y.s=-b:xc[0]?y=new Big(x):y.s=1,y;
+// Determine which is the bigger number. Prepend zeros to equalise exponents.
+if(a=xe-ye){for((xlty=a<0)?(a=-a,t=xc):(ye=xe,t=yc),t.reverse(),b=a;b--;)t.push(0);t.reverse()}else for(
+// Exponents equal. Check digit by digit.
+j=((xlty=xc.length<yc.length)?xc:yc).length,a=b=0;b<j;b++)if(xc[b]!=yc[b]){xlty=xc[b]<yc[b];break}
+// x < y? Point xc to the array of the bigger number.
+/*
+     * Append zeros to xc if shorter. No need to add zeros to yc if shorter as subtraction only
+     * needs to start at yc.length.
+     */
+if(xlty&&(t=xc,xc=yc,yc=t,y.s=-y.s),(b=(j=yc.length)-(i=xc.length))>0)for(;b--;)xc[i++]=0;
+// Subtract yc from xc.
+for(b=i;j>a;){if(xc[--j]<yc[j]){for(i=j;i&&!xc[--i];)xc[i]=9;--xc[i],xc[j]+=10}xc[j]-=yc[j]}
+// Remove trailing zeros.
+for(;0===xc[--b];)xc.pop();
+// Remove leading zeros and adjust exponent accordingly.
+for(;0===xc[0];)xc.shift(),--ye;return xc[0]||(
+// n - n = +0
+y.s=1,
+// Result must be zero.
+xc=[ye=0]),y.c=xc,y.e=ye,y},
+/*
+   * Return a new Big whose value is the value of this Big modulo the value of Big y.
+   */
+P.mod=function(y){var ygtx,x=this,Big=x.constructor,a=x.s,b=(y=new Big(y)).s;if(!y.c[0])throw Error(DIV_BY_ZERO);return x.s=y.s=1,ygtx=1==y.cmp(x),x.s=a,y.s=b,ygtx?new Big(x):(a=Big.DP,b=Big.RM,Big.DP=Big.RM=0,x=x.div(y),Big.DP=a,Big.RM=b,this.minus(x.times(y)))},
+/*
+   * Return a new Big whose value is the value of this Big negated.
+   */
+P.neg=function(){var x=new this.constructor(this);return x.s=-x.s,x},
+/*
+   * Return a new Big whose value is the value of this Big plus the value of Big y.
+   */
+P.plus=P.add=function(y){var e,k,t,x=this,Big=x.constructor;
+// Signs differ?
+if(y=new Big(y),x.s!=y.s)return y.s=-y.s,x.minus(y);var xe=x.e,xc=x.c,ye=y.e,yc=y.c;
+// Either zero?
+if(!xc[0]||!yc[0])return yc[0]||(xc[0]?y=new Big(x):y.s=x.s),y;
+// Prepend zeros to equalise exponents.
+// Note: reverse faster than unshifts.
+if(xc=xc.slice(),e=xe-ye){for(e>0?(ye=xe,t=yc):(e=-e,t=xc),t.reverse();e--;)t.push(0);t.reverse()}
+// Point xc to the longer array.
+// Only start adding at yc.length - 1 as the further digits of xc can be left as they are.
+for(xc.length-yc.length<0&&(t=yc,yc=xc,xc=t),e=yc.length,k=0;e;xc[e]%=10)k=(xc[--e]=xc[e]+yc[e]+k)/10|0;
+// No need to check for zero, as +x + +y != 0 && -x + -y != 0
+// Remove trailing zeros.
+for(k&&(xc.unshift(k),++ye),e=xc.length;0===xc[--e];)xc.pop();return y.c=xc,y.e=ye,y},
+/*
+   * Return a Big whose value is the value of this Big raised to the power n.
+   * If n is negative, round to a maximum of Big.DP decimal places using rounding
+   * mode Big.RM.
+   *
+   * n {number} Integer, -MAX_POWER to MAX_POWER inclusive.
+   */
+P.pow=function(n){var x=this,one=new x.constructor("1"),y=one,isneg=n<0;if(n!==~~n||n<-1e6||n>1e6)throw Error(INVALID+"exponent");for(isneg&&(n=-n);1&n&&(y=y.times(x)),n>>=1;)x=x.times(x);return isneg?one.div(y):y},
+/*
+   * Return a new Big whose value is the value of this Big rounded to a maximum precision of sd
+   * significant digits using rounding mode rm, or Big.RM if rm is not specified.
+   *
+   * sd {number} Significant digits: integer, 1 to MAX_DP inclusive.
+   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
+   */
+P.prec=function(sd,rm){if(sd!==~~sd||sd<1||sd>1e6)throw Error(INVALID+"precision");return round(new this.constructor(this),sd,rm)},
+/*
+   * Return a new Big whose value is the value of this Big rounded to a maximum of dp decimal places
+   * using rounding mode rm, or Big.RM if rm is not specified.
+   * If dp is negative, round to an integer which is a multiple of 10**-dp.
+   * If dp is not specified, round to 0 decimal places.
+   *
+   * dp? {number} Integer, -MAX_DP to MAX_DP inclusive.
+   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
+   */
+P.round=function(dp,rm){if(void 0===dp)dp=0;else if(dp!==~~dp||dp<-1e6||dp>1e6)throw Error(INVALID_DP);return round(new this.constructor(this),dp+this.e+1,rm)},
+/*
+   * Return a new Big whose value is the square root of the value of this Big, rounded, if
+   * necessary, to a maximum of Big.DP decimal places using rounding mode Big.RM.
+   */
+P.sqrt=function(){var r,c,t,x=this,Big=x.constructor,s=x.s,e=x.e,half=new Big("0.5");
+// Zero?
+if(!x.c[0])return new Big(x);
+// Negative?
+if(s<0)throw Error(NAME+"No square root");
+// Estimate.
+// Math.sqrt underflow/overflow?
+// Re-estimate: pass x coefficient to Math.sqrt as integer, then adjust the result exponent.
+0===(s=Math.sqrt(+stringify(x,!0,!0)))||s===1/0?((c=x.c.join("")).length+e&1||(c+="0"),e=((e+1)/2|0)-(e<0||1&e),r=new Big(((s=Math.sqrt(c))==1/0?"5e":(s=s.toExponential()).slice(0,s.indexOf("e")+1))+e)):r=new Big(s+""),e=r.e+(Big.DP+=4);
+// Newton-Raphson iteration.
+do{t=r,r=half.times(t.plus(x.div(t)))}while(t.c.slice(0,e).join("")!==r.c.slice(0,e).join(""));return round(r,(Big.DP-=4)+r.e+1,Big.RM)},
+/*
+   * Return a new Big whose value is the value of this Big times the value of Big y.
+   */
+P.times=P.mul=function(y){var c,x=this,Big=x.constructor,xc=x.c,yc=(y=new Big(y)).c,a=xc.length,b=yc.length,i=x.e,j=y.e;
+// Determine sign of result.
+// Return signed 0 if either 0.
+if(y.s=x.s==y.s?1:-1,!xc[0]||!yc[0])return y.c=[y.e=0],y;
+// Initialise exponent of result as x.e + y.e.
+// Initialise coefficient array of result with zeros.
+for(y.e=i+j,
+// If array xc has fewer digits than yc, swap xc and yc, and lengths.
+a<b&&(c=xc,xc=yc,yc=c,j=a,a=b,b=j),c=new Array(j=a+b);j--;)c[j]=0;
+// Multiply.
+// i is initially xc.length.
+for(i=b;i--;){
+// a is yc.length.
+for(b=0,j=a+i;j>i;)
+// Current sum of products at this digit position, plus carry.
+b=c[j]+yc[i]*xc[j-i-1]+b,c[j--]=b%10,
+// carry
+b=b/10|0;c[j]=b}
+// Increment result exponent if there is a final carry, otherwise remove leading zero.
+// Remove trailing zeros.
+for(b?++y.e:c.shift(),i=c.length;!c[--i];)c.pop();return y.c=c,y},
+/*
+   * Return a string representing the value of this Big in exponential notation rounded to dp fixed
+   * decimal places using rounding mode rm, or Big.RM if rm is not specified.
+   *
+   * dp? {number} Decimal places: integer, 0 to MAX_DP inclusive.
+   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
+   */
+P.toExponential=function(dp,rm){var x=this,n=x.c[0];if(void 0!==dp){if(dp!==~~dp||dp<0||dp>1e6)throw Error(INVALID_DP);for(x=round(new x.constructor(x),++dp,rm);x.c.length<dp;)x.c.push(0)}return stringify(x,!0,!!n)},
+/*
+   * Return a string representing the value of this Big in normal notation rounded to dp fixed
+   * decimal places using rounding mode rm, or Big.RM if rm is not specified.
+   *
+   * dp? {number} Decimal places: integer, 0 to MAX_DP inclusive.
+   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
+   *
+   * (-0).toFixed(0) is '0', but (-0.1).toFixed(0) is '-0'.
+   * (-0).toFixed(1) is '0.0', but (-0.01).toFixed(1) is '-0.0'.
+   */
+P.toFixed=function(dp,rm){var x=this,n=x.c[0];if(void 0!==dp){if(dp!==~~dp||dp<0||dp>1e6)throw Error(INVALID_DP);
+// x.e may have changed if the value is rounded up.
+for(dp=dp+(x=round(new x.constructor(x),dp+x.e+1,rm)).e+1;x.c.length<dp;)x.c.push(0)}return stringify(x,!1,!!n)},
+/*
+   * Return a string representing the value of this Big.
+   * Return exponential notation if this Big has a positive exponent equal to or greater than
+   * Big.PE, or a negative exponent equal to or less than Big.NE.
+   * Omit the sign for negative zero.
+   */
+P.toJSON=P.toString=function(){var x=this,Big=x.constructor;return stringify(x,x.e<=Big.NE||x.e>=Big.PE,!!x.c[0])},
+/*
+   * Return the value of this Big as a primitve number.
+   */
+P.toNumber=function(){var n=+stringify(this,!0,!0);if(!0===this.constructor.strict&&!this.eq(n.toString()))throw Error(NAME+"Imprecise conversion");return n},
+/*
+   * Return a string representing the value of this Big rounded to sd significant digits using
+   * rounding mode rm, or Big.RM if rm is not specified.
+   * Use exponential notation if sd is less than the number of digits necessary to represent
+   * the integer part of the value in normal notation.
+   *
+   * sd {number} Significant digits: integer, 1 to MAX_DP inclusive.
+   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
+   */
+P.toPrecision=function(sd,rm){var x=this,Big=x.constructor,n=x.c[0];if(void 0!==sd){if(sd!==~~sd||sd<1||sd>1e6)throw Error(INVALID+"precision");for(x=round(new Big(x),sd,rm);x.c.length<sd;)x.c.push(0)}return stringify(x,sd<=x.e||x.e<=Big.NE||x.e>=Big.PE,!!n)},
+/*
+   * Return a string representing the value of this Big.
+   * Return exponential notation if this Big has a positive exponent equal to or greater than
+   * Big.PE, or a negative exponent equal to or less than Big.NE.
+   * Include the sign for negative zero.
+   */
+P.valueOf=function(){var x=this,Big=x.constructor;if(!0===Big.strict)throw Error(NAME+"valueOf disallowed");return stringify(x,x.e<=Big.NE||x.e>=Big.PE,!0)},
+// Export
+Big=function _Big_(){
+/*
+     * The Big constructor and exported function.
+     * Create and return a new instance of a Big number object.
+     *
+     * n {number|string|Big} A numeric value.
+     */
+function Big(n){var x=this;
+// Enable constructor usage without new.
+if(!(x instanceof Big))return void 0===n?_Big_():new Big(n);
+// Duplicate.
+if(n instanceof Big)x.s=n.s,x.e=n.e,x.c=n.c.slice();else{if("string"!=typeof n){if(!0===Big.strict&&"bigint"!=typeof n)throw TypeError(INVALID+"value");
+// Minus zero?
+n=0===n&&1/n<0?"-0":String(n)}!
+/*
+   * Parse the number or string value passed to a Big constructor.
+   *
+   * x {Big} A Big number instance.
+   * n {number|string} A numeric value.
+   */
+function(x,n){var e,i,nl;if(!NUMERIC.test(n))throw Error(INVALID+"number");
+// Determine sign.
+// Decimal point?
+x.s="-"==n.charAt(0)?(n=n.slice(1),-1):1,(e=n.indexOf("."))>-1&&(n=n.replace(".",""));
+// Exponential form?
+(i=n.search(/e/i))>0?(
+// Determine exponent.
+e<0&&(e=i),e+=+n.slice(i+1),n=n.substring(0,i)):e<0&&(
+// Integer.
+e=n.length);
+// Determine leading zeros.
+for(nl=n.length,i=0;i<nl&&"0"==n.charAt(i);)++i;if(i==nl)
+// Zero.
+x.c=[x.e=0];else{
+// Determine trailing zeros.
+for(;nl>0&&"0"==n.charAt(--nl););
+// Convert string to array of digits without leading/trailing zeros.
+for(x.e=e-i-1,x.c=[],e=0;i<=nl;)x.c[e++]=+n.charAt(i++)}}(x,n)}
+// Retain a reference to this Big constructor.
+// Shadow Big.prototype.constructor which points to Object.
+x.constructor=Big}return Big.prototype=P,Big.DP=20,Big.RM=1,Big.NE=-7,Big.PE=21,Big.strict=false,Big.roundDown=0,Big.roundHalfUp=1,Big.roundHalfEven=2,Big.roundUp=3,Big}(),Big.default=Big.Big=Big,void 0===(__WEBPACK_AMD_DEFINE_RESULT__=function(){return Big}.call(exports,__webpack_require__,exports,module))||(module.exports=__WEBPACK_AMD_DEFINE_RESULT__)}()},
+/***/3144(module,__unused_webpack_exports,__webpack_require__){"use strict";var bind=__webpack_require__(6743),$apply=__webpack_require__(1002),$call=__webpack_require__(76),$reflectApply=__webpack_require__(7119);
+/** @type {import('./actualApply')} */
+module.exports=$reflectApply||bind.call($call,$apply)},
+/***/1002(module){"use strict";
+/** @type {import('./functionApply')} */module.exports=Function.prototype.apply},
+/***/76(module){"use strict";
+/** @type {import('./functionCall')} */module.exports=Function.prototype.call},
+/***/3126(module,__unused_webpack_exports,__webpack_require__){"use strict";var bind=__webpack_require__(6743),$TypeError=__webpack_require__(9675),$call=__webpack_require__(76),$actualApply=__webpack_require__(3144);
+/** @type {(args: [Function, thisArg?: unknown, ...args: unknown[]]) => Function} TODO FIXME, find a way to use import('.') */
+module.exports=function(args){if(args.length<1||"function"!=typeof args[0])throw new $TypeError("a function is required");return $actualApply(bind,$call,args)}},
+/***/7119(module){"use strict";
+/** @type {import('./reflectApply')} */module.exports="undefined"!=typeof Reflect&&Reflect&&Reflect.apply},
+/***/6556(module,__unused_webpack_exports,__webpack_require__){"use strict";var GetIntrinsic=__webpack_require__(453),callBindBasic=__webpack_require__(3126),$indexOf=callBindBasic([GetIntrinsic("%String.prototype.indexOf%")]);
+/** @type {import('.')} */
+module.exports=function(name,allowMissing){
+/* eslint no-extra-parens: 0 */
+var intrinsic=/** @type {(this: unknown, ...args: unknown[]) => unknown} */GetIntrinsic(name,!!allowMissing);return"function"==typeof intrinsic&&$indexOf(name,".prototype.")>-1?callBindBasic(/** @type {const} */[intrinsic]):intrinsic}},
+/***/7176(module,__unused_webpack_exports,__webpack_require__){"use strict";var hasProtoAccessor,callBind=__webpack_require__(3126),gOPD=__webpack_require__(5795);try{
+// eslint-disable-next-line no-extra-parens, no-proto
+hasProtoAccessor=/** @type {{ __proto__?: typeof Array.prototype }} */[].__proto__===Array.prototype}catch(e){if(!e||"object"!=typeof e||!("code"in e)||"ERR_PROTO_ACCESS"!==e.code)throw e}
+// eslint-disable-next-line no-extra-parens
+var desc=!!hasProtoAccessor&&gOPD&&gOPD(Object.prototype,/** @type {keyof typeof Object.prototype} */"__proto__"),$Object=Object,$getPrototypeOf=$Object.getPrototypeOf;
+/** @type {import('./get')} */
+module.exports=desc&&"function"==typeof desc.get?callBind([desc.get]):"function"==typeof $getPrototypeOf&&/** @type {import('./get')} */function(value){
+// eslint-disable-next-line eqeqeq
+return $getPrototypeOf(null==value?value:$Object(value))}},
+/***/655(module){"use strict";
+/** @type {import('.')} */var $defineProperty=Object.defineProperty||!1;if($defineProperty)try{$defineProperty({},"a",{value:1})}catch(e){
+// IE 8 has a broken defineProperty
+$defineProperty=!1}module.exports=$defineProperty},
+/***/1237(module){"use strict";
+/** @type {import('./eval')} */module.exports=EvalError},
+/***/9383(module){"use strict";
+/** @type {import('.')} */module.exports=Error},
+/***/9290(module){"use strict";
+/** @type {import('./range')} */module.exports=RangeError},
+/***/9538(module){"use strict";
+/** @type {import('./ref')} */module.exports=ReferenceError},
+/***/8068(module){"use strict";
+/** @type {import('./syntax')} */module.exports=SyntaxError},
+/***/9675(module){"use strict";
+/** @type {import('./type')} */module.exports=TypeError},
+/***/5345(module){"use strict";
+/** @type {import('./uri')} */module.exports=URIError},
+/***/9612(module){"use strict";
+/** @type {import('.')} */module.exports=Object},
+/***/9353(module){"use strict";
+/* eslint no-invalid-this: 1 */var toStr=Object.prototype.toString,max=Math.max,concatty=function(a,b){for(var arr=[],i=0;i<a.length;i+=1)arr[i]=a[i];for(var j=0;j<b.length;j+=1)arr[j+a.length]=b[j];return arr};module.exports=function(that){var target=this;if("function"!=typeof target||"[object Function]"!==toStr.apply(target))throw new TypeError("Function.prototype.bind called on incompatible "+target);for(var bound,args=function(arrLike,offset){for(var arr=[],i=offset||0,j=0;i<arrLike.length;i+=1,j+=1)arr[j]=arrLike[i];return arr}(arguments,1),boundLength=max(0,target.length-args.length),boundArgs=[],i=0;i<boundLength;i++)boundArgs[i]="$"+i;if(bound=Function("binder","return function ("+function(arr,joiner){for(var str="",i=0;i<arr.length;i+=1)str+=arr[i],i+1<arr.length&&(str+=joiner);return str}(boundArgs,",")+"){ return binder.apply(this,arguments); }")(function(){if(this instanceof bound){var result=target.apply(this,concatty(args,arguments));return Object(result)===result?result:this}return target.apply(that,concatty(args,arguments))}),target.prototype){var Empty=function(){};Empty.prototype=target.prototype,bound.prototype=new Empty,Empty.prototype=null}return bound}},
+/***/6743(module,__unused_webpack_exports,__webpack_require__){"use strict";var implementation=__webpack_require__(9353);module.exports=Function.prototype.bind||implementation},
+/***/453(module,__unused_webpack_exports,__webpack_require__){"use strict";var $Object=__webpack_require__(9612),$Error=__webpack_require__(9383),$EvalError=__webpack_require__(1237),$RangeError=__webpack_require__(9290),$ReferenceError=__webpack_require__(9538),$SyntaxError=__webpack_require__(8068),$TypeError=__webpack_require__(9675),$URIError=__webpack_require__(5345),abs=__webpack_require__(1514),floor=__webpack_require__(8968),max=__webpack_require__(6188),min=__webpack_require__(8002),pow=__webpack_require__(5880),round=__webpack_require__(414),sign=__webpack_require__(3093),$Function=Function,getEvalledConstructor=function(expressionSyntax){try{return $Function('"use strict"; return ('+expressionSyntax+").constructor;")()}catch(e){}},$gOPD=__webpack_require__(5795),$defineProperty=__webpack_require__(655),throwTypeError=function(){throw new $TypeError},ThrowTypeError=$gOPD?function(){try{// IE 8 does not throw here
+return throwTypeError}catch(calleeThrows){try{
+// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
+return $gOPD(arguments,"callee").get}catch(gOPDthrows){return throwTypeError}}}():throwTypeError,hasSymbols=__webpack_require__(4039)(),getProto=__webpack_require__(3628),$ObjectGPO=__webpack_require__(1064),$ReflectGPO=__webpack_require__(8648),$apply=__webpack_require__(1002),$call=__webpack_require__(76),needsEval={},TypedArray="undefined"!=typeof Uint8Array&&getProto?getProto(Uint8Array):void 0,INTRINSICS={__proto__:null,"%AggregateError%":"undefined"==typeof AggregateError?void 0:AggregateError,"%Array%":Array,"%ArrayBuffer%":"undefined"==typeof ArrayBuffer?void 0:ArrayBuffer,"%ArrayIteratorPrototype%":hasSymbols&&getProto?getProto([][Symbol.iterator]()):void 0,"%AsyncFromSyncIteratorPrototype%":void 0,"%AsyncFunction%":needsEval,"%AsyncGenerator%":needsEval,"%AsyncGeneratorFunction%":needsEval,"%AsyncIteratorPrototype%":needsEval,"%Atomics%":"undefined"==typeof Atomics?void 0:Atomics,"%BigInt%":"undefined"==typeof BigInt?void 0:BigInt,"%BigInt64Array%":"undefined"==typeof BigInt64Array?void 0:BigInt64Array,"%BigUint64Array%":"undefined"==typeof BigUint64Array?void 0:BigUint64Array,"%Boolean%":Boolean,"%DataView%":"undefined"==typeof DataView?void 0:DataView,"%Date%":Date,"%decodeURI%":decodeURI,"%decodeURIComponent%":decodeURIComponent,"%encodeURI%":encodeURI,"%encodeURIComponent%":encodeURIComponent,"%Error%":$Error,"%eval%":eval,// eslint-disable-line no-eval
+"%EvalError%":$EvalError,"%Float16Array%":"undefined"==typeof Float16Array?void 0:Float16Array,"%Float32Array%":"undefined"==typeof Float32Array?void 0:Float32Array,"%Float64Array%":"undefined"==typeof Float64Array?void 0:Float64Array,"%FinalizationRegistry%":"undefined"==typeof FinalizationRegistry?void 0:FinalizationRegistry,"%Function%":$Function,"%GeneratorFunction%":needsEval,"%Int8Array%":"undefined"==typeof Int8Array?void 0:Int8Array,"%Int16Array%":"undefined"==typeof Int16Array?void 0:Int16Array,"%Int32Array%":"undefined"==typeof Int32Array?void 0:Int32Array,"%isFinite%":isFinite,"%isNaN%":isNaN,"%IteratorPrototype%":hasSymbols&&getProto?getProto(getProto([][Symbol.iterator]())):void 0,"%JSON%":"object"==typeof JSON?JSON:void 0,"%Map%":"undefined"==typeof Map?void 0:Map,"%MapIteratorPrototype%":"undefined"!=typeof Map&&hasSymbols&&getProto?getProto((new Map)[Symbol.iterator]()):void 0,"%Math%":Math,"%Number%":Number,"%Object%":$Object,"%Object.getOwnPropertyDescriptor%":$gOPD,"%parseFloat%":parseFloat,"%parseInt%":parseInt,"%Promise%":"undefined"==typeof Promise?void 0:Promise,"%Proxy%":"undefined"==typeof Proxy?void 0:Proxy,"%RangeError%":$RangeError,"%ReferenceError%":$ReferenceError,"%Reflect%":"undefined"==typeof Reflect?void 0:Reflect,"%RegExp%":RegExp,"%Set%":"undefined"==typeof Set?void 0:Set,"%SetIteratorPrototype%":"undefined"!=typeof Set&&hasSymbols&&getProto?getProto((new Set)[Symbol.iterator]()):void 0,"%SharedArrayBuffer%":"undefined"==typeof SharedArrayBuffer?void 0:SharedArrayBuffer,"%String%":String,"%StringIteratorPrototype%":hasSymbols&&getProto?getProto(""[Symbol.iterator]()):void 0,"%Symbol%":hasSymbols?Symbol:void 0,"%SyntaxError%":$SyntaxError,"%ThrowTypeError%":ThrowTypeError,"%TypedArray%":TypedArray,"%TypeError%":$TypeError,"%Uint8Array%":"undefined"==typeof Uint8Array?void 0:Uint8Array,"%Uint8ClampedArray%":"undefined"==typeof Uint8ClampedArray?void 0:Uint8ClampedArray,"%Uint16Array%":"undefined"==typeof Uint16Array?void 0:Uint16Array,"%Uint32Array%":"undefined"==typeof Uint32Array?void 0:Uint32Array,"%URIError%":$URIError,"%WeakMap%":"undefined"==typeof WeakMap?void 0:WeakMap,"%WeakRef%":"undefined"==typeof WeakRef?void 0:WeakRef,"%WeakSet%":"undefined"==typeof WeakSet?void 0:WeakSet,"%Function.prototype.call%":$call,"%Function.prototype.apply%":$apply,"%Object.defineProperty%":$defineProperty,"%Object.getPrototypeOf%":$ObjectGPO,"%Math.abs%":abs,"%Math.floor%":floor,"%Math.max%":max,"%Math.min%":min,"%Math.pow%":pow,"%Math.round%":round,"%Math.sign%":sign,"%Reflect.getPrototypeOf%":$ReflectGPO};if(getProto)try{null.error;// eslint-disable-line no-unused-expressions
+}catch(e){
+// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
+var errorProto=getProto(getProto(e));INTRINSICS["%Error.prototype%"]=errorProto}var doEval=function doEval(name){var value;if("%AsyncFunction%"===name)value=getEvalledConstructor("async function () {}");else if("%GeneratorFunction%"===name)value=getEvalledConstructor("function* () {}");else if("%AsyncGeneratorFunction%"===name)value=getEvalledConstructor("async function* () {}");else if("%AsyncGenerator%"===name){var fn=doEval("%AsyncGeneratorFunction%");fn&&(value=fn.prototype)}else if("%AsyncIteratorPrototype%"===name){var gen=doEval("%AsyncGenerator%");gen&&getProto&&(value=getProto(gen.prototype))}return INTRINSICS[name]=value,value},LEGACY_ALIASES={__proto__:null,"%ArrayBufferPrototype%":["ArrayBuffer","prototype"],"%ArrayPrototype%":["Array","prototype"],"%ArrayProto_entries%":["Array","prototype","entries"],"%ArrayProto_forEach%":["Array","prototype","forEach"],"%ArrayProto_keys%":["Array","prototype","keys"],"%ArrayProto_values%":["Array","prototype","values"],"%AsyncFunctionPrototype%":["AsyncFunction","prototype"],"%AsyncGenerator%":["AsyncGeneratorFunction","prototype"],"%AsyncGeneratorPrototype%":["AsyncGeneratorFunction","prototype","prototype"],"%BooleanPrototype%":["Boolean","prototype"],"%DataViewPrototype%":["DataView","prototype"],"%DatePrototype%":["Date","prototype"],"%ErrorPrototype%":["Error","prototype"],"%EvalErrorPrototype%":["EvalError","prototype"],"%Float32ArrayPrototype%":["Float32Array","prototype"],"%Float64ArrayPrototype%":["Float64Array","prototype"],"%FunctionPrototype%":["Function","prototype"],"%Generator%":["GeneratorFunction","prototype"],"%GeneratorPrototype%":["GeneratorFunction","prototype","prototype"],"%Int8ArrayPrototype%":["Int8Array","prototype"],"%Int16ArrayPrototype%":["Int16Array","prototype"],"%Int32ArrayPrototype%":["Int32Array","prototype"],"%JSONParse%":["JSON","parse"],"%JSONStringify%":["JSON","stringify"],"%MapPrototype%":["Map","prototype"],"%NumberPrototype%":["Number","prototype"],"%ObjectPrototype%":["Object","prototype"],"%ObjProto_toString%":["Object","prototype","toString"],"%ObjProto_valueOf%":["Object","prototype","valueOf"],"%PromisePrototype%":["Promise","prototype"],"%PromiseProto_then%":["Promise","prototype","then"],"%Promise_all%":["Promise","all"],"%Promise_reject%":["Promise","reject"],"%Promise_resolve%":["Promise","resolve"],"%RangeErrorPrototype%":["RangeError","prototype"],"%ReferenceErrorPrototype%":["ReferenceError","prototype"],"%RegExpPrototype%":["RegExp","prototype"],"%SetPrototype%":["Set","prototype"],"%SharedArrayBufferPrototype%":["SharedArrayBuffer","prototype"],"%StringPrototype%":["String","prototype"],"%SymbolPrototype%":["Symbol","prototype"],"%SyntaxErrorPrototype%":["SyntaxError","prototype"],"%TypedArrayPrototype%":["TypedArray","prototype"],"%TypeErrorPrototype%":["TypeError","prototype"],"%Uint8ArrayPrototype%":["Uint8Array","prototype"],"%Uint8ClampedArrayPrototype%":["Uint8ClampedArray","prototype"],"%Uint16ArrayPrototype%":["Uint16Array","prototype"],"%Uint32ArrayPrototype%":["Uint32Array","prototype"],"%URIErrorPrototype%":["URIError","prototype"],"%WeakMapPrototype%":["WeakMap","prototype"],"%WeakSetPrototype%":["WeakSet","prototype"]},bind=__webpack_require__(6743),hasOwn=__webpack_require__(9957),$concat=bind.call($call,Array.prototype.concat),$spliceApply=bind.call($apply,Array.prototype.splice),$replace=bind.call($call,String.prototype.replace),$strSlice=bind.call($call,String.prototype.slice),$exec=bind.call($call,RegExp.prototype.exec),rePropName=/[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g,reEscapeChar=/\\(\\)?/g,getBaseIntrinsic=function(name,allowMissing){var alias,intrinsicName=name;if(hasOwn(LEGACY_ALIASES,intrinsicName)&&(intrinsicName="%"+(alias=LEGACY_ALIASES[intrinsicName])[0]+"%"),hasOwn(INTRINSICS,intrinsicName)){var value=INTRINSICS[intrinsicName];if(value===needsEval&&(value=doEval(intrinsicName)),void 0===value&&!allowMissing)throw new $TypeError("intrinsic "+name+" exists, but is not available. Please file an issue!");return{alias,name:intrinsicName,value}}throw new $SyntaxError("intrinsic "+name+" does not exist!")};module.exports=function(name,allowMissing){if("string"!=typeof name||0===name.length)throw new $TypeError("intrinsic name must be a non-empty string");if(arguments.length>1&&"boolean"!=typeof allowMissing)throw new $TypeError('"allowMissing" argument must be a boolean');if(null===$exec(/^%?[^%]*%?$/,name))throw new $SyntaxError("`%` may not be present anywhere but at the beginning and end of the intrinsic name");var parts=function(string){var first=$strSlice(string,0,1),last=$strSlice(string,-1);if("%"===first&&"%"!==last)throw new $SyntaxError("invalid intrinsic syntax, expected closing `%`");if("%"===last&&"%"!==first)throw new $SyntaxError("invalid intrinsic syntax, expected opening `%`");var result=[];return $replace(string,rePropName,function(match,number,quote,subString){result[result.length]=quote?$replace(subString,reEscapeChar,"$1"):number||match}),result}(name),intrinsicBaseName=parts.length>0?parts[0]:"",intrinsic=getBaseIntrinsic("%"+intrinsicBaseName+"%",allowMissing),intrinsicRealName=intrinsic.name,value=intrinsic.value,skipFurtherCaching=!1,alias=intrinsic.alias;alias&&(intrinsicBaseName=alias[0],$spliceApply(parts,$concat([0,1],alias)));for(var i=1,isOwn=!0;i<parts.length;i+=1){var part=parts[i],first=$strSlice(part,0,1),last=$strSlice(part,-1);if(('"'===first||"'"===first||"`"===first||'"'===last||"'"===last||"`"===last)&&first!==last)throw new $SyntaxError("property names with quotes must have matching quotes");if("constructor"!==part&&isOwn||(skipFurtherCaching=!0),hasOwn(INTRINSICS,intrinsicRealName="%"+(intrinsicBaseName+="."+part)+"%"))value=INTRINSICS[intrinsicRealName];else if(null!=value){if(!(part in value)){if(!allowMissing)throw new $TypeError("base intrinsic for "+name+" exists, but the property is not available.");return}if($gOPD&&i+1>=parts.length){var desc=$gOPD(value,part);
+// By convention, when a data property is converted to an accessor
+// property to emulate a data property that does not suffer from
+// the override mistake, that accessor's getter is marked with
+// an `originalValue` property. Here, when we detect this, we
+// uphold the illusion by pretending to see that original data
+// property, i.e., returning the value rather than the getter
+// itself.
+value=(isOwn=!!desc)&&"get"in desc&&!("originalValue"in desc.get)?desc.get:value[part]}else isOwn=hasOwn(value,part),value=value[part];isOwn&&!skipFurtherCaching&&(INTRINSICS[intrinsicRealName]=value)}}return value}},
+/***/1064(module,__unused_webpack_exports,__webpack_require__){"use strict";var $Object=__webpack_require__(9612);
+/** @type {import('./Object.getPrototypeOf')} */module.exports=$Object.getPrototypeOf||null},
+/***/8648(module){"use strict";
+/** @type {import('./Reflect.getPrototypeOf')} */module.exports="undefined"!=typeof Reflect&&Reflect.getPrototypeOf||null},
+/***/3628(module,__unused_webpack_exports,__webpack_require__){"use strict";var reflectGetProto=__webpack_require__(8648),originalGetProto=__webpack_require__(1064),getDunderProto=__webpack_require__(7176);
+/** @type {import('.')} */
+module.exports=reflectGetProto?function(O){
+// @ts-expect-error TS can't narrow inside a closure, for some reason
+return reflectGetProto(O)}:originalGetProto?function(O){if(!O||"object"!=typeof O&&"function"!=typeof O)throw new TypeError("getProto: not an object");
+// @ts-expect-error TS can't narrow inside a closure, for some reason
+return originalGetProto(O)}:getDunderProto?function(O){
+// @ts-expect-error TS can't narrow inside a closure, for some reason
+return getDunderProto(O)}:null},
+/***/6549(module){"use strict";
+/** @type {import('./gOPD')} */module.exports=Object.getOwnPropertyDescriptor},
+/***/5795(module,__unused_webpack_exports,__webpack_require__){"use strict";
+/** @type {import('.')} */var $gOPD=__webpack_require__(6549);if($gOPD)try{$gOPD([],"length")}catch(e){
+// IE 8 has a broken gOPD
+$gOPD=null}module.exports=$gOPD},
+/***/4039(module,__unused_webpack_exports,__webpack_require__){"use strict";var origSymbol="undefined"!=typeof Symbol&&Symbol,hasSymbolSham=__webpack_require__(1333);
+/** @type {import('.')} */
+module.exports=function(){return"function"==typeof origSymbol&&("function"==typeof Symbol&&("symbol"==typeof origSymbol("foo")&&("symbol"==typeof Symbol("bar")&&hasSymbolSham())))}},
+/***/1333(module){"use strict";
+/** @type {import('./shams')} */
+/* eslint complexity: [2, 18], max-statements: [2, 33] */module.exports=function(){if("function"!=typeof Symbol||"function"!=typeof Object.getOwnPropertySymbols)return!1;if("symbol"==typeof Symbol.iterator)return!0;
+/** @type {{ [k in symbol]?: unknown }} */var obj={},sym=Symbol("test"),symObj=Object(sym);if("string"==typeof sym)return!1;if("[object Symbol]"!==Object.prototype.toString.call(sym))return!1;if("[object Symbol]"!==Object.prototype.toString.call(symObj))return!1;
+// temp disabled per https://github.com/ljharb/object.assign/issues/17
+// if (sym instanceof Symbol) { return false; }
+// temp disabled per https://github.com/WebReflection/get-own-property-symbols/issues/4
+// if (!(symObj instanceof Symbol)) { return false; }
+// if (typeof Symbol.prototype.toString !== 'function') { return false; }
+// if (String(sym) !== Symbol.prototype.toString.call(sym)) { return false; }
+for(var _ in obj[sym]=42,obj)return!1;// eslint-disable-line no-restricted-syntax, no-unreachable-loop
+if("function"==typeof Object.keys&&0!==Object.keys(obj).length)return!1;if("function"==typeof Object.getOwnPropertyNames&&0!==Object.getOwnPropertyNames(obj).length)return!1;var syms=Object.getOwnPropertySymbols(obj);if(1!==syms.length||syms[0]!==sym)return!1;if(!Object.prototype.propertyIsEnumerable.call(obj,sym))return!1;if("function"==typeof Object.getOwnPropertyDescriptor){
+// eslint-disable-next-line no-extra-parens
+var descriptor=/** @type {PropertyDescriptor} */Object.getOwnPropertyDescriptor(obj,sym);if(42!==descriptor.value||!0!==descriptor.enumerable)return!1}return!0}},
+/***/9957(module,__unused_webpack_exports,__webpack_require__){"use strict";var call=Function.prototype.call,$hasOwn=Object.prototype.hasOwnProperty,bind=__webpack_require__(6743);
+/** @type {import('.')} */
+module.exports=bind.call(call,$hasOwn)},
+/***/1514(module){"use strict";
+/** @type {import('./abs')} */module.exports=Math.abs},
+/***/8968(module){"use strict";
+/** @type {import('./floor')} */module.exports=Math.floor},
+/***/4459(module){"use strict";
+/** @type {import('./isNaN')} */module.exports=Number.isNaN||function(a){return a!=a}},
+/***/6188(module){"use strict";
+/** @type {import('./max')} */module.exports=Math.max},
+/***/8002(module){"use strict";
+/** @type {import('./min')} */module.exports=Math.min},
+/***/5880(module){"use strict";
+/** @type {import('./pow')} */module.exports=Math.pow},
+/***/414(module){"use strict";
+/** @type {import('./round')} */module.exports=Math.round},
+/***/3093(module,__unused_webpack_exports,__webpack_require__){"use strict";var $isNaN=__webpack_require__(4459);
+/** @type {import('./sign')} */module.exports=function(number){return $isNaN(number)||0===number?number:number<0?-1:1}},
+/***/8859(module,__unused_webpack_exports,__webpack_require__){var hasMap="function"==typeof Map&&Map.prototype,mapSizeDescriptor=Object.getOwnPropertyDescriptor&&hasMap?Object.getOwnPropertyDescriptor(Map.prototype,"size"):null,mapSize=hasMap&&mapSizeDescriptor&&"function"==typeof mapSizeDescriptor.get?mapSizeDescriptor.get:null,mapForEach=hasMap&&Map.prototype.forEach,hasSet="function"==typeof Set&&Set.prototype,setSizeDescriptor=Object.getOwnPropertyDescriptor&&hasSet?Object.getOwnPropertyDescriptor(Set.prototype,"size"):null,setSize=hasSet&&setSizeDescriptor&&"function"==typeof setSizeDescriptor.get?setSizeDescriptor.get:null,setForEach=hasSet&&Set.prototype.forEach,weakMapHas="function"==typeof WeakMap&&WeakMap.prototype?WeakMap.prototype.has:null,weakSetHas="function"==typeof WeakSet&&WeakSet.prototype?WeakSet.prototype.has:null,weakRefDeref="function"==typeof WeakRef&&WeakRef.prototype?WeakRef.prototype.deref:null,booleanValueOf=Boolean.prototype.valueOf,objectToString=Object.prototype.toString,functionToString=Function.prototype.toString,$match=String.prototype.match,$slice=String.prototype.slice,$replace=String.prototype.replace,$toUpperCase=String.prototype.toUpperCase,$toLowerCase=String.prototype.toLowerCase,$test=RegExp.prototype.test,$concat=Array.prototype.concat,$join=Array.prototype.join,$arrSlice=Array.prototype.slice,$floor=Math.floor,bigIntValueOf="function"==typeof BigInt?BigInt.prototype.valueOf:null,gOPS=Object.getOwnPropertySymbols,symToString="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?Symbol.prototype.toString:null,hasShammedSymbols="function"==typeof Symbol&&"object"==typeof Symbol.iterator,toStringTag="function"==typeof Symbol&&Symbol.toStringTag&&(typeof Symbol.toStringTag===hasShammedSymbols||"symbol")?Symbol.toStringTag:null,isEnumerable=Object.prototype.propertyIsEnumerable,gPO=("function"==typeof Reflect?Reflect.getPrototypeOf:Object.getPrototypeOf)||([].__proto__===Array.prototype?function(O){return O.__proto__;// eslint-disable-line no-proto
+}:null);function addNumericSeparator(num,str){if(num===1/0||num===-1/0||num!=num||num&&num>-1e3&&num<1e3||$test.call(/e/,str))return str;var sepRegex=/[0-9](?=(?:[0-9]{3})+(?![0-9]))/g;if("number"==typeof num){var int=num<0?-$floor(-num):$floor(num);// trunc(num)
+if(int!==num){var intStr=String(int),dec=$slice.call(str,intStr.length+1);return $replace.call(intStr,sepRegex,"$&_")+"."+$replace.call($replace.call(dec,/([0-9]{3})/g,"$&_"),/_$/,"")}}return $replace.call(str,sepRegex,"$&_")}var utilInspect=__webpack_require__(2634),inspectCustom=utilInspect.custom,inspectSymbol=isSymbol(inspectCustom)?inspectCustom:null,quotes={__proto__:null,double:'"',single:"'"},quoteREs={__proto__:null,double:/(["\\])/g,single:/(['\\])/g};function wrapQuotes(s,defaultStyle,opts){var style=opts.quoteStyle||defaultStyle,quoteChar=quotes[style];return quoteChar+s+quoteChar}function quote(s){return $replace.call(String(s),/"/g,"&quot;")}function canTrustToString(obj){return!toStringTag||!("object"==typeof obj&&(toStringTag in obj||void 0!==obj[toStringTag]))}function isArray(obj){return"[object Array]"===toStr(obj)&&canTrustToString(obj)}function isRegExp(obj){return"[object RegExp]"===toStr(obj)&&canTrustToString(obj)}
+// Symbol and BigInt do have Symbol.toStringTag by spec, so that can't be used to eliminate false positives
+function isSymbol(obj){if(hasShammedSymbols)return obj&&"object"==typeof obj&&obj instanceof Symbol;if("symbol"==typeof obj)return!0;if(!obj||"object"!=typeof obj||!symToString)return!1;try{return symToString.call(obj),!0}catch(e){}return!1}module.exports=function inspect_(obj,options,depth,seen){var opts=options||{};if(has(opts,"quoteStyle")&&!has(quotes,opts.quoteStyle))throw new TypeError('option "quoteStyle" must be "single" or "double"');if(has(opts,"maxStringLength")&&("number"==typeof opts.maxStringLength?opts.maxStringLength<0&&opts.maxStringLength!==1/0:null!==opts.maxStringLength))throw new TypeError('option "maxStringLength", if provided, must be a positive integer, Infinity, or `null`');var customInspect=!has(opts,"customInspect")||opts.customInspect;if("boolean"!=typeof customInspect&&"symbol"!==customInspect)throw new TypeError("option \"customInspect\", if provided, must be `true`, `false`, or `'symbol'`");if(has(opts,"indent")&&null!==opts.indent&&"\t"!==opts.indent&&!(parseInt(opts.indent,10)===opts.indent&&opts.indent>0))throw new TypeError('option "indent" must be "\\t", an integer > 0, or `null`');if(has(opts,"numericSeparator")&&"boolean"!=typeof opts.numericSeparator)throw new TypeError('option "numericSeparator", if provided, must be `true` or `false`');var numericSeparator=opts.numericSeparator;if(void 0===obj)return"undefined";if(null===obj)return"null";if("boolean"==typeof obj)return obj?"true":"false";if("string"==typeof obj)return inspectString(obj,opts);if("number"==typeof obj){if(0===obj)return 1/0/obj>0?"0":"-0";var str=String(obj);return numericSeparator?addNumericSeparator(obj,str):str}if("bigint"==typeof obj){var bigIntStr=String(obj)+"n";return numericSeparator?addNumericSeparator(obj,bigIntStr):bigIntStr}var maxDepth=void 0===opts.depth?5:opts.depth;if(void 0===depth&&(depth=0),depth>=maxDepth&&maxDepth>0&&"object"==typeof obj)return isArray(obj)?"[Array]":"[Object]";var indent=function(opts,depth){var baseIndent;if("\t"===opts.indent)baseIndent="\t";else{if(!("number"==typeof opts.indent&&opts.indent>0))return null;baseIndent=$join.call(Array(opts.indent+1)," ")}return{base:baseIndent,prev:$join.call(Array(depth+1),baseIndent)}}(opts,depth);if(void 0===seen)seen=[];else if(indexOf(seen,obj)>=0)return"[Circular]";function inspect(value,from,noIndent){if(from&&(seen=$arrSlice.call(seen)).push(from),noIndent){var newOpts={depth:opts.depth};return has(opts,"quoteStyle")&&(newOpts.quoteStyle=opts.quoteStyle),inspect_(value,newOpts,depth+1,seen)}return inspect_(value,opts,depth+1,seen)}if("function"==typeof obj&&!isRegExp(obj)){// in older engines, regexes are callable
+var name=function(f){if(f.name)return f.name;var m=$match.call(functionToString.call(f),/^function\s*([\w$]+)/);if(m)return m[1];return null}(obj),keys=arrObjKeys(obj,inspect);return"[Function"+(name?": "+name:" (anonymous)")+"]"+(keys.length>0?" { "+$join.call(keys,", ")+" }":"")}if(isSymbol(obj)){var symString=hasShammedSymbols?$replace.call(String(obj),/^(Symbol\(.*\))_[^)]*$/,"$1"):symToString.call(obj);return"object"!=typeof obj||hasShammedSymbols?symString:markBoxed(symString)}if(function(x){if(!x||"object"!=typeof x)return!1;if("undefined"!=typeof HTMLElement&&x instanceof HTMLElement)return!0;return"string"==typeof x.nodeName&&"function"==typeof x.getAttribute}(obj)){for(var s="<"+$toLowerCase.call(String(obj.nodeName)),attrs=obj.attributes||[],i=0;i<attrs.length;i++)s+=" "+attrs[i].name+"="+wrapQuotes(quote(attrs[i].value),"double",opts);return s+=">",obj.childNodes&&obj.childNodes.length&&(s+="..."),s+="</"+$toLowerCase.call(String(obj.nodeName))+">"}if(isArray(obj)){if(0===obj.length)return"[]";var xs=arrObjKeys(obj,inspect);return indent&&!function(xs){for(var i=0;i<xs.length;i++)if(indexOf(xs[i],"\n")>=0)return!1;return!0}(xs)?"["+indentedJoin(xs,indent)+"]":"[ "+$join.call(xs,", ")+" ]"}if(function(obj){return"[object Error]"===toStr(obj)&&canTrustToString(obj)}(obj)){var parts=arrObjKeys(obj,inspect);return"cause"in Error.prototype||!("cause"in obj)||isEnumerable.call(obj,"cause")?0===parts.length?"["+String(obj)+"]":"{ ["+String(obj)+"] "+$join.call(parts,", ")+" }":"{ ["+String(obj)+"] "+$join.call($concat.call("[cause]: "+inspect(obj.cause),parts),", ")+" }"}if("object"==typeof obj&&customInspect){if(inspectSymbol&&"function"==typeof obj[inspectSymbol]&&utilInspect)return utilInspect(obj,{depth:maxDepth-depth});if("symbol"!==customInspect&&"function"==typeof obj.inspect)return obj.inspect()}if(function(x){if(!mapSize||!x||"object"!=typeof x)return!1;try{mapSize.call(x);try{setSize.call(x)}catch(s){return!0}return x instanceof Map;// core-js workaround, pre-v2.5.0
+}catch(e){}return!1}(obj)){var mapParts=[];return mapForEach&&mapForEach.call(obj,function(value,key){mapParts.push(inspect(key,obj,!0)+" => "+inspect(value,obj))}),collectionOf("Map",mapSize.call(obj),mapParts,indent)}if(function(x){if(!setSize||!x||"object"!=typeof x)return!1;try{setSize.call(x);try{mapSize.call(x)}catch(m){return!0}return x instanceof Set;// core-js workaround, pre-v2.5.0
+}catch(e){}return!1}(obj)){var setParts=[];return setForEach&&setForEach.call(obj,function(value){setParts.push(inspect(value,obj))}),collectionOf("Set",setSize.call(obj),setParts,indent)}if(function(x){if(!weakMapHas||!x||"object"!=typeof x)return!1;try{weakMapHas.call(x,weakMapHas);try{weakSetHas.call(x,weakSetHas)}catch(s){return!0}return x instanceof WeakMap;// core-js workaround, pre-v2.5.0
+}catch(e){}return!1}(obj))return weakCollectionOf("WeakMap");if(function(x){if(!weakSetHas||!x||"object"!=typeof x)return!1;try{weakSetHas.call(x,weakSetHas);try{weakMapHas.call(x,weakMapHas)}catch(s){return!0}return x instanceof WeakSet;// core-js workaround, pre-v2.5.0
+}catch(e){}return!1}(obj))return weakCollectionOf("WeakSet");if(function(x){if(!weakRefDeref||!x||"object"!=typeof x)return!1;try{return weakRefDeref.call(x),!0}catch(e){}return!1}(obj))return weakCollectionOf("WeakRef");if(function(obj){return"[object Number]"===toStr(obj)&&canTrustToString(obj)}(obj))return markBoxed(inspect(Number(obj)));if(function(obj){if(!obj||"object"!=typeof obj||!bigIntValueOf)return!1;try{return bigIntValueOf.call(obj),!0}catch(e){}return!1}(obj))return markBoxed(inspect(bigIntValueOf.call(obj)));if(function(obj){return"[object Boolean]"===toStr(obj)&&canTrustToString(obj)}(obj))return markBoxed(booleanValueOf.call(obj));if(function(obj){return"[object String]"===toStr(obj)&&canTrustToString(obj)}(obj))return markBoxed(inspect(String(obj)));
+// note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
+/* eslint-env browser */if("undefined"!=typeof window&&obj===window)return"{ [object Window] }";if("undefined"!=typeof globalThis&&obj===globalThis||void 0!==__webpack_require__.g&&obj===__webpack_require__.g)return"{ [object globalThis] }";if(!function(obj){return"[object Date]"===toStr(obj)&&canTrustToString(obj)}(obj)&&!isRegExp(obj)){var ys=arrObjKeys(obj,inspect),isPlainObject=gPO?gPO(obj)===Object.prototype:obj instanceof Object||obj.constructor===Object,protoTag=obj instanceof Object?"":"null prototype",stringTag=!isPlainObject&&toStringTag&&Object(obj)===obj&&toStringTag in obj?$slice.call(toStr(obj),8,-1):protoTag?"Object":"",tag=(isPlainObject||"function"!=typeof obj.constructor?"":obj.constructor.name?obj.constructor.name+" ":"")+(stringTag||protoTag?"["+$join.call($concat.call([],stringTag||[],protoTag||[]),": ")+"] ":"");return 0===ys.length?tag+"{}":indent?tag+"{"+indentedJoin(ys,indent)+"}":tag+"{ "+$join.call(ys,", ")+" }"}return String(obj)};var hasOwn=Object.prototype.hasOwnProperty||function(key){return key in this};function has(obj,key){return hasOwn.call(obj,key)}function toStr(obj){return objectToString.call(obj)}function indexOf(xs,x){if(xs.indexOf)return xs.indexOf(x);for(var i=0,l=xs.length;i<l;i++)if(xs[i]===x)return i;return-1}function inspectString(str,opts){if(str.length>opts.maxStringLength){var remaining=str.length-opts.maxStringLength,trailer="... "+remaining+" more character"+(remaining>1?"s":"");return inspectString($slice.call(str,0,opts.maxStringLength),opts)+trailer}var quoteRE=quoteREs[opts.quoteStyle||"single"];return quoteRE.lastIndex=0,wrapQuotes($replace.call($replace.call(str,quoteRE,"\\$1"),/[\x00-\x1f]/g,lowbyte),"single",opts)}function lowbyte(c){var n=c.charCodeAt(0),x={8:"b",9:"t",10:"n",12:"f",13:"r"}[n];return x?"\\"+x:"\\x"+(n<16?"0":"")+$toUpperCase.call(n.toString(16))}function markBoxed(str){return"Object("+str+")"}function weakCollectionOf(type){return type+" { ? }"}function collectionOf(type,size,entries,indent){return type+" ("+size+") {"+(indent?indentedJoin(entries,indent):$join.call(entries,", "))+"}"}function indentedJoin(xs,indent){if(0===xs.length)return"";var lineJoiner="\n"+indent.prev+indent.base;return lineJoiner+$join.call(xs,","+lineJoiner)+"\n"+indent.prev}function arrObjKeys(obj,inspect){var isArr=isArray(obj),xs=[];if(isArr){xs.length=obj.length;for(var i=0;i<obj.length;i++)xs[i]=has(obj,i)?inspect(obj[i],obj):""}var symMap,syms="function"==typeof gOPS?gOPS(obj):[];if(hasShammedSymbols){symMap={};for(var k=0;k<syms.length;k++)symMap["$"+syms[k]]=syms[k]}for(var key in obj)// eslint-disable-line no-restricted-syntax
+has(obj,key)&&(// eslint-disable-line no-restricted-syntax, no-continue
+isArr&&String(Number(key))===key&&key<obj.length||hasShammedSymbols&&symMap["$"+key]instanceof Symbol||($test.call(/[^\w$]/,key)?xs.push(inspect(key,obj)+": "+inspect(obj[key],obj)):xs.push(key+": "+inspect(obj[key],obj))));if("function"==typeof gOPS)for(var j=0;j<syms.length;j++)isEnumerable.call(obj,syms[j])&&xs.push("["+inspect(syms[j])+"]: "+inspect(obj[syms[j]],obj));return xs}
+/***/},
 /***/945(__unused_webpack_module,__webpack_exports__,__webpack_require__){"use strict";var defineProperty,codePointAt;__webpack_require__.r(__webpack_exports__),
 /* harmony export */__webpack_require__.d(__webpack_exports__,{
 /* harmony export */BoundingBox:()=>/* binding */BoundingBox,
@@ -3967,7 +8824,7 @@ Font.prototype.toArrayBuffer=function(){for(var bytes=this.toTables().encode(),b
 /**
  * Initiate a download of the OpenType font.
  */
-Font.prototype.download=function(fileName){var familyName=this.getEnglishName("fontFamily"),styleName=this.getEnglishName("fontSubfamily");fileName=fileName||familyName.replace(/\s/g,"")+"-"+styleName+".otf";var arrayBuffer=this.toArrayBuffer();if("undefined"!=typeof window)if(window.URL=window.URL||window.webkitURL,window.URL){var dataView=new DataView(arrayBuffer),blob=new Blob([dataView],{type:"font/opentype"}),link=document.createElement("a");link.href=window.URL.createObjectURL(blob),link.download=fileName;var event=document.createEvent("MouseEvents");event.initEvent("click",!0,!1),link.dispatchEvent(event)}else console.warn("Font file could not be downloaded. Try using a different browser.");else{var fs=__webpack_require__(256),buffer=function(ab){for(var buffer=new Buffer(ab.byteLength),view=new Uint8Array(ab),i=0;i<buffer.length;++i)buffer[i]=view[i];return buffer}(arrayBuffer);fs.writeFileSync(fileName,buffer)}},
+Font.prototype.download=function(fileName){var familyName=this.getEnglishName("fontFamily"),styleName=this.getEnglishName("fontSubfamily");fileName=fileName||familyName.replace(/\s/g,"")+"-"+styleName+".otf";var arrayBuffer=this.toArrayBuffer();if("undefined"!=typeof window)if(window.URL=window.URL||window.webkitURL,window.URL){var dataView=new DataView(arrayBuffer),blob=new Blob([dataView],{type:"font/opentype"}),link=document.createElement("a");link.href=window.URL.createObjectURL(blob),link.download=fileName;var event=document.createEvent("MouseEvents");event.initEvent("click",!0,!1),link.dispatchEvent(event)}else console.warn("Font file could not be downloaded. Try using a different browser.");else{var fs=__webpack_require__(7256),buffer=function(ab){for(var buffer=new Buffer(ab.byteLength),view=new Uint8Array(ab),i=0;i<buffer.length;++i)buffer[i]=view[i];return buffer}(arrayBuffer);fs.writeFileSync(fileName,buffer)}},
 /**
  * @private
  */
@@ -4049,7 +8906,7 @@ glyphOffset*=2),glyphOffsets.push(glyphOffset)}return glyphOffsets}};
  * and the font as an ArrayBuffer in the second parameter if it succeeds.
  * @param  {string} path - The path of the file
  * @param  {Function} callback - The function to call when the font load completes
- */function loadFromFile(path,callback){__webpack_require__(256).readFile(path,function(err,buffer){if(err)return callback(err.message);callback(null,nodeBufferToArrayBuffer(buffer))})}
+ */function loadFromFile(path,callback){__webpack_require__(7256).readFile(path,function(err,buffer){if(err)return callback(err.message);callback(null,nodeBufferToArrayBuffer(buffer))})}
 /**
  * Loads a font from a URL. The callback throws an error message as the first parameter if it fails
  * and the font as an ArrayBuffer in the second parameter if it succeeds.
@@ -4114,27 +8971,125 @@ for(var tableEntries=[],p=44,i=0;i<numTables;i+=1){var tag=parse.getTag(data,p),
  * @param  {string} url - The URL of the font to load.
  * @param  {Object} opt - opt.lowMemory
  * @return {opentype.Font}
- */function loadSync(url,opt){return parseBuffer(nodeBufferToArrayBuffer(__webpack_require__(256).readFileSync(url)),opt)}
+ */function loadSync(url,opt){return parseBuffer(nodeBufferToArrayBuffer(__webpack_require__(7256).readFileSync(url)),opt)}
 /* harmony default export */const __WEBPACK_DEFAULT_EXPORT__=Object.freeze({__proto__:null,Font,Glyph,Path,BoundingBox,_parse:parse,parse:parseBuffer,load,loadSync});
 //# sourceMappingURL=opentype.module.js.map
 /***/},
-/***/195(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.Defaults=void 0;class Defaults{}exports.Defaults=Defaults,
+/***/4765(module){"use strict";var replace=String.prototype.replace,percentTwenties=/%20/g,Format_RFC1738="RFC1738",Format_RFC3986="RFC3986";module.exports={default:Format_RFC3986,formatters:{RFC1738:function(value){return replace.call(value,percentTwenties,"+")},RFC3986:function(value){return String(value)}},RFC1738:Format_RFC1738,RFC3986:Format_RFC3986}},
+/***/5373(module,__unused_webpack_exports,__webpack_require__){"use strict";var stringify=__webpack_require__(8636),parse=__webpack_require__(2642),formats=__webpack_require__(4765);module.exports={formats,parse,stringify}},
+/***/2642(module,__unused_webpack_exports,__webpack_require__){"use strict";var utils=__webpack_require__(7720),has=Object.prototype.hasOwnProperty,isArray=Array.isArray,defaults={allowDots:!1,allowEmptyArrays:!1,allowPrototypes:!1,allowSparse:!1,arrayLimit:20,charset:"utf-8",charsetSentinel:!1,comma:!1,decodeDotInKeys:!1,decoder:utils.decode,delimiter:"&",depth:5,duplicates:"combine",ignoreQueryPrefix:!1,interpretNumericEntities:!1,parameterLimit:1e3,parseArrays:!0,plainObjects:!1,strictDepth:!1,strictMerge:!0,strictNullHandling:!1,throwOnLimitExceeded:!1},interpretNumericEntities=function(str){return str.replace(/&#(\d+);/g,function($0,numberStr){return String.fromCharCode(parseInt(numberStr,10))})},parseArrayValue=function(val,options,currentArrayLength){if(val&&"string"==typeof val&&options.comma&&val.indexOf(",")>-1)return val.split(",");if(options.throwOnLimitExceeded&&currentArrayLength>=options.arrayLimit)throw new RangeError("Array limit exceeded. Only "+options.arrayLimit+" element"+(1===options.arrayLimit?"":"s")+" allowed in an array.");return val},parseKeys=function(givenKey,val,options,valuesParsed){if(givenKey){var keys=function(givenKey,options){var key=options.allowDots?givenKey.replace(/\.([^.[]+)/g,"[$1]"):givenKey;if(options.depth<=0){if(!options.plainObjects&&has.call(Object.prototype,key)&&!options.allowPrototypes)return;return[key]}var child=/(\[[^[\]]*])/g,segment=/(\[[^[\]]*])/.exec(key),parent=segment?key.slice(0,segment.index):key,keys=[];if(parent){if(!options.plainObjects&&has.call(Object.prototype,parent)&&!options.allowPrototypes)return;keys[keys.length]=parent}for(var i=0;null!==(segment=child.exec(key))&&i<options.depth;){i+=1;var segmentContent=segment[1].slice(1,-1);if(!options.plainObjects&&has.call(Object.prototype,segmentContent)&&!options.allowPrototypes)return;keys[keys.length]=segment[1]}if(segment){if(!0===options.strictDepth)throw new RangeError("Input depth exceeded depth option of "+options.depth+" and strictDepth is true");keys[keys.length]="["+key.slice(segment.index)+"]"}return keys}(givenKey,options);if(keys)return function(chain,val,options,valuesParsed){var currentArrayLength=0;if(chain.length>0&&"[]"===chain[chain.length-1]){var parentKey=chain.slice(0,-1).join("");currentArrayLength=Array.isArray(val)&&val[parentKey]?val[parentKey].length:0}for(var leaf=valuesParsed?val:parseArrayValue(val,options,currentArrayLength),i=chain.length-1;i>=0;--i){var obj,root=chain[i];if("[]"===root&&options.parseArrays)
+// leaf is already an overflow object, preserve it
+obj=utils.isOverflow(leaf)?leaf:options.allowEmptyArrays&&(""===leaf||options.strictNullHandling&&null===leaf)?[]:utils.combine([],leaf,options.arrayLimit,options.plainObjects);else{obj=options.plainObjects?{__proto__:null}:{};var cleanRoot="["===root.charAt(0)&&"]"===root.charAt(root.length-1)?root.slice(1,-1):root,decodedRoot=options.decodeDotInKeys?cleanRoot.replace(/%2E/g,"."):cleanRoot,index=parseInt(decodedRoot,10),isValidArrayIndex=!isNaN(index)&&root!==decodedRoot&&String(index)===decodedRoot&&index>=0&&options.parseArrays;if(options.parseArrays||""!==decodedRoot)if(isValidArrayIndex&&index<options.arrayLimit)(obj=[])[index]=leaf;else{if(isValidArrayIndex&&options.throwOnLimitExceeded)throw new RangeError("Array limit exceeded. Only "+options.arrayLimit+" element"+(1===options.arrayLimit?"":"s")+" allowed in an array.");isValidArrayIndex?(obj[index]=leaf,utils.markOverflow(obj,index)):"__proto__"!==decodedRoot&&(obj[decodedRoot]=leaf)}else obj={0:leaf}}leaf=obj}return leaf}(keys,val,options,valuesParsed)}};module.exports=function(str,opts){var options=function(opts){if(!opts)return defaults;if(void 0!==opts.allowEmptyArrays&&"boolean"!=typeof opts.allowEmptyArrays)throw new TypeError("`allowEmptyArrays` option can only be `true` or `false`, when provided");if(void 0!==opts.decodeDotInKeys&&"boolean"!=typeof opts.decodeDotInKeys)throw new TypeError("`decodeDotInKeys` option can only be `true` or `false`, when provided");if(null!==opts.decoder&&void 0!==opts.decoder&&"function"!=typeof opts.decoder)throw new TypeError("Decoder has to be a function.");if(void 0!==opts.charset&&"utf-8"!==opts.charset&&"iso-8859-1"!==opts.charset)throw new TypeError("The charset option must be either utf-8, iso-8859-1, or undefined");if(void 0!==opts.throwOnLimitExceeded&&"boolean"!=typeof opts.throwOnLimitExceeded)throw new TypeError("`throwOnLimitExceeded` option must be a boolean");var charset=void 0===opts.charset?defaults.charset:opts.charset,duplicates=void 0===opts.duplicates?defaults.duplicates:opts.duplicates;if("combine"!==duplicates&&"first"!==duplicates&&"last"!==duplicates)throw new TypeError("The duplicates option must be either combine, first, or last");return{allowDots:void 0===opts.allowDots?!0===opts.decodeDotInKeys||defaults.allowDots:!!opts.allowDots,allowEmptyArrays:"boolean"==typeof opts.allowEmptyArrays?!!opts.allowEmptyArrays:defaults.allowEmptyArrays,allowPrototypes:"boolean"==typeof opts.allowPrototypes?opts.allowPrototypes:defaults.allowPrototypes,allowSparse:"boolean"==typeof opts.allowSparse?opts.allowSparse:defaults.allowSparse,arrayLimit:"number"==typeof opts.arrayLimit?opts.arrayLimit:defaults.arrayLimit,charset,charsetSentinel:"boolean"==typeof opts.charsetSentinel?opts.charsetSentinel:defaults.charsetSentinel,comma:"boolean"==typeof opts.comma?opts.comma:defaults.comma,decodeDotInKeys:"boolean"==typeof opts.decodeDotInKeys?opts.decodeDotInKeys:defaults.decodeDotInKeys,decoder:"function"==typeof opts.decoder?opts.decoder:defaults.decoder,delimiter:"string"==typeof opts.delimiter||utils.isRegExp(opts.delimiter)?opts.delimiter:defaults.delimiter,
+// eslint-disable-next-line no-implicit-coercion, no-extra-parens
+depth:"number"==typeof opts.depth||!1===opts.depth?+opts.depth:defaults.depth,duplicates,ignoreQueryPrefix:!0===opts.ignoreQueryPrefix,interpretNumericEntities:"boolean"==typeof opts.interpretNumericEntities?opts.interpretNumericEntities:defaults.interpretNumericEntities,parameterLimit:"number"==typeof opts.parameterLimit?opts.parameterLimit:defaults.parameterLimit,parseArrays:!1!==opts.parseArrays,plainObjects:"boolean"==typeof opts.plainObjects?opts.plainObjects:defaults.plainObjects,strictDepth:"boolean"==typeof opts.strictDepth?!!opts.strictDepth:defaults.strictDepth,strictMerge:"boolean"==typeof opts.strictMerge?!!opts.strictMerge:defaults.strictMerge,strictNullHandling:"boolean"==typeof opts.strictNullHandling?opts.strictNullHandling:defaults.strictNullHandling,throwOnLimitExceeded:"boolean"==typeof opts.throwOnLimitExceeded&&opts.throwOnLimitExceeded}}(opts);if(""===str||null==str)return options.plainObjects?{__proto__:null}:{};for(var tempObj="string"==typeof str?function(str,options){var obj={__proto__:null},cleanStr=options.ignoreQueryPrefix?str.replace(/^\?/,""):str;cleanStr=cleanStr.replace(/%5B/gi,"[").replace(/%5D/gi,"]");var limit=options.parameterLimit===1/0?void 0:options.parameterLimit,parts=cleanStr.split(options.delimiter,options.throwOnLimitExceeded?limit+1:limit);if(options.throwOnLimitExceeded&&parts.length>limit)throw new RangeError("Parameter limit exceeded. Only "+limit+" parameter"+(1===limit?"":"s")+" allowed.");var i,skipIndex=-1,charset=options.charset;// Keep track of where the utf8 sentinel was found
+if(options.charsetSentinel)for(i=0;i<parts.length;++i)0===parts[i].indexOf("utf8=")&&("utf8=%E2%9C%93"===parts[i]?charset="utf-8":"utf8=%26%2310003%3B"===parts[i]&&(charset="iso-8859-1"),skipIndex=i,i=parts.length);for(i=0;i<parts.length;++i)if(i!==skipIndex){var key,val,part=parts[i],bracketEqualsPos=part.indexOf("]="),pos=-1===bracketEqualsPos?part.indexOf("="):bracketEqualsPos+1;if(-1===pos?(key=options.decoder(part,defaults.decoder,charset,"key"),val=options.strictNullHandling?null:""):null!==(key=options.decoder(part.slice(0,pos),defaults.decoder,charset,"key"))&&(val=utils.maybeMap(parseArrayValue(part.slice(pos+1),options,isArray(obj[key])?obj[key].length:0),function(encodedVal){return options.decoder(encodedVal,defaults.decoder,charset,"value")})),val&&options.interpretNumericEntities&&"iso-8859-1"===charset&&(val=interpretNumericEntities(String(val))),part.indexOf("[]=")>-1&&(val=isArray(val)?[val]:val),options.comma&&isArray(val)&&val.length>options.arrayLimit){if(options.throwOnLimitExceeded)throw new RangeError("Array limit exceeded. Only "+options.arrayLimit+" element"+(1===options.arrayLimit?"":"s")+" allowed in an array.");val=utils.combine([],val,options.arrayLimit,options.plainObjects)}if(null!==key){var existing=has.call(obj,key);existing&&("combine"===options.duplicates||part.indexOf("[]=")>-1)?obj[key]=utils.combine(obj[key],val,options.arrayLimit,options.plainObjects):existing&&"last"!==options.duplicates||(obj[key]=val)}}return obj}(str,options):str,obj=options.plainObjects?{__proto__:null}:{},keys=Object.keys(tempObj),i=0;i<keys.length;++i){var key=keys[i],newObj=parseKeys(key,tempObj[key],options,"string"==typeof str);obj=utils.merge(obj,newObj,options)}return!0===options.allowSparse?obj:utils.compact(obj)}},
+/***/8636(module,__unused_webpack_exports,__webpack_require__){"use strict";var getSideChannel=__webpack_require__(920),utils=__webpack_require__(7720),formats=__webpack_require__(4765),has=Object.prototype.hasOwnProperty,arrayPrefixGenerators={brackets:function(prefix){return prefix+"[]"},comma:"comma",indices:function(prefix,key){return prefix+"["+key+"]"},repeat:function(prefix){return prefix}},isArray=Array.isArray,push=Array.prototype.push,pushToArray=function(arr,valueOrArray){push.apply(arr,isArray(valueOrArray)?valueOrArray:[valueOrArray])},toISO=Date.prototype.toISOString,defaultFormat=formats.default,defaults={addQueryPrefix:!1,allowDots:!1,allowEmptyArrays:!1,arrayFormat:"indices",charset:"utf-8",charsetSentinel:!1,commaRoundTrip:!1,delimiter:"&",encode:!0,encodeDotInKeys:!1,encoder:utils.encode,encodeValuesOnly:!1,filter:void 0,format:defaultFormat,formatter:formats.formatters[defaultFormat],
+// deprecated
+indices:!1,serializeDate:function(date){return toISO.call(date)},skipNulls:!1,strictNullHandling:!1},sentinel={},stringify=function stringify(object,prefix,generateArrayPrefix,commaRoundTrip,allowEmptyArrays,strictNullHandling,skipNulls,encodeDotInKeys,encoder,filter,sort,allowDots,serializeDate,format,formatter,encodeValuesOnly,charset,sideChannel){for(var v,obj=object,tmpSc=sideChannel,step=0,findFlag=!1;void 0!==(tmpSc=tmpSc.get(sentinel))&&!findFlag;){
+// Where object last appeared in the ref tree
+var pos=tmpSc.get(object);if(step+=1,void 0!==pos){if(pos===step)throw new RangeError("Cyclic object value");findFlag=!0}void 0===tmpSc.get(sentinel)&&(step=0)}if("function"==typeof filter?obj=filter(prefix,obj):obj instanceof Date?obj=serializeDate(obj):"comma"===generateArrayPrefix&&isArray(obj)&&(obj=utils.maybeMap(obj,function(value){return value instanceof Date?serializeDate(value):value})),null===obj){if(strictNullHandling)return encoder&&!encodeValuesOnly?encoder(prefix,defaults.encoder,charset,"key",format):prefix;obj=""}if("string"==typeof(v=obj)||"number"==typeof v||"boolean"==typeof v||"symbol"==typeof v||"bigint"==typeof v||utils.isBuffer(obj))return encoder?[formatter(encodeValuesOnly?prefix:encoder(prefix,defaults.encoder,charset,"key",format))+"="+formatter(encoder(obj,defaults.encoder,charset,"value",format))]:[formatter(prefix)+"="+formatter(String(obj))];var objKeys,values=[];if(void 0===obj)return values;if("comma"===generateArrayPrefix&&isArray(obj))
+// we need to join elements in
+encodeValuesOnly&&encoder&&(obj=utils.maybeMap(obj,encoder)),objKeys=[{value:obj.length>0?obj.join(",")||null:void 0}];else if(isArray(filter))objKeys=filter;else{var keys=Object.keys(obj);objKeys=sort?keys.sort(sort):keys}var encodedPrefix=encodeDotInKeys?String(prefix).replace(/\./g,"%2E"):String(prefix),adjustedPrefix=commaRoundTrip&&isArray(obj)&&1===obj.length?encodedPrefix+"[]":encodedPrefix;if(allowEmptyArrays&&isArray(obj)&&0===obj.length)return adjustedPrefix+"[]";for(var j=0;j<objKeys.length;++j){var key=objKeys[j],value="object"==typeof key&&key&&void 0!==key.value?key.value:obj[key];if(!skipNulls||null!==value){var encodedKey=allowDots&&encodeDotInKeys?String(key).replace(/\./g,"%2E"):String(key),keyPrefix=isArray(obj)?"function"==typeof generateArrayPrefix?generateArrayPrefix(adjustedPrefix,encodedKey):adjustedPrefix:adjustedPrefix+(allowDots?"."+encodedKey:"["+encodedKey+"]");sideChannel.set(object,step);var valueSideChannel=getSideChannel();valueSideChannel.set(sentinel,sideChannel),pushToArray(values,stringify(value,keyPrefix,generateArrayPrefix,commaRoundTrip,allowEmptyArrays,strictNullHandling,skipNulls,encodeDotInKeys,"comma"===generateArrayPrefix&&encodeValuesOnly&&isArray(obj)?null:encoder,filter,sort,allowDots,serializeDate,format,formatter,encodeValuesOnly,charset,valueSideChannel))}}return values};module.exports=function(object,opts){var objKeys,obj=object,options=function(opts){if(!opts)return defaults;if(void 0!==opts.allowEmptyArrays&&"boolean"!=typeof opts.allowEmptyArrays)throw new TypeError("`allowEmptyArrays` option can only be `true` or `false`, when provided");if(void 0!==opts.encodeDotInKeys&&"boolean"!=typeof opts.encodeDotInKeys)throw new TypeError("`encodeDotInKeys` option can only be `true` or `false`, when provided");if(null!==opts.encoder&&void 0!==opts.encoder&&"function"!=typeof opts.encoder)throw new TypeError("Encoder has to be a function.");var charset=opts.charset||defaults.charset;if(void 0!==opts.charset&&"utf-8"!==opts.charset&&"iso-8859-1"!==opts.charset)throw new TypeError("The charset option must be either utf-8, iso-8859-1, or undefined");var format=formats.default;if(void 0!==opts.format){if(!has.call(formats.formatters,opts.format))throw new TypeError("Unknown format option provided.");format=opts.format}var arrayFormat,formatter=formats.formatters[format],filter=defaults.filter;if(("function"==typeof opts.filter||isArray(opts.filter))&&(filter=opts.filter),arrayFormat=opts.arrayFormat in arrayPrefixGenerators?opts.arrayFormat:"indices"in opts?opts.indices?"indices":"repeat":defaults.arrayFormat,"commaRoundTrip"in opts&&"boolean"!=typeof opts.commaRoundTrip)throw new TypeError("`commaRoundTrip` must be a boolean, or absent");var allowDots=void 0===opts.allowDots?!0===opts.encodeDotInKeys||defaults.allowDots:!!opts.allowDots;return{addQueryPrefix:"boolean"==typeof opts.addQueryPrefix?opts.addQueryPrefix:defaults.addQueryPrefix,allowDots,allowEmptyArrays:"boolean"==typeof opts.allowEmptyArrays?!!opts.allowEmptyArrays:defaults.allowEmptyArrays,arrayFormat,charset,charsetSentinel:"boolean"==typeof opts.charsetSentinel?opts.charsetSentinel:defaults.charsetSentinel,commaRoundTrip:!!opts.commaRoundTrip,delimiter:void 0===opts.delimiter?defaults.delimiter:opts.delimiter,encode:"boolean"==typeof opts.encode?opts.encode:defaults.encode,encodeDotInKeys:"boolean"==typeof opts.encodeDotInKeys?opts.encodeDotInKeys:defaults.encodeDotInKeys,encoder:"function"==typeof opts.encoder?opts.encoder:defaults.encoder,encodeValuesOnly:"boolean"==typeof opts.encodeValuesOnly?opts.encodeValuesOnly:defaults.encodeValuesOnly,filter,format,formatter,serializeDate:"function"==typeof opts.serializeDate?opts.serializeDate:defaults.serializeDate,skipNulls:"boolean"==typeof opts.skipNulls?opts.skipNulls:defaults.skipNulls,sort:"function"==typeof opts.sort?opts.sort:null,strictNullHandling:"boolean"==typeof opts.strictNullHandling?opts.strictNullHandling:defaults.strictNullHandling}}(opts);"function"==typeof options.filter?obj=(0,options.filter)("",obj):isArray(options.filter)&&(objKeys=options.filter);var keys=[];if("object"!=typeof obj||null===obj)return"";var generateArrayPrefix=arrayPrefixGenerators[options.arrayFormat],commaRoundTrip="comma"===generateArrayPrefix&&options.commaRoundTrip;objKeys||(objKeys=Object.keys(obj)),options.sort&&objKeys.sort(options.sort);for(var sideChannel=getSideChannel(),i=0;i<objKeys.length;++i){var key=objKeys[i],value=obj[key];options.skipNulls&&null===value||pushToArray(keys,stringify(value,key,generateArrayPrefix,commaRoundTrip,options.allowEmptyArrays,options.strictNullHandling,options.skipNulls,options.encodeDotInKeys,options.encode?options.encoder:null,options.filter,options.sort,options.allowDots,options.serializeDate,options.format,options.formatter,options.encodeValuesOnly,options.charset,sideChannel))}var joined=keys.join(options.delimiter),prefix=!0===options.addQueryPrefix?"?":"";return options.charsetSentinel&&("iso-8859-1"===options.charset?
+// encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
+prefix+="utf8=%26%2310003%3B&":
+// encodeURIComponent('✓')
+prefix+="utf8=%E2%9C%93&"),joined.length>0?prefix+joined:""}},
+/***/7720(module,__unused_webpack_exports,__webpack_require__){"use strict";var formats=__webpack_require__(4765),getSideChannel=__webpack_require__(920),has=Object.prototype.hasOwnProperty,isArray=Array.isArray,overflowChannel=getSideChannel(),markOverflow=function(obj,maxIndex){return overflowChannel.set(obj,maxIndex),obj},isOverflow=function(obj){return overflowChannel.has(obj)},getMaxIndex=function(obj){return overflowChannel.get(obj)},setMaxIndex=function(obj,maxIndex){overflowChannel.set(obj,maxIndex)},hexTable=function(){for(var array=[],i=0;i<256;++i)array[array.length]="%"+((i<16?"0":"")+i.toString(16)).toUpperCase();return array}(),arrayToObject=function(source,options){for(var obj=options&&options.plainObjects?{__proto__:null}:{},i=0;i<source.length;++i)void 0!==source[i]&&(obj[i]=source[i]);return obj};module.exports={arrayToObject,assign:function(target,source){return Object.keys(source).reduce(function(acc,key){return acc[key]=source[key],acc},target)},combine:function(a,b,arrayLimit,plainObjects){
+// If 'a' is already an overflow object, add to it
+if(isOverflow(a)){var newIndex=getMaxIndex(a)+1;return a[newIndex]=b,setMaxIndex(a,newIndex),a}var result=[].concat(a,b);return result.length>arrayLimit?markOverflow(arrayToObject(result,{plainObjects}),result.length-1):result},compact:function(value){for(var queue=[{obj:{o:value},prop:"o"}],refs=[],i=0;i<queue.length;++i)for(var item=queue[i],obj=item.obj[item.prop],keys=Object.keys(obj),j=0;j<keys.length;++j){var key=keys[j],val=obj[key];"object"==typeof val&&null!==val&&-1===refs.indexOf(val)&&(queue[queue.length]={obj,prop:key},refs[refs.length]=val)}return function(queue){for(;queue.length>1;){var item=queue.pop(),obj=item.obj[item.prop];if(isArray(obj)){for(var compacted=[],j=0;j<obj.length;++j)void 0!==obj[j]&&(compacted[compacted.length]=obj[j]);item.obj[item.prop]=compacted}}}(queue),value},decode:function(str,defaultDecoder,charset){var strWithoutPlus=str.replace(/\+/g," ");if("iso-8859-1"===charset)
+// unescape never throws, no try...catch needed:
+return strWithoutPlus.replace(/%[0-9a-f]{2}/gi,unescape);
+// utf-8
+try{return decodeURIComponent(strWithoutPlus)}catch(e){return strWithoutPlus}},encode:function(str,defaultEncoder,charset,kind,format){
+// This code was originally written by Brian White (mscdex) for the io.js core querystring library.
+// It has been adapted here for stricter adherence to RFC 3986
+if(0===str.length)return str;var string=str;if("symbol"==typeof str?string=Symbol.prototype.toString.call(str):"string"!=typeof str&&(string=String(str)),"iso-8859-1"===charset)return escape(string).replace(/%u[0-9a-f]{4}/gi,function($0){return"%26%23"+parseInt($0.slice(2),16)+"%3B"});for(var out="",j=0;j<string.length;j+=1024){for(var segment=string.length>=1024?string.slice(j,j+1024):string,arr=[],i=0;i<segment.length;++i){var c=segment.charCodeAt(i);45===c||46===c||95===c||126===c||c>=48&&c<=57||c>=65&&c<=90||c>=97&&c<=122||format===formats.RFC1738&&(40===c||41===c)?arr[arr.length]=segment.charAt(i):c<128?arr[arr.length]=hexTable[c]:c<2048?arr[arr.length]=hexTable[192|c>>6]+hexTable[128|63&c]:c<55296||c>=57344?arr[arr.length]=hexTable[224|c>>12]+hexTable[128|c>>6&63]+hexTable[128|63&c]:(i+=1,c=65536+((1023&c)<<10|1023&segment.charCodeAt(i)),arr[arr.length]=hexTable[240|c>>18]+hexTable[128|c>>12&63]+hexTable[128|c>>6&63]+hexTable[128|63&c])}out+=arr.join("")}return out},isBuffer:function(obj){return!(!obj||"object"!=typeof obj)&&!!(obj.constructor&&obj.constructor.isBuffer&&obj.constructor.isBuffer(obj))},isOverflow,isRegExp:function(obj){return"[object RegExp]"===Object.prototype.toString.call(obj)},markOverflow,maybeMap:function(val,fn){if(isArray(val)){for(var mapped=[],i=0;i<val.length;i+=1)mapped[mapped.length]=fn(val[i]);return mapped}return fn(val)},merge:function merge(target,source,options){
+/* eslint no-param-reassign: 0 */
+if(!source)return target;if("object"!=typeof source&&"function"!=typeof source){if(isArray(target)){var nextIndex=target.length;if(options&&"number"==typeof options.arrayLimit&&nextIndex>options.arrayLimit)return markOverflow(arrayToObject(target.concat(source),options),nextIndex);target[nextIndex]=source}else{if(!target||"object"!=typeof target)return[target,source];if(isOverflow(target)){
+// Add at next numeric index for overflow objects
+var newIndex=getMaxIndex(target)+1;target[newIndex]=source,setMaxIndex(target,newIndex)}else{if(options&&options.strictMerge)return[target,source];(options&&(options.plainObjects||options.allowPrototypes)||!has.call(Object.prototype,source))&&(target[source]=!0)}}return target}if(!target||"object"!=typeof target){if(isOverflow(source)){for(
+// Create new object with target at 0, source values shifted by 1
+var sourceKeys=Object.keys(source),result=options&&options.plainObjects?{__proto__:null,0:target}:{0:target},m=0;m<sourceKeys.length;m++){result[parseInt(sourceKeys[m],10)+1]=source[sourceKeys[m]]}return markOverflow(result,getMaxIndex(source)+1)}var combined=[target].concat(source);return options&&"number"==typeof options.arrayLimit&&combined.length>options.arrayLimit?markOverflow(arrayToObject(combined,options),combined.length-1):combined}var mergeTarget=target;return isArray(target)&&!isArray(source)&&(mergeTarget=arrayToObject(target,options)),isArray(target)&&isArray(source)?(source.forEach(function(item,i){if(has.call(target,i)){var targetItem=target[i];targetItem&&"object"==typeof targetItem&&item&&"object"==typeof item?target[i]=merge(targetItem,item,options):target[target.length]=item}else target[i]=item}),target):Object.keys(source).reduce(function(acc,key){var value=source[key];if(has.call(acc,key)?acc[key]=merge(acc[key],value,options):acc[key]=value,isOverflow(source)&&!isOverflow(acc)&&markOverflow(acc,getMaxIndex(source)),isOverflow(acc)){var keyNum=parseInt(key,10);String(keyNum)===key&&keyNum>=0&&keyNum>getMaxIndex(acc)&&setMaxIndex(acc,keyNum)}return acc},mergeTarget)}}},
+/***/4803(module,__unused_webpack_exports,__webpack_require__){"use strict";var inspect=__webpack_require__(8859),$TypeError=__webpack_require__(9675),listGetNode=function(list,key,isDelete){
+// eslint-disable-next-line eqeqeq
+for(
+/** @type {typeof list | NonNullable<(typeof list)['next']>} */
+var curr,prev=list
+/** @type {(typeof list)['next']} */;null!=(curr=prev.next);prev=curr)if(curr.key===key)return prev.next=curr.next,isDelete||(
+// eslint-disable-next-line no-extra-parens
+curr.next=/** @type {NonNullable<typeof list.next>} */list.next,list.next=curr),curr};
+/** @type {import('.')} */
+module.exports=function(){
+/** @typedef {ReturnType<typeof getSideChannelList>} Channel */
+/** @typedef {Parameters<Channel['get']>[0]} K */
+/** @typedef {Parameters<Channel['set']>[1]} V */
+/** @type {import('./list.d.ts').RootNode<V, K> | undefined} */var $o,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){var root=$o&&$o.next,deletedNode=function(objects,key){if(objects)return listGetNode(objects,key,!0)}($o,key);return deletedNode&&root&&root===deletedNode&&($o=void 0),!!deletedNode},get:function(key){return function(objects,key){if(objects){var node=listGetNode(objects,key);return node&&node.value}}($o,key)},has:function(key){return function(objects,key){return!!objects&&!!listGetNode(objects,key)}($o,key)},set:function(key,value){$o||(
+// Initialize the linked list as an empty node, so that we don't have to special-case handling of the first node: we can always refer to it as (previous node).next, instead of something like (list).head
+$o={next:void 0}),
+// eslint-disable-next-line no-extra-parens
+function(objects,key,value){var node=listGetNode(objects,key);node?node.value=value:
+// Prepend the new node to the beginning of the list
+objects.next=/** @type {import('./list.d.ts').ListNode<typeof value, typeof key>} */{// eslint-disable-line no-param-reassign, no-extra-parens
+key,next:objects.next,value}}(/** @type {NonNullable<typeof $o>} */$o,key,value)}};
+/** @type {Channel} */
+// @ts-expect-error TODO: figure out why this is erroring
+return channel}},
+/***/507(module,__unused_webpack_exports,__webpack_require__){"use strict";var GetIntrinsic=__webpack_require__(453),callBound=__webpack_require__(6556),inspect=__webpack_require__(8859),$TypeError=__webpack_require__(9675),$Map=GetIntrinsic("%Map%",!0),$mapGet=callBound("Map.prototype.get",!0),$mapSet=callBound("Map.prototype.set",!0),$mapHas=callBound("Map.prototype.has",!0),$mapDelete=callBound("Map.prototype.delete",!0),$mapSize=callBound("Map.prototype.size",!0);
+/** @type {import('.')} */
+module.exports=!!$Map&&/** @type {Exclude<import('.'), false>} */function(){
+/** @typedef {ReturnType<typeof getSideChannelMap>} Channel */
+/** @typedef {Parameters<Channel['get']>[0]} K */
+/** @typedef {Parameters<Channel['set']>[1]} V */
+/** @type {Map<K, V> | undefined} */var $m,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){if($m){var result=$mapDelete($m,key);return 0===$mapSize($m)&&($m=void 0),result}return!1},get:function(key){// eslint-disable-line consistent-return
+if($m)return $mapGet($m,key)},has:function(key){return!!$m&&$mapHas($m,key)},set:function(key,value){$m||(
+// @ts-expect-error TS can't handle narrowing a variable inside a closure
+$m=new $Map),$mapSet($m,key,value)}};
+/** @type {Channel} */
+// @ts-expect-error TODO: figure out why TS is erroring here
+return channel}},
+/***/2271(module,__unused_webpack_exports,__webpack_require__){"use strict";var GetIntrinsic=__webpack_require__(453),callBound=__webpack_require__(6556),inspect=__webpack_require__(8859),getSideChannelMap=__webpack_require__(507),$TypeError=__webpack_require__(9675),$WeakMap=GetIntrinsic("%WeakMap%",!0),$weakMapGet=callBound("WeakMap.prototype.get",!0),$weakMapSet=callBound("WeakMap.prototype.set",!0),$weakMapHas=callBound("WeakMap.prototype.has",!0),$weakMapDelete=callBound("WeakMap.prototype.delete",!0);
+/** @type {import('.')} */
+module.exports=$WeakMap?/** @type {Exclude<import('.'), false>} */function(){
+/** @typedef {ReturnType<typeof getSideChannelWeakMap>} Channel */
+/** @typedef {Parameters<Channel['get']>[0]} K */
+/** @typedef {Parameters<Channel['set']>[1]} V */
+/** @type {WeakMap<K & object, V> | undefined} */var $wm,$m,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){if($WeakMap&&key&&("object"==typeof key||"function"==typeof key)){if($wm)return $weakMapDelete($wm,key)}else if(getSideChannelMap&&$m)return $m.delete(key);return!1},get:function(key){return $WeakMap&&key&&("object"==typeof key||"function"==typeof key)&&$wm?$weakMapGet($wm,key):$m&&$m.get(key)},has:function(key){return $WeakMap&&key&&("object"==typeof key||"function"==typeof key)&&$wm?$weakMapHas($wm,key):!!$m&&$m.has(key)},set:function(key,value){$WeakMap&&key&&("object"==typeof key||"function"==typeof key)?($wm||($wm=new $WeakMap),$weakMapSet($wm,key,value)):getSideChannelMap&&($m||($m=getSideChannelMap()),
+// eslint-disable-next-line no-extra-parens
+/** @type {NonNullable<typeof $m>} */$m.set(key,value))}};
+/** @type {Channel | undefined} */
+// @ts-expect-error TODO: figure out why this is erroring
+return channel}:getSideChannelMap},
+/***/920(module,__unused_webpack_exports,__webpack_require__){"use strict";var $TypeError=__webpack_require__(9675),inspect=__webpack_require__(8859),getSideChannelList=__webpack_require__(4803),getSideChannelMap=__webpack_require__(507),makeChannel=__webpack_require__(2271)||getSideChannelMap||getSideChannelList;
+/** @type {import('.')} */
+module.exports=function(){
+/** @typedef {ReturnType<typeof getSideChannel>} Channel */
+/** @type {Channel | undefined} */var $channelData,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){return!!$channelData&&$channelData.delete(key)},get:function(key){return $channelData&&$channelData.get(key)},has:function(key){return!!$channelData&&$channelData.has(key)},set:function(key,value){$channelData||($channelData=makeChannel()),$channelData.set(key,value)}};
+/** @type {Channel} */
+// @ts-expect-error TODO: figure out why this is erroring
+return channel}},
+/***/4195(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.Defaults=void 0;class Defaults{}exports.Defaults=Defaults,
 /** Default texture size applied to both width & length. */
 Defaults.TEXTURE_SIZE=4096,
 /** Default number of horizontal/vertical bands per glyph for spatial indexing. */
-Defaults.BAND_COUNT=32,
-/** Default font size in pixels. */
-Defaults.FONT_SIZE=24,
-/** Default number of supersamples when supersampling is enabled. */
-Defaults.SUPERSAMPLE_COUNT=4,
+Defaults.BAND_COUNT=32,Defaults.FONT_SIZE=24,
 /** Maximum allowed supersample count. The shader has patterns up to 16 samples. */
-Defaults.MAX_SUPERSAMPLE_COUNT=16},
-/***/330(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugFont=void 0;const opentype_js_1=__importDefault(__webpack_require__(945)),defaults_1=__webpack_require__(195),curves_1=__webpack_require__(708),bands_1=__webpack_require__(382),pack_1=__webpack_require__(238);exports.SlugFont=
+Defaults.MAX_SUPERSAMPLE_COUNT=16,Defaults.SlugText={
+/** Default font size in pixels. */
+FontSize:24,Text:"",WordWrap:!1,WordWrapwidth:0,Supersampling:!1,
+/** Default number of supersamples when supersampling is enabled. */
+SupersampleCount:4,
+/** Fill color default (white, fully opaque). */
+FillColor:[1,1,1,1],
+/** Stroke defaults. Width 0 = disabled. */
+StrokeWidth:0,StrokeColor:[0,0,0,1],StrokeAlphaMode:"uniform",StrokeAlphaStart:1,StrokeAlphaRate:0,
+/** Drop shadow defaults (matches PIXI.Text). */
+DropShadowAlpha:1,DropShadowAngle:Math.PI/6,DropShadowBlur:0,DropShadowColor:[0,0,0,1],DropShadowDistance:5}},
+/***/8330(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugFont=void 0;const opentype_js_1=__importDefault(__webpack_require__(945)),defaults_1=__webpack_require__(4195),curves_1=__webpack_require__(5708),bands_1=__webpack_require__(1382),pack_1=__webpack_require__(8238);exports.SlugFont=
 /**
  * Preprocesses font glyph outlines into GPU-ready curve and band textures
  * for the Slug rendering algorithm.
  */
-class{constructor(textureWidth=defaults_1.Defaults.TEXTURE_SIZE){if(textureWidth<=0||textureWidth&textureWidth-1)throw new Error(`textureWidth must be a power of 2, got ${textureWidth}`);this.textureWidth=textureWidth,this.curveData=new Float32Array(0),this.bandData=new Uint32Array(0),this.glyphs=new Map,this.advances=new Map,this.unitsPerEm=0,this.gpuCache=null,this._gpuDestroy=null}
+class{constructor(textureWidth=defaults_1.Defaults.TEXTURE_SIZE){if(textureWidth<=0||textureWidth&textureWidth-1)throw new Error(`textureWidth must be a power of 2, got ${textureWidth}`);this.textureWidth=textureWidth,this.curveData=new Float32Array(0),this.bandData=new Uint32Array(0),this.glyphs=new Map,this.advances=new Map,this.unitsPerEm=0,this.ascender=0,this.descender=0,this.gpuCache=null,this._gpuDestroy=null}
 /**
      * Set the GPU cache cleanup function. Called by version-specific factories
      * (e.g. slugFontGpuV8) when they populate gpuCache.
@@ -4149,7 +9104,7 @@ class{constructor(textureWidth=defaults_1.Defaults.TEXTURE_SIZE){if(textureWidth
      * Band data is uint32 reinterpreted as float32 bit patterns on upload.
      * This is shared across all SlugText instances that use this font.
      */memoryBytes(){const textureWidth=this.textureWidth;// rgba32float
-return((Math.ceil(this.curveData.length/4/textureWidth)||1)+(Math.ceil(this.bandData.length/4/textureWidth)||1))*textureWidth*16}async load(fontData){const font=opentype_js_1.default.parse(fontData);this.unitsPerEm=font.unitsPerEm;const glyphList=[];for(let i=0;i<font.glyphs.length;i++){const glyph=font.glyphs.get(i),charCode=glyph.unicode;if(
+return((Math.ceil(this.curveData.length/4/textureWidth)||1)+(Math.ceil(this.bandData.length/4/textureWidth)||1))*textureWidth*16}async load(fontData){const font=opentype_js_1.default.parse(fontData);this.unitsPerEm=font.unitsPerEm,this.ascender=font.ascender,this.descender=font.descender;const glyphList=[];for(let i=0;i<font.glyphs.length;i++){const glyph=font.glyphs.get(i),charCode=glyph.unicode;if(
 // Store advance width for all glyphs (including space/empty)
 void 0!==charCode&&glyph.advanceWidth&&this.advances.set(charCode,glyph.advanceWidth),!glyph.path||0===glyph.path.commands.length)continue;if(void 0===charCode)continue;
 // Extract quadratic Bezier curves from glyph path
@@ -4162,7 +9117,7 @@ glyphList.push(glyphData),this.glyphs.set(charCode,glyphData)}
 const packed=(0,pack_1.slugTexturePack)(glyphList,this.textureWidth);this.curveData=packed.curveData,this.bandData=packed.bandData,
 // Invalidate any existing GPU cache since font data changed.
 this.destroyGpu()}}},
-/***/382(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugGlyphBands=
+/***/1382(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugGlyphBands=
 /**
  * Assign curves to horizontal and vertical bands for spatial indexing.
  * The glyph's bounding box is divided into a grid of bands.
@@ -4196,7 +9151,7 @@ for(let b=hStart;b<=hEnd;b++)hBands[b].push(i);const vStart=Math.max(0,Math.floo
 // frag.glsl breaks early once max coord drops below the pixel threshold,
 // so the sort order must be descending for the early-exit to be correct.
 for(let b=0;b<hBandCount;b++)hBands[b].sort((a,b)=>{const maxXa=Math.max(curves[a].p1x,curves[a].p2x,curves[a].p3x);return Math.max(curves[b].p1x,curves[b].p2x,curves[b].p3x)-maxXa});for(let b=0;b<vBandCount;b++)vBands[b].sort((a,b)=>{const maxYa=Math.max(curves[a].p1y,curves[a].p2y,curves[a].p3y);return Math.max(curves[b].p1y,curves[b].p2y,curves[b].p3y)-maxYa});return{hBandCount,vBandCount,hBands,vBands}}
-/***/;const defaults_1=__webpack_require__(195),_boundsF32=new Float32Array(6);
+/***/;const defaults_1=__webpack_require__(4195),_boundsF32=new Float32Array(6);
 /**
  * Compute the axis-aligned bounding box of a quadratic Bezier curve.
  * Returns [minX, minY, maxX, maxY].
@@ -4215,7 +9170,7 @@ let minX=Math.min(p1x,p3x),maxX=Math.max(p1x,p3x),minY=Math.min(p1y,p3y),maxY=Ma
 const denomX=p1x-2*p2x+p3x;if(Math.abs(denomX)>1e-10){const tx=(p1x-p2x)/denomX;if(tx>0&&tx<1){const oneMinusT=1-tx,ex=oneMinusT*oneMinusT*p1x+2*oneMinusT*tx*p2x+tx*tx*p3x;minX=Math.min(minX,ex),maxX=Math.max(maxX,ex)}}
 // Check y-axis extremum
 const denomY=p1y-2*p2y+p3y;if(Math.abs(denomY)>1e-10){const ty=(p1y-p2y)/denomY;if(ty>0&&ty<1){const oneMinusT=1-ty,ey=oneMinusT*oneMinusT*p1y+2*oneMinusT*ty*p2y+ty*ty*p3y;minY=Math.min(minY,ey),maxY=Math.max(maxY,ey)}}return[minX,minY,maxX,maxY]}},
-/***/708(__unused_webpack_module,exports){"use strict";
+/***/5708(__unused_webpack_module,exports){"use strict";
 /**
  * Convert a cubic Bezier curve to two quadratic Bezier approximations.
  * This is an approximation — a single cubic can't be exactly represented
@@ -4242,7 +9197,50 @@ const q0x=.5*(x0+x1),q0y=.5*(y0+y1),mx=.5*(x1+x2),my=.5*(y1+y2),q2x=.5*(x2+x3),q
 // Close path: add closing line if the current position is not already at the subpath start.
 (Math.abs(curX-subpathStartX)>1e-6||Math.abs(curY-subpathStartY)>1e-6)&&curves.push(lineToQuadratic(curX,curY,subpathStartX,subpathStartY)),curX=subpathStartX,curY=subpathStartY}return{curves,contourStarts}}
 /***/},
-/***/727(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugGlyphQuads=
+/***/2727(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugGlyphQuads=slugGlyphQuads,exports.slugGlyphQuadsMultiline=
+/**
+ * Build quads for multiple lines of text with vertical line spacing.
+ * Each line is laid out at a Y offset of `lineIndex * lineHeight` pixels.
+ * All lines share a single vertex/index buffer for efficient rendering.
+ *
+ * @param lines			Array of text strings, one per line.
+ * @param glyphs		Glyph data map from SlugFont.
+ * @param advances		Advance width map for all glyphs.
+ * @param unitsPerEm	Font units per em.
+ * @param fontSize		Desired font size in pixels.
+ * @param textureWidth	Width of the curve/band textures.
+ * @param lineHeight	Vertical distance between lines in pixels.
+ * @param color			Text color as [r, g, b, a] in 0-1 range.
+ * @param extraExpand	Extra outward expansion in pixels per side.
+ */
+function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
+// Build quads per line, then merge into a single buffer.
+const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalIdxs=6*totalQuads,vertices=new Float32Array(4*totalQuads*20),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
+// Copy vertices with Y offset applied to position (float index 1 per vertex)
+for(let v=0;v<4*q.quadCount;v++){const srcOff=20*v,dstOff=vertOffset+srcOff;
+// Copy all 20 floats
+for(let f=0;f<20;f++)vertices[dstOff+f]=srcVerts[srcOff+f];
+// Shift posY (index 1) by line offset
+vertices[dstOff+1]+=yShift}
+// Copy indices with base vertex offset
+for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=4*q.quadCount*20,idxOffset+=srcIdxs.length,baseVertex+=4*q.quadCount}return{vertices,indices,quadCount:totalQuads}}
+/***/;
+/**
+ * Number of floats per vertex for each attribute.
+ * All 5 attributes are vec4 (4 floats each), totaling 20 floats per vertex.
+ */
+const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
+/** Number of vertices per glyph quad. */
+/**
+ * Pack a float into a uint32 bit pattern, stored as a float.
+ * Used to pass packed integer data through float vertex attributes.
+ */
+function packUint16Pair(low,high){return _packU32[0]=(65535&high)<<16|65535&low,_packF32[0]}
+/**
+ * Pack band max indices into a single float via uint32 reinterpretation.
+ * low16 becomes glyphData.z (bandMax.x) in the shader → clamps vertical bandIndex.x.
+ * high16 becomes glyphData.w (bandMax.y) in the shader → clamps horizontal bandIndex.y.
+ */function packBandMax(low16_vBandMax,high16_hBandMax){return packUint16Pair(low16_vBandMax,high16_hBandMax)}
 /**
  * Build per-glyph quads with the 5 vertex attributes required by the Slug shaders.
  *
@@ -4261,8 +9259,8 @@ const q0x=.5*(x0+x1),q0y=.5*(y0+y1),mx=.5*(x1+x2),my=.5*(y1+y2),q2x=.5*(x2+x3),q
  * @param fontSize		Desired font size in pixels.
  * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
- */
-function(text,glyphs,advances,unitsPerEm,fontSize,textureWidth,color=[1,1,1,1]){const scale=fontSize/unitsPerEm,invScale=1/scale,negInvScale=-invScale,cr=color[0],cg=color[1],cb=color[2],ca=color[3];
+ * @param extraExpand	Extra outward expansion in pixels per side (e.g. stroke width). Default 0.
+ */function slugGlyphQuads(text,glyphs,advances,unitsPerEm,fontSize,textureWidth,color=[1,1,1,1],extraExpand=0){const scale=fontSize/unitsPerEm,invScale=1/scale,negInvScale=-invScale,cr=color[0],cg=color[1],cb=color[2],ca=color[3];
 // Count renderable glyphs and find the tallest glyph's top in em-space.
 // We use the actual max bounds.maxY (not the font's typographic ascender)
 // so that position(0,0) aligns the top of the tallest rendered glyph to y=0,
@@ -4270,11 +9268,12 @@ function(text,glyphs,advances,unitsPerEm,fontSize,textureWidth,color=[1,1,1,1]){
 // includes extra line-gap space that would produce a visible offset.
 let quadCount=0,maxGlyphTop=0;for(let i=0;i<text.length;i++){const g=glyphs.get(text.charCodeAt(i));g&&(quadCount++,g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY))}const baselineY=maxGlyphTop*scale,vertices=new Float32Array(4*quadCount*20),indices=new Uint32Array(6*quadCount);let cursorX=0,quadIdx=0;for(let i=0;i<text.length;i++){const charCode=text.charCodeAt(i),glyph=glyphs.get(charCode);if(!glyph){
 // No curves for this char (e.g. space) — advance cursor using advance width
-const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds,hBandCount,vBandCount,bandOffset}=glyph,x0=cursorX+bounds.minX*scale,y0=-bounds.maxY*scale+baselineY,x1=cursorX+bounds.maxX*scale,y1=-bounds.minY*scale+baselineY,u0=bounds.minX,v0=bounds.minY,u1=bounds.maxX,v1=bounds.maxY,glyphWidth=bounds.maxX-bounds.minX,glyphHeight=bounds.maxY-bounds.minY,maxDim=Math.max(glyphWidth,glyphHeight),bandCount=Math.max(hBandCount,vBandCount);
+const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds,hBandCount,vBandCount,bandOffset}=glyph,x0=cursorX+bounds.minX*scale-extraExpand,y0=-bounds.maxY*scale+baselineY-extraExpand,x1=cursorX+bounds.maxX*scale+extraExpand,y1=-bounds.minY*scale+baselineY+extraExpand,emExpand=extraExpand*invScale,u0=bounds.minX-emExpand,v0=bounds.minY-emExpand,u1=bounds.maxX+emExpand,v1=bounds.maxY+emExpand,glyphWidth=bounds.maxX-bounds.minX,glyphHeight=bounds.maxY-bounds.minY,maxDim=Math.max(glyphWidth,glyphHeight),bandCount=Math.max(hBandCount,vBandCount);
 // Glyph quad corners in pixel space.
 // Font Y is up (ascenders positive), screen Y is down.
 // Negate Y to flip, then add baselineY so that position(0,0)
 // places the ascender line at screen y=0.
+// extraExpand pushes each edge outward by N pixels (for stroke).
 _f32[0]=maxDim>0?bandCount/maxDim:0;// shared scale
 const bandScale=_f32[0];_f32[1]=-bounds.minX*bandScale,// vBandOffset (X → vertical band)
 _f32[2]=-bounds.minY*bandScale;// hBandOffset (Y → horizontal band)
@@ -4298,25 +9297,100 @@ off+=20,vertices[off]=x1,vertices[off+1]=y1,vertices[off+2]=1,vertices[off+3]=1,
 // Corner 3: screen bottom-left = font (minX, minY)
 off+=20,vertices[off]=x0,vertices[off+1]=y1,vertices[off+2]=-1,vertices[off+3]=1,vertices[off+4]=u0,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca;
 // Two triangles: [0,1,2] and [0,2,3]
-const idxOffset=6*quadIdx;indices[idxOffset]=baseVertex,indices[idxOffset+1]=baseVertex+1,indices[idxOffset+2]=baseVertex+2,indices[idxOffset+3]=baseVertex,indices[idxOffset+4]=baseVertex+2,indices[idxOffset+5]=baseVertex+3,cursorX+=glyph.advanceWidth*scale,quadIdx++}return{vertices,indices,quadCount}}
-/***/;
+const idxOffset=6*quadIdx;indices[idxOffset]=baseVertex,indices[idxOffset+1]=baseVertex+1,indices[idxOffset+2]=baseVertex+2,indices[idxOffset+3]=baseVertex,indices[idxOffset+4]=baseVertex+2,indices[idxOffset+5]=baseVertex+3,cursorX+=glyph.advanceWidth*scale,quadIdx++}return{vertices,indices,quadCount}}},
+/***/8518(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugTextMixin=
 /**
- * Number of floats per vertex for each attribute.
- * All 5 attributes are vec4 (4 floats each), totaling 20 floats per vertex.
+ * Mixin that adds shared SlugText state and property accessors to a
+ * Container base class. Each PixiJS version passes its own Container:
+ *
+ * ```typescript
+ * // v8
+ * import {Container} from 'pixi.js';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ *
+ * // v6/v7
+ * import {Container} from '@pixi/display';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ * ```
+ *
+ * The returned class manages text, font, fontSize, color, wordWrap,
+ * supersampling, memory tracking, and rebuild lifecycle. Subclasses
+ * implement `rebuild()` with version-specific GPU APIs.
+ *
+ * Fields use public `_` prefix instead of `protected` to avoid TS4094
+ * ("Property of exported anonymous class type may not be private or
+ * protected"). The `_` convention signals internal use.
  */
-const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
-/** Number of vertices per glyph quad. */
+function(Base){return class extends Base{
 /**
- * Pack a float into a uint32 bit pattern, stored as a float.
- * Used to pass packed integer data through float vertex attributes.
+         * Initialize shared fields from a SlugTextInit object.
+         * Called by the subclass constructor after super().
+         * Subclass must call rebuild() separately after version-specific init.
+         */
+initBase(init){this._text=(0,strong_types_1.stringValue)(init.text,defaults_1.Defaults.SlugText.Text),this._font=init.slugFont,this._fontRef=new WeakRef(init.slugFont),this._fontSize=(0,strong_types_1.numberValue)(init.options?.fontSize,defaults_1.Defaults.SlugText.FontSize);const fill=init.options?.fill;this._color=fill?[fill[0],fill[1],fill[2],fill[3]]:[...defaults_1.Defaults.SlugText.FillColor],this._supersampling=(0,strong_types_1.booleanValue)(init.supersampling,defaults_1.Defaults.SlugText.Supersampling),this._supersampleCount=(0,strong_types_1.numberValue)(init.supersampleCount,defaults_1.Defaults.SlugText.SupersampleCount),this._wordWrap=(0,strong_types_1.booleanValue)(init.options?.wordWrap,defaults_1.Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,strong_types_1.numberValue)(init.options?.wordWrapWidth,defaults_1.Defaults.SlugText.WordWrapwidth),this._breakWords=(0,strong_types_1.booleanValue)(init.options?.breakWords,!1),this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
+// Stroke
+const stroke=init.options?.stroke;this._strokeWidth=(0,strong_types_1.numberValue)(stroke?.width,defaults_1.Defaults.SlugText.StrokeWidth),this._strokeColor=stroke?.color?[stroke.color[0],stroke.color[1],stroke.color[2],stroke.color[3]]:[...defaults_1.Defaults.SlugText.StrokeColor],this._strokeAlphaMode=stroke?.alphaMode??defaults_1.Defaults.SlugText.StrokeAlphaMode,this._strokeAlphaStart=(0,strong_types_1.numberValue)(stroke?.alphaStart,defaults_1.Defaults.SlugText.StrokeAlphaStart),this._strokeAlphaRate=(0,strong_types_1.numberValue)(stroke?.alphaRate,defaults_1.Defaults.SlugText.StrokeAlphaRate);
+// Drop shadow — presence of the object enables it
+const ds=init.options?.dropShadow;this._dropShadow=ds?{alpha:(0,strong_types_1.numberValue)(ds.alpha,defaults_1.Defaults.SlugText.DropShadowAlpha),angle:(0,strong_types_1.numberValue)(ds.angle,defaults_1.Defaults.SlugText.DropShadowAngle),blur:(0,strong_types_1.numberValue)(ds.blur,defaults_1.Defaults.SlugText.DropShadowBlur),color:ds.color?[ds.color[0],ds.color[1],ds.color[2],ds.color[3]]:[...defaults_1.Defaults.SlugText.DropShadowColor],distance:(0,strong_types_1.numberValue)(ds.distance,defaults_1.Defaults.SlugText.DropShadowDistance)}:null}
+/**
+         * Called when supersampling is toggled. Override to update shader
+         * uniforms without a full rebuild.
+         */onSupersamplingChanged(){}
+/**
+         * Called when supersample count changes. Override to update shader
+         * uniforms without a full rebuild.
+         */onSupersampleCountChanged(){}
+// --- Property accessors ---
+get text(){return this._text}set text(value){this._text!==value&&(this._text=value,this.rebuild())}get font(){return this._fontRef?.deref()??null}set font(value){this._font!==value&&(this._font=value,this._fontRef=new WeakRef(value),this.rebuild())}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this.rebuild())}get color(){return this._color}set color(value){this._color[0]===value[0]&&this._color[1]===value[1]&&this._color[2]===value[2]&&this._color[3]===value[3]||(this._color=value,this.rebuild())}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}
+// --- Stroke ---
+/** Stroke width in pixels. 0 = no stroke. */
+get strokeWidth(){return this._strokeWidth}set strokeWidth(value){this._strokeWidth!==value&&(this._strokeWidth=value,this.rebuild())}
+/** Stroke color as [r, g, b, a] in 0-1 range. */get strokeColor(){return this._strokeColor}set strokeColor(value){this._strokeColor=value,this._strokeWidth>0&&this.rebuild()}
+/** Stroke alpha mode: 'uniform' for uniform, 'gradient' for per-pixel fade. */get strokeAlphaMode(){return this._strokeAlphaMode}set strokeAlphaMode(value){this._strokeAlphaMode!==value&&(this._strokeAlphaMode=value,this._strokeWidth>0&&this.rebuild())}
+/** Starting alpha for gradient mode (innermost stroke pixel). */get strokeAlphaStart(){return this._strokeAlphaStart}set strokeAlphaStart(value){this._strokeAlphaStart!==value&&(this._strokeAlphaStart=value,this._strokeWidth>0&&"gradient"===this._strokeAlphaMode&&this.rebuild())}
+/** Alpha change per pixel outward in gradient mode. */get strokeAlphaRate(){return this._strokeAlphaRate}set strokeAlphaRate(value){this._strokeAlphaRate!==value&&(this._strokeAlphaRate=value,this._strokeWidth>0&&"gradient"===this._strokeAlphaMode&&this.rebuild())}
+/** Stroke configuration object, or null if disabled. */get stroke(){return this._strokeWidth<=0?null:{color:this._strokeColor,width:this._strokeWidth,alphaMode:this._strokeAlphaMode,alphaStart:this._strokeAlphaStart,alphaRate:this._strokeAlphaRate}}set stroke(value){const newWidth=(0,strong_types_1.numberValue)(value?.width,0),newColor=value?.color?[value.color[0],value.color[1],value.color[2],value.color[3]]:[...defaults_1.Defaults.SlugText.StrokeColor],newAlphaMode=value?.alphaMode??defaults_1.Defaults.SlugText.StrokeAlphaMode,newAlphaStart=(0,strong_types_1.numberValue)(value?.alphaStart,defaults_1.Defaults.SlugText.StrokeAlphaStart),newAlphaRate=(0,strong_types_1.numberValue)(value?.alphaRate,defaults_1.Defaults.SlugText.StrokeAlphaRate),changed=this._strokeWidth!==newWidth||this._strokeColor[0]!==newColor[0]||this._strokeColor[1]!==newColor[1]||this._strokeColor[2]!==newColor[2]||this._strokeColor[3]!==newColor[3]||this._strokeAlphaMode!==newAlphaMode||this._strokeAlphaStart!==newAlphaStart||this._strokeAlphaRate!==newAlphaRate;this._strokeWidth=newWidth,this._strokeColor=newColor,this._strokeAlphaMode=newAlphaMode,this._strokeAlphaStart=newAlphaStart,this._strokeAlphaRate=newAlphaRate,changed&&this.rebuild()}
+// --- Drop shadow ---
+/**
+         * Drop shadow configuration, or null if disabled.
+         * Setting to a partial object fills missing fields with defaults.
+         * Setting to null disables the shadow.
+         */
+get dropShadow(){return this._dropShadow}set dropShadow(value){if(null===value){if(null===this._dropShadow)return;this._dropShadow=null}else this._dropShadow={alpha:(0,strong_types_1.numberValue)(value.alpha,defaults_1.Defaults.SlugText.DropShadowAlpha),angle:(0,strong_types_1.numberValue)(value.angle,defaults_1.Defaults.SlugText.DropShadowAngle),blur:(0,strong_types_1.numberValue)(value.blur,defaults_1.Defaults.SlugText.DropShadowBlur),color:value.color?[value.color[0],value.color[1],value.color[2],value.color[3]]:[...defaults_1.Defaults.SlugText.DropShadowColor],distance:(0,strong_types_1.numberValue)(value.distance,defaults_1.Defaults.SlugText.DropShadowDistance)};this.rebuild()}
+// --- Supersampling ---
+get supersampling(){return this._supersampling}set supersampling(value){this._supersampling!==value&&(this._supersampling=value,this.onSupersamplingChanged())}get supersampleCount(){return this._supersampleCount}set supersampleCount(value){const clamped=Math.min(Math.max(value,1),defaults_1.Defaults.MAX_SUPERSAMPLE_COUNT);this._supersampleCount!==clamped&&(this._supersampleCount=clamped,this.onSupersampleCountChanged())}get rebuildCount(){return this._rebuildCount}meshMemoryBytes(){return this._vertexBytes+this._indexBytes}totalMemoryBytes(){const font=this._fontRef?.deref();return this.meshMemoryBytes()+(font?font.memoryBytes():0)}}}
+/***/;const defaults_1=__webpack_require__(4195),strong_types_1=__webpack_require__(6859)},
+/***/9503(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugTextWrap=
+/**
+ * Break a text string into lines that fit within a maximum pixel width.
+ * Uses a greedy word-wrap algorithm: fills each line as much as possible
+ * before breaking to the next line.
+ *
+ * @param text			The full text string.
+ * @param advances		Advance width map (char code → em-space width).
+ * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
+ * @param maxWidth		Maximum line width in pixels.
+ * @param breakWords	If true, break mid-word when a single word exceeds maxWidth.
  */
-function packUint16Pair(low,high){return _packU32[0]=(65535&high)<<16|65535&low,_packF32[0]}
-/**
- * Pack band max indices into a single float via uint32 reinterpretation.
- * low16 becomes glyphData.z (bandMax.x) in the shader → clamps vertical bandIndex.x.
- * high16 becomes glyphData.w (bandMax.y) in the shader → clamps horizontal bandIndex.y.
- */function packBandMax(low16_vBandMax,high16_hBandMax){return packUint16Pair(low16_vBandMax,high16_hBandMax)}},
-/***/238(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugTexturePack=
+function(text,advances,scale,maxWidth,breakWords=!1){if(maxWidth<=0)return{lines:[text]};const lines=[];let lineStart=0,lastBreak=-1,lineWidth=0;for(let i=0;i<text.length;i++){const code=text.charCodeAt(i);
+// Newline forces a line break
+if(10===code){lines.push(text.substring(lineStart,i)),lineStart=i+1,lastBreak=-1,lineWidth=0;continue}if(
+// Track word boundaries (space is a valid break point)
+32===code&&(lastBreak=i),lineWidth+=(advances.get(code)??0)*scale,lineWidth>maxWidth&&i>lineStart){if(lastBreak>=lineStart)
+// Break at last space
+lines.push(text.substring(lineStart,lastBreak)),lineStart=lastBreak+1;else{if(!breakWords)
+// No valid break point — let the word overflow until a space is found
+continue;
+// Break mid-word at current character
+lines.push(text.substring(lineStart,i)),lineStart=i}lastBreak=-1,
+// Recalculate width from lineStart to current position
+lineWidth=0;for(let j=lineStart;j<=i;j++)lineWidth+=(advances.get(text.charCodeAt(j))??0)*scale}}
+// Push remaining text
+lineStart<text.length?lines.push(text.substring(lineStart)):lineStart===text.length&&
+// Text ended with a newline — add empty final line
+lines.push("");return{lines}}
+/***/},
+/***/8238(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugTexturePack=
 /**
  * Pack preprocessed glyph data into curve and band textures.
  *
@@ -4397,7 +9471,7 @@ for(let b=0;b<glyph.vBandCount;b++){const band=glyph.vBands[b],headerBase=4*(hea
 function countContourTexels(contourSize,startIdx,textureWidth){let idx=startIdx;
 // N curve texels + 1 sentinel, each needing its +1 neighbor on the same row
 const totalTexels=contourSize+1;for(let i=0;i<totalTexels;i++)(idx&textureWidth-1)==textureWidth-1&&idx++,idx++;return idx-startIdx}},
-/***/976(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugFontGpuV8=
+/***/6976(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugFontGpuV8=
 /**
  * Create or retrieve cached V8 GPU resources for a SlugFont.
  * On first call, creates curve/band textures and a GlProgram.
@@ -4409,8 +9483,8 @@ const totalTexels=contourSize+1;for(let i=0;i<totalTexels;i++)(idx&textureWidth-
 function(font){if(font.gpuCache)return font.gpuCache;const textureWidth=font.textureWidth,curveRows=Math.ceil(font.curveData.length/4/textureWidth)||1,curveTexture=new pixi_js_1.Texture({source:new pixi_js_1.BufferImageSource({resource:font.curveData,width:textureWidth,height:curveRows,format:"rgba32float",autoGenerateMipmaps:!1,scaleMode:"nearest",alphaMode:"no-premultiply-alpha"})}),bandRows=Math.ceil(font.bandData.length/4/textureWidth)||1,bandDataAsFloat=new Float32Array(font.bandData.buffer,font.bandData.byteOffset,font.bandData.length),bandTexture=new pixi_js_1.Texture({source:new pixi_js_1.BufferImageSource({resource:bandDataAsFloat,width:textureWidth,height:bandRows,format:"rgba32float",autoGenerateMipmaps:!1,scaleMode:"nearest",alphaMode:"no-premultiply-alpha"})}),glProgram=pixi_js_1.GlProgram.from({vertex:vert_glsl_1.default,fragment:frag_glsl_1.default}),cache={curveTexture,bandTexture,glProgram};
 // Curve texture: RGBA float32, one texel per 2 control points.
 return font.gpuCache=cache,font.setGpuDestroy(()=>{curveTexture.destroy(),bandTexture.destroy()}),cache}
-/***/;const pixi_js_1=__webpack_require__(0),vert_glsl_1=__importDefault(__webpack_require__(972)),frag_glsl_1=__importDefault(__webpack_require__(155))},
-/***/636(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugPipe=void 0;const pixi_js_1=__webpack_require__(0),text_1=__webpack_require__(291);
+/***/;const pixi_js_1=__webpack_require__(3e3),vert_glsl_1=__importDefault(__webpack_require__(9972)),frag_glsl_1=__importDefault(__webpack_require__(9155))},
+/***/6636(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugPipe=void 0;const pixi_js_1=__webpack_require__(3e3),text_1=__webpack_require__(2291);
 /**
  * PixiJS v8 render pipe for SlugText renderables.
  * Handles the rendering lifecycle for Slug-based text objects.
@@ -4420,7 +9494,7 @@ class SlugPipe{constructor(renderer){this._renderer=renderer}addRenderable(rende
 }destroyRenderable(renderable){text_1.SlugText}}exports.SlugPipe=SlugPipe,SlugPipe.extension={type:pixi_js_1.ExtensionType.WebGLPipes,name:"slug-pipe"},
 // Register the pipe as a PixiJS v8 extension
 pixi_js_1.extensions.add(SlugPipe)},
-/***/445(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugShader=
+/***/8445(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugShader=
 /**
  * Creates a per-instance PixiJS v8 Shader for the Slug rendering algorithm.
  * The GlProgram and textures are shared across instances (from SlugFont's GPU cache).
@@ -4432,61 +9506,486 @@ pixi_js_1.extensions.add(SlugPipe)},
 function(glProgram,curveTexture,bandTexture){
 // PixiJS v8 UniformGroup has no 'bool' type — use i32 (0/1).
 // WebGL maps glUniform1i to GLSL bool uniforms correctly.
-const uniforms=new pixi_js_1.UniformGroup({uSupersampleCount:{value:0,type:"i32"}});return{shader:new pixi_js_1.Shader({glProgram,resources:{uCurveTexture:curveTexture.source,uBandTexture:bandTexture.source,uSupersamplingGroup:uniforms}}),uniforms}}
-/***/;const pixi_js_1=__webpack_require__(0)},
-/***/291(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugText=void 0;const pixi_js_1=__webpack_require__(0),defaults_1=__webpack_require__(195),quad_1=__webpack_require__(727),gpu_1=__webpack_require__(976),shader_1=__webpack_require__(445);
+const uniforms=new pixi_js_1.UniformGroup({uSupersampleCount:{value:0,type:"i32"},uStrokeExpand:{value:0,type:"f32"},uStrokeAlphaStart:{value:1,type:"f32"},uStrokeAlphaRate:{value:0,type:"f32"}});return{shader:new pixi_js_1.Shader({glProgram,resources:{uCurveTexture:curveTexture.source,uBandTexture:bandTexture.source,uSupersamplingGroup:uniforms}}),uniforms}}
+/***/;const pixi_js_1=__webpack_require__(3e3)},
+/***/2291(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.SlugText=void 0;const pixi_js_1=__webpack_require__(3e3),quad_1=__webpack_require__(2727),wrap_1=__webpack_require__(9503),gpu_1=__webpack_require__(6976),shader_1=__webpack_require__(8445),SlugTextV8Base=(0,__webpack_require__(8518).SlugTextMixin)(pixi_js_1.Container);exports.SlugText=
 /**
  * Renderable text element using the Slug algorithm for PixiJS v8.
- * Renders font glyphs directly from quadratic Bezier curves on the GPU.
+ * Extends Container (via SlugTextMixin) for scene graph compatibility.
+ *
+ * Supports multi-pass rendering for stroke and drop shadow effects:
+ * - Drop shadow: rendered first (behind) with shadow color and offset
+ * - Stroke: rendered second with stroke color and extra dilation
+ * - Fill: rendered last (on top) with the normal text color
  *
  * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
- * and shared across all SlugText instances using the same font. SlugText owns only
- * its per-instance vertex/index buffers and mesh.
+ * and shared across all SlugText instances using the same font.
  */
-class SlugText extends pixi_js_1.Container{constructor(text,font,fontSize=defaults_1.Defaults.FONT_SIZE){super(),this._text=text,this._fontRef=new WeakRef(font),this._fontSize=fontSize,this._color=[1,1,1,1],this._mesh=null,this._supersampling=!1,this._supersampleCount=defaults_1.Defaults.SUPERSAMPLE_COUNT,this._uniforms=null,this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0,this.wordWrap=!1,this.rebuild()}
-/** The text string to render. */get text(){return this._text}set text(value){this._text!==value&&(this._text=value,this.rebuild())}
+class extends SlugTextV8Base{constructor(init){super(),this.initBase(init),this._meshes=[],this._uniforms=null,this.rebuild()}onSupersamplingChanged(){this._uniforms&&(this._uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0)}onSupersampleCountChanged(){this._uniforms&&this._supersampling&&(this._uniforms.uniforms.uSupersampleCount=this._supersampleCount)}
 /**
-     * The Slug font used for rendering, or null if the font has been garbage collected.
-     * Returns null only if the font was destroyed and no strong references remain.
-     */get font(){return this._fontRef.deref()??null}set font(value){this._fontRef.deref()!==value&&(this._fontRef=new WeakRef(value),this.rebuild())}
-/** Font size in pixels. */get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this.rebuild())}
-/** Text color as [r, g, b, a] in 0-1 range. */get color(){return this._color}set color(value){this._color=value,this.rebuild()}
-/** Enable supersampling for smoother edges. */get supersampling(){return this._supersampling}set supersampling(value){this._supersampling!==value&&(this._supersampling=value,this._uniforms&&(this._uniforms.uniforms.uSupersampleCount=value?this._supersampleCount:0))}
-/** Number of supersamples (2, 4, 8, or 16). Only used when supersampling is true. */get supersampleCount(){return this._supersampleCount}set supersampleCount(value){const clamped=Math.min(Math.max(value,1),defaults_1.Defaults.MAX_SUPERSAMPLE_COUNT);this._supersampleCount!==clamped&&(this._supersampleCount=clamped,this._uniforms&&this._supersampling&&(this._uniforms.uniforms.uSupersampleCount=clamped))}
+     * Build a Mesh from quad data with optional stroke expansion.
+     */_buildMesh(quads,gpu,strokeExpand=0){const vertexBuffer=new pixi_js_1.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:pixi_js_1.BufferUsage.VERTEX}),geometry=new pixi_js_1.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:16},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:32},aBanding:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:48},aColor:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:64}},indexBuffer:quads.indices}),{shader,uniforms}=(0,shader_1.slugShader)(gpu.glProgram,gpu.curveTexture,gpu.bandTexture);return uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,{mesh:new pixi_js_1.Mesh({geometry,shader}),uniforms}}
 /**
-     * Build mesh geometry for current text + font.
-     * Creates per-glyph quads with the 5 vertex attributes required by the Slug shaders.
-     * Textures and shader program come from the font's shared GPU cache.
-     */rebuild(){this._rebuildCount++,
-// Clean up previous mesh (per-instance resource).
-this._mesh&&(this.removeChild(this._mesh),this._mesh.destroy(),this._mesh=null);const font=this._fontRef.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;
-// Build per-glyph quads with all 5 vertex attributes
-const quads=(0,quad_1.slugGlyphQuads)(this._text,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,this._color);if(0===quads.quadCount)return;
-// Track GPU buffer sizes for memoryBytes() reporting.
-this._vertexBytes=quads.vertices.byteLength,this._indexBytes=quads.indices.byteLength;
-// Create geometry with 5 interleaved vec4 attributes
-const vertexBuffer=new pixi_js_1.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:pixi_js_1.BufferUsage.VERTEX}),geometry=new pixi_js_1.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:16},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:32},aBanding:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:48},aColor:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:64}},indexBuffer:quads.indices});// 20 floats * 4 bytes per float
-let minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;for(let i=0;i<quads.vertices.length;i+=20){const vx=quads.vertices[i],vy=quads.vertices[i+1];vx<minX&&(minX=vx),vx>maxX&&(maxX=vx),vy<minY&&(minY=vy),vy>maxY&&(maxY=vy)}this.boundsArea=new pixi_js_1.Rectangle(minX,minY,maxX-minX,maxY-minY);
-// GPU resources from font cache (created once, shared across all SlugText instances).
-const gpu=(0,gpu_1.slugFontGpuV8)(font),{shader,uniforms}=(0,shader_1.slugShader)(gpu.glProgram,gpu.curveTexture,gpu.bandTexture);
-// Per-instance shader: shares GlProgram + textures, owns its own UniformGroup.
-this._uniforms=uniforms,this._uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0;const mesh=new pixi_js_1.Mesh({geometry,shader});this._mesh=mesh,this.addChild(mesh)}
-/** Number of times rebuild() has been called on this instance. */get rebuildCount(){return this._rebuildCount}
+     * Build glyph quads, handling word wrap when enabled.
+     * Returns single-line or multi-line quads depending on _wordWrap state.
+     */_makeQuads(font,text,color,extraExpand=0){if(this._wordWrap&&this._wordWrapWidth>0){const scale=this._fontSize/font.unitsPerEm,{lines}=(0,wrap_1.slugTextWrap)(text,font.advances,scale,this._wordWrapWidth,this._breakWords),lineHeight=(font.ascender-font.descender)*scale;return(0,quad_1.slugGlyphQuadsMultiline)(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return(0,quad_1.slugGlyphQuads)(text,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}rebuild(){this._rebuildCount++;
+// Remove all previous meshes from display list.
+// Don't call mesh.destroy() — it can interfere with shared GlProgram
+// resources when multiple meshes use the same shader program.
+for(const mesh of this._meshes)this.removeChild(mesh);this._meshes=[],this._uniforms=null;const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=(0,gpu_1.slugFontGpuV8)(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0;
+// --- Drop shadow pass ---
+if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,this._text,shadowColor,blur);if(shadowQuads.quadCount>0){const{mesh,uniforms:shadowUniforms}=this._buildMesh(shadowQuads,gpu,blur);blur>0&&(shadowUniforms.uniforms.uStrokeAlphaStart=shadowAlpha,shadowUniforms.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}
+// --- Stroke pass ---
+if(hasStroke){const strokeQuads=this._makeQuads(font,this._text,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){const{mesh,uniforms:strokeUniforms}=this._buildMesh(strokeQuads,gpu,this._strokeWidth);strokeUniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,strokeUniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}
+// --- Fill pass ---
+const fillQuads=this._makeQuads(font,this._text,this._color);if(fillQuads.quadCount>0){const{mesh,uniforms}=this._buildMesh(fillQuads,gpu);this._uniforms=uniforms,this.addChild(mesh),this._meshes.push(mesh),
+// Track memory for the fill pass (representative of total)
+this._vertexBytes=fillQuads.vertices.byteLength,this._indexBytes=fillQuads.indices.byteLength;
+// Bounds from fill pass vertices
+const floatsPerVertex=20;let minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;for(let i=0;i<fillQuads.vertices.length;i+=floatsPerVertex){const vx=fillQuads.vertices[i],vy=fillQuads.vertices[i+1];vx<minX&&(minX=vx),vx>maxX&&(maxX=vx),vy<minY&&(minY=vy),vy>maxY&&(maxY=vy)}this.boundsArea=new pixi_js_1.Rectangle(minX,minY,maxX-minX,maxY-minY)}}destroy(){for(const mesh of this._meshes)mesh.destroy();this._meshes=[],super.destroy()}}},
+/***/1270(module,exports,__webpack_require__){var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
+/* module decorator */module=__webpack_require__.nmd(module),function(){
+/** Detect free variables */
+exports&&exports.nodeType,module&&module.nodeType;var freeGlobal="object"==typeof __webpack_require__.g&&__webpack_require__.g;freeGlobal.global!==freeGlobal&&freeGlobal.window!==freeGlobal&&freeGlobal.self;
 /**
-     * GPU memory consumed by this text object's vertex and index buffers, in bytes.
-     * Does not include the font textures — those are shared and reported by SlugFont.memoryBytes().
-     */meshMemoryBytes(){return this._vertexBytes+this._indexBytes}
+	 * The `punycode` object.
+	 * @name punycode
+	 * @type Object
+	 */var punycode,
+/** Highest positive signed 32-bit float value */
+maxInt=2147483647,// '\x2D'
+/** Regular expressions */
+regexPunycode=/^xn--/,regexNonASCII=/[^\x20-\x7E]/,// unprintable ASCII chars + non-ASCII chars
+regexSeparators=/[\x2E\u3002\uFF0E\uFF61]/g,// RFC 3490 separators
+/** Error messages */
+errors={overflow:"Overflow: input needs wider integers to process","not-basic":"Illegal input >= 0x80 (not a basic code point)","invalid-input":"Invalid input"},floor=Math.floor,stringFromCharCode=String.fromCharCode;
+/*--------------------------------------------------------------------------*/
 /**
-     * Total GPU memory for this text object plus its font's textures, in bytes.
-     * Use this when the font is not shared, or to get a complete per-instance total.
-     */totalMemoryBytes(){const font=this._fontRef.deref();return this.meshMemoryBytes()+(font?font.memoryBytes():0)}destroy(){this._mesh?.destroy(),
-// DO NOT destroy textures — they belong to the font's GPU cache
-// and are shared across all SlugText instances.
-super.destroy()}}exports.SlugText=SlugText},
-/***/155(module){"use strict";module.exports="#version 300 es\r\n// ===================================================\r\n// Slug algorithm fragment shader — GLSL ES 3.00 port.\r\n// Based on the reference Slug shader by Eric Lengyel.\r\n// ===================================================\r\nprecision highp float;\r\nprecision highp int;\r\nprecision highp sampler2D;\r\n\r\n#define kLogBandTextureWidth 12\r\n#define kMaxCurvesPerBand 512\r\n#define kQuadraticEpsilon 0.0001\r\n\r\nin vec4 vColor;\r\nin vec2 vTexcoord;\r\nflat in vec4 vBanding;\r\nflat in ivec4 vGlyph;\r\n\r\nuniform sampler2D uCurveTexture;\r\nuniform sampler2D uBandTexture;\r\nuniform int uSupersampleCount;\r\n\r\n// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).\r\n// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.\r\nuvec2 fetchBand(ivec2 coord)\r\n{\r\n\tvec2 raw = texelFetch(uBandTexture, coord, 0).xy;\r\n\treturn uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));\r\n}\r\n\r\nivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)\r\n{\r\n\tivec2 bandLoc = ivec2(glyphLoc.x + int(offset), glyphLoc.y);\r\n\tbandLoc.y += bandLoc.x >> kLogBandTextureWidth;\r\n\tbandLoc.x &= (1 << kLogBandTextureWidth) - 1;\r\n\treturn bandLoc;\r\n}\r\n\r\n// Combine horizontal and vertical fractional winding into coverage.\r\n// Near edges (high weight): weighted average provides smooth antialiasing.\r\n// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.\r\n// max() is used instead of min() to handle glyphs with oppositely-wound\r\n// contours where one axis cancels to ~0 while the other reads ~1.\r\nfloat CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)\r\n{\r\n\tfloat coverage = max(\r\n\t\tabs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),\r\n\t\tmax(abs(xcov), abs(ycov))\r\n\t);\r\n\r\n\treturn clamp(sqrt(abs(coverage)), 0.0, 1.0);\r\n}\r\n\r\nout vec4 fragColor;\r\n\r\nfloat SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)\r\n{\r\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\r\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\r\n\r\n\tivec2 bandMax = glyphData.zw;\r\n\tbandMax.y &= 0x00FF;\r\n\r\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\r\n\tivec2 glyphLoc = glyphData.xy;\r\n\r\n\tfloat xcov = 0.0;\r\n\tfloat xwgt = 0.0;\r\n\r\n\t// ---------------------------------------------------------------\r\n\t// Horizontal ray (+X direction)\r\n\t// ---------------------------------------------------------------\r\n\r\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\r\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\r\n\r\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\r\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\r\n\t{\r\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\r\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\r\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\r\n\r\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < -0.5) break;\r\n\r\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +\r\n\t\t        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\r\n\r\n\t\tif (code != 0u)\r\n\t\t{\r\n\t\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\r\n\t\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\r\n\t\t\tfloat bx = p12.x - p12.z;\r\n\t\t\tfloat by = p12.y - p12.w;\r\n\t\t\tfloat ra = 1.0 / ay;\r\n\r\n\t\t\tfloat d = sqrt(max(by * by - ay * p12.y, 0.0));\r\n\t\t\tfloat t1 = (by - d) * ra;\r\n\t\t\tfloat t2 = (by + d) * ra;\r\n\r\n\t\t\tif (abs(ay) < kQuadraticEpsilon)\r\n\t\t\t{\r\n\t\t\t\tif (abs(by) < kQuadraticEpsilon) continue;\r\n\t\t\t\tt1 = p12.y * 0.5 / by;\r\n\t\t\t\tt2 = t1;\r\n\t\t\t}\r\n\r\n\t\t\tfloat x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;\r\n\t\t\tfloat x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;\r\n\t\t\tx1 *= pixelsPerEm.x;\r\n\t\t\tx2 *= pixelsPerEm.x;\r\n\r\n\t\t\tif ((code & 1u) != 0u)\r\n\t\t\t{\r\n\t\t\t\txcov += clamp(x1 + 0.5, 0.0, 1.0);\r\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0));\r\n\t\t\t}\r\n\r\n\t\t\tif (code > 1u)\r\n\t\t\t{\r\n\t\t\t\txcov -= clamp(x2 + 0.5, 0.0, 1.0);\r\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0));\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\r\n\t// ---------------------------------------------------------------\r\n\t// Vertical ray (+Y direction)\r\n\t// Same solver as horizontal with x↔y roles swapped.\r\n\t// ---------------------------------------------------------------\r\n\r\n\tfloat ycov = 0.0;\r\n\tfloat ywgt = 0.0;\r\n\r\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\r\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\r\n\r\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\r\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\r\n\t{\r\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\r\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\r\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\r\n\r\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < -0.5) break;\r\n\r\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +\r\n\t\t        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\r\n\r\n\t\tif (code != 0u)\r\n\t\t{\r\n\t\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\r\n\t\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\r\n\t\t\tfloat bx = p12.y - p12.w;\r\n\t\t\tfloat by = p12.x - p12.z;\r\n\t\t\tfloat ra = 1.0 / ay;\r\n\r\n\t\t\tfloat d = sqrt(max(by * by - ay * p12.x, 0.0));\r\n\t\t\tfloat t1 = (by - d) * ra;\r\n\t\t\tfloat t2 = (by + d) * ra;\r\n\r\n\t\t\tif (abs(ay) < kQuadraticEpsilon)\r\n\t\t\t{\r\n\t\t\t\tif (abs(by) < kQuadraticEpsilon) continue;\r\n\t\t\t\tt1 = p12.x * 0.5 / by;\r\n\t\t\t\tt2 = t1;\r\n\t\t\t}\r\n\r\n\t\t\tfloat y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;\r\n\t\t\tfloat y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;\r\n\t\t\ty1 *= pixelsPerEm.y;\r\n\t\t\ty2 *= pixelsPerEm.y;\r\n\r\n\t\t\tif ((code & 1u) != 0u)\r\n\t\t\t{\r\n\t\t\t\tycov += clamp(y1 + 0.5, 0.0, 1.0);\r\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0));\r\n\t\t\t}\r\n\r\n\t\t\tif (code > 1u)\r\n\t\t\t{\r\n\t\t\t\tycov -= clamp(y2 + 0.5, 0.0, 1.0);\r\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0));\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\r\n\treturn CalcCoverage(xcov, ycov, xwgt, ywgt);\r\n}\r\n\r\nvoid main()\r\n{\r\n\tfloat coverage;\r\n\tint sampleCount = min(uSupersampleCount, 16);\r\n\r\n\tif (sampleCount <= 1)\r\n\t{\r\n\t\tcoverage = SlugRender(vTexcoord, vBanding, vGlyph);\r\n\t}\r\n\telse\r\n\t{\r\n\t\t// Supersampling with configurable sample count.\r\n\t\t// Offsets are in em-space, derived from screen-space derivatives so they\r\n\t\t// scale correctly at any font size or transform.\r\n\t\tvec2 dx = dFdx(vTexcoord) * 0.5;\r\n\t\tvec2 dy = dFdy(vTexcoord) * 0.5;\r\n\r\n\t\tif (sampleCount <= 2)\r\n\t\t{\r\n\t\t\t// 2-sample: diagonal pair\r\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph);\r\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph);\r\n\t\t\tcoverage = (c0 + c1) * 0.5;\r\n\t\t}\r\n\t\telse if (sampleCount <= 4)\r\n\t\t{\r\n\t\t\t// 4-sample rotated-grid supersampling (RGSS pattern).\r\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph);\r\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph);\r\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph);\r\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph);\r\n\t\t\tcoverage = (c0 + c1 + c2 + c3) * 0.25;\r\n\t\t}\r\n\t\telse if (sampleCount <= 8)\r\n\t\t{\r\n\t\t\t// 8-sample: 8-queens pattern (good spatial distribution)\r\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph);\r\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph);\r\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph);\r\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph);\r\n\t\t\tfloat c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph);\r\n\t\t\tfloat c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph);\r\n\t\t\tfloat c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph);\r\n\t\t\tfloat c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph);\r\n\t\t\tcoverage = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7) * 0.125;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\t// 16-sample: 4x4 jittered grid for maximum quality\r\n\t\t\tfloat sum = 0.0;\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph);\r\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph);\r\n\t\t\tcoverage = sum * 0.0625;\r\n\t\t}\r\n\t}\r\n\r\n\tfragColor = vColor * coverage;\r\n}\r\n"},
-/***/972(module){"use strict";module.exports="#version 300 es\n// ===================================================\n// Slug algorithm vertex shader — GLSL ES 3.00 port.\n// Original HLSL reference shader by Eric Lengyel.\n// SPDX-License-Identifier: MIT OR Apache-2.0\n// Copyright 2017, by Eric Lengyel.\n// ===================================================\n\n// Per-vertex attribute layout:\n//\n// 0 - pos  : object-space vertex coords (xy) and normal vector (zw)\n// 1 - tex  : em-space sample coords (xy), packed glyph data location (z), packed band max + flags (w)\n// 2 - jac  : inverse Jacobian matrix entries (00, 01, 10, 11)\n// 3 - bnd  : band scale x, band scale y, band offset x, band offset y\n// 4 - col  : vertex color (rgba)\n\nprecision highp float;\nprecision highp int;\n\nlayout(location = 0) in vec4 aPositionNormal; // pos xy + normal zw\nlayout(location = 1) in vec4 aTexcoord;       // em-space uv + packed glyph loc + packed bands\nlayout(location = 2) in vec4 aJacobian;       // inverse Jacobian (00, 01, 10, 11)\nlayout(location = 3) in vec4 aBanding;        // band scale xy + band offset xy\nlayout(location = 4) in vec4 aColor;          // vertex color rgba\n\n// PixiJS v8 global uniforms — auto-populated each frame by the renderer (bind group 100).\nuniform mat3 uProjectionMatrix; // Orthographic projection: world pixels → NDC.\nuniform vec2 uResolution;       // Viewport size in pixels (width, height).\n\n// PixiJS v8 local uniforms — per-object transform injected by MeshPipe (bind group 101).\nuniform mat3 uTransformMatrix;  // World transform of this mesh: local → world pixels.\n\nout vec4 vColor;\nout vec2 vTexcoord;\nflat out vec4 vBanding;\nflat out ivec4 vGlyph;\n\n// Unpack glyph metadata from bit-packed float32 vertex attributes.\n// Reads aTexcoord.zw (packed integers) and aBanding (band transform) —\n// independent of the em-space coords in aTexcoord.xy used by SlugDilate.\nvoid SlugUnpack(vec4 tex, vec4 bnd, out vec4 vbnd, out ivec4 vgly)\n{\n\tuvec2 g = floatBitsToUint(tex.zw);\n\tvgly = ivec4(\n\t\tint(g.x & 0xFFFFu),\n\t\tint(g.x >> 16u),\n\t\tint(g.y & 0xFFFFu),\n\t\tint(g.y >> 16u)\n\t);\n\tvbnd = bnd;\n}\n\n// Compute dynamic glyph dilation (Lengyel 2019).\n// Expands the bounding polygon by 0.5 pixels in viewport space so the\n// rasterizer generates fragments for boundary pixels whose centers fall\n// just outside the undilated quad.\n//\n// The displacement uses pos.zw (the raw scaled normal, e.g. (-1,-1) at corners)\n// rather than the unit normal n. The scalar factor is derived from n via u and v,\n// and the magnitude of pos.zw is absorbed into the quadratic solution — this is\n// correct per the Dynamic Glyph Dilation paper.\nvec2 SlugDilate(vec4 pos, vec4 tex, vec4 jac, mat4 mvp, vec2 dim, out vec2 vpos)\n{\n\t// INVARIANT: pos.zw (normal) must be nonzero. quad.ts always sets\n\t// normals to (-1,-1), (1,-1), (1,1), (-1,1) for quad corners.\n\tvec2 n = normalize(pos.zw);\n\n\t// Project position and normal through the MVP matrix.\n\tvec4 Mpos = mvp * vec4(pos.xy, 0.0, 1.0);\n\tvec4 Mn   = mvp * vec4(n,      0.0, 0.0);\n\n\tfloat s = Mpos.w;\n\tfloat t = Mn.w;\n\n\tfloat u = (s * Mn.x - t * Mpos.x) * dim.x;\n\tfloat v = (s * Mn.y - t * Mpos.y) * dim.y;\n\n\tfloat s2 = s * s;\n\tfloat st = s * t;\n\tfloat uv = u * u + v * v;\n\n\t// Solve: (uv - st²)d² - 2s³t·d - s⁴ = 0\n\t// Guard the denominator against division-by-zero (undefined in GLSL ES,\n\t// see port_risks.md GLSL-3). For orthographic 2D, t=0 always so the\n\t// denominator is uv = u²+v². It is zero only when the normal projects\n\t// to zero screen-space length (degenerate MVP or zero viewport).\n\t// In that case, skip dilation — the vertex stays at its original position.\n\tfloat denom = uv - st * st;\n\tif (abs(denom) < 1e-10)\n\t{\n\t\tvpos = pos.xy;\n\t\treturn tex.xy;\n\t}\n\n\tvec2 d = pos.zw * (s2 * (st + sqrt(uv)) / denom);\n\n\tvpos = pos.xy + d;\n\treturn vec2(tex.x + dot(d, jac.xy), tex.y + dot(d, jac.zw));\n}\n\nvoid main()\n{\n\t// Combine projection and world transform into a single 2D affine mat3,\n\t// then lift it to a column-major mat4 for the Slug dilation algorithm.\n\t// The W row is (0,0,0,1) — correct for orthographic projection.\n\t// For perspective, the W row would need to carry the actual projection terms.\n\tmat3 m = uProjectionMatrix * uTransformMatrix;\n\tmat4 mvp = mat4(\n\t\tm[0][0], m[0][1], 0.0, 0.0,  // column 0\n\t\tm[1][0], m[1][1], 0.0, 0.0,  // column 1\n\t\t0.0,     0.0,     1.0, 0.0,  // column 2\n\t\tm[2][0], m[2][1], 0.0, 1.0   // column 3\n\t);\n\n\t// Half viewport converts clip-space normal vectors to pixel-space distances.\n\tvec2 dim = uResolution * 0.5;\n\n\tvec2 p;\n\tvTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);\n\n\tgl_Position = mvp * vec4(p, 0.0, 1.0);\n\n\tSlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);\n\tvColor = aColor;\n}\n"},
-/***/0(module){"use strict";module.exports=__WEBPACK_EXTERNAL_MODULE__0__},
-/***/256(){
+	 * A generic error utility function.
+	 * @private
+	 * @param {String} type The error type.
+	 * @returns {Error} Throws a `RangeError` with the applicable error message.
+	 */function error(type){throw new RangeError(errors[type])}
+/**
+	 * A generic `Array#map` utility function.
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} callback The function that gets called for every array
+	 * item.
+	 * @returns {Array} A new array of values returned by the callback function.
+	 */function map(array,fn){for(var length=array.length,result=[];length--;)result[length]=fn(array[length]);return result}
+/**
+	 * A simple `Array#map`-like wrapper to work with domain name strings or email
+	 * addresses.
+	 * @private
+	 * @param {String} domain The domain name or email address.
+	 * @param {Function} callback The function that gets called for every
+	 * character.
+	 * @returns {Array} A new string of characters returned by the callback
+	 * function.
+	 */function mapDomain(string,fn){var parts=string.split("@"),result="";return parts.length>1&&(
+// In email addresses, only the domain name should be punycoded. Leave
+// the local part (i.e. everything up to `@`) intact.
+result=parts[0]+"@",string=parts[1]),result+map((
+// Avoid `split(regex)` for IE8 compatibility. See #17.
+string=string.replace(regexSeparators,".")).split("."),fn).join(".")}
+/**
+	 * Creates an array containing the numeric code points of each Unicode
+	 * character in the string. While JavaScript uses UCS-2 internally,
+	 * this function will convert a pair of surrogate halves (each of which
+	 * UCS-2 exposes as separate characters) into a single code point,
+	 * matching UTF-16.
+	 * @see `punycode.ucs2.encode`
+	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+	 * @memberOf punycode.ucs2
+	 * @name decode
+	 * @param {String} string The Unicode input string (UCS-2).
+	 * @returns {Array} The new array of code points.
+	 */function ucs2decode(string){for(var value,extra,output=[],counter=0,length=string.length;counter<length;)(value=string.charCodeAt(counter++))>=55296&&value<=56319&&counter<length?56320==(64512&(
+// high surrogate, and there is a next character
+extra=string.charCodeAt(counter++)))?// low surrogate
+output.push(((1023&value)<<10)+(1023&extra)+65536):(
+// unmatched surrogate; only append this code unit, in case the next
+// code unit is the high surrogate of a surrogate pair
+output.push(value),counter--):output.push(value);return output}
+/**
+	 * Creates a string based on an array of numeric code points.
+	 * @see `punycode.ucs2.decode`
+	 * @memberOf punycode.ucs2
+	 * @name encode
+	 * @param {Array} codePoints The array of numeric code points.
+	 * @returns {String} The new Unicode string (UCS-2).
+	 */function ucs2encode(array){return map(array,function(value){var output="";return value>65535&&(output+=stringFromCharCode((value-=65536)>>>10&1023|55296),value=56320|1023&value),output+=stringFromCharCode(value)}).join("")}
+/**
+	 * Converts a basic code point into a digit/integer.
+	 * @see `digitToBasic()`
+	 * @private
+	 * @param {Number} codePoint The basic numeric code point value.
+	 * @returns {Number} The numeric value of a basic code point (for use in
+	 * representing integers) in the range `0` to `base - 1`, or `base` if
+	 * the code point does not represent a value.
+	 */function basicToDigit(codePoint){return codePoint-48<10?codePoint-22:codePoint-65<26?codePoint-65:codePoint-97<26?codePoint-97:36}
+/**
+	 * Converts a digit/integer into a basic code point.
+	 * @see `basicToDigit()`
+	 * @private
+	 * @param {Number} digit The numeric value of a basic code point.
+	 * @returns {Number} The basic code point whose value (when used for
+	 * representing integers) is `digit`, which needs to be in the range
+	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
+	 * used; else, the lowercase form is used. The behavior is undefined
+	 * if `flag` is non-zero and `digit` has no uppercase form.
+	 */function digitToBasic(digit,flag){
+//  0..25 map to ASCII a..z or A..Z
+// 26..35 map to ASCII 0..9
+return digit+22+75*(digit<26)-((0!=flag)<<5)}
+/**
+	 * Bias adaptation function as per section 3.4 of RFC 3492.
+	 * https://tools.ietf.org/html/rfc3492#section-3.4
+	 * @private
+	 */function adapt(delta,numPoints,firstTime){var k=0;for(delta=firstTime?floor(delta/700):delta>>1,delta+=floor(delta/numPoints);delta>455;k+=36)delta=floor(delta/35);return floor(k+36*delta/(delta+38))}
+/**
+	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The Punycode string of ASCII-only symbols.
+	 * @returns {String} The resulting string of Unicode symbols.
+	 */function decode(input){
+// Don't use UCS-2
+var out,basic,j,index,oldi,w,k,digit,t,
+/** Cached calculation results */
+baseMinusT,output=[],inputLength=input.length,i=0,n=128,bias=72;
+// Handle the basic code points: let `basic` be the number of input code
+// points before the last delimiter, or `0` if there is none, then copy
+// the first basic code points to the output.
+for((basic=input.lastIndexOf("-"))<0&&(basic=0),j=0;j<basic;++j)
+// if it's not a basic code point
+input.charCodeAt(j)>=128&&error("not-basic"),output.push(input.charCodeAt(j));
+// Main decoding loop: start just after the last delimiter if any basic code
+// points were copied; start at the beginning otherwise.
+for(index=basic>0?basic+1:0;index<inputLength;){
+// `index` is the index of the next character to be consumed.
+// Decode a generalized variable-length integer into `delta`,
+// which gets added to `i`. The overflow checking is easier
+// if we increase `i` as we go, then subtract off its starting
+// value at the end to obtain `delta`.
+for(oldi=i,w=1,k=36;index>=inputLength&&error("invalid-input"),((digit=basicToDigit(input.charCodeAt(index++)))>=36||digit>floor((maxInt-i)/w))&&error("overflow"),i+=digit*w,!(digit<(t=k<=bias?1:k>=bias+26?26:k-bias));k+=36)w>floor(maxInt/(baseMinusT=36-t))&&error("overflow"),w*=baseMinusT;bias=adapt(i-oldi,out=output.length+1,0==oldi),
+// `i` was supposed to wrap around from `out` to `0`,
+// incrementing `n` each time, so we'll fix that now:
+floor(i/out)>maxInt-n&&error("overflow"),n+=floor(i/out),i%=out,
+// Insert `n` at position `i` of the output
+output.splice(i++,0,n)}return ucs2encode(output)}
+/**
+	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
+	 * Punycode string of ASCII-only symbols.
+	 * @memberOf punycode
+	 * @param {String} input The string of Unicode symbols.
+	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
+	 */function encode(input){var n,delta,handledCPCount,basicLength,bias,j,m,q,k,t,currentValue,
+/** `inputLength` will hold the number of code points in `input`. */
+inputLength,
+/** Cached calculation results */
+handledCPCountPlusOne,baseMinusT,qMinusT,output=[];
+// Convert the input in UCS-2 to Unicode
+// Handle the basic code points
+for(
+// Cache the length
+inputLength=(input=ucs2decode(input)).length,
+// Initialize the state
+n=128,delta=0,bias=72,j=0;j<inputLength;++j)(currentValue=input[j])<128&&output.push(stringFromCharCode(currentValue));
+// Main encoding loop:
+for(handledCPCount=basicLength=output.length,
+// `handledCPCount` is the number of code points that have been handled;
+// `basicLength` is the number of basic code points.
+// Finish the basic string - if it is not empty - with a delimiter
+basicLength&&output.push("-");handledCPCount<inputLength;){
+// All non-basic code points < n have been handled already. Find the next
+// larger one:
+for(m=maxInt,j=0;j<inputLength;++j)(currentValue=input[j])>=n&&currentValue<m&&(m=currentValue);
+// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
+// but guard against overflow
+for(m-n>floor((maxInt-delta)/(handledCPCountPlusOne=handledCPCount+1))&&error("overflow"),delta+=(m-n)*handledCPCountPlusOne,n=m,j=0;j<inputLength;++j)if((currentValue=input[j])<n&&++delta>maxInt&&error("overflow"),currentValue==n){
+// Represent delta as a generalized variable-length integer
+for(q=delta,k=36;!(q<(t=k<=bias?1:k>=bias+26?26:k-bias));k+=36)qMinusT=q-t,baseMinusT=36-t,output.push(stringFromCharCode(digitToBasic(t+qMinusT%baseMinusT,0))),q=floor(qMinusT/baseMinusT);output.push(stringFromCharCode(digitToBasic(q,0))),bias=adapt(delta,handledCPCountPlusOne,handledCPCount==basicLength),delta=0,++handledCPCount}++delta,++n}return output.join("")}
+/**
+	 * Converts a Punycode string representing a domain name or an email address
+	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
+	 * it doesn't matter if you call it on a string that has already been
+	 * converted to Unicode.
+	 * @memberOf punycode
+	 * @param {String} input The Punycoded domain name or email address to
+	 * convert to Unicode.
+	 * @returns {String} The Unicode representation of the given Punycode
+	 * string.
+	 */
+/*--------------------------------------------------------------------------*/
+/** Define the public API */
+punycode={
+/**
+		 * A string representing the current Punycode.js version number.
+		 * @memberOf punycode
+		 * @type String
+		 */
+version:"1.4.1",
+/**
+		 * An object of methods to convert from JavaScript's internal character
+		 * representation (UCS-2) to Unicode code points, and back.
+		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+		 * @memberOf punycode
+		 * @type Object
+		 */
+ucs2:{decode:ucs2decode,encode:ucs2encode},decode,encode,toASCII:
+/**
+	 * Converts a Unicode string representing a domain name or an email address to
+	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
+	 * i.e. it doesn't matter if you call it with a domain that's already in
+	 * ASCII.
+	 * @memberOf punycode
+	 * @param {String} input The domain name or email address to convert, as a
+	 * Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name or
+	 * email address.
+	 */
+function(input){return mapDomain(input,function(string){return regexNonASCII.test(string)?"xn--"+encode(string):string})},toUnicode:function(input){return mapDomain(input,function(string){return regexPunycode.test(string)?decode(string.slice(4).toLowerCase()):string})}},void 0===(__WEBPACK_AMD_DEFINE_RESULT__=function(){return punycode}.call(exports,__webpack_require__,exports,module))||(module.exports=__WEBPACK_AMD_DEFINE_RESULT__)}()},
+/***/8835(__unused_webpack_module,exports,__webpack_require__){"use strict";
+/*
+ * Copyright Joyent, Inc. and other Node contributors.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */var punycode=__webpack_require__(1270);function Url(){this.protocol=null,this.slashes=null,this.auth=null,this.host=null,this.port=null,this.hostname=null,this.hash=null,this.search=null,this.query=null,this.pathname=null,this.path=null,this.href=null}
+// Reference: RFC 3986, RFC 1808, RFC 2396
+/*
+ * define these here so at least they only have to be
+ * compiled once on the first module load.
+ */var protocolPattern=/^([a-z0-9.+-]+:)/i,portPattern=/:[0-9]*$/,
+// Special case for a simple path URL
+simplePathPattern=/^(\/\/?(?!\/)[^?\s]*)(\?[^\s]*)?$/,
+// RFC 2396: characters not allowed for various reasons.
+unwise=["{","}","|","\\","^","`"].concat(["<",">",'"',"`"," ","\r","\n","\t"]),
+// Allowed by RFCs, but cause of XSS attacks.  Always escape these.
+autoEscape=["'"].concat(unwise),
+/*
+   * Characters that are never ever allowed in a hostname.
+   * Note that any invalid chars are also handled, but these
+   * are the ones that are *expected* to be seen, so we fast-path
+   * them.
+   */
+nonHostChars=["%","/","?",";","#"].concat(autoEscape),hostEndingChars=["/","?","#"],hostnamePartPattern=/^[+a-z0-9A-Z_-]{0,63}$/,hostnamePartStart=/^([+a-z0-9A-Z_-]{0,63})(.*)$/,
+// protocols that can allow "unsafe" and "unwise" chars.
+unsafeProtocol={javascript:!0,"javascript:":!0},
+// protocols that never have a hostname.
+hostlessProtocol={javascript:!0,"javascript:":!0},
+// protocols that always contain a // bit.
+slashedProtocol={http:!0,https:!0,ftp:!0,gopher:!0,file:!0,"http:":!0,"https:":!0,"ftp:":!0,"gopher:":!0,"file:":!0},querystring=__webpack_require__(5373);function urlParse(url,parseQueryString,slashesDenoteHost){if(url&&"object"==typeof url&&url instanceof Url)return url;var u=new Url;return u.parse(url,parseQueryString,slashesDenoteHost),u}Url.prototype.parse=function(url,parseQueryString,slashesDenoteHost){if("string"!=typeof url)throw new TypeError("Parameter 'url' must be a string, not "+typeof url);
+/*
+   * Copy chrome, IE, opera backslash-handling behavior.
+   * Back slashes before the query string get converted to forward slashes
+   * See: https://code.google.com/p/chromium/issues/detail?id=25916
+   */var queryIndex=url.indexOf("?"),splitter=-1!==queryIndex&&queryIndex<url.indexOf("#")?"?":"#",uSplit=url.split(splitter);uSplit[0]=uSplit[0].replace(/\\/g,"/");var rest=url=uSplit.join(splitter);
+/*
+   * trim before proceeding.
+   * This is to support parse stuff like "  http://foo.com  \n"
+   */if(rest=rest.trim(),!slashesDenoteHost&&1===url.split("#").length){
+// Try fast path regexp
+var simplePath=simplePathPattern.exec(rest);if(simplePath)return this.path=rest,this.href=rest,this.pathname=simplePath[1],simplePath[2]?(this.search=simplePath[2],this.query=parseQueryString?querystring.parse(this.search.substr(1)):this.search.substr(1)):parseQueryString&&(this.search="",this.query={}),this}var proto=protocolPattern.exec(rest);if(proto){var lowerProto=(proto=proto[0]).toLowerCase();this.protocol=lowerProto,rest=rest.substr(proto.length)}
+/*
+   * figure out if it's got a host
+   * user@server is *always* interpreted as a hostname, and url
+   * resolution will treat //foo/bar as host=foo,path=bar because that's
+   * how the browser resolves relative URLs.
+   */if(slashesDenoteHost||proto||rest.match(/^\/\/[^@/]+@[^@/]+/)){var slashes="//"===rest.substr(0,2);!slashes||proto&&hostlessProtocol[proto]||(rest=rest.substr(2),this.slashes=!0)}if(!hostlessProtocol[proto]&&(slashes||proto&&!slashedProtocol[proto])){for(
+/*
+     * there's a hostname.
+     * the first instance of /, ?, ;, or # ends the host.
+     *
+     * If there is an @ in the hostname, then non-host chars *are* allowed
+     * to the left of the last @ sign, unless some host-ending character
+     * comes *before* the @-sign.
+     * URLs are obnoxious.
+     *
+     * ex:
+     * http://a@b@c/ => user:a@b host:c
+     * http://a@b?@c => user:a host:c path:/?@c
+     */
+/*
+     * v0.12 TODO(isaacs): This is not quite how Chrome does things.
+     * Review our test case against browsers more comprehensively.
+     */
+// find the first instance of any hostEndingChars
+var auth,atSign,hostEnd=-1,i=0;i<hostEndingChars.length;i++){-1!==(hec=rest.indexOf(hostEndingChars[i]))&&(-1===hostEnd||hec<hostEnd)&&(hostEnd=hec)}
+/*
+     * at this point, either we have an explicit point where the
+     * auth portion cannot go past, or the last @ char is the decider.
+     */
+/*
+     * Now we have a portion which is definitely the auth.
+     * Pull that off.
+     */
+-1!==(
+// atSign can be anywhere.
+atSign=-1===hostEnd?rest.lastIndexOf("@"):rest.lastIndexOf("@",hostEnd))&&(auth=rest.slice(0,atSign),rest=rest.slice(atSign+1),this.auth=decodeURIComponent(auth)),
+// the host is the remaining to the left of the first non-host char
+hostEnd=-1;for(i=0;i<nonHostChars.length;i++){var hec;-1!==(hec=rest.indexOf(nonHostChars[i]))&&(-1===hostEnd||hec<hostEnd)&&(hostEnd=hec)}
+// if we still have not hit it, then the entire thing is a host.
+-1===hostEnd&&(hostEnd=rest.length),this.host=rest.slice(0,hostEnd),rest=rest.slice(hostEnd),
+// pull out port.
+this.parseHost(),
+/*
+     * we've indicated that there is a hostname,
+     * so even if it's empty, it has to be present.
+     */
+this.hostname=this.hostname||"";
+/*
+     * if hostname begins with [ and ends with ]
+     * assume that it's an IPv6 address.
+     */
+var ipv6Hostname="["===this.hostname[0]&&"]"===this.hostname[this.hostname.length-1];
+// validate a little.
+if(!ipv6Hostname)for(var hostparts=this.hostname.split(/\./),l=(i=0,hostparts.length);i<l;i++){var part=hostparts[i];if(part&&!part.match(hostnamePartPattern)){for(var newpart="",j=0,k=part.length;j<k;j++)part.charCodeAt(j)>127?
+/*
+               * we replace non-ASCII char with a temporary placeholder
+               * we need this to make sure size of hostname is not
+               * broken by replacing non-ASCII by nothing
+               */
+newpart+="x":newpart+=part[j];
+// we test again with ASCII char only
+if(!newpart.match(hostnamePartPattern)){var validParts=hostparts.slice(0,i),notHost=hostparts.slice(i+1),bit=part.match(hostnamePartStart);bit&&(validParts.push(bit[1]),notHost.unshift(bit[2])),notHost.length&&(rest="/"+notHost.join(".")+rest),this.hostname=validParts.join(".");break}}}this.hostname.length>255?this.hostname="":
+// hostnames are always lower case.
+this.hostname=this.hostname.toLowerCase(),ipv6Hostname||(
+/*
+       * IDNA Support: Returns a punycoded representation of "domain".
+       * It only converts parts of the domain name that
+       * have non-ASCII characters, i.e. it doesn't matter if
+       * you call it with a domain that already is ASCII-only.
+       */
+this.hostname=punycode.toASCII(this.hostname));var p=this.port?":"+this.port:"",h=this.hostname||"";this.host=h+p,this.href+=this.host,
+/*
+     * strip [ and ] from the hostname
+     * the host field still retains them, though
+     */
+ipv6Hostname&&(this.hostname=this.hostname.substr(1,this.hostname.length-2),"/"!==rest[0]&&(rest="/"+rest))}
+/*
+   * now rest is set to the post-host stuff.
+   * chop off any delim chars.
+   */if(!unsafeProtocol[lowerProto])
+/*
+     * First, make 100% sure that any "autoEscape" chars get
+     * escaped, even if encodeURIComponent doesn't think they
+     * need to be.
+     */
+for(i=0,l=autoEscape.length;i<l;i++){var ae=autoEscape[i];if(-1!==rest.indexOf(ae)){var esc=encodeURIComponent(ae);esc===ae&&(esc=escape(ae)),rest=rest.split(ae).join(esc)}}
+// chop off from the tail first.
+var hash=rest.indexOf("#");-1!==hash&&(
+// got a fragment string.
+this.hash=rest.substr(hash),rest=rest.slice(0,hash));var qm=rest.indexOf("?");
+// to support http.request
+if(-1!==qm?(this.search=rest.substr(qm),this.query=rest.substr(qm+1),parseQueryString&&(this.query=querystring.parse(this.query)),rest=rest.slice(0,qm)):parseQueryString&&(
+// no query string, but parseQueryString still requested
+this.search="",this.query={}),rest&&(this.pathname=rest),slashedProtocol[lowerProto]&&this.hostname&&!this.pathname&&(this.pathname="/"),this.pathname||this.search){p=this.pathname||"";var s=this.search||"";this.path=p+s}
+// finally, reconstruct the href based on what has been validated.
+return this.href=this.format(),this},Url.prototype.format=function(){var auth=this.auth||"";auth&&(auth=(auth=encodeURIComponent(auth)).replace(/%3A/i,":"),auth+="@");var protocol=this.protocol||"",pathname=this.pathname||"",hash=this.hash||"",host=!1,query="";this.host?host=auth+this.host:this.hostname&&(host=auth+(-1===this.hostname.indexOf(":")?this.hostname:"["+this.hostname+"]"),this.port&&(host+=":"+this.port)),this.query&&"object"==typeof this.query&&Object.keys(this.query).length&&(query=querystring.stringify(this.query,{arrayFormat:"repeat",addQueryPrefix:!1}));var search=this.search||query&&"?"+query||"";return protocol&&":"!==protocol.substr(-1)&&(protocol+=":")
+/*
+   * only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
+   * unless they had them to begin with.
+   */,this.slashes||(!protocol||slashedProtocol[protocol])&&!1!==host?(host="//"+(host||""),pathname&&"/"!==pathname.charAt(0)&&(pathname="/"+pathname)):host||(host=""),hash&&"#"!==hash.charAt(0)&&(hash="#"+hash),search&&"?"!==search.charAt(0)&&(search="?"+search),protocol+host+(pathname=pathname.replace(/[?#]/g,function(match){return encodeURIComponent(match)}))+(search=search.replace("#","%23"))+hash},Url.prototype.resolve=function(relative){return this.resolveObject(urlParse(relative,!1,!0)).format()},Url.prototype.resolveObject=function(relative){if("string"==typeof relative){var rel=new Url;rel.parse(relative,!1,!0),relative=rel}for(var result=new Url,tkeys=Object.keys(this),tk=0;tk<tkeys.length;tk++){var tkey=tkeys[tk];result[tkey]=this[tkey]}
+/*
+   * hash is always overridden, no matter what.
+   * even href="" will remove it.
+   */
+// if the relative url is empty, then there's nothing left to do here.
+if(result.hash=relative.hash,""===relative.href)return result.href=result.format(),result;
+// hrefs like //foo/bar always cut to the protocol.
+if(relative.slashes&&!relative.protocol){for(
+// take everything except the protocol from relative
+var rkeys=Object.keys(relative),rk=0;rk<rkeys.length;rk++){var rkey=rkeys[rk];"protocol"!==rkey&&(result[rkey]=relative[rkey])}
+// urlParse appends trailing / to urls like http://www.example.com
+return slashedProtocol[result.protocol]&&result.hostname&&!result.pathname&&(result.pathname="/",result.path=result.pathname),result.href=result.format(),result}if(relative.protocol&&relative.protocol!==result.protocol){
+/*
+     * if it's a known url protocol, then changing
+     * the protocol does weird things
+     * first, if it's not file:, then we MUST have a host,
+     * and if there was a path
+     * to begin with, then we MUST have a path.
+     * if it is file:, then the host is dropped,
+     * because that's known to be hostless.
+     * anything else is assumed to be absolute.
+     */
+if(!slashedProtocol[relative.protocol]){for(var keys=Object.keys(relative),v=0;v<keys.length;v++){var k=keys[v];result[k]=relative[k]}return result.href=result.format(),result}if(result.protocol=relative.protocol,relative.host||hostlessProtocol[relative.protocol])result.pathname=relative.pathname;else{for(var relPath=(relative.pathname||"").split("/");relPath.length&&!(relative.host=relPath.shift()););relative.host||(relative.host=""),relative.hostname||(relative.hostname=""),""!==relPath[0]&&relPath.unshift(""),relPath.length<2&&relPath.unshift(""),result.pathname=relPath.join("/")}
+// to support http.request
+if(result.search=relative.search,result.query=relative.query,result.host=relative.host||"",result.auth=relative.auth,result.hostname=relative.hostname||relative.host,result.port=relative.port,result.pathname||result.search){var p=result.pathname||"",s=result.search||"";result.path=p+s}return result.slashes=result.slashes||relative.slashes,result.href=result.format(),result}var isSourceAbs=result.pathname&&"/"===result.pathname.charAt(0),isRelAbs=relative.host||relative.pathname&&"/"===relative.pathname.charAt(0),mustEndAbs=isRelAbs||isSourceAbs||result.host&&relative.pathname,removeAllDots=mustEndAbs,srcPath=result.pathname&&result.pathname.split("/")||[],psychotic=(relPath=relative.pathname&&relative.pathname.split("/")||[],result.protocol&&!slashedProtocol[result.protocol]);
+/*
+   * if the url is a non-slashed url, then relative
+   * links like ../.. should be able
+   * to crawl up to the hostname, as well.  This is strange.
+   * result.protocol has already been set by now.
+   * Later on, put the first path part into the host field.
+   */if(psychotic&&(result.hostname="",result.port=null,result.host&&(""===srcPath[0]?srcPath[0]=result.host:srcPath.unshift(result.host)),result.host="",relative.protocol&&(relative.hostname=null,relative.port=null,relative.host&&(""===relPath[0]?relPath[0]=relative.host:relPath.unshift(relative.host)),relative.host=null),mustEndAbs=mustEndAbs&&(""===relPath[0]||""===srcPath[0])),isRelAbs)
+// it's absolute.
+result.host=relative.host||""===relative.host?relative.host:result.host,result.hostname=relative.hostname||""===relative.hostname?relative.hostname:result.hostname,result.search=relative.search,result.query=relative.query,srcPath=relPath;else if(relPath.length)
+/*
+     * it's relative
+     * throw away the existing file, and take the new path instead.
+     */
+srcPath||(srcPath=[]),srcPath.pop(),srcPath=srcPath.concat(relPath),result.search=relative.search,result.query=relative.query;else if(null!=relative.search){
+/*
+     * just pull out the search.
+     * like href='?foo'.
+     * Put this after the other two cases because it simplifies the booleans
+     */
+if(psychotic)result.host=srcPath.shift(),result.hostname=result.host,(authInHost=!!(result.host&&result.host.indexOf("@")>0)&&result.host.split("@"))&&(result.auth=authInHost.shift(),result.hostname=authInHost.shift(),result.host=result.hostname);return result.search=relative.search,result.query=relative.query,
+// to support http.request
+null===result.pathname&&null===result.search||(result.path=(result.pathname?result.pathname:"")+(result.search?result.search:"")),result.href=result.format(),result}if(!srcPath.length)
+/*
+     * no path at all.  easy.
+     * we've already handled the other stuff above.
+     */
+return result.pathname=null,
+// to support http.request
+result.search?result.path="/"+result.search:result.path=null,result.href=result.format(),result;
+/*
+   * if a url ENDs in . or .., then it must get a trailing slash.
+   * however, if it ends in anything else non-slashy,
+   * then it must NOT get a trailing slash.
+   */for(var last=srcPath.slice(-1)[0],hasTrailingSlash=(result.host||relative.host||srcPath.length>1)&&("."===last||".."===last)||""===last,up=0,i=srcPath.length;i>=0;i--)"."===(last=srcPath[i])?srcPath.splice(i,1):".."===last?(srcPath.splice(i,1),up++):up&&(srcPath.splice(i,1),up--);
+// if the path is allowed to go above the root, restore leading ..s
+if(!mustEndAbs&&!removeAllDots)for(;up--;up)srcPath.unshift("..");!mustEndAbs||""===srcPath[0]||srcPath[0]&&"/"===srcPath[0].charAt(0)||srcPath.unshift(""),hasTrailingSlash&&"/"!==srcPath.join("/").substr(-1)&&srcPath.push("");var authInHost,isAbsolute=""===srcPath[0]||srcPath[0]&&"/"===srcPath[0].charAt(0);
+// put the host back
+psychotic&&(result.hostname=isAbsolute?"":srcPath.length?srcPath.shift():"",result.host=result.hostname,(authInHost=!!(result.host&&result.host.indexOf("@")>0)&&result.host.split("@"))&&(result.auth=authInHost.shift(),result.hostname=authInHost.shift(),result.host=result.hostname));return(mustEndAbs=mustEndAbs||result.host&&srcPath.length)&&!isAbsolute&&srcPath.unshift(""),srcPath.length>0?result.pathname=srcPath.join("/"):(result.pathname=null,result.path=null),
+// to support request.http
+null===result.pathname&&null===result.search||(result.path=(result.pathname?result.pathname:"")+(result.search?result.search:"")),result.auth=relative.auth||result.auth,result.slashes=result.slashes||relative.slashes,result.href=result.format(),result},Url.prototype.parseHost=function(){var host=this.host,port=portPattern.exec(host);port&&(":"!==(port=port[0])&&(this.port=port.substr(1)),host=host.substr(0,host.length-port.length)),host&&(this.hostname=host)},exports.parse=urlParse,exports.resolve=function(source,relative){return urlParse(source,!1,!0).resolve(relative)},exports.resolveObject=function(source,relative){return source?urlParse(source,!1,!0).resolveObject(relative):relative},exports.format=
+// format a parsed object into a url string
+function(obj){
+/*
+   * ensure it's an object, and not a string url.
+   * If it's an obj, this is a no-op.
+   * this way, you can call url_format() on strings
+   * to clean up potentially wonky urls.
+   */
+return"string"==typeof obj&&(obj=urlParse(obj)),obj instanceof Url?obj.format():Url.prototype.format.call(obj)},exports.Url=Url},
+/***/9155(module){"use strict";module.exports="#version 300 es\n// ===================================================\n// Slug algorithm fragment shader — GLSL ES 3.00 port.\n// Based on the reference Slug shader by Eric Lengyel.\n// ===================================================\nprecision highp float;\nprecision highp int;\nprecision highp sampler2D;\n\n#define kLogBandTextureWidth 12\n#define kMaxCurvesPerBand 512\n#define kQuadraticEpsilon 0.0001\n\nin vec4 vColor;\nin vec2 vTexcoord;\nflat in vec4 vBanding;\nflat in ivec4 vGlyph;\n\nuniform sampler2D uCurveTexture;\nuniform sampler2D uBandTexture;\nuniform int uSupersampleCount;\nuniform float uStrokeExpand;     // Stroke expansion in pixels. 0 = normal fill.\nuniform float uStrokeAlphaStart; // Starting alpha at inner stroke edge. @default 1.0\nuniform float uStrokeAlphaRate;  // Alpha change per pixel outward. 0 = uniform. @default 0.0\n\n// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).\n// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.\nuvec2 fetchBand(ivec2 coord)\n{\n\tvec2 raw = texelFetch(uBandTexture, coord, 0).xy;\n\treturn uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));\n}\n\nivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)\n{\n\tivec2 bandLoc = ivec2(glyphLoc.x + int(offset), glyphLoc.y);\n\tbandLoc.y += bandLoc.x >> kLogBandTextureWidth;\n\tbandLoc.x &= (1 << kLogBandTextureWidth) - 1;\n\treturn bandLoc;\n}\n\n// Combine horizontal and vertical fractional winding into coverage.\n// Near edges (high weight): weighted average provides smooth antialiasing.\n// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.\n// max() is used instead of min() to handle glyphs with oppositely-wound\n// contours where one axis cancels to ~0 while the other reads ~1.\nfloat CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)\n{\n\tfloat coverage = max(\n\t\tabs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),\n\t\tmax(abs(xcov), abs(ycov))\n\t);\n\n\treturn clamp(sqrt(abs(coverage)), 0.0, 1.0);\n}\n\nout vec4 fragColor;\n\n// Returns vec2(coverage, minBoundaryDist).\n// minBoundaryDist is the minimum absolute distance (in pixels) from this\n// pixel to any curve crossing — an approximation of the distance to the\n// nearest glyph boundary. Used for stroke alpha gradient.\nvec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\n\t// Early-out threshold: expanded by stroke so curves within stroke range\n\t// are not skipped. When strokePx is 0 this reduces to the original -0.5.\n\tfloat earlyOutBias = -0.5 - strokePx;\n\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tfloat xcov = 0.0;\n\tfloat xwgt = 0.0;\n\tfloat minDist = 1e10;\n\n\t// ---------------------------------------------------------------\n\t// Horizontal ray (+X direction)\n\t// ---------------------------------------------------------------\n\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +\n\t\t        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat bx = p12.x - p12.z;\n\t\t\tfloat by = p12.y - p12.w;\n\t\t\tfloat ra = 1.0 / ay;\n\n\t\t\tfloat d = sqrt(max(by * by - ay * p12.y, 0.0));\n\t\t\tfloat t1 = (by - d) * ra;\n\t\t\tfloat t2 = (by + d) * ra;\n\n\t\t\tif (abs(ay) < kQuadraticEpsilon)\n\t\t\t{\n\t\t\t\tif (abs(by) < kQuadraticEpsilon) continue;\n\t\t\t\tt1 = p12.y * 0.5 / by;\n\t\t\t\tt2 = t1;\n\t\t\t}\n\n\t\t\tfloat x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;\n\t\t\tfloat x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;\n\t\t\tx1 *= pixelsPerEm.x;\n\t\t\tx2 *= pixelsPerEm.x;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(x1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(x2));\n\n\t\t\t// Stroke dilation: entry crossings shift inward (+strokePx),\n\t\t\t// exit crossings shift outward (-strokePx).\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sx1 = x1 + strokePx;\n\t\t\t\txcov += clamp(sx1 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sx2 = x2 - strokePx;\n\t\t\t\txcov -= clamp(sx2 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\t// ---------------------------------------------------------------\n\t// Vertical ray (+Y direction)\n\t// Same solver as horizontal with x↔y roles swapped.\n\t// ---------------------------------------------------------------\n\n\tfloat ycov = 0.0;\n\tfloat ywgt = 0.0;\n\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +\n\t\t        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat bx = p12.y - p12.w;\n\t\t\tfloat by = p12.x - p12.z;\n\t\t\tfloat ra = 1.0 / ay;\n\n\t\t\tfloat d = sqrt(max(by * by - ay * p12.x, 0.0));\n\t\t\tfloat t1 = (by - d) * ra;\n\t\t\tfloat t2 = (by + d) * ra;\n\n\t\t\tif (abs(ay) < kQuadraticEpsilon)\n\t\t\t{\n\t\t\t\tif (abs(by) < kQuadraticEpsilon) continue;\n\t\t\t\tt1 = p12.x * 0.5 / by;\n\t\t\t\tt2 = t1;\n\t\t\t}\n\n\t\t\tfloat y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;\n\t\t\tfloat y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;\n\t\t\ty1 *= pixelsPerEm.y;\n\t\t\ty2 *= pixelsPerEm.y;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(y1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(y2));\n\n\t\t\t// Vertical stroke dilation: signs flipped from horizontal\n\t\t\t// because +Y em-space is up but +Y screen-space is down.\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sy1 = y1 - strokePx;\n\t\t\t\tycov += clamp(sy1 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sy2 = y2 + strokePx;\n\t\t\t\tycov -= clamp(sy2 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\tfloat coverage = CalcCoverage(xcov, ycov, xwgt, ywgt);\n\treturn vec2(coverage, minDist);\n}\n\n// Convenience wrapper that returns only coverage (used by fill pass and supersampling).\nfloat SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\treturn SlugRenderEx(renderCoord, bandTransform, glyphData, strokePx).x;\n}\n\nvoid main()\n{\n\tfloat coverage;\n\tint sampleCount = min(uSupersampleCount, 16);\n\tfloat strokePx = uStrokeExpand;\n\tbool useGradientAlpha = (strokePx > 0.0 && uStrokeAlphaRate != 0.0);\n\n\t// When gradient alpha is active and no supersampling, use SlugRenderEx\n\t// to get both coverage and boundary distance in a single pass.\n\tif (useGradientAlpha && sampleCount <= 1)\n\t{\n\t\tvec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);\n\t\tcoverage = result.x;\n\n\t\t// minDist is the distance from the pixel to the nearest original\n\t\t// glyph boundary (before stroke expansion). Pixels at the inner\n\t\t// stroke edge have minDist ≈ 0, outer edge have minDist ≈ strokePx.\n\t\t// The per-pixel alpha is: alphaStart + alphaRate * minDist\n\t\tfloat dist = clamp(result.y, 0.0, strokePx);\n\t\tfloat alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);\n\t\tfragColor = vColor * coverage * alpha;\n\t\treturn;\n\t}\n\n\tif (sampleCount <= 1)\n\t{\n\t\tcoverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);\n\t}\n\telse\n\t{\n\t\t// Supersampling with configurable sample count.\n\t\t// Offsets are in em-space, derived from screen-space derivatives so they\n\t\t// scale correctly at any font size or transform.\n\t\tvec2 dx = dFdx(vTexcoord) * 0.5;\n\t\tvec2 dy = dFdy(vTexcoord) * 0.5;\n\n\t\tif (sampleCount <= 2)\n\t\t{\n\t\t\t// 2-sample: diagonal pair\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1) * 0.5;\n\t\t}\n\t\telse if (sampleCount <= 4)\n\t\t{\n\t\t\t// 4-sample rotated-grid supersampling (RGSS pattern).\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3) * 0.25;\n\t\t}\n\t\telse if (sampleCount <= 8)\n\t\t{\n\t\t\t// 8-sample: 8-queens pattern (good spatial distribution)\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7) * 0.125;\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// 16-sample: 4x4 jittered grid for maximum quality\n\t\t\tfloat sum = 0.0;\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = sum * 0.0625;\n\t\t}\n\t}\n\n\t// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)\n\t// uStrokeAlphaStart defaults to 1.0, so this is a no-op.\n\tfragColor = vColor * coverage * uStrokeAlphaStart;\n}\n"},
+/***/9972(module){"use strict";module.exports="#version 300 es\n// ===================================================\n// Slug algorithm vertex shader — GLSL ES 3.00 port.\n// Original HLSL reference shader by Eric Lengyel.\n// SPDX-License-Identifier: MIT OR Apache-2.0\n// Copyright 2017, by Eric Lengyel.\n// ===================================================\n\n// Per-vertex attribute layout:\n//\n// 0 - pos  : object-space vertex coords (xy) and normal vector (zw)\n// 1 - tex  : em-space sample coords (xy), packed glyph data location (z), packed band max + flags (w)\n// 2 - jac  : inverse Jacobian matrix entries (00, 01, 10, 11)\n// 3 - bnd  : band scale x, band scale y, band offset x, band offset y\n// 4 - col  : vertex color (rgba)\n\nprecision highp float;\nprecision highp int;\n\nlayout(location = 0) in vec4 aPositionNormal; // pos xy + normal zw\nlayout(location = 1) in vec4 aTexcoord;       // em-space uv + packed glyph loc + packed bands\nlayout(location = 2) in vec4 aJacobian;       // inverse Jacobian (00, 01, 10, 11)\nlayout(location = 3) in vec4 aBanding;        // band scale xy + band offset xy\nlayout(location = 4) in vec4 aColor;          // vertex color rgba\n\n// PixiJS v8 global uniforms — auto-populated each frame by the renderer (bind group 100).\nuniform mat3 uProjectionMatrix; // Orthographic projection: world pixels → NDC.\nuniform vec2 uResolution;       // Viewport size in pixels (width, height).\n\n// PixiJS v8 local uniforms — per-object transform injected by MeshPipe (bind group 101).\nuniform mat3 uTransformMatrix;  // World transform of this mesh: local → world pixels.\n\nout vec4 vColor;\nout vec2 vTexcoord;\nflat out vec4 vBanding;\nflat out ivec4 vGlyph;\n\n// Unpack glyph metadata from bit-packed float32 vertex attributes.\n// Reads aTexcoord.zw (packed integers) and aBanding (band transform) —\n// independent of the em-space coords in aTexcoord.xy used by SlugDilate.\nvoid SlugUnpack(vec4 tex, vec4 bnd, out vec4 vbnd, out ivec4 vgly)\n{\n\tuvec2 g = floatBitsToUint(tex.zw);\n\tvgly = ivec4(\n\t\tint(g.x & 0xFFFFu),\n\t\tint(g.x >> 16u),\n\t\tint(g.y & 0xFFFFu),\n\t\tint(g.y >> 16u)\n\t);\n\tvbnd = bnd;\n}\n\n// Compute dynamic glyph dilation (Lengyel 2019).\n// Expands the bounding polygon by 0.5 pixels in viewport space so the\n// rasterizer generates fragments for boundary pixels whose centers fall\n// just outside the undilated quad.\n//\n// The displacement uses pos.zw (the raw scaled normal, e.g. (-1,-1) at corners)\n// rather than the unit normal n. The scalar factor is derived from n via u and v,\n// and the magnitude of pos.zw is absorbed into the quadratic solution — this is\n// correct per the Dynamic Glyph Dilation paper.\nvec2 SlugDilate(vec4 pos, vec4 tex, vec4 jac, mat4 mvp, vec2 dim, out vec2 vpos)\n{\n\t// INVARIANT: pos.zw (normal) must be nonzero. quad.ts always sets\n\t// normals to (-1,-1), (1,-1), (1,1), (-1,1) for quad corners.\n\tvec2 n = normalize(pos.zw);\n\n\t// Project position and normal through the MVP matrix.\n\tvec4 Mpos = mvp * vec4(pos.xy, 0.0, 1.0);\n\tvec4 Mn   = mvp * vec4(n,      0.0, 0.0);\n\n\tfloat s = Mpos.w;\n\tfloat t = Mn.w;\n\n\tfloat u = (s * Mn.x - t * Mpos.x) * dim.x;\n\tfloat v = (s * Mn.y - t * Mpos.y) * dim.y;\n\n\tfloat s2 = s * s;\n\tfloat st = s * t;\n\tfloat uv = u * u + v * v;\n\n\t// Solve: (uv - st²)d² - 2s³t·d - s⁴ = 0\n\t// Guard the denominator against division-by-zero (undefined in GLSL ES,\n\t// see port_risks.md GLSL-3). For orthographic 2D, t=0 always so the\n\t// denominator is uv = u²+v². It is zero only when the normal projects\n\t// to zero screen-space length (degenerate MVP or zero viewport).\n\t// In that case, skip dilation — the vertex stays at its original position.\n\tfloat denom = uv - st * st;\n\tif (abs(denom) < 1e-10)\n\t{\n\t\tvpos = pos.xy;\n\t\treturn tex.xy;\n\t}\n\n\tvec2 d = pos.zw * (s2 * (st + sqrt(uv)) / denom);\n\n\tvpos = pos.xy + d;\n\treturn vec2(tex.x + dot(d, jac.xy), tex.y + dot(d, jac.zw));\n}\n\nvoid main()\n{\n\t// Combine projection and world transform into a single 2D affine mat3,\n\t// then lift it to a column-major mat4 for the Slug dilation algorithm.\n\t// The W row is (0,0,0,1) — correct for orthographic projection.\n\t// For perspective, the W row would need to carry the actual projection terms.\n\tmat3 m = uProjectionMatrix * uTransformMatrix;\n\tmat4 mvp = mat4(\n\t\tm[0][0], m[0][1], 0.0, 0.0,  // column 0\n\t\tm[1][0], m[1][1], 0.0, 0.0,  // column 1\n\t\t0.0,     0.0,     1.0, 0.0,  // column 2\n\t\tm[2][0], m[2][1], 0.0, 1.0   // column 3\n\t);\n\n\t// Half viewport converts clip-space normal vectors to pixel-space distances.\n\tvec2 dim = uResolution * 0.5;\n\n\tvec2 p;\n\tvTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);\n\n\tgl_Position = mvp * vec4(p, 0.0, 1.0);\n\n\tSlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);\n\tvColor = aColor;\n}\n"},
+/***/3e3(module){"use strict";module.exports=__WEBPACK_EXTERNAL_MODULE__3000__},
+/***/2634(){
+/* (ignored) */
+/***/},
+/***/7256(){
 /* (ignored) */
 /***/}
 /******/},__webpack_module_cache__={};
@@ -4503,8 +10002,8 @@ super.destroy()}}exports.SlugText=SlugText},
 /******/
 /******/ // Create a new module (and put it into the cache)
 /******/var module=__webpack_module_cache__[moduleId]={
-/******/ // no module.id needed
-/******/ // no module.loaded needed
+/******/id:moduleId,
+/******/loaded:!1,
 /******/exports:{}
 /******/};
 /******/
@@ -4512,7 +10011,10 @@ super.destroy()}}exports.SlugText=SlugText},
 /******/
 /******/
 /******/ // Return the exports of the module
-/******/return __webpack_modules__[moduleId].call(module.exports,module,module.exports,__webpack_require__),module.exports;
+/******/return __webpack_modules__[moduleId].call(module.exports,module,module.exports,__webpack_require__),
+/******/
+/******/ // Flag the module as loaded
+/******/module.loaded=!0,module.exports;
 /******/}
 /******/
 /************************************************************************/
@@ -4525,16 +10027,28 @@ super.destroy()}}exports.SlugText=SlugText},
 /******/Object.defineProperty(exports,key,{enumerable:!0,get:definition[key]})
 /******/;
 /******/},
+/******/__webpack_require__.g=function(){
+/******/if("object"==typeof globalThis)return globalThis;
+/******/try{
+/******/return this||new Function("return this")();
+/******/}catch(e){
+/******/if("object"==typeof window)return window;
+/******/}
+/******/}(),
 /******/__webpack_require__.o=(obj,prop)=>Object.prototype.hasOwnProperty.call(obj,prop)
 /******/,
 /******/ // define __esModule on exports
 /******/__webpack_require__.r=exports=>{
 /******/"undefined"!=typeof Symbol&&Symbol.toStringTag&&
 /******/Object.defineProperty(exports,Symbol.toStringTag,{value:"Module"})
-/******/,Object.defineProperty(exports,"__esModule",{value:!0})};
+/******/,Object.defineProperty(exports,"__esModule",{value:!0})},
+/******/__webpack_require__.nmd=module=>(
+/******/module.paths=[],
+/******/module.children||(module.children=[])
+/******/,module);
 /******/
 /************************************************************************/
 var __webpack_exports__={};
 // This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
-/******/return(()=>{"use strict";var exports=__webpack_exports__;Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugFontGpuV8=exports.slugShader=exports.SlugPipe=exports.SlugText=exports.SlugFont=void 0;var font_1=__webpack_require__(330);Object.defineProperty(exports,"SlugFont",{enumerable:!0,get:function(){return font_1.SlugFont}});var text_1=__webpack_require__(291);Object.defineProperty(exports,"SlugText",{enumerable:!0,get:function(){return text_1.SlugText}});var pipe_1=__webpack_require__(636);Object.defineProperty(exports,"SlugPipe",{enumerable:!0,get:function(){return pipe_1.SlugPipe}});var shader_1=__webpack_require__(445);Object.defineProperty(exports,"slugShader",{enumerable:!0,get:function(){return shader_1.slugShader}});var gpu_1=__webpack_require__(976);Object.defineProperty(exports,"slugFontGpuV8",{enumerable:!0,get:function(){return gpu_1.slugFontGpuV8}})})(),__webpack_exports__;
+/******/return(()=>{"use strict";var exports=__webpack_exports__;Object.defineProperty(exports,"__esModule",{value:!0}),exports.slugFontGpuV8=exports.slugShader=exports.SlugPipe=exports.SlugText=exports.SlugFont=void 0;var font_1=__webpack_require__(8330);Object.defineProperty(exports,"SlugFont",{enumerable:!0,get:function(){return font_1.SlugFont}});var text_1=__webpack_require__(2291);Object.defineProperty(exports,"SlugText",{enumerable:!0,get:function(){return text_1.SlugText}});var pipe_1=__webpack_require__(6636);Object.defineProperty(exports,"SlugPipe",{enumerable:!0,get:function(){return pipe_1.SlugPipe}});var shader_1=__webpack_require__(8445);Object.defineProperty(exports,"slugShader",{enumerable:!0,get:function(){return shader_1.slugShader}});var gpu_1=__webpack_require__(6976);Object.defineProperty(exports,"slugFontGpuV8",{enumerable:!0,get:function(){return gpu_1.slugFontGpuV8}})})(),__webpack_exports__;
 /******/})());

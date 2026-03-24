@@ -8,8 +8,9 @@ import {
 	Shader,
 	UniformGroup
 } from 'pixi.js';
-import {slugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugTextWrap} from '../../shared/slug/text/wrap';
 import {slugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
@@ -90,6 +91,31 @@ export class SlugText extends SlugTextV8Base {
 		return {mesh: new Mesh({geometry, shader}), uniforms};
 	}
 
+	/**
+	 * Build glyph quads, handling word wrap when enabled.
+	 * Returns single-line or multi-line quads depending on _wordWrap state.
+	 */
+	private _makeQuads(
+		font: SlugFont,
+		text: string,
+		color: [number, number, number, number],
+		extraExpand: number = 0
+	): SlugGlyphQuads {
+		if (this._wordWrap && this._wordWrapWidth > 0) {
+			const scale = this._fontSize / font.unitsPerEm;
+			const {lines} = slugTextWrap(text, font.advances, scale, this._wordWrapWidth, this._breakWords);
+			const lineHeight = (font.ascender - font.descender) * scale;
+			return slugGlyphQuadsMultiline(
+				lines, font.glyphs, font.advances, font.unitsPerEm,
+				this._fontSize, font.textureWidth, lineHeight, color, extraExpand
+			);
+		}
+		return slugGlyphQuads(
+			text, font.glyphs, font.advances, font.unitsPerEm,
+			this._fontSize, font.textureWidth, color, extraExpand
+		);
+	}
+
 	public rebuild(): void {
 		this._rebuildCount++;
 
@@ -120,21 +146,14 @@ export class SlugText extends SlugTextV8Base {
 				: [0, 0, 0, shadowAlpha];
 			const blur = ds.blur ?? 0;
 
-			const shadowQuads = slugGlyphQuads(
-				this._text, font.glyphs, font.advances,
-				font.unitsPerEm, this._fontSize, font.textureWidth,
-				shadowColor, blur
-			);
+			const shadowQuads = this._makeQuads(font, this._text, shadowColor, blur);
 
 			if (shadowQuads.quadCount > 0) {
 				const {mesh, uniforms: shadowUniforms} = this._buildMesh(shadowQuads, gpu, blur);
-				// Blur reuses stroke dilation: expand by blur radius,
-				// fade alpha from full at glyph edge to 0 at outer edge.
 				if (blur > 0) {
 					shadowUniforms.uniforms.uStrokeAlphaStart = shadowAlpha;
 					shadowUniforms.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
 				}
-				// Offset shadow by angle + distance
 				const angle = ds.angle ?? Math.PI / 6;
 				const dist = ds.distance ?? 5;
 				mesh.x = Math.cos(angle) * dist;
@@ -145,16 +164,8 @@ export class SlugText extends SlugTextV8Base {
 		}
 
 		// --- Stroke pass ---
-		// Same font size as fill but with expanded quads (extraExpand = strokeWidth).
-		// Each glyph quad is pushed outward by strokeWidth pixels on all sides,
-		// and em-space texcoords expand to match, so the shader renders the
-		// wider glyph area in the stroke color behind the fill.
 		if (hasStroke) {
-			const strokeQuads = slugGlyphQuads(
-				this._text, font.glyphs, font.advances,
-				font.unitsPerEm, this._fontSize, font.textureWidth,
-				this._strokeColor, this._strokeWidth
-			);
+			const strokeQuads = this._makeQuads(font, this._text, this._strokeColor, this._strokeWidth);
 
 			if (strokeQuads.quadCount > 0) {
 				const {mesh, uniforms: strokeUniforms} = this._buildMesh(strokeQuads, gpu, this._strokeWidth);
@@ -167,11 +178,7 @@ export class SlugText extends SlugTextV8Base {
 		}
 
 		// --- Fill pass ---
-		const fillQuads = slugGlyphQuads(
-			this._text, font.glyphs, font.advances,
-			font.unitsPerEm, this._fontSize, font.textureWidth,
-			this._color
-		);
+		const fillQuads = this._makeQuads(font, this._text, this._color);
 
 		if (fillQuads.quadCount > 0) {
 			const {mesh, uniforms} = this._buildMesh(fillQuads, gpu);

@@ -170,6 +170,17 @@
 					<label for="ctrlFillColor">Fill</label>
 					<input type="color" id="ctrlFillColor" value="#ffffff">
 				</div>
+				<div class="ctrl-row">
+					<input type="checkbox" id="ctrlWordWrap">
+					<label for="ctrlWordWrap">Word Wrap</label>
+					<input type="checkbox" id="ctrlBreakWords">
+					<label for="ctrlBreakWords">Break</label>
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlWrapWidth">Width</label>
+					<input type="range" id="ctrlWrapWidth" value="400" min="50" max="2000" step="10">
+					<input type="number" id="ctrlWrapWidthVal" class="slider-val" value="400">
+				</div>
 			</div>
 
 			<div class="ctrl-group">
@@ -397,6 +408,15 @@
 			document.getElementById('ctrlFillColor').oninput = function () {
 				slugText.color = hexToRGBA(document.getElementById('ctrlFillColor').value);
 			};
+
+			function applyWordWrap() {
+				slugText.wordWrap = document.getElementById('ctrlWordWrap').checked;
+				slugText.wordWrapWidth = parseFloat(document.getElementById('ctrlWrapWidth').value) || 400;
+				slugText.breakWords = document.getElementById('ctrlBreakWords').checked;
+			}
+			document.getElementById('ctrlWordWrap').onchange = applyWordWrap;
+			document.getElementById('ctrlBreakWords').onchange = applyWordWrap;
+			linkSlider('ctrlWrapWidth', 'ctrlWrapWidthVal', applyWordWrap);
 
 			document.getElementById('ctrlStroke').onchange = applyStroke;
 			linkSlider('ctrlStrokeWidth', 'ctrlStrokeWidthVal', applyStroke);

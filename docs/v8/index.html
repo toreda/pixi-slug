@@ -21,7 +21,7 @@
 			background: #16213e;
 			width: 100%;
 		}
-		canvas { border: 1px solid #333; }
+		canvas { border: none; }
 		#nav {
 			display: flex;
 			gap: 0;
@@ -107,22 +107,50 @@
 			accent-color: #4a6aae;
 			cursor: pointer;
 		}
+		#sidebar .slider-val {
+			width: 46px;
+			padding: 2px 4px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 12px;
+			text-align: center;
+			appearance: textfield;
+			-moz-appearance: textfield;
+		}
+		#sidebar .slider-val::-webkit-inner-spin-button,
+		#sidebar .slider-val::-webkit-outer-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+		#sidebar select {
+			padding: 3px 6px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+			cursor: pointer;
+		}
 		#app {
 			flex: 1;
-			display: flex;
-			align-items: flex-start;
-			justify-content: center;
-			padding: 16px;
+			overflow: hidden;
+		}
+		#app canvas {
+			display: block;
+			width: 100% !important;
+			height: 100% !important;
 		}
 	</style>
 </head>
 <body>
 	<nav id="nav">
-		<a href="/examples/v8/" class="active">V8</a>
-		<a href="/examples/v7/">V7</a>
-		<a href="/examples/v6/">V6</a>
-		<a href="/examples/comparison/">Live Rendering Comparison</a>
-		<a href="/examples/benchmark/">Benchmark</a>
+		<a href="../v8/" class="active">V8</a>
+		<a href="../v7/">V7</a>
+		<a href="../v6/">V6</a>
+		<a href="../comparison/">Live Rendering Comparison</a>
+		<a href="../benchmark/">Benchmark</a>
 	</nav>
 	<h1>pixi-slug — PixiJS v8</h1>
 
@@ -135,11 +163,23 @@
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlFontSize">Size</label>
-					<input type="number" id="ctrlFontSize" value="48" min="4" max="400" step="1">
+					<input type="range" id="ctrlFontSize" value="120" min="4" max="400" step="1">
+					<input type="number" id="ctrlFontSizeVal" class="slider-val" value="120">
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlFillColor">Fill</label>
 					<input type="color" id="ctrlFillColor" value="#ffffff">
+				</div>
+				<div class="ctrl-row">
+					<input type="checkbox" id="ctrlWordWrap">
+					<label for="ctrlWordWrap">Word Wrap</label>
+					<input type="checkbox" id="ctrlBreakWords">
+					<label for="ctrlBreakWords">Break</label>
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlWrapWidth">Width</label>
+					<input type="range" id="ctrlWrapWidth" value="400" min="50" max="2000" step="10">
+					<input type="number" id="ctrlWrapWidthVal" class="slider-val" value="400">
 				</div>
 			</div>
 
@@ -150,11 +190,29 @@
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlStrokeWidth">Width</label>
-					<input type="number" id="ctrlStrokeWidth" value="2" min="0" max="20" step="0.5">
+					<input type="range" id="ctrlStrokeWidth" value="2" min="0" max="20" step="1">
+					<input type="number" id="ctrlStrokeWidthVal" class="slider-val" value="2">
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlStrokeColor">Color</label>
 					<input type="color" id="ctrlStrokeColor" value="#000000">
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlStrokeAlphaMode">Alpha</label>
+					<select id="ctrlStrokeAlphaMode">
+						<option value="uniform" selected>Uniform</option>
+						<option value="gradient">Gradient</option>
+					</select>
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlStrokeAlphaStart">Start</label>
+					<input type="range" id="ctrlStrokeAlphaStart" value="1" min="0" max="1" step="0.05">
+					<input type="number" id="ctrlStrokeAlphaStartVal" class="slider-val" value="1" step="0.05">
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlStrokeAlphaRate">Rate</label>
+					<input type="range" id="ctrlStrokeAlphaRate" value="0" min="-0.5" max="0.5" step="0.01">
+					<input type="number" id="ctrlStrokeAlphaRateVal" class="slider-val" value="0" step="0.01">
 				</div>
 			</div>
 
@@ -165,12 +223,23 @@
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlShadowDist">Dist</label>
-					<input type="number" id="ctrlShadowDist" value="5" min="0" max="30" step="1">
+					<input type="range" id="ctrlShadowDist" value="5" min="0" max="30" step="1">
+					<input type="number" id="ctrlShadowDistVal" class="slider-val" value="5">
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlShadowAngle">Angle</label>
 					<input type="range" id="ctrlShadowAngle" min="0" max="360" step="1" value="30">
-					<span id="ctrlShadowAngleVal">30°</span>
+					<input type="number" id="ctrlShadowAngleVal" class="slider-val" value="30">
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlShadowAlpha">Alpha</label>
+					<input type="range" id="ctrlShadowAlpha" min="0" max="1" step="0.05" value="1">
+					<input type="number" id="ctrlShadowAlphaVal" class="slider-val" value="1" step="0.05">
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlShadowBlur">Blur</label>
+					<input type="range" id="ctrlShadowBlur" min="0" max="20" step="1" value="0">
+					<input type="number" id="ctrlShadowBlurVal" class="slider-val" value="0">
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlShadowColor">Color</label>
@@ -186,14 +255,14 @@
 	<script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
 
 	<!-- pixi-slug v8 bundle (build with: pnpm run build:v8) -->
-	<script src="../../dist/v8/index.js"></script>
+	<script src="../dist/v8/index.js"></script>
 
 	<script>
 		(async function () {
+			var appContainer = document.getElementById('app');
 			var app = new PIXI.Application();
 			await app.init({
-				width: 800,
-				height: 450,
+				resizeTo: appContainer,
 				backgroundColor: 0x16213e,
 				preferWebGLVersion: 2,
 				antialias: true,
@@ -201,7 +270,7 @@
 			});
 			window.__PIXI_APP__ = app;
 
-			document.getElementById('app').appendChild(app.canvas);
+			appContainer.appendChild(app.canvas);
 
 			var gl = app.renderer.gl;
 			if (!gl || !(gl instanceof WebGL2RenderingContext)) {
@@ -260,7 +329,16 @@
 				}
 				var w = parseFloat(document.getElementById('ctrlStrokeWidth').value) || 0;
 				var c = hexToRGBA(document.getElementById('ctrlStrokeColor').value);
-				slugText.stroke = { width: w, color: c };
+				var mode = document.getElementById('ctrlStrokeAlphaMode').value;
+				var alphaStart = parseFloat(document.getElementById('ctrlStrokeAlphaStart').value);
+				var alphaRate = parseFloat(document.getElementById('ctrlStrokeAlphaRate').value);
+				slugText.stroke = {
+					width: w,
+					color: c,
+					alphaMode: mode,
+					alphaStart: alphaStart,
+					alphaRate: alphaRate
+				};
 			}
 
 			function applyShadow() {
@@ -271,13 +349,40 @@
 				}
 				var dist = parseFloat(document.getElementById('ctrlShadowDist').value) || 5;
 				var angleDeg = parseFloat(document.getElementById('ctrlShadowAngle').value) || 30;
+				var alpha = parseFloat(document.getElementById('ctrlShadowAlpha').value);
+				var blur = parseFloat(document.getElementById('ctrlShadowBlur').value) || 0;
 				var c = hexToRGBA(document.getElementById('ctrlShadowColor').value);
 				slugText.dropShadow = {
 					distance: dist,
 					angle: angleDeg * Math.PI / 180,
 					color: c,
-					alpha: 1
+					alpha: alpha,
+					blur: blur
 				};
+			}
+
+			// --- Slider ↔ text input sync with clamping ---
+			function linkSlider(sliderId, inputId, onChange) {
+				var slider = document.getElementById(sliderId);
+				var input = document.getElementById(inputId);
+				var min = parseFloat(slider.min);
+				var max = parseFloat(slider.max);
+				var step = parseFloat(slider.step) || 1;
+
+				function clampAndSync(source, target) {
+					var v = parseFloat(source.value);
+					if (isNaN(v)) return;
+					v = Math.min(Math.max(v, min), max);
+					// Round to step precision to avoid floating point drift
+					v = Math.round(v / step) * step;
+					v = parseFloat(v.toFixed(10));
+					slider.value = v;
+					input.value = v;
+					if (onChange) onChange(v);
+				}
+
+				slider.oninput = function () { clampAndSync(slider, input); };
+				input.onchange = function () { clampAndSync(input, slider); };
 			}
 
 			// --- Wire up controls ---
@@ -285,12 +390,11 @@
 				slugText.text = this.value;
 			};
 
-			document.getElementById('ctrlFontSize').oninput = function () {
-				var sz = parseInt(this.value, 10);
-				if (sz > 0) slugText.fontSize = sz;
-			};
+			linkSlider('ctrlFontSize', 'ctrlFontSizeVal', function (v) {
+				slugText.fontSize = v;
+			});
 
-			// Debounce rapid rebuilds from color pickers / sliders
+			// Debounce rapid rebuilds from color pickers
 			var _rebuildTimer = null;
 			function debouncedApplyStroke() {
 				clearTimeout(_rebuildTimer);
@@ -305,16 +409,29 @@
 				slugText.color = hexToRGBA(document.getElementById('ctrlFillColor').value);
 			};
 
+			function applyWordWrap() {
+				slugText.wordWrap = document.getElementById('ctrlWordWrap').checked;
+				slugText.wordWrapWidth = parseFloat(document.getElementById('ctrlWrapWidth').value) || 400;
+				slugText.breakWords = document.getElementById('ctrlBreakWords').checked;
+			}
+			document.getElementById('ctrlWordWrap').onchange = applyWordWrap;
+			document.getElementById('ctrlBreakWords').onchange = applyWordWrap;
+			linkSlider('ctrlWrapWidth', 'ctrlWrapWidthVal', applyWordWrap);
+
 			document.getElementById('ctrlStroke').onchange = applyStroke;
-			document.getElementById('ctrlStrokeWidth').oninput = applyStroke;
+			linkSlider('ctrlStrokeWidth', 'ctrlStrokeWidthVal', applyStroke);
 			document.getElementById('ctrlStrokeColor').oninput = debouncedApplyStroke;
+			document.getElementById('ctrlStrokeAlphaMode').onchange = applyStroke;
+			linkSlider('ctrlStrokeAlphaStart', 'ctrlStrokeAlphaStartVal', applyStroke);
+			linkSlider('ctrlStrokeAlphaRate', 'ctrlStrokeAlphaRateVal', applyStroke);
 
 			document.getElementById('ctrlShadow').onchange = applyShadow;
-			document.getElementById('ctrlShadowDist').oninput = applyShadow;
-			document.getElementById('ctrlShadowAngle').oninput = function () {
-				document.getElementById('ctrlShadowAngleVal').textContent = this.value + '°';
+			linkSlider('ctrlShadowDist', 'ctrlShadowDistVal', applyShadow);
+			linkSlider('ctrlShadowAngle', 'ctrlShadowAngleVal', function () {
 				debouncedApplyShadow();
-			};
+			});
+			linkSlider('ctrlShadowAlpha', 'ctrlShadowAlphaVal', applyShadow);
+			linkSlider('ctrlShadowBlur', 'ctrlShadowBlurVal', applyShadow);
 			document.getElementById('ctrlShadowColor').oninput = debouncedApplyShadow;
 		})();
 	</script>

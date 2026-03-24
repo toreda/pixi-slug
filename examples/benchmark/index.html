@@ -357,10 +357,15 @@
 					<input type="number" id="canvasH" value="500" min="200" max="1080" step="100">
 				</div>
 				<div class="setting">
+					<label style="width:170px"></label>
+					<input type="checkbox" id="canvasFillArea">
+					<label for="canvasFillArea">Fill available area</label>
+				</div>
+				<div class="setting">
 					<label for="pixiAntialias">Pixi Antialiasing: <span class="info-icon">?<span class="info-tip">Enables MSAA antialiasing on the PixiJS WebGL canvas. May improve edge smoothness for canvas-rendered text but adds GPU overhead.</span></span></label>
 					<select id="pixiAntialias">
-						<option value="0" selected>Disabled</option>
-						<option value="1">Enabled</option>
+						<option value="0">Disabled</option>
+						<option value="1" selected>Enabled</option>
 					</select>
 				</div>
 				<div class="setting">
@@ -370,7 +375,7 @@
 				</div>
 				<div class="setting">
 					<label for="pixiResolution">Resolution: <span class="info-icon">?<span class="info-tip">Device pixel ratio for the PixiJS renderer. Higher values render at greater pixel density (e.g. 2 for Retina) but increase fill-rate cost proportionally.</span></span></label>
-					<input type="number" id="pixiResolution" value="1" min="0.5" max="4" step="0.5">
+					<input type="number" id="pixiResolution" value="2" min="0.5" max="4" step="0.5">
 				</div>
 				<div class="setting">
 					<label for="pixiPowerPref">GPU Power Preference: <span class="info-icon">?<span class="info-tip">Hints the browser to prefer a discrete GPU (high-performance) or integrated GPU (low-power). Affects which GPU adapter is selected on multi-GPU systems.</span></span></label>
@@ -443,9 +448,9 @@
 				<div class="setting">
 					<label for="canvasResolution">Resolution: <span class="info-icon">?<span class="info-tip">Pixel resolution multiplier for PIXI.Text canvas textures. 2× renders at double resolution for sharper text on high-DPI displays, but doubles texture memory.</span></span></label>
 					<select id="canvasResolution">
-						<option value="1" selected>1×</option>
+						<option value="1">1×</option>
 						<option value="2">2×</option>
-						<option value="4">4×</option>
+						<option value="4" selected>4×</option>
 						<option value="8">8×</option>
 					</select>
 				</div>
@@ -464,9 +469,9 @@
 					<label for="bitmapAtlasSize">Atlas font size: <span class="info-icon">?<span class="info-tip">Font size used to rasterize the BitmapFont atlas. Larger atlases look sharper at big sizes but use more texture memory. Text rendered above this size will be scaled up from the atlas.</span></span></label>
 					<select id="bitmapAtlasSize">
 						<option value="32">32 px</option>
-						<option value="48" selected>48 px</option>
+						<option value="48">48 px</option>
 						<option value="64">64 px</option>
-						<option value="96">96 px</option>
+						<option value="96" selected>96 px</option>
 					</select>
 				</div>
 			</div>
@@ -787,6 +792,15 @@
 		//  Settings helpers
 		// ================================================================
 
+		// Fill-area checkbox: grey out canvas dimension fields when checked
+		document.getElementById('canvasFillArea').onchange = function () {
+			var disabled = this.checked;
+			document.getElementById('canvasW').disabled = disabled;
+			document.getElementById('canvasH').disabled = disabled;
+			document.getElementById('canvasW').style.opacity = disabled ? '0.35' : '1';
+			document.getElementById('canvasH').style.opacity = disabled ? '0.35' : '1';
+		};
+
 		// Sync color picker and text field
 		document.getElementById('pixiBgColorPicker').oninput = function () {
 			document.getElementById('pixiBgColor').value = this.value;
@@ -948,8 +962,13 @@
 			return {
 				durationMs: parseInt(document.getElementById('duration').value, 10),
 				warmupFrames: parseInt(document.getElementById('warmupFrames').value, 10) || 60,
-				canvasW: parseInt(document.getElementById('canvasW').value, 10) || 800,
-				canvasH: parseInt(document.getElementById('canvasH').value, 10) || 500,
+				canvasFillArea: document.getElementById('canvasFillArea').checked,
+				canvasW: document.getElementById('canvasFillArea').checked
+					? document.getElementById('canvasWrap').clientWidth || 800
+					: parseInt(document.getElementById('canvasW').value, 10) || 800,
+				canvasH: document.getElementById('canvasFillArea').checked
+					? Math.max(document.getElementById('canvasWrap').clientHeight, 400)
+					: parseInt(document.getElementById('canvasH').value, 10) || 500,
 				pixiAntialias: document.getElementById('pixiAntialias').value === '1',
 				pixiBgColor: document.getElementById('pixiBgColor').value.trim(),
 				pixiResolution: parseFloat(document.getElementById('pixiResolution').value) || 1,
@@ -1062,6 +1081,12 @@
 			if (s.enableSlug !== undefined) document.getElementById('enableSlug').checked = s.enableSlug;
 			if (s.enableCanvas !== undefined) document.getElementById('enableCanvas').checked = s.enableCanvas;
 			if (s.enableBitmap !== undefined) document.getElementById('enableBitmap').checked = s.enableBitmap;
+
+			// Canvas fill area
+			if (s.canvasFillArea !== undefined) {
+				document.getElementById('canvasFillArea').checked = s.canvasFillArea;
+				document.getElementById('canvasFillArea').onchange();
+			}
 
 			// Re-run wireCheckbox updates so disabled styling matches
 			['enableSlug', 'enableCanvas', 'enableBitmap'].forEach(function (id) {
@@ -1626,19 +1651,24 @@
 			objects.length = 0;
 		}
 
-		async function createApp(settings) {
+		async function createApp(settings, container) {
 			var bgColor = parseInt(settings.pixiBgColor.replace('#', ''), 16) || 0x16213e;
-			var app = new PIXI.Application();
-			await app.init({
-				width: settings.canvasW,
-				height: settings.canvasH,
+			var initOpts = {
 				backgroundColor: bgColor,
 				preferWebGLVersion: 2,
 				antialias: settings.pixiAntialias,
 				resolution: settings.pixiResolution,
 				powerPreference: settings.pixiPowerPref,
 				useBackBuffer: settings.pixiBackBuffer
-			});
+			};
+			if (settings.canvasFillArea && container) {
+				initOpts.resizeTo = container;
+			} else {
+				initOpts.width = settings.canvasW;
+				initOpts.height = settings.canvasH;
+			}
+			var app = new PIXI.Application();
+			await app.init(initOpts);
 			if (PIXI.GraphicsContext && PIXI.GraphicsContext.defaultOptions && !isNaN(settings.pixiBezierSmoothness)) {
 				PIXI.GraphicsContext.defaultOptions.bezierSmoothness = settings.pixiBezierSmoothness;
 			}
@@ -1662,8 +1692,8 @@
 				results[sys.key] = {};
 
 				// Fresh app per system
-				var app = await createApp(settings);
 				canvasWrap.innerHTML = '';
+				var app = await createApp(settings, canvasWrap);
 				canvasWrap.appendChild(app.canvas);
 
 				// Try to get GPU timer extension for this app's context
@@ -1777,7 +1807,8 @@
 
 				var perSystemSettings = Object.assign({}, settings, {
 					canvasW: Math.floor(settings.canvasW / enabledSystems.length),
-					canvasH: settings.canvasH
+					canvasH: settings.canvasH,
+					canvasFillArea: false
 				});
 
 				var app = await createApp(perSystemSettings);

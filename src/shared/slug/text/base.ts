@@ -49,6 +49,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_supersampleCount!: number;
 		_wordWrap!: boolean;
 		_wordWrapWidth!: number;
+		_breakWords!: boolean;
 		_vertexBytes!: number;
 		_indexBytes!: number;
 		_rebuildCount!: number;
@@ -81,6 +82,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._supersampleCount = numberValue(init.supersampleCount, Defaults.SlugText.SupersampleCount);
 			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
 			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapwidth);
+			this._breakWords = booleanValue(init.options?.breakWords, false);
 			this._vertexBytes = 0;
 			this._indexBytes = 0;
 			this._rebuildCount = 0;
@@ -189,6 +191,16 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._wordWrapWidth === value) return;
 			this._wordWrapWidth = value;
 			this.rebuild();
+		}
+
+		public get breakWords(): boolean {
+			return this._breakWords;
+		}
+
+		public set breakWords(value: boolean) {
+			if (this._breakWords === value) return;
+			this._breakWords = value;
+			if (this._wordWrap) this.rebuild();
 		}
 
 		// --- Stroke ---

@@ -18,6 +18,12 @@
 			"types": "./dist/v6/index.d.ts"
 		}
 	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"dist/"
+	],
 	"scripts": {
 		"build:v6:dev": "webpack --env version=v6 --env target=dev && tsc -p tsconfig.v6.json --emitDeclarationOnly",
 		"build:v6:prod": "webpack --env version=v6 --env target=prod && tsc -p tsconfig.v6.json --emitDeclarationOnly",
