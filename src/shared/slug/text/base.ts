@@ -50,6 +50,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_wordWrap!: boolean;
 		_wordWrapWidth!: number;
 		_breakWords!: boolean;
+		_underline!: boolean;
+		_strikethrough!: boolean;
 		_vertexBytes!: number;
 		_indexBytes!: number;
 		_rebuildCount!: number;
@@ -83,6 +85,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
 			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapwidth);
 			this._breakWords = booleanValue(init.options?.breakWords, false);
+			this._underline = booleanValue(init.options?.underline, false);
+			this._strikethrough = booleanValue(init.options?.strikethrough, false);
 			this._vertexBytes = 0;
 			this._indexBytes = 0;
 			this._rebuildCount = 0;
@@ -201,6 +205,26 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._breakWords === value) return;
 			this._breakWords = value;
 			if (this._wordWrap) this.rebuild();
+		}
+
+		public get underline(): boolean {
+			return this._underline;
+		}
+
+		public set underline(value: boolean) {
+			if (this._underline === value) return;
+			this._underline = value;
+			this.rebuild();
+		}
+
+		public get strikethrough(): boolean {
+			return this._strikethrough;
+		}
+
+		public set strikethrough(value: boolean) {
+			if (this._strikethrough === value) return;
+			this._strikethrough = value;
+			this.rebuild();
 		}
 
 		// --- Stroke ---

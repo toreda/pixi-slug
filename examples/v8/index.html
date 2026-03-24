@@ -181,6 +181,12 @@
 					<input type="range" id="ctrlWrapWidth" value="400" min="50" max="2000" step="10">
 					<input type="number" id="ctrlWrapWidthVal" class="slider-val" value="400">
 				</div>
+				<div class="ctrl-row">
+					<input type="checkbox" id="ctrlUnderline">
+					<label for="ctrlUnderline">Underline</label>
+					<input type="checkbox" id="ctrlStrikethrough">
+					<label for="ctrlStrikethrough">Strikethrough</label>
+				</div>
 			</div>
 
 			<div class="ctrl-group">
@@ -416,6 +422,12 @@
 			}
 			document.getElementById('ctrlWordWrap').onchange = applyWordWrap;
 			document.getElementById('ctrlBreakWords').onchange = applyWordWrap;
+			document.getElementById('ctrlUnderline').onchange = function () {
+				slugText.underline = this.checked;
+			};
+			document.getElementById('ctrlStrikethrough').onchange = function () {
+				slugText.strikethrough = this.checked;
+			};
 			linkSlider('ctrlWrapWidth', 'ctrlWrapWidthVal', applyWordWrap);
 
 			document.getElementById('ctrlStroke').onchange = applyStroke;

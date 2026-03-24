@@ -25,6 +25,14 @@ export class SlugFont {
 	public ascender: number;
 	/** Typographic descender in font units (negative, below baseline). */
 	public descender: number;
+	/** Underline position in font units (negative = below baseline). */
+	public underlinePosition: number;
+	/** Underline thickness in font units. */
+	public underlineThickness: number;
+	/** Strikethrough position in font units (positive = above baseline). */
+	public strikethroughPosition: number;
+	/** Strikethrough thickness in font units. */
+	public strikethroughSize: number;
 
 	/**
 	 * Version-specific GPU resources (textures, shader program) cached for sharing
@@ -49,6 +57,10 @@ export class SlugFont {
 		this.unitsPerEm = 0;
 		this.ascender = 0;
 		this.descender = 0;
+		this.underlinePosition = 0;
+		this.underlineThickness = 0;
+		this.strikethroughPosition = 0;
+		this.strikethroughSize = 0;
 		this.gpuCache = null;
 		this._gpuDestroy = null;
 	}
@@ -92,6 +104,14 @@ export class SlugFont {
 		this.unitsPerEm = font.unitsPerEm;
 		this.ascender = font.ascender;
 		this.descender = font.descender;
+
+		// OS/2 table metrics for underline and strikethrough
+		const post = (font as any).tables?.post;
+		const os2 = (font as any).tables?.os2;
+		this.underlinePosition = post?.underlinePosition ?? Math.round(-font.unitsPerEm * 0.1);
+		this.underlineThickness = post?.underlineThickness ?? Math.round(font.unitsPerEm * 0.05);
+		this.strikethroughPosition = os2?.yStrikeoutPosition ?? Math.round(font.ascender * 0.3);
+		this.strikethroughSize = os2?.yStrikeoutSize ?? this.underlineThickness;
 
 		const glyphList: SlugGlyphData[] = [];
 

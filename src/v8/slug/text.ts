@@ -3,6 +3,7 @@ import {
 	BufferUsage,
 	Container,
 	Geometry,
+	Graphics,
 	Mesh,
 	Rectangle,
 	Shader,
@@ -11,6 +12,7 @@ import {
 import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
 import {slugTextWrap} from '../../shared/slug/text/wrap';
+import {slugMeasureText} from '../../shared/slug/text/measure';
 import {slugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
@@ -36,12 +38,15 @@ export class SlugText extends SlugTextV8Base {
 	private _meshes: Mesh<Geometry, Shader>[];
 	/** Uniforms for the fill pass (controls supersampling). */
 	private _uniforms: UniformGroup | null;
+	/** Graphics child for underline/strikethrough decorations. */
+	private _decorations: Graphics | null;
 
 	constructor(init: SlugTextInit) {
 		super();
 		this.initBase(init);
 		this._meshes = [];
 		this._uniforms = null;
+		this._decorations = null;
 
 		this.rebuild();
 	}
@@ -126,6 +131,11 @@ export class SlugText extends SlugTextV8Base {
 			this.removeChild(mesh);
 		}
 		this._meshes = [];
+		if (this._decorations) {
+			this.removeChild(this._decorations);
+			this._decorations.destroy();
+			this._decorations = null;
+		}
 		this._uniforms = null;
 
 		const font = this._fontRef?.deref();
@@ -203,6 +213,53 @@ export class SlugText extends SlugTextV8Base {
 			}
 			this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 		}
+
+		// --- Text decorations (underline / strikethrough) ---
+		if ((this._underline || this._strikethrough) && font) {
+			const scale = this._fontSize / font.unitsPerEm;
+			const lineHeight = (font.ascender - font.descender) * scale;
+			const fillColor = (this._color[0] * 255) << 16 | (this._color[1] * 255) << 8 | (this._color[2] * 255);
+
+			// Determine lines for measurement
+			let lines: string[];
+			if (this._wordWrap && this._wordWrapWidth > 0) {
+				lines = slugTextWrap(this._text, font.advances, scale, this._wordWrapWidth, this._breakWords).lines;
+			} else {
+				lines = [this._text];
+			}
+
+			// maxGlyphTop offset to match quad builder's baselineY
+			let maxGlyphTop = 0;
+			for (let i = 0; i < this._text.length; i++) {
+				const g = font.glyphs.get(this._text.charCodeAt(i));
+				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
+			}
+			const baselineY = maxGlyphTop * scale;
+
+			const gfx = new Graphics();
+
+			for (let l = 0; l < lines.length; l++) {
+				const lineW = slugMeasureText(lines[l], font.advances, scale);
+				const lineY = l * lineHeight;
+
+				if (this._underline) {
+					const ulY = baselineY + lineY - font.underlinePosition * scale;
+					const ulH = Math.max(font.underlineThickness * scale, 1);
+					gfx.rect(0, ulY, lineW, ulH);
+					gfx.fill({color: fillColor, alpha: this._color[3]});
+				}
+
+				if (this._strikethrough) {
+					const stY = baselineY + lineY - font.strikethroughPosition * scale;
+					const stH = Math.max(font.strikethroughSize * scale, 1);
+					gfx.rect(0, stY, lineW, stH);
+					gfx.fill({color: fillColor, alpha: this._color[3]});
+				}
+			}
+
+			this._decorations = gfx;
+			this.addChild(gfx);
+		}
 	}
 
 	override destroy(): void {
@@ -210,6 +267,10 @@ export class SlugText extends SlugTextV8Base {
 			mesh.destroy();
 		}
 		this._meshes = [];
+		if (this._decorations) {
+			this._decorations.destroy();
+			this._decorations = null;
+		}
 		super.destroy();
 	}
 }

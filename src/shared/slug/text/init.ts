@@ -77,6 +77,10 @@ export interface SlugTextStyleOptions {
 	wordWrapWidth?: number | null;
 	align?: SlugTextStyleAlign;
 	breakWords?: boolean;
+	/** Draw an underline below the text. @default false */
+	underline?: boolean;
+	/** Draw a strikethrough line through the text. @default false */
+	strikethrough?: boolean;
 	/** Stroke configuration. Stroke is disabled when width is 0 or omitted. */
 	stroke?: SlugStroke | null;
 	/** Drop shadow configuration. Presence enables shadow. */
