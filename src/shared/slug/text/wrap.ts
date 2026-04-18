@@ -14,7 +14,9 @@ export interface SlugTextLines {
  * @param text			The full text string.
  * @param advances		Advance width map (char code → em-space width).
  * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
- * @param maxWidth		Maximum line width in pixels.
+ * @param maxWidth		Maximum line width in pixels. Pass 0 (or a negative value)
+ *						to disable width-based wrapping; newlines will still
+ *						force line breaks.
  * @param breakWords	If true, break mid-word when a single word exceeds maxWidth.
  */
 export function slugTextWrap(
@@ -24,10 +26,6 @@ export function slugTextWrap(
 	maxWidth: number,
 	breakWords: boolean = false
 ): SlugTextLines {
-	if (maxWidth <= 0) {
-		return {lines: [text]};
-	}
-
 	const spaceCode = 32;
 	const lines: string[] = [];
 	let lineStart = 0;
@@ -55,7 +53,7 @@ export function slugTextWrap(
 
 		lineWidth += advance;
 
-		if (lineWidth > maxWidth && i > lineStart) {
+		if (maxWidth > 0 && lineWidth > maxWidth && i > lineStart) {
 			if (lastBreak >= lineStart) {
 				// Break at last space
 				lines.push(text.substring(lineStart, lastBreak));
@@ -81,7 +79,7 @@ export function slugTextWrap(
 	// Push remaining text
 	if (lineStart < text.length) {
 		lines.push(text.substring(lineStart));
-	} else if (lineStart === text.length) {
+	} else if (text.length > 0 && lineStart === text.length) {
 		// Text ended with a newline — add empty final line
 		lines.push('');
 	}
