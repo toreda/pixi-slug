@@ -2,12 +2,14 @@ import {Buffer, Geometry, TYPES} from '@pixi/core';
 import {Container} from '@pixi/display';
 import {Mesh} from '@pixi/mesh';
 import type {Shader} from '@pixi/core';
-import {slugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugTextWrap} from '../../shared/slug/text/wrap';
 import {slugFontGpuV7} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
+import type {SlugFont} from '../../shared/slug/font';
 
 const SlugTextV7Base = SlugTextMixin(Container);
 
@@ -24,6 +26,30 @@ export class SlugText extends SlugTextV7Base {
 		this._meshes = [];
 
 		this.rebuild();
+	}
+
+	private _makeQuads(
+		font: SlugFont,
+		text: string,
+		color: [number, number, number, number],
+		extraExpand: number = 0
+	): SlugGlyphQuads {
+		const hasNewline = text.indexOf('\n') >= 0;
+		const wrapping = this._wordWrap && this._wordWrapWidth > 0;
+		if (wrapping || hasNewline) {
+			const scale = this._fontSize / font.unitsPerEm;
+			const width = wrapping ? this._wordWrapWidth : 0;
+			const {lines} = slugTextWrap(text, font.advances, scale, width, this._breakWords);
+			const lineHeight = (font.ascender - font.descender) * scale;
+			return slugGlyphQuadsMultiline(
+				lines, font.glyphs, font.advances, font.unitsPerEm,
+				this._fontSize, font.textureWidth, lineHeight, color, extraExpand
+			);
+		}
+		return slugGlyphQuads(
+			text, font.glyphs, font.advances, font.unitsPerEm,
+			this._fontSize, font.textureWidth, color, extraExpand
+		);
 	}
 
 	private _buildMesh(
@@ -78,11 +104,7 @@ export class SlugText extends SlugTextV7Base {
 				: [0, 0, 0, shadowAlpha];
 			const blur = ds.blur ?? 0;
 
-			const shadowQuads = slugGlyphQuads(
-				this._text, font.glyphs, font.advances,
-				font.unitsPerEm, this._fontSize, font.textureWidth,
-				shadowColor, blur
-			);
+			const shadowQuads = this._makeQuads(font, this._text, shadowColor, blur);
 
 			if (shadowQuads.quadCount > 0) {
 				const {mesh, shader} = this._buildMesh(shadowQuads, gpu);
@@ -101,11 +123,7 @@ export class SlugText extends SlugTextV7Base {
 		}
 
 		if (hasStroke) {
-			const strokeQuads = slugGlyphQuads(
-				this._text, font.glyphs, font.advances,
-				font.unitsPerEm, this._fontSize, font.textureWidth,
-				this._strokeColor, this._strokeWidth
-			);
+			const strokeQuads = this._makeQuads(font, this._text, this._strokeColor, this._strokeWidth);
 
 			if (strokeQuads.quadCount > 0) {
 				const {mesh, shader} = this._buildMesh(strokeQuads, gpu);
@@ -118,11 +136,7 @@ export class SlugText extends SlugTextV7Base {
 			}
 		}
 
-		const fillQuads = slugGlyphQuads(
-			this._text, font.glyphs, font.advances,
-			font.unitsPerEm, this._fontSize, font.textureWidth,
-			this._color
-		);
+		const fillQuads = this._makeQuads(font, this._text, this._color);
 
 		if (fillQuads.quadCount > 0) {
 			const {mesh} = this._buildMesh(fillQuads, gpu);
