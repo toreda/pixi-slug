@@ -106,9 +106,12 @@ export class SlugText extends SlugTextV8Base {
 		color: [number, number, number, number],
 		extraExpand: number = 0
 	): SlugGlyphQuads {
-		if (this._wordWrap && this._wordWrapWidth > 0) {
+		const hasNewline = text.indexOf('\n') >= 0;
+		const wrapping = this._wordWrap && this._wordWrapWidth > 0;
+		if (wrapping || hasNewline) {
 			const scale = this._fontSize / font.unitsPerEm;
-			const {lines} = slugTextWrap(text, font.advances, scale, this._wordWrapWidth, this._breakWords);
+			const width = wrapping ? this._wordWrapWidth : 0;
+			const {lines} = slugTextWrap(text, font.advances, scale, width, this._breakWords);
 			const lineHeight = (font.ascender - font.descender) * scale;
 			return slugGlyphQuadsMultiline(
 				lines, font.glyphs, font.advances, font.unitsPerEm,
@@ -220,10 +223,13 @@ export class SlugText extends SlugTextV8Base {
 			const lineHeight = (font.ascender - font.descender) * scale;
 			const fillColor = (this._color[0] * 255) << 16 | (this._color[1] * 255) << 8 | (this._color[2] * 255);
 
-			// Determine lines for measurement
+			// Determine lines for measurement — match the quad builder's decision.
+			const hasNewline = this._text.indexOf('\n') >= 0;
+			const wrapping = this._wordWrap && this._wordWrapWidth > 0;
 			let lines: string[];
-			if (this._wordWrap && this._wordWrapWidth > 0) {
-				lines = slugTextWrap(this._text, font.advances, scale, this._wordWrapWidth, this._breakWords).lines;
+			if (wrapping || hasNewline) {
+				const width = wrapping ? this._wordWrapWidth : 0;
+				lines = slugTextWrap(this._text, font.advances, scale, width, this._breakWords).lines;
 			} else {
 				lines = [this._text];
 			}
