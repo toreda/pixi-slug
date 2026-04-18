@@ -3,19 +3,26 @@
 	"version": "0.0.1",
 	"description": "Render fonts in pixi.js using bezier curves with the slug algorithm.",
 	"main": "./dist/v8/index.js",
+	"sideEffects": true,
 	"types": "./dist/v8/index.d.ts",
 	"exports": {
 		".": {
+			"types": "./dist/v8/index.d.ts",
+			"import": "./dist/v8/index.js",
 			"require": "./dist/v8/index.js",
-			"types": "./dist/v8/index.d.ts"
+			"default": "./dist/v8/index.js"
 		},
 		"./v7": {
+			"types": "./dist/v7/index.d.ts",
+			"import": "./dist/v7/index.js",
 			"require": "./dist/v7/index.js",
-			"types": "./dist/v7/index.d.ts"
+			"default": "./dist/v7/index.js"
 		},
 		"./v6": {
+			"types": "./dist/v6/index.d.ts",
+			"import": "./dist/v6/index.js",
 			"require": "./dist/v6/index.js",
-			"types": "./dist/v6/index.d.ts"
+			"default": "./dist/v6/index.js"
 		}
 	},
 	"publishConfig": {
