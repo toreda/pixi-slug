@@ -269,85 +269,9 @@ git commit -m "fix(text): handle newlines in slugTextWrap when maxWidth is 0"
 
 ---
 
-## Task 3: Add failing test for v8 `SlugText` multi-line rendering without wordWrap
+## Task 3: Update v8 `SlugText` to trigger multi-line path when `\n` is present
 
-**Files:**
-- Modify: `tests/v8/slug/text.spec.ts`
-
-- [ ] **Step 1: Inspect the existing test file to match conventions**
-
-Run: `cat tests/v8/slug/text.spec.ts`
-
-Look at how existing tests construct a `SlugText` (imports, font fixture, init object). Match that style exactly.
-
-- [ ] **Step 2: Write a failing test that verifies multi-line behavior without wordWrap**
-
-Append a new `describe` block to `tests/v8/slug/text.spec.ts`. The test constructs a `SlugText` with text containing `\n` and `wordWrap: false`, then verifies two observable signals:
-
-1. The internal `_rebuildCount` increments (sanity).
-2. The bounds height covers multiple lines (proving the multi-line quad path ran).
-
-Because `SlugText` does not expose `lines` directly, use `boundsArea.height` as the signal: a multi-line layout produces a height of approximately `N * lineHeight`, while a single-line layout produces a height of one glyph. If the existing text spec uses a mock/stub font, reuse it; otherwise mirror whatever fixture is already there.
-
-Concrete test (adapt font-fixture construction to match the file's existing pattern):
-
-```ts
-describe('SlugText — automatic newline handling', () => {
-	it('renders \\n as a line break even when wordWrap is false', () => {
-		// Use the same font fixture as the other tests in this file.
-		const font = /* existing font fixture from this spec */;
-		const singleLine = new SlugText({
-			font,
-			text: 'foo',
-			fontSize: 32,
-			color: [1, 1, 1, 1]
-			// wordWrap defaults to false
-		});
-		const multiLine = new SlugText({
-			font,
-			text: 'foo\nbar',
-			fontSize: 32,
-			color: [1, 1, 1, 1]
-			// wordWrap defaults to false
-		});
-
-		// Multi-line text must be taller than single-line text.
-		expect(multiLine.boundsArea.height).toBeGreaterThan(singleLine.boundsArea.height);
-	});
-
-	it('still renders single line when text has no newline and wordWrap is false', () => {
-		const font = /* existing font fixture from this spec */;
-		const txt = new SlugText({
-			font,
-			text: 'foobar',
-			fontSize: 32,
-			color: [1, 1, 1, 1]
-		});
-		// Bounds height is roughly one line — sanity check it is positive and finite.
-		expect(txt.boundsArea.height).toBeGreaterThan(0);
-		expect(Number.isFinite(txt.boundsArea.height)).toBe(true);
-	});
-});
-```
-
-If the existing test file uses a helper to construct the font fixture (e.g. `makeTestFont()`), reuse it. Do **not** invent a new font fixture.
-
-- [ ] **Step 3: Run the test to verify it fails**
-
-Run: `pnpm test -- tests/v8/slug/text.spec.ts -t "automatic newline handling"`
-
-Expected: the "renders \\n as a line break" test FAILS because the current `_makeQuads` guard at `src/v8/slug/text.ts:109` does not enter the multi-line path for `\n` when `wordWrap` is off — `boundsArea.height` will be equal between single-line and multi-line cases.
-
-- [ ] **Step 4: Commit the failing test**
-
-```bash
-git add tests/v8/slug/text.spec.ts
-git commit -m "test(v8): add SlugText multi-line-without-wordWrap test"
-```
-
----
-
-## Task 4: Update v8 `SlugText` to trigger multi-line path when `\n` is present
+> **Note:** The plan originally included a v8-level unit test before this task, but `tests/v8/slug/text.spec.ts` contains only `it.todo` stubs — the project has not set up PixiJS v8 renderer mocking. Behavior is fully covered by the Task 1 shared-level tests on `slugTextWrap`. The v8 layer change is a mechanical two-site edit that routes through the same shared function. Manual visual verification happens in Task 4.
 
 **Files:**
 - Modify: `src/v8/slug/text.ts:103-122` (the `_makeQuads` method)
@@ -412,25 +336,19 @@ Replace it with:
 			}
 ```
 
-- [ ] **Step 3: Run the v8 text spec to verify it passes**
-
-Run: `pnpm test -- tests/v8/slug/text.spec.ts -t "automatic newline handling"`
-
-Expected: both new tests PASS.
-
-- [ ] **Step 4: Run the full test suite**
+- [ ] **Step 3: Run the full test suite to confirm no regressions**
 
 Run: `pnpm test`
 
-Expected: all tests PASS.
+Expected: all tests PASS. The shared `slugTextWrap` tests from Task 1 cover the behavior change; the v8 text spec still contains only `it.todo` stubs and will remain green.
 
-- [ ] **Step 5: Build the v8 target to confirm it compiles**
+- [ ] **Step 4: Build the v8 target to confirm it compiles**
 
 Run: `pnpm run build:v8:dev`
 
 Expected: webpack + tsc both succeed with no errors.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add src/v8/slug/text.ts
@@ -439,7 +357,7 @@ git commit -m "feat(v8): render \\n as line break in SlugText regardless of word
 
 ---
 
-## Task 5: Manual visual verification in the v8 demo
+## Task 4: Manual visual verification in the v8 demo
 
 **Files:** (no changes — verification only)
 
@@ -480,7 +398,7 @@ No commit for this task. If any case fails, stop and diagnose using systematic-d
 
 ---
 
-## Task 6: Stop and wait for user confirmation before porting to v6/v7
+## Task 5: Stop and wait for user confirmation before porting to v6/v7
 
 - [ ] **Step 1: Report completion to the user and request confirmation before proceeding to the v6/v7 ports**
 
