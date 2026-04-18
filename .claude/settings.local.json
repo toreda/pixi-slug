@@ -25,7 +25,11 @@
       "Bash(pdftotext \"Lengyel2017FontRendering.pdf\" /tmp/lengyel2017.txt)",
       "Bash(pdftotext -layout \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_US10373352.pdf\" \"g:/Projects/Toreda/pixi-slug/_references/slug_patent_text.txt\")",
       "Bash(npx tsc:*)",
-      "WebFetch(domain:web.mit.edu)"
+      "WebFetch(domain:web.mit.edu)",
+      "Bash(pnpm test *)",
+      "Bash(find tests/v* -path \"*/text*\" -type f)",
+      "Bash(npx jest *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
