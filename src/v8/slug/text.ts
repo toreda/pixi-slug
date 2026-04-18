@@ -234,19 +234,21 @@ export class SlugText extends SlugTextV8Base {
 				lines = [this._text];
 			}
 
-			// maxGlyphTop offset to match quad builder's baselineY
-			let maxGlyphTop = 0;
-			for (let i = 0; i < this._text.length; i++) {
-				const g = font.glyphs.get(this._text.charCodeAt(i));
-				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
-			}
-			const baselineY = maxGlyphTop * scale;
-
 			const gfx = new Graphics();
 
 			for (let l = 0; l < lines.length; l++) {
-				const lineW = slugMeasureText(lines[l], font.advances, scale);
+				const line = lines[l];
+				const lineW = slugMeasureText(line, font.advances, scale);
 				const lineY = l * lineHeight;
+
+				// Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
+				// so decorations align with the actual glyph positions on this line.
+				let maxGlyphTop = 0;
+				for (let i = 0; i < line.length; i++) {
+					const g = font.glyphs.get(line.charCodeAt(i));
+					if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
+				}
+				const baselineY = maxGlyphTop * scale;
 
 				if (this._underline) {
 					const ulY = baselineY + lineY - font.underlinePosition * scale;
