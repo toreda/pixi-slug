@@ -100,10 +100,12 @@ describe('slugTextWrap', () => {
 
 	describe('width-based wrapping (existing behavior)', () => {
 		it('wraps on space when line exceeds maxWidth', () => {
-			// 'foo bar baz' with 10px each = 110px total. maxWidth=60 should break
-			// after 'foo bar' (70px triggers break at last space).
+			// 'foo bar baz' each char 10px, space 10px, maxWidth=60:
+			// 'foo bar' → 70px overflow, break at last space, push 'foo'.
+			// Recalc 'bar ' → 40px, 'bar baz' → 70px overflow, break at space, push 'bar'.
+			// Push remaining 'baz'. Result: ['foo', 'bar', 'baz'].
 			const {lines} = slugTextWrap('foo bar baz', advances, scale, 60, false);
-			expect(lines).toEqual(['foo', 'bar baz']);
+			expect(lines).toEqual(['foo', 'bar', 'baz']);
 		});
 
 		it('does not break mid-word when breakWords is false', () => {
@@ -121,10 +123,11 @@ describe('slugTextWrap', () => {
 	describe('newline + width-based wrapping combined', () => {
 		it('resets line-width counter at \\n so each segment wraps independently', () => {
 			// 'foo bar\nbaz qux quux' with maxWidth=60:
-			//   segment 1: 'foo bar' = 70px → would wrap but fits as-is (break at space gives 'foo' then 'bar')
-			//   segment 2: 'baz qux quux' wraps as if fresh line
+			//   segment 1 ('foo bar'): break at space → 'foo', then 'bar' alone.
+			//   segment 2 ('baz qux quux'): width counter resets at \n, then wraps
+			//   as 'baz', 'qux', 'quux' (each 3-char word alone per space break).
 			const {lines} = slugTextWrap('foo bar\nbaz qux quux', advances, scale, 60, false);
-			expect(lines).toEqual(['foo', 'bar', 'baz qux', 'quux']);
+			expect(lines).toEqual(['foo', 'bar', 'baz', 'qux', 'quux']);
 		});
 
 		it('breaks on \\n even when the segment would fit within maxWidth', () => {
