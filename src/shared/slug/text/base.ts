@@ -1,5 +1,6 @@
 import {Defaults} from '../../../defaults';
 import {SlugFont} from '../font';
+import {SlugFonts} from '../fonts';
 import type {SlugDropShadow, SlugStroke, SlugTextInit} from './init';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
 import {booleanValue, numberValue, stringValue} from '@toreda/strong-types';
@@ -73,8 +74,32 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		 */
 		public initBase(init: SlugTextInit): void {
 			this._text = stringValue(init.text, Defaults.SlugText.Text);
-			this._font = init.slugFont;
-			this._fontRef = new WeakRef(init.slugFont);
+
+			const fallbackWhileLoading = booleanValue(
+				init.fallbackWhileLoading,
+				Defaults.SlugText.FallbackWhileLoading
+			);
+
+			if (typeof init.slugFont === 'string') {
+				const key = init.slugFont;
+				const ready = SlugFonts.get(key);
+				if (ready) {
+					this._font = ready;
+				} else {
+					const fallback = fallbackWhileLoading ? SlugFonts.fallback() : null;
+					this._font = fallback ?? new SlugFont();
+					SlugFonts.from(key).then((resolved) => {
+						if (resolved && this._font !== resolved) {
+							this._font = resolved;
+							this._fontRef = new WeakRef(resolved);
+							this.rebuild();
+						}
+					});
+				}
+			} else {
+				this._font = init.slugFont;
+			}
+			this._fontRef = new WeakRef(this._font);
 			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
 			const fill = init.options?.fill;
 			this._color = fill

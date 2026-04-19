@@ -87,10 +87,26 @@ export interface SlugTextStyleOptions {
 	dropShadow?: SlugDropShadow | null;
 }
 
+/**
+ * Font input accepted by `SlugText`. A `SlugFont` is used directly; a
+ * string is resolved through `SlugFonts` (first as a registered name,
+ * then as a URL to fetch).
+ */
+export type SlugTextFontInput = SlugFont | string;
+
+/**
+ * Object with required properties to instantiate `SlugText`.
+ */
 export interface SlugTextInit {
 	text: string;
-	slugFont: SlugFont;
+	slugFont: SlugTextFontInput;
 	supersampling?: boolean | null;
 	supersampleCount?: number | null;
 	options?: SlugTextStyleOptions;
+	/**
+	 * When `slugFont` is a string and the font is not yet loaded, render
+	 * using the `SlugFonts` fallback font until the real font resolves.
+	 * @default Defaults.SlugText.FallbackWhileLoading (true)
+	 */
+	fallbackWhileLoading?: boolean | null;
 }

@@ -19,6 +19,11 @@ import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
 import type {SlugFont} from '../../shared/slug/font';
 
+/**
+ * The Mixin pattern is necessary due to Container API difference
+ * per PIXI version while supporting multiple PIXI versions. If we
+ * only supported V8 this would be `extends Container` instead.
+ */
 const SlugTextV8Base = SlugTextMixin(Container);
 
 /**

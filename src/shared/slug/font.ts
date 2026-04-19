@@ -100,6 +100,16 @@ export class SlugFont {
 	}
 
 	public async load(fontData: ArrayBuffer): Promise<void> {
+		this.loadSync(fontData);
+	}
+
+	/**
+	 * Synchronous equivalent of {@link load}. `opentype.parse` and all
+	 * downstream glyph processing are CPU-bound, so there is no reason
+	 * to wrap them in a Promise — but {@link load} is kept async for
+	 * API compatibility with callers that `await` it.
+	 */
+	public loadSync(fontData: ArrayBuffer): void {
 		const font = opentype.parse(fontData);
 		this.unitsPerEm = font.unitsPerEm;
 		this.ascender = font.ascender;

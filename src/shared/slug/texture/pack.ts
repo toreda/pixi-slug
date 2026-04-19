@@ -1,4 +1,4 @@
-import type { SlugGlyphData } from '../glyph/data';
+import type {SlugGlyphData} from '../glyph/data';
 
 /**
  * Result of packing all glyph data into GPU-ready textures.
@@ -156,7 +156,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 				const curve = glyph.curves[i];
 
 				const base = curveTexelIdx * 4;
-				curveData[base]     = curve.p1x;
+				curveData[base] = curve.p1x;
 				curveData[base + 1] = curve.p1y;
 				curveData[base + 2] = curve.p2x;
 				curveData[base + 3] = curve.p2y;
@@ -172,7 +172,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			// on the last column for the next contour's first curve.
 			const lastCurve = glyph.curves[contourEnd - 1];
 			const sentBase = curveTexelIdx * 4;
-			curveData[sentBase]     = lastCurve.p3x;
+			curveData[sentBase] = lastCurve.p3x;
 			curveData[sentBase + 1] = lastCurve.p3y;
 			curveTexelIdx++;
 		}
@@ -208,14 +208,14 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 				}
 			}
 
-			bandData[headerBase]     = band.length;
+			bandData[headerBase] = band.length;
 			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
 				const absCurveTexel = curveTexels[curveIdx];
-				bandData[refBase]     = absCurveTexel & widthMask;
-				bandData[refBase + 1] = (absCurveTexel >>> 12);
+				bandData[refBase] = absCurveTexel & widthMask;
+				bandData[refBase + 1] = absCurveTexel >>> 12;
 				bandTexelIdx++;
 			}
 		}
@@ -232,18 +232,18 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 				}
 			}
 
-			bandData[headerBase]     = band.length;
+			bandData[headerBase] = band.length;
 			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
 
 			for (const curveIdx of band) {
 				const refBase = bandTexelIdx * 4;
 				const absCurveTexel = curveTexels[curveIdx];
-				bandData[refBase]     = absCurveTexel & widthMask;
-				bandData[refBase + 1] = (absCurveTexel >>> 12);
+				bandData[refBase] = absCurveTexel & widthMask;
+				bandData[refBase + 1] = absCurveTexel >>> 12;
 				bandTexelIdx++;
 			}
 		}
 	}
 
-	return { curveData, bandData };
+	return {curveData, bandData};
 }

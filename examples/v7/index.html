@@ -49,10 +49,12 @@
 		}
 		#sidebar .ctrl-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
 		#sidebar .ctrl-row label { white-space: nowrap; min-width: 50px; }
-		#sidebar input[type="text"] {
+		#sidebar input[type="text"],
+		#sidebar textarea {
 			width: 100%; padding: 4px 8px; border: 1px solid #444;
 			background: #2a2a4e; color: #eee; border-radius: 4px; font-size: 13px;
 		}
+		#sidebar textarea { resize: vertical; min-height: 48px; font-family: inherit; }
 		#sidebar input[type="number"] {
 			width: 56px; padding: 4px 6px; border: 1px solid #444;
 			background: #2a2a4e; color: #eee; border-radius: 4px; font-size: 13px; text-align: center;
@@ -89,7 +91,7 @@
 		<div id="sidebar">
 			<div class="ctrl-group">
 				<div class="ctrl-group-title">Text</div>
-				<div class="ctrl-row"><input type="text" id="ctrlText" value="The quick brown fox"></div>
+				<div class="ctrl-row"><textarea id="ctrlText" rows="2">The quick brown fox</textarea></div>
 				<div class="ctrl-row">
 					<label for="ctrlFontSize">Size</label>
 					<input type="range" id="ctrlFontSize" value="120" min="4" max="400" step="1">

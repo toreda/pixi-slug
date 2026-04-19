@@ -45,6 +45,7 @@
 		"build:v8": "pnpm run build:v8:prod",
 		"build:all": "pnpm run build:all:prod",
 		"build:docs": "node scripts/build-docs.js",
+		"build:fallback-font": "node scripts/build-fallback-font.mjs",
 		"build:types": "tsc -p tsconfig.v8.json --emitDeclarationOnly && tsc -p tsconfig.v7.json --emitDeclarationOnly && tsc -p tsconfig.v6.json --emitDeclarationOnly",
 		"test": "jest --coverage",
 		"test:ci": "jest --ci --coverage --forceExit --maxWorkers=50% --reporters=default --reporters=jest-junit",

@@ -1,4 +1,5 @@
 export {SlugFont} from '../shared/slug/font';
+export {SlugFonts} from '../shared/slug/fonts';
 export {SlugText} from './slug/text';
 export {SlugPipe} from './slug/pipe';
 export {slugShader} from './slug/shader';
