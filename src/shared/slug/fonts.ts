@@ -1,36 +1,8 @@
 import {Defaults} from '../../defaults';
 import {SlugFont} from './font';
 import {robotoFallbackBytes} from './fonts/fallback/roboto';
-
-/**
- * Global key used to share the `SlugFonts` registry instance across
- * module duplicates (e.g. when multiple bundles load `pixi-slug` on
- * the same page). Callers never see this — it is an internal detail.
- */
-const GLOBAL_KEY = '__pixiSlugFontsRegistry__';
-
-/**
- * Registry instance hidden from the public API. Holds the font cache
- * and in-flight load promises. Never exported; only reachable through
- * `SlugFonts`' static methods.
- */
-class SlugFontsRegistry {
-	public readonly byUrl: Map<string, SlugFont>;
-	public readonly byName: Map<string, SlugFont>;
-	public readonly inflight: Map<string, Promise<SlugFont | null>>;
-	public fallback: SlugFont | null;
-	/** True once the caller has explicitly set a fallback, so the
-	 *  lazy bundled fallback won't overwrite it. */
-	public fallbackOverridden: boolean;
-
-	constructor() {
-		this.byUrl = new Map();
-		this.byName = new Map();
-		this.inflight = new Map();
-		this.fallback = null;
-		this.fallbackOverridden = false;
-	}
-}
+import {SlugFontsRegistry, type SlugFontsRegistryStat} from './fonts/registry';
+import {SlugFontsRegistryEntry} from './fonts/registry/entry';
 
 /**
  * Central Slug Font Registry. Loads, caches, and hands out `SlugFont`
@@ -48,10 +20,10 @@ export class SlugFonts {
 	 */
 	private static _reg(): SlugFontsRegistry {
 		const g = globalThis as Record<string, unknown>;
-		let reg = g[GLOBAL_KEY] as SlugFontsRegistry | undefined;
+		let reg = g[Defaults.GLOBAL_KEY] as SlugFontsRegistry | undefined;
 		if (!reg) {
 			reg = new SlugFontsRegistry();
-			g[GLOBAL_KEY] = reg;
+			g[Defaults.GLOBAL_KEY] = reg;
 		}
 		return reg;
 	}
@@ -66,15 +38,13 @@ export class SlugFonts {
 	 *
 	 * Returns `null` if the input cannot be resolved.
 	 */
-	public static async from(
-		input: SlugFont | string | ArrayBuffer | Uint8Array
-	): Promise<SlugFont | null> {
+	public static async from(input: SlugFont | string | ArrayBuffer | Uint8Array): Promise<SlugFont | null> {
 		if (input instanceof SlugFont) {
 			return input;
 		}
 		if (typeof input === 'string') {
 			const named = SlugFonts._reg().byName.get(input);
-			if (named) return named;
+			if (named) return named.font;
 			return SlugFonts.fromUrl(input);
 		}
 		if (input instanceof ArrayBuffer) {
@@ -118,7 +88,7 @@ export class SlugFonts {
 	): Promise<SlugFont | null> {
 		const reg = SlugFonts._reg();
 		const cached = reg.byUrl.get(url);
-		if (cached) return cached;
+		if (cached) return cached.font;
 
 		const pending = reg.inflight.get(url);
 		if (pending) return pending;
@@ -130,7 +100,9 @@ export class SlugFonts {
 				const data = await response.arrayBuffer();
 				const font = new SlugFont(textureWidth);
 				await font.load(data);
-				reg.byUrl.set(url, font);
+				const entry = new SlugFontsRegistryEntry(font, data.byteLength);
+				reg.byUrl.set(url, entry);
+				reg.addToAll(entry);
 				return font;
 			} catch {
 				return null;
@@ -149,7 +121,15 @@ export class SlugFonts {
 	 * accepted.
 	 */
 	public static register(name: string, font: SlugFont): void {
-		SlugFonts._reg().byName.set(name, font);
+		const reg = SlugFonts._reg();
+		const existing = reg.entryForFont(font);
+		if (existing) {
+			reg.byName.set(name, existing);
+			return;
+		}
+		const entry = new SlugFontsRegistryEntry(font, 0);
+		reg.byName.set(name, entry);
+		reg.addToAll(entry);
 	}
 
 	/**
@@ -158,7 +138,7 @@ export class SlugFonts {
 	 */
 	public static get(key: string): SlugFont | null {
 		const reg = SlugFonts._reg();
-		return reg.byName.get(key) ?? reg.byUrl.get(key) ?? null;
+		return reg.byName.get(key)?.font ?? reg.byUrl.get(key)?.font ?? null;
 	}
 
 	/**
@@ -218,18 +198,103 @@ export class SlugFonts {
 	}
 
 	/**
+	 * Increment the ref count for a registry-managed font. No-op when
+	 * the font is null, the fallback, or not owned by the registry
+	 * (e.g. `new SlugFont()` passed directly by the caller).
+	 */
+	public static retain(font: SlugFont | null): void {
+		if (!font) {
+			return;
+		}
+
+		const reg = SlugFonts._reg();
+		if (font === reg.fallback) {
+			return;
+		}
+
+		reg.incRef(reg.entryForFont(font));
+	}
+
+	/** Decrement counterpart to {@link retain}. Same exclusion rules. */
+	public static release(font: SlugFont | null): void {
+		if (!font) {
+			return;
+		}
+
+		const reg = SlugFonts._reg();
+		if (font === reg.fallback) {
+			return;
+		}
+
+		reg.decRef(reg.entryForFont(font));
+	}
+
+	/**
+	 * Advance the auto-destroy grace-period sweep. Called from a PIXI
+	 * `Ticker` callback (auto-attached by version entry points) or
+	 * manually by the host app.
+	 */
+	public static onUpdate(deltaMs: number): void {
+		SlugFonts._reg().onUpdate(deltaMs);
+	}
+
+	/**
+	 * Bind the registry to a tick source. `subscribe` should register
+	 * the callback and return a detach function. Replaces any prior
+	 * attachment.
+	 */
+	public static attachTicker(subscribe: (cb: (deltaMs: number) => void) => () => void): void {
+		const reg = SlugFonts._reg();
+		if (reg.tickerDetach) {
+			reg.tickerDetach();
+			reg.tickerDetach = null;
+		}
+		reg.tickerDetach = subscribe((deltaMs) => SlugFonts.onUpdate(deltaMs));
+	}
+
+	/** Detach the current ticker binding, if any. */
+	public static detachTicker(): void {
+		const reg = SlugFonts._reg();
+		if (reg.tickerDetach) {
+			reg.tickerDetach();
+			reg.tickerDetach = null;
+		}
+	}
+
+	/** Per-entry diagnostics for inspection and tests. */
+	public static stats(): SlugFontsRegistryStat[] {
+		return SlugFonts._reg().stats();
+	}
+
+	/** True when this font is tracked by the registry (URL- or name-keyed). */
+	public static owns(font: SlugFont | null): boolean {
+		if (!font) {
+			return false;
+		}
+
+		return SlugFonts._reg().entryForFont(font) !== null;
+	}
+
+	/**
 	 * Remove all cached fonts and the fallback. GPU resources owned by
 	 * the cached fonts are destroyed. Intended for tests and teardown.
 	 */
 	public static clear(): void {
 		const reg = SlugFonts._reg();
-		for (const font of reg.byUrl.values()) font.destroyGpu();
-		for (const font of reg.byName.values()) font.destroyGpu();
+		for (let i = 0; i < reg.all.length; i++) {
+			reg.all[i].font.destroyGpu();
+		}
 		if (reg.fallback) reg.fallback.destroyGpu();
 		reg.byUrl.clear();
 		reg.byName.clear();
 		reg.inflight.clear();
+		reg.all.length = 0;
+		reg.marked.length = 0;
 		reg.fallback = null;
 		reg.fallbackOverridden = false;
+		if (reg.tickerDetach) {
+			reg.tickerDetach();
+			reg.tickerDetach = null;
+		}
 	}
 }

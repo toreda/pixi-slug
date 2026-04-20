@@ -167,6 +167,7 @@ export class SlugText extends SlugTextV6Base {
 	}
 
 	public destroy(): void {
+		this._releaseFontOnDestroy();
 		for (const mesh of this._meshes) {
 			mesh.destroy();
 		}

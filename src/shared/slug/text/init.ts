@@ -88,24 +88,28 @@ export interface SlugTextStyleOptions {
 }
 
 /**
- * Font input accepted by `SlugText`. A `SlugFont` is used directly; a
- * string is resolved through `SlugFonts` (first as a registered name,
- * then as a URL to fetch).
+ * Font input accepted by `SlugText`. Resolved through `SlugFonts.from()`:
+ *  - `SlugFont`: used directly.
+ *  - `string`: registered name first, then URL to fetch and cache.
+ *  - `ArrayBuffer` / `Uint8Array`: raw font bytes (e.g. webpack asset
+ *    imports). Parsed but not cached — call `SlugFonts.register(name, font)`
+ *    afterwards to cache under a name.
  */
-export type SlugTextFontInput = SlugFont | string;
+export type SlugTextFontInput = SlugFont | string | ArrayBuffer | Uint8Array;
 
 /**
  * Object with required properties to instantiate `SlugText`.
  */
 export interface SlugTextInit {
 	text: string;
-	slugFont: SlugTextFontInput;
+	font: SlugTextFontInput;
 	supersampling?: boolean | null;
 	supersampleCount?: number | null;
 	options?: SlugTextStyleOptions;
 	/**
-	 * When `slugFont` is a string and the font is not yet loaded, render
-	 * using the `SlugFonts` fallback font until the real font resolves.
+	 * When `font` resolves asynchronously (URL string or raw bytes) and is
+	 * not yet loaded, render using the `SlugFonts` fallback font until the
+	 * real font resolves.
 	 * @default Defaults.SlugText.FallbackWhileLoading (true)
 	 */
 	fallbackWhileLoading?: boolean | null;

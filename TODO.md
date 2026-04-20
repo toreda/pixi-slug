@@ -4,7 +4,8 @@
 
 - [x] Stroke width & color (outline of specified thickness in px with hex color around text)
 - [ ] Font weight
-- [ ] Font underline
+- [x] Font underline (decoration)
+- [x] Font strikethrough (decoration)
 - [ ] Emoji text characters
 - [ ] Text fill color
 - [x] Drop shadow

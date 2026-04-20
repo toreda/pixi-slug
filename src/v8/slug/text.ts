@@ -276,6 +276,7 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	override destroy(): void {
+		this._releaseFontOnDestroy();
 		for (const mesh of this._meshes) {
 			mesh.destroy();
 		}

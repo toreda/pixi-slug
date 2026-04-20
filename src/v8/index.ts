@@ -1,3 +1,4 @@
+import './slug/fonts/ticker';
 export {SlugFont} from '../shared/slug/font';
 export {SlugFonts} from '../shared/slug/fonts';
 export {SlugText} from './slug/text';
@@ -5,3 +6,4 @@ export {SlugPipe} from './slug/pipe';
 export {slugShader} from './slug/shader';
 export {slugFontGpuV8} from './slug/font/gpu';
 export type {SlugFontGpuV8} from './slug/font/gpu';
+export {slugFontsAttachTickerV8} from './slug/fonts/ticker';

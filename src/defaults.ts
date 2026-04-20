@@ -4,6 +4,12 @@
  * value here will update all usages.
  */
 export class Defaults {
+	/**
+	 * Global key used to share the `SlugFonts` registry instance across
+	 * module duplicates (e.g. when multiple bundles load `pixi-slug` on
+	 * the same page). Callers never see this — it is an internal detail.
+	 */
+	public static GLOBAL_KEY = '__pixiSlugFontsRegistry__' as const;
 	/** Default texture size applied to both width & length. */
 	public static readonly TEXTURE_SIZE = 4096 as const;
 	/** Default number of horizontal/vertical bands per glyph for spatial indexing. */
@@ -14,6 +20,17 @@ export class Defaults {
 	/** Maximum allowed supersample count. The shader has patterns
 	 * up to 16 samples. */
 	public static readonly MAX_SUPERSAMPLE_COUNT = 16 as const;
+
+	public static readonly Registry = {
+		/** Mark unreferenced fonts for destroy when their ref count hits 0. */
+		AutoDestroyUnused: true as const,
+		/** Grace period in seconds before a marked font is actually destroyed. */
+		AutoDestroyDelay: 60 as const,
+		/** Version entry points auto-attach `Ticker.shared` when true. */
+		AutoAttachTicker: true as const,
+		/** Minimum milliseconds between sweep runs driven by `onUpdate`. */
+		UpdateRate: 1000 as const
+	} as const;
 
 	public static readonly SlugText = {
 		/** Default font size in pixels. */

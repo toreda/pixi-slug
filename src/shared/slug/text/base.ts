@@ -80,26 +80,26 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 				Defaults.SlugText.FallbackWhileLoading
 			);
 
-			if (typeof init.slugFont === 'string') {
-				const key = init.slugFont;
-				const ready = SlugFonts.get(key);
-				if (ready) {
-					this._font = ready;
-				} else {
-					const fallback = fallbackWhileLoading ? SlugFonts.fallback() : null;
-					this._font = fallback ?? new SlugFont();
-					SlugFonts.from(key).then((resolved) => {
-						if (resolved && this._font !== resolved) {
-							this._font = resolved;
-							this._fontRef = new WeakRef(resolved);
-							this.rebuild();
-						}
-					});
-				}
+			const fontInput = init.font;
+			if (fontInput instanceof SlugFont) {
+				this._font = fontInput;
+			} else if (typeof fontInput === 'string' && SlugFonts.get(fontInput)) {
+				this._font = SlugFonts.get(fontInput) as SlugFont;
 			} else {
-				this._font = init.slugFont;
+				const fallback = fallbackWhileLoading ? SlugFonts.fallback() : null;
+				this._font = fallback ?? new SlugFont();
+				SlugFonts.from(fontInput).then((resolved) => {
+					if (resolved && this._font !== resolved) {
+						SlugFonts.release(this._font);
+						this._font = resolved;
+						this._fontRef = new WeakRef(resolved);
+						SlugFonts.retain(resolved);
+						this.rebuild();
+					}
+				});
 			}
 			this._fontRef = new WeakRef(this._font);
+			SlugFonts.retain(this._font);
 			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
 			const fill = init.options?.fill;
 			this._color = fill
@@ -176,9 +176,21 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		public set font(value: SlugFont) {
 			if (this._font === value) return;
+			SlugFonts.release(this._font);
 			this._font = value;
 			this._fontRef = new WeakRef(value);
+			SlugFonts.retain(value);
 			this.rebuild();
+		}
+
+		/**
+		 * Release the live font reference held by this text instance.
+		 * Version-specific subclasses must call this from their `destroy()`
+		 * override so the registry's ref counter can mark the font for
+		 * auto-destroy when no other text instances hold it.
+		 */
+		public _releaseFontOnDestroy(): void {
+			SlugFonts.release(this._font);
 		}
 
 		public get fontSize(): number {

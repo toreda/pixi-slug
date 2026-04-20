@@ -6,10 +6,36 @@
 
 # [`pixi-slug`](https://www.npmjs.com/package/pixi-slug)
 
-GPU-based font rendering for [pixi.js](https://pixijs.com/) using Bézier curves.
+&nbsp;
+## FAQ
+**Q: What does `pixi-slug` do?**
 
-Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
+A: It harnesses the power of bézier curves and their fancy maths to draw super crisp text using the GPU via shaders. 
 
+
+
+**Q: Why is it called `pixi-slug`?**
+
+A: `pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
+
+
+**Q: Is `pixi-slug` better than PIXI.Text?**
+
+A: `pixi-slug` is significantly more performant than `PIXI.Text` in several specific situations, but *better* depends on use case. Scenes with a small number of static `Text` objects probably won't see improvement. 
+
+`SlugText` produces clear, crisp text for any resolution and can be resized with no performance hit.  See the performance section for a full comparison.
+
+
+**Q: Can I use both `pixi-slug` and `PIXI.Text` together?**
+
+Yes they can be used together. `pixi-slug` doesn't replace or change `PIXI.Text`. You can use both together or just one. It's up to you. 
+
+## Performance: `SlugText` vs `PIXI.Text`
+
+`PIXI.Text` is generally costly to create or modify, but efficient to render.
+
+
+&nbsp;
 ## Supported Versions
 
 Default import targets PixiJS v8. PixiJS v7 and v6 are available as separate import paths.
