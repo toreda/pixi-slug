@@ -30,7 +30,11 @@
       "Bash(find tests/v* -path \"*/text*\" -type f)",
       "Bash(npx jest *)",
       "Bash(node -e ' *)",
-      "Bash(node scripts/build-fallback-font.mjs)"
+      "Bash(node scripts/build-fallback-font.mjs)",
+      "Bash(xargs grep *)",
+      "Bash(npm view *)",
+      "Bash(node -e \"console.log\\(typeof atob, typeof FontFace, typeof fetch\\)\")",
+      "Bash(npm pack *)"
     ]
   }
 }

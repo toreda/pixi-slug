@@ -42,34 +42,179 @@ Default import targets PixiJS v8. PixiJS v7 and v6 are available as separate imp
 
 # Examples
 
-## `Pixi` `v8`
+Every version has the same `SlugText` / `SlugFonts` API. Only the import path and the surrounding PIXI scaffolding change between `v6`, `v7`, and `v8`.
+
+## Creating a `SlugText`
+
+`font` accepts a URL string, a registered name, a pre-built `SlugFont`, raw `ArrayBuffer` / `Uint8Array` bytes, or a `FontFace` returned by PIXI's asset loader. Strings that look like URLs are fetched and cached automatically.
+
+### `Pixi` `v8`
 
 ```typescript
-import {SlugText} from 'pixi-slug'; // v8 (default)
+const {Application} = require('pixi.js');
+const {SlugText} = require('pixi-slug');
+
+const app = new Application();
+await app.init({width: 800, height: 600});
+
+const text = new SlugText({
+    text: 'Hello Slug',
+    font: 'https://cdn.example.com/roboto.ttf',
+    options: {
+        fontSize: 48,
+        fill: [1, 1, 1, 1]
+    }
+});
+
+app.stage.addChild(text);
 ```
 
-```javascript
-const {SlugText} = require('pixi-slug'); // v8 (default)
-```
-
-## `Pixi` `v7`
+### `Pixi` `v7`
 
 ```typescript
-import {SlugText} from 'pixi-slug/v7'; // v7
+const {Application} = require('pixi.js');
+const {SlugText} = require('pixi-slug/v7');
+
+const app = new Application({width: 800, height: 600});
+
+const text = new SlugText({
+    text: 'Hello Slug',
+    font: 'https://cdn.example.com/roboto.ttf',
+    options: {
+        fontSize: 48,
+        fill: [1, 1, 1, 1]
+    }
+});
+
+app.stage.addChild(text);
 ```
 
-```javascript
-const {SlugText} = require('pixi-slug/v7'); // v7
-```
-
-## `Pixi` `v6`
+### `Pixi` `v6`
 
 ```typescript
-import {SlugText} from 'pixi-slug/v6'; // v6
+const {Application} = require('pixi.js');
+const {SlugText} = require('pixi-slug/v6');
+
+const app = new Application({width: 800, height: 600});
+
+const text = new SlugText({
+    text: 'Hello Slug',
+    font: 'https://cdn.example.com/roboto.ttf',
+    options: {
+        fontSize: 48,
+        fill: [1, 1, 1, 1]
+    }
+});
+
+app.stage.addChild(text);
 ```
 
-```javascript
-const {SlugText} = require('pixi-slug/v6'); // v6
+## Updating a `SlugText`
+
+Mutate properties directly — `SlugText` rebuilds its geometry on change. This pattern is identical across v6, v7, and v8.
+
+```typescript
+text.text = 'Updated!';
+text.fontSize = 72;
+text.color = [1, 0.2, 0.2, 1];
+text.wordWrap = true;
+text.wordWrapWidth = 300;
+text.font = await SlugFonts.from('https://cdn.example.com/inter.ttf');
+```
+
+## Colors
+
+Every `SlugText` color field — `fill`, stroke color, drop shadow color, and the setter equivalents (`text.color`, `text.strokeColor`) — accepts the same flexible input set: hex strings, hex numbers, or numeric arrays.
+
+```typescript
+text.color = '#FF0000';           // 6-digit hex, preserves existing alpha
+text.color = '0xFF0000AA';        // 8-digit hex string, alpha 0xAA
+text.color = '#F00';              // 3-digit shorthand, preserves alpha
+text.color = '#F00F';             // 4-digit shorthand with alpha
+text.color = '#80';               // 2-digit grayscale, preserves alpha
+text.color = 0xFF0000;            // hex number ≤ 0xFFFFFF, preserves alpha
+text.color = 0xFF0000CC;          // hex number > 0xFFFFFF, alpha from input
+text.color = [1, 0, 0];           // 3-elem 0..1, preserves alpha
+text.color = [1, 0, 0, 0.5];      // 4-elem 0..1
+text.color = [255, 0, 0];         // 3-elem 0..255 (any element > 1 triggers 0..255 scale)
+text.color = [255, 0, 0, 128];    // 4-elem 0..255
+```
+
+**Alpha-preservation rules:**
+- Forms without an alpha component (2/3/6-digit hex, hex numbers ≤ `0xFFFFFF`, 3-element arrays) **preserve the existing alpha**.
+- Forms with an alpha component (4/8-digit hex, hex numbers > `0xFFFFFF`, 4-element arrays) **set alpha from the input**.
+
+**Array scale detection:** arrays are scanned before parsing. If every element is `≤ 1` the array is treated as already normalized (0..1). If any element is `> 1` the whole array is treated as 0..255. You cannot mix scales within a single array.
+
+**Invalid input:** malformed hex strings, numbers out of range, or arrays with bad shapes log `console.error` and leave the existing color unchanged — `SlugText` never throws on a color parse failure.
+
+Full specification: [_features/color_input.md](_features/color_input.md).
+
+## Aliases
+
+Bind a short name to a font URL inline at the `SlugText` construction site — no separate preload step. The first `SlugText` that references a given URL fetches and caches the font; subsequent references (by alias or URL) share the cached entry.
+
+```typescript
+// Tuple: [alias, url]
+const title = new SlugText({
+    text: 'Title',
+    font: ['roboto', 'https://cdn.example.com/roboto.ttf'],
+    options: {fontSize: 64}
+});
+
+// Equivalent object form
+const body = new SlugText({
+    text: 'Body text',
+    font: {alias: 'roboto', url: 'https://cdn.example.com/roboto.ttf'}
+});
+
+// Once the alias is registered, later sites can reference it by name alone
+const caption = new SlugText({
+    text: 'Caption',
+    font: 'roboto'  // alias lookup (string without URL characters)
+});
+```
+
+**Alias resolution rules:**
+- `font: 'roboto'` (bare string, no URL characters) → alias lookup. Miss is a `console.error` and the `SlugText` renders with the bundled fallback font.
+- `font: 'roboto.ttf'` or `font: 'https://…'` → URL-sniffed and fetched. `.ttf`/`.otf`/`.woff`/`.woff2` extensions, `/`, `./`, `../`, `//`, `data:`, and `://` all trigger URL mode.
+- `font: {alias}` / `font: [alias]` → pure alias lookup, same as the bare string form.
+- `font: {url}` / `font: [url]` (URL-sniffed) → URL fetch; the URL itself doubles as the alias.
+- `font: {alias, url}` / `font: [alias, url]` → fetch `url`, bind `alias` to the loaded font.
+
+**Alias collision:** if `alias` is already registered to a different URL, the new binding is ignored — `console.error` is logged and the `SlugText` falls back. Call `SlugFonts.unregister('roboto')` before rebinding to a different URL.
+
+## Loading fonts through PIXI's asset loader
+
+`PIXI.Assets.load()` (v7/v8) returns a browser `FontFace`, which `SlugText` accepts directly. For more efficient loading — skip the intermediate `FontFace` and receive raw bytes — call the version-specific installer once at app startup:
+
+```typescript
+// v8
+const {Assets} = require('pixi.js');
+const {SlugText, slugFontsInstallLoaderV8} = require('pixi-slug');
+
+slugFontsInstallLoaderV8();
+const bytes = await Assets.load('roboto.ttf'); // now returns ArrayBuffer
+const text = new SlugText({text: 'Hi', font: bytes});
+```
+
+```typescript
+// v7
+const {Assets} = require('pixi.js');
+const {SlugText, slugFontsInstallLoaderV7} = require('pixi-slug/v7');
+
+slugFontsInstallLoaderV7();
+const bytes = await Assets.load('roboto.ttf');
+const text = new SlugText({text: 'Hi', font: bytes});
+```
+
+```typescript
+// v6 — PIXI.Loader can't be extended to return raw bytes; use the
+// helper instead of `loader.add(url)` when the font is destined for SlugText.
+const {SlugText, slugFontsFetchV6} = require('pixi-slug/v6');
+
+const bytes = await slugFontsFetchV6('roboto.ttf');
+const text = new SlugText({text: 'Hi', font: bytes});
 ```
 
 # Slug Reference Code

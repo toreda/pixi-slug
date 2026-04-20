@@ -7,3 +7,4 @@ export {slugShader} from './slug/shader';
 export {slugFontGpuV8} from './slug/font/gpu';
 export type {SlugFontGpuV8} from './slug/font/gpu';
 export {slugFontsAttachTickerV8} from './slug/fonts/ticker';
+export {slugFontsInstallLoaderV8} from './slug/fonts/loader';

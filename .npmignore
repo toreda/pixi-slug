@@ -1,14 +1,14 @@
-# Reference materials & documentation
-_references/
+# Reference materials & internal docs
 _docs/
+_features/
+_references/
 docs/
 examples/
+assets/
 CLAUDE.md
+TODO.md
 
-# Workspace files
-*.code-workspace
-
-# Source & build config
+# Source & build config — users rebuild from GitHub, not the tarball
 src/
 tests/
 scripts/
@@ -20,12 +20,14 @@ webpack.config.ts
 eslint.config.js
 jest.config.ts
 
-# CI/CD
-.github/
+# Build artifacts that aren't the published one
+coverage/
 
-# Package manager
-pnpm-lock.yaml
-node_modules/
+# CI/CD & workspace
+.github/
+.claude/
+.gitattributes
+*.code-workspace
 
 # Editor & OS
 .vscode/

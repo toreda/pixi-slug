@@ -133,6 +133,15 @@ export class SlugFonts {
 	}
 
 	/**
+	 * Remove an alias binding. Only the `byName` entry is dropped — any
+	 * underlying URL cache entry and refcount are left alone. No-op when
+	 * the alias is not currently registered.
+	 */
+	public static unregister(name: string): void {
+		SlugFonts._reg().byName.delete(name);
+	}
+
+	/**
 	 * Look up a previously registered font by name, or a previously
 	 * loaded font by URL. Returns `null` if unknown.
 	 */

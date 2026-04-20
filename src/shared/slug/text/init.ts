@@ -1,7 +1,23 @@
 import {SlugFont} from '../font';
 import {TextStyleOptions} from 'pixi.js';
+import type {SlugFontErrorPolicy} from '../fonts/error';
 import {SlugTextStyleAlign} from './style/align';
+import type {SlugTextColor} from './style/color';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
+
+/**
+ * Resolved drop shadow state kept on `SlugText` after input validation.
+ * All numeric fields are concrete (no `null` / `undefined`) and `color`
+ * is always a normalized RGBA tuple. Consumers that read the current
+ * shadow — render passes, `dropShadow` getter — work with this shape.
+ */
+export interface SlugDropShadowResolved {
+	alpha: number;
+	angle: number;
+	blur: number;
+	color: [number, number, number, number];
+	distance: number;
+}
 
 /**
  * Drop shadow configuration matching PIXI.Text's TextDropShadow API.
@@ -14,8 +30,15 @@ export interface SlugDropShadow {
 	angle?: number | null;
 	/** Shadow blur radius in pixels. 0=sharp. @default 0 */
 	blur?: number | null;
-	/** Shadow color as [r,g,b,a] in 0-1 range. @default [0,0,0,1] */
-	color?: [number, number, number, number] | null;
+	/**
+	 * Shadow color. Accepts a hex string (`'#FF0000'`, `'0xFF0000AA'`,
+	 * `'FF0'`, etc.), a hex number (`0xFF0000` or `0xFF0000AA`), or a
+	 * 3/4-element numeric array (0..1 normalized, or 0..255).
+	 * 6-digit / 3-element forms preserve the existing alpha; 8-digit /
+	 * 4-element forms set alpha from input.
+	 * @default [0,0,0,1]
+	 */
+	color?: SlugTextColor | null;
 	/** Shadow distance in pixels. @default 5 */
 	distance?: number | null;
 }
@@ -39,8 +62,15 @@ export interface SlugDropShadow {
  * - Final alpha per pixel is clamped to 0–1.
  */
 export interface SlugStroke {
-	/** Stroke color as [r,g,b,a] in 0-1 range. @default [0,0,0,1] */
-	color?: [number, number, number, number] | null;
+	/**
+	 * Stroke color. Accepts a hex string (`'#FF0000'`, `'0xFF0000AA'`,
+	 * `'FF0'`, etc.), a hex number (`0xFF0000` or `0xFF0000AA`), or a
+	 * 3/4-element numeric array (0..1 normalized, or 0..255).
+	 * 6-digit / 3-element forms preserve the existing alpha; 8-digit /
+	 * 4-element forms set alpha from input.
+	 * @default [0,0,0,1]
+	 */
+	color?: SlugTextColor | null;
 	/** Stroke width in pixels. 0 = disabled. @default 0 */
 	width?: number | null;
 	/** How alpha is applied across the stroke width. @default 'single' */
@@ -71,8 +101,15 @@ export interface SlugStroke {
  */
 export interface SlugTextStyleOptions {
 	fontSize?: number | null;
-	/** Fill color as [r,g,b,a] in 0-1 range. @default [1,1,1,1] (white) */
-	fill?: [number, number, number, number] | null;
+	/**
+	 * Fill color. Accepts a hex string (`'#FF0000'`, `'0xFF0000AA'`,
+	 * `'FF0'`, etc.), a hex number (`0xFF0000` or `0xFF0000AA`), or a
+	 * 3/4-element numeric array (0..1 normalized, or 0..255).
+	 * 6-digit / 3-element forms preserve the existing alpha; 8-digit /
+	 * 4-element forms set alpha from input.
+	 * @default [1,1,1,1] (white)
+	 */
+	fill?: SlugTextColor | null;
 	wordWrap?: boolean | null;
 	wordWrapWidth?: number | null;
 	align?: SlugTextStyleAlign;
@@ -88,14 +125,47 @@ export interface SlugTextStyleOptions {
 }
 
 /**
- * Font input accepted by `SlugText`. Resolved through `SlugFonts.from()`:
+ * Alias/URL pair in object form. Either field may be omitted; at least
+ * one must be present. When both are present, `alias` binds to the
+ * font loaded from `url` (the alias is never URL-sniffed). When only
+ * `url` is present, the URL itself doubles as the alias.
+ */
+export interface SlugTextFontRef {
+	alias?: string;
+	url?: string;
+}
+
+/**
+ * Font input accepted by `SlugText`. Resolved through
+ * `slugResolveFontInput`:
  *  - `SlugFont`: used directly.
- *  - `string`: registered name first, then URL to fetch and cache.
+ *  - `string`: URL-sniffed — absolute/protocol-relative/root-relative/
+ *    explicit-relative paths, paths containing `/`, and strings ending
+ *    in `.ttf`/`.otf`/`.woff`/`.woff2` are fetched as URLs. Everything
+ *    else is looked up as a registered alias.
+ *  - `[alias]` or `[alias, url]`: tuple form. Single element is sniffed
+ *    like a bare string; the two-element form always treats element 0
+ *    as a pure alias and element 1 as the URL source.
+ *  - `{alias?, url?}`: object form. `alias` is always a pure alias;
+ *    `url` is the source. When only `url` is present it also becomes
+ *    the alias.
  *  - `ArrayBuffer` / `Uint8Array`: raw font bytes (e.g. webpack asset
  *    imports). Parsed but not cached — call `SlugFonts.register(name, font)`
  *    afterwards to cache under a name.
+ *  - `FontFace` / `FontFace[]`: the PIXI Assets loader default return
+ *    type. The URL is extracted from `FontFace.src` and fetched as
+ *    bytes; base64 `data:` URIs are decoded inline.
  */
-export type SlugTextFontInput = SlugFont | string | ArrayBuffer | Uint8Array;
+export type SlugTextFontInput =
+	| SlugFont
+	| string
+	| [string]
+	| [string, string]
+	| SlugTextFontRef
+	| ArrayBuffer
+	| Uint8Array
+	| FontFace
+	| FontFace[];
 
 /**
  * Object with required properties to instantiate `SlugText`.
@@ -113,4 +183,9 @@ export interface SlugTextInit {
 	 * @default Defaults.SlugText.FallbackWhileLoading (true)
 	 */
 	fallbackWhileLoading?: boolean | null;
+	/**
+	 * Per-case override of the font resolver's error behavior. Missing
+	 * cases fall back to `Defaults.SlugText.ErrorPolicy`.
+	 */
+	errorPolicy?: Partial<SlugFontErrorPolicy>;
 }

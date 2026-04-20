@@ -65,6 +65,28 @@ export class Defaults {
 		DropShadowAngle: Math.PI / 6,
 		DropShadowBlur: 0 as const,
 		DropShadowColor: [0, 0, 0, 1] as readonly [number, number, number, number],
-		DropShadowDistance: 5 as const
+		DropShadowDistance: 5 as const,
+
+		/**
+		 * Per-case error policy for the font resolver. `'throw'` surfaces a
+		 * clear message at the point of failure; `'error'` logs via
+		 * `console.error` without throwing; `'warn'` logs via
+		 * `console.warn`; `'silent'` swallows errors entirely.
+		 *
+		 * Alias-related issues (`aliasNotFound`, `aliasCollision`) default
+		 * to `'error'` — serious enough to surface, not serious enough to
+		 * kill the scene. The SlugText falls back to the bundled fallback
+		 * font instead.
+		 */
+		ErrorPolicy: {
+			unknownInput: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+			fontFaceNoUrl: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+			emptyFontFaceArray: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+			emptyInput: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+			loadFailed: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+			unsupportedFormat: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+			aliasNotFound: 'error' as 'throw' | 'error' | 'warn' | 'silent',
+			aliasCollision: 'error' as 'throw' | 'error' | 'warn' | 'silent'
+		}
 	} as const;
 }
