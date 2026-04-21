@@ -17,44 +17,95 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 
 &nbsp;
 ## FAQ
-**Q: What does `pixi-slug` do?**
 
-A: It harnesses the power of bézier curves and their fancy maths to draw super crisp text using the GPU via shaders. 
+<blockquote><p align="left">Q: What does pixi-slug do?</p></blockquote>
 
+**A**: It renders text using shaders.
 
-**Q: Is `pixi-slug` better than PIXI.Text?**
+<p align="center">· · ·</p>
 
-A: `pixi-slug` outperforms `PIXI.Text` in several specific situations, but *better* is use case dependent. Scenes with a small number of static `Text` objects won't see improvement. 
+<blockquote><p align="left">Q: Does pixi-slug replace PIXI.Text?</p></blockquote>
 
-`SlugText` produces clear, crisp text for any resolution and can be resized with no performance hit.  See the performance section for a full comparison.
+**A**: No, it doesn't affect `PIXI.Text`. `pixi-slug` is a standalone plugin that uses its own `SlugText`.
 
+<p align="center">· · ·</p>
 
-**Q: Does pixi-slug support CFF (cubic Bézier) fonts?**
+<blockquote><p align="left">Q: Is pixi-slug a drop-in replacement for PIXI.Text?</p></blockquote>
 
-A: Yes — cubic outlines are approximated as two quadratics per cubic segment, since the Slug algorithm operates on quadratic Béziers. Quality is indistinguishable at typical sizes; extreme zooms on cubic-heavy fonts may reveal the approximation."
+**A**: Unfortunately no, it's not a drop-in replacement where you can just replace `new Text(...)` with `new SlugText(...)`. It's close but not identical.
 
-
-**Q: Can I use both `pixi-slug` and `PIXI.Text` together?**
-
-Yes they can be used together. `pixi-slug` doesn't replace or change `PIXI.Text`. You can use both together or just one. It's up to you. 
-
-**Q: Why is it called `pixi-slug`?**
-
-A: `pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
+<p align="center">· · ·</p>
 
 
+<blockquote><p align="left">Q: What are the advantages of using pixi-slug instead of PIXI.Text?</p></blockquote>
 
-## Performance: `SlugText` vs `PIXI.Text`
+**A:**
+* Text always appears crisp & clear.
+* Font size changes don't affect rendering clarity.
+* The same `SlugText` can be used on multiple resolutions.
+* `SlugText` content changes have only a minimal impact on performance. Replacing text content several times per second (or more) doesn't create intense GC pressure the way `PIXI.Text` does.
 
-`PIXI.Text` is generally costly to create or modify, but efficient to render.
+
+Do these advantages matter for you? It depends on your use case. This package probably won't benefit you if:
+* Your PIXI scenes have a small number of Text objects.
+* Text rarely (or never) changes size or content.
+* Your scene can afford to render text at a large base size & scale the text down to the target font size to guarantee clear rendering.
+
+<p align="center">· · ·</p>
+
+<blockquote><p align="left">Q: Can it render emojis?</p></blockquote>
+
+**A**: Yes, but it requires using a font with emoji characters. Find one online, make one, or try one of these Google fonts:
+* [Noto Sans Symbols 1](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols?preview.script=Latn)
+* [Noto Sans Symbols 2](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols+2)
+
+<p align="center">· · ·</p>
+
+<blockquote><p align="left">Q: Does pixi-slug support CFF (cubic Bézier) fonts?</p></blockquote>
+
+**A**: Yes — cubic outlines are approximated as two quadratics per cubic segment, since the Slug algorithm operates on quadratic Béziers. Quality is indistinguishable at typical sizes; extreme zooms on cubic-heavy fonts may reveal the approximation.
+
+
+<p align="center">· · ·</p>
+
+<blockquote><p align="left">Q: Can I use both pixi-slug and PIXI.Text together?</p></blockquote>
+
+
+**A**: Yes they can be used together. `pixi-slug` doesn't replace or change `PIXI.Text`. You can use both together or just one. It's up to you.
+
+<p align="center">· · ·</p>
+
+<blockquote><p align="left">Q: Why is it called pixi-slug?</p></blockquote>
+
+**A**: `pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
 
 
 
+## Features
+
+| Feature                              |  v8  |  v7  |  v6  |
+| ------------------------------------ | :--: | :--: | :--: |
+| TTF (`.ttf`) fonts                    |  ✅  |  ✅  |  ✅  |
+| OTF (`.otf`) (CFF) fonts              |  ✅  |  ✅  |  ✅  |
+| WOFF (`.woff`) fonts                  |  ✅  |  ✅  |  ✅  |
+| WOFF2 (`.woff2`) fonts                |  ✅  |  ✅  |  ✅  |
+| URL string font loading (cached)     |  ✅  |  ✅  |  ✅  |
+| Raw bytes (`ArrayBuffer`/`Uint8Array`) |  ✅  |  ✅  |  ✅  |
+| `FontFace` input (PIXI asset loader) |  ✅  |  ✅  |  ✅  |
+| Fallback font on load failure        |  ✅  |  ✅  |  ✅  |
+| Hex color input (`#rrggbb[aa]`)      |  ✅  |  ✅  |  ✅  |
+| Word wrap + newlines                 |  ✅  |  ✅  |  ✅  |
+| Font ref counting + autoDestroy      |  ✅  |  ✅  |  ✅  |
+| PIXI Ticker auto-hook                |  ✅  |  ✅  |  ✅  |
+| Application plugin                   |  ✅  |  ✅  |  ✅  |
+| Text decoration: `underline`           |  ✅  |  ❌  |  ❌  |
+| Text decoration: `strikethrough`       |  ✅  |  ❌  |  ❌  |
+| Text decoration: `overline`            |  ❌  |  ❌  |  ❌  |
+| `superscript`                          |  ❌  |  ❌  |  ❌  |
+| `subscript`                            |  ❌  |  ❌  |  ❌  |
+| `RTL` glyph support                    |  ❌  |  ❌  |  ❌  |
 
 &nbsp;
-## Supported Versions
-
-Default import targets PixiJS v8. PixiJS v7 and v6 are available as separate import paths.
 
 # Examples
 
@@ -137,6 +188,7 @@ text.wordWrap = true;
 text.wordWrapWidth = 300;
 text.font = await SlugFonts.from('https://cdn.example.com/inter.ttf');
 ```
+
 
 ## Colors
 
@@ -311,13 +363,12 @@ Application.registerPlugin(SlugApplicationPluginV6);
 
 **Conflict behavior:** both paths call `SlugFonts.attachTicker` under the hood. If one is already active and another tries to attach, `SlugFonts.reattachPolicy` decides what happens — `'throw'` by default, or `'error'` / `'warn'` / `'silent'`. Change it with `SlugFonts.setReattachPolicy('warn')` (validated — invalid modes are rejected and logged). Pass `{force: true}` as the second arg to `attachTicker` to replace silently. Full details in [_features/application_plugin.md](_features/application_plugin.md).
 
-# Slug Reference Code
+## Slug Reference Code
 
 [Eric Lengyel](https://github.com/EricLengyel) created and patented the Slug algorithm. He published [reference code on Github](https://github.com/EricLengyel/Slug/tree/main).
 
-# Testing
 
-# Legal
+## Legal
 
 Eric Lengyel created the patented slug algorithm in 2016. He graciously released it into the public domain for free in 2026. [`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is a TypeScript port of his work to add gpu-based font rendering to [pixi.js](https://pixijs.com/).
 
