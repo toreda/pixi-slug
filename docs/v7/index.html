@@ -37,42 +37,117 @@
 		}
 		#nav a:hover { color: #eee; background: #161b22; }
 		#nav a.active { color: #eee; border-bottom-color: #4a6aae; }
-		#main { display: flex; flex: 1; }
+		#main {
+			display: flex;
+			flex: 1;
+		}
 		#sidebar {
-			width: 220px; min-width: 220px; padding: 14px 12px;
-			background: #1a1a2e; font-size: 13px; color: #aaa; overflow-y: auto;
+			width: 220px;
+			min-width: 220px;
+			padding: 14px 12px;
+			background: #1a1a2e;
+			font-size: 13px;
+			color: #aaa;
+			overflow-y: auto;
 		}
-		#sidebar .ctrl-group { margin-bottom: 14px; }
+		#sidebar .ctrl-group {
+			margin-bottom: 14px;
+		}
 		#sidebar .ctrl-group-title {
-			font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
-			color: #667; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #333;
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: 0.06em;
+			color: #667;
+			margin-bottom: 6px;
+			padding-bottom: 4px;
+			border-bottom: 1px solid #333;
 		}
-		#sidebar .ctrl-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-		#sidebar .ctrl-row label { white-space: nowrap; min-width: 50px; }
-		#sidebar input[type="text"] {
-			width: 100%; padding: 4px 8px; border: 1px solid #444;
-			background: #2a2a4e; color: #eee; border-radius: 4px; font-size: 13px;
+		#sidebar .ctrl-row {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			margin-bottom: 6px;
+		}
+		#sidebar .ctrl-row label {
+			white-space: nowrap;
+			min-width: 50px;
+		}
+		#sidebar input[type="text"],
+		#sidebar textarea {
+			width: 100%;
+			padding: 4px 8px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+		}
+		#sidebar textarea {
+			resize: vertical;
+			min-height: 48px;
+			font-family: inherit;
 		}
 		#sidebar input[type="number"] {
-			width: 56px; padding: 4px 6px; border: 1px solid #444;
-			background: #2a2a4e; color: #eee; border-radius: 4px; font-size: 13px; text-align: center;
+			width: 56px;
+			padding: 4px 6px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+			text-align: center;
 		}
-		#sidebar input[type="color"] { width: 28px; height: 24px; border: 1px solid #444; background: none; cursor: pointer; padding: 0; }
-		#sidebar input[type="range"] { width: 80px; accent-color: #4a6aae; cursor: pointer; }
-		#sidebar input[type="checkbox"] { accent-color: #4a6aae; cursor: pointer; }
+		#sidebar input[type="color"] {
+			width: 28px; height: 24px;
+			border: 1px solid #444;
+			background: none;
+			cursor: pointer;
+			padding: 0;
+		}
+		#sidebar input[type="range"] {
+			width: 80px;
+			accent-color: #4a6aae;
+			cursor: pointer;
+		}
+		#sidebar input[type="checkbox"] {
+			accent-color: #4a6aae;
+			cursor: pointer;
+		}
 		#sidebar .slider-val {
-			width: 46px; padding: 2px 4px; border: 1px solid #444; background: #2a2a4e;
-			color: #eee; border-radius: 4px; font-size: 12px; text-align: center;
-			appearance: textfield; -moz-appearance: textfield;
+			width: 46px;
+			padding: 2px 4px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 12px;
+			text-align: center;
+			appearance: textfield;
+			-moz-appearance: textfield;
 		}
 		#sidebar .slider-val::-webkit-inner-spin-button,
-		#sidebar .slider-val::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-		#sidebar select {
-			padding: 3px 6px; border: 1px solid #444; background: #2a2a4e;
-			color: #eee; border-radius: 4px; font-size: 13px; cursor: pointer;
+		#sidebar .slider-val::-webkit-outer-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
 		}
-		#app { flex: 1; overflow: hidden; }
-		#app canvas { display: block; }
+		#sidebar select {
+			padding: 3px 6px;
+			border: 1px solid #444;
+			background: #2a2a4e;
+			color: #eee;
+			border-radius: 4px;
+			font-size: 13px;
+			cursor: pointer;
+		}
+		#app {
+			flex: 1;
+			overflow: hidden;
+		}
+		#app canvas {
+			display: block;
+			width: 100% !important;
+			height: 100% !important;
+		}
 	</style>
 </head>
 <body>
@@ -88,8 +163,20 @@
 	<div id="main">
 		<div id="sidebar">
 			<div class="ctrl-group">
+				<div class="ctrl-group-title">Font</div>
+				<div class="ctrl-row">
+					<select id="ctrlFont" style="width: 100%;"></select>
+				</div>
+				<div class="ctrl-row">
+					<span id="ctrlFontStatus" style="font-size: 12px; color: #8b949e;"></span>
+				</div>
+			</div>
+
+			<div class="ctrl-group">
 				<div class="ctrl-group-title">Text</div>
-				<div class="ctrl-row"><input type="text" id="ctrlText" value="The quick brown fox"></div>
+				<div class="ctrl-row">
+					<textarea id="ctrlText" rows="2">The quick brown fox</textarea>
+				</div>
 				<div class="ctrl-row">
 					<label for="ctrlFontSize">Size</label>
 					<input type="range" id="ctrlFontSize" value="120" min="4" max="400" step="1">
@@ -99,18 +186,39 @@
 					<label for="ctrlFillColor">Fill</label>
 					<input type="color" id="ctrlFillColor" value="#ffffff">
 				</div>
+				<div class="ctrl-row">
+					<input type="checkbox" id="ctrlWordWrap">
+					<label for="ctrlWordWrap">Word Wrap</label>
+					<input type="checkbox" id="ctrlBreakWords">
+					<label for="ctrlBreakWords">Break</label>
+				</div>
+				<div class="ctrl-row">
+					<label for="ctrlWrapWidth">Width</label>
+					<input type="range" id="ctrlWrapWidth" value="400" min="50" max="2000" step="10">
+					<input type="number" id="ctrlWrapWidthVal" class="slider-val" value="400">
+				</div>
 			</div>
+
 			<div class="ctrl-group">
-				<div class="ctrl-group-title"><input type="checkbox" id="ctrlStroke"><label for="ctrlStroke">Stroke</label></div>
+				<div class="ctrl-group-title">
+					<input type="checkbox" id="ctrlStroke">
+					<label for="ctrlStroke">Stroke</label>
+				</div>
 				<div class="ctrl-row">
 					<label for="ctrlStrokeWidth">Width</label>
 					<input type="range" id="ctrlStrokeWidth" value="2" min="0" max="20" step="1">
 					<input type="number" id="ctrlStrokeWidthVal" class="slider-val" value="2">
 				</div>
-				<div class="ctrl-row"><label for="ctrlStrokeColor">Color</label><input type="color" id="ctrlStrokeColor" value="#000000"></div>
+				<div class="ctrl-row">
+					<label for="ctrlStrokeColor">Color</label>
+					<input type="color" id="ctrlStrokeColor" value="#000000">
+				</div>
 				<div class="ctrl-row">
 					<label for="ctrlStrokeAlphaMode">Alpha</label>
-					<select id="ctrlStrokeAlphaMode"><option value="uniform" selected>Uniform</option><option value="gradient">Gradient</option></select>
+					<select id="ctrlStrokeAlphaMode">
+						<option value="uniform" selected>Uniform</option>
+						<option value="gradient">Gradient</option>
+					</select>
 				</div>
 				<div class="ctrl-row">
 					<label for="ctrlStrokeAlphaStart">Start</label>
@@ -123,8 +231,12 @@
 					<input type="number" id="ctrlStrokeAlphaRateVal" class="slider-val" value="0" step="0.01">
 				</div>
 			</div>
+
 			<div class="ctrl-group">
-				<div class="ctrl-group-title"><input type="checkbox" id="ctrlShadow"><label for="ctrlShadow">Shadow</label></div>
+				<div class="ctrl-group-title">
+					<input type="checkbox" id="ctrlShadow">
+					<label for="ctrlShadow">Shadow</label>
+				</div>
 				<div class="ctrl-row">
 					<label for="ctrlShadowDist">Dist</label>
 					<input type="range" id="ctrlShadowDist" value="5" min="0" max="30" step="1">
@@ -145,13 +257,20 @@
 					<input type="range" id="ctrlShadowBlur" min="0" max="20" step="1" value="0">
 					<input type="number" id="ctrlShadowBlurVal" class="slider-val" value="0">
 				</div>
-				<div class="ctrl-row"><label for="ctrlShadowColor">Color</label><input type="color" id="ctrlShadowColor" value="#000000"></div>
+				<div class="ctrl-row">
+					<label for="ctrlShadowColor">Color</label>
+					<input type="color" id="ctrlShadowColor" value="#000000">
+				</div>
 			</div>
 		</div>
+
 		<div id="app"></div>
 	</div>
 
+	<!-- PixiJS v7 via CDN -->
 	<script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+
+	<!-- pixi-slug v7 bundle (build with: pnpm run build:v7) -->
 	<script src="../dist/v7/index.js"></script>
 
 	<script>
@@ -160,95 +279,190 @@
 			var app = new PIXI.Application({
 				resizeTo: appContainer,
 				backgroundColor: 0x16213e,
-				preferWebGLVersion: 2
+				preferWebGLVersion: 2,
+				antialias: true,
+				resolution: 1
 			});
+			window.__PIXI_APP__ = app;
+
 			appContainer.appendChild(app.view);
 
-			var fontResponse = await fetch('font.ttf');
-			if (!fontResponse.ok) {
-				var info = new PIXI.Text('Place a font.ttf file in examples/v7/ to see Slug rendering.', { fill: '#ffffff', fontSize: 18 });
-				info.x = 40; info.y = 180;
-				app.stage.addChild(info);
-				return;
+			var FONTS = {
+				'Roboto TTF (default)':  'font.ttf',
+				'Roboto TTF (fallback)': '/assets/fonts/roboto-fallback.ttf',
+				'Roboto OTF (CFF)':      '/assets/fonts/roboto-fallback.otf',
+				'Roboto WOFF':           '/assets/fonts/roboto-fallback.woff',
+				'Roboto WOFF2':          '/assets/fonts/roboto-fallback.woff2'
+			};
+
+			var fontSelect = document.getElementById('ctrlFont');
+			Object.keys(FONTS).forEach(function (label) {
+				var opt = document.createElement('option');
+				opt.value = FONTS[label];
+				opt.textContent = label;
+				fontSelect.appendChild(opt);
+			});
+
+			var fontStatus = document.getElementById('ctrlFontStatus');
+			var slugText = null;
+
+			async function loadFont(url) {
+				fontStatus.style.color = '#8b949e';
+				fontStatus.textContent = 'Loading ' + url + '...';
+				try {
+					if (slugText) {
+						app.stage.removeChild(slugText);
+						slugText.destroy();
+						slugText = null;
+					}
+					slugText = new pixiSlug.SlugText({
+						text: document.getElementById('ctrlText').value,
+						font: url,
+						fallbackWhileLoading: false,
+						options: {
+							fontSize: parseInt(document.getElementById('ctrlFontSize').value, 10) || 48,
+							fill: hexToRGBA(document.getElementById('ctrlFillColor').value)
+						},
+						errorPolicy: {unknownInput: 'throw', loadFailed: 'throw', unsupportedFormat: 'throw'}
+					});
+					slugText.position.set(10, 10);
+					app.stage.addChild(slugText);
+
+					applyStroke();
+					applyShadow();
+					applyWordWrap();
+
+					fontStatus.style.color = '#4ab07a';
+					fontStatus.textContent = 'Loaded ' + url;
+				} catch (e) {
+					fontStatus.style.color = '#ff6b6b';
+					fontStatus.textContent = 'Failed: ' + e.message;
+					console.error('Font load failed for ' + url, e);
+				}
 			}
 
-			var fontData = await fontResponse.arrayBuffer();
-			var font = new pixiSlug.SlugFont(4096);
-			await font.load(fontData);
+			fontSelect.onchange = function () { loadFont(this.value); };
+			await loadFont(fontSelect.value);
 
-			var slugText = new pixiSlug.SlugText({
-				text: document.getElementById('ctrlText').value,
-				slugFont: font,
-				options: {
-					fontSize: parseInt(document.getElementById('ctrlFontSize').value, 10) || 120,
-					fill: hexToRGBA(document.getElementById('ctrlFillColor').value)
-				}
-			});
-			slugText.position.set(10, 10);
-			app.stage.addChild(slugText);
-
+			// --- Helpers ---
 			function hexToRGBA(hex) {
 				var r = parseInt(hex.slice(1, 3), 16) / 255;
 				var g = parseInt(hex.slice(3, 5), 16) / 255;
 				var b = parseInt(hex.slice(5, 7), 16) / 255;
 				return [r, g, b, 1];
 			}
+
 			function applyStroke() {
 				var enabled = document.getElementById('ctrlStroke').checked;
-				if (!enabled) { slugText.strokeWidth = 0; return; }
+				if (!enabled) {
+					slugText.strokeWidth = 0;
+					return;
+				}
+				var w = parseFloat(document.getElementById('ctrlStrokeWidth').value) || 0;
+				var c = hexToRGBA(document.getElementById('ctrlStrokeColor').value);
+				var mode = document.getElementById('ctrlStrokeAlphaMode').value;
+				var alphaStart = parseFloat(document.getElementById('ctrlStrokeAlphaStart').value);
+				var alphaRate = parseFloat(document.getElementById('ctrlStrokeAlphaRate').value);
 				slugText.stroke = {
-					width: parseFloat(document.getElementById('ctrlStrokeWidth').value) || 0,
-					color: hexToRGBA(document.getElementById('ctrlStrokeColor').value),
-					alphaMode: document.getElementById('ctrlStrokeAlphaMode').value,
-					alphaStart: parseFloat(document.getElementById('ctrlStrokeAlphaStart').value),
-					alphaRate: parseFloat(document.getElementById('ctrlStrokeAlphaRate').value)
+					width: w,
+					color: c,
+					alphaMode: mode,
+					alphaStart: alphaStart,
+					alphaRate: alphaRate
 				};
 			}
+
 			function applyShadow() {
 				var enabled = document.getElementById('ctrlShadow').checked;
-				if (!enabled) { slugText.dropShadow = null; return; }
+				if (!enabled) {
+					slugText.dropShadow = null;
+					return;
+				}
+				var dist = parseFloat(document.getElementById('ctrlShadowDist').value) || 5;
+				var angleDeg = parseFloat(document.getElementById('ctrlShadowAngle').value) || 30;
+				var alpha = parseFloat(document.getElementById('ctrlShadowAlpha').value);
+				var blur = parseFloat(document.getElementById('ctrlShadowBlur').value) || 0;
+				var c = hexToRGBA(document.getElementById('ctrlShadowColor').value);
 				slugText.dropShadow = {
-					distance: parseFloat(document.getElementById('ctrlShadowDist').value) || 5,
-					angle: (parseFloat(document.getElementById('ctrlShadowAngle').value) || 30) * Math.PI / 180,
-					color: hexToRGBA(document.getElementById('ctrlShadowColor').value),
-					alpha: parseFloat(document.getElementById('ctrlShadowAlpha').value),
-					blur: parseFloat(document.getElementById('ctrlShadowBlur').value) || 0
+					distance: dist,
+					angle: angleDeg * Math.PI / 180,
+					color: c,
+					alpha: alpha,
+					blur: blur
 				};
 			}
+
+			// --- Slider ↔ text input sync with clamping ---
 			function linkSlider(sliderId, inputId, onChange) {
 				var slider = document.getElementById(sliderId);
 				var input = document.getElementById(inputId);
-				var min = parseFloat(slider.min), max = parseFloat(slider.max), step = parseFloat(slider.step) || 1;
-				function sync(src) {
-					var v = parseFloat(src.value);
+				var min = parseFloat(slider.min);
+				var max = parseFloat(slider.max);
+				var step = parseFloat(slider.step) || 1;
+
+				function clampAndSync(source, target) {
+					var v = parseFloat(source.value);
 					if (isNaN(v)) return;
 					v = Math.min(Math.max(v, min), max);
-					v = parseFloat((Math.round(v / step) * step).toFixed(10));
-					slider.value = v; input.value = v;
+					v = Math.round(v / step) * step;
+					v = parseFloat(v.toFixed(10));
+					slider.value = v;
+					input.value = v;
 					if (onChange) onChange(v);
 				}
-				slider.oninput = function () { sync(slider); };
-				input.onchange = function () { sync(input); };
+
+				slider.oninput = function () { clampAndSync(slider, input); };
+				input.onchange = function () { clampAndSync(input, slider); };
 			}
 
-			document.getElementById('ctrlText').oninput = function () { slugText.text = this.value; };
-			linkSlider('ctrlFontSize', 'ctrlFontSizeVal', function (v) { slugText.fontSize = v; });
-			var _t = null;
-			function debStroke() { clearTimeout(_t); _t = setTimeout(applyStroke, 30); }
-			function debShadow() { clearTimeout(_t); _t = setTimeout(applyShadow, 30); }
-			document.getElementById('ctrlFillColor').oninput = function () { slugText.color = hexToRGBA(this.value); };
+			// --- Wire up controls ---
+			document.getElementById('ctrlText').oninput = function () {
+				slugText.text = this.value;
+			};
+
+			linkSlider('ctrlFontSize', 'ctrlFontSizeVal', function (v) {
+				slugText.fontSize = v;
+			});
+
+			// Debounce rapid rebuilds from color pickers
+			var _rebuildTimer = null;
+			function debouncedApplyStroke() {
+				clearTimeout(_rebuildTimer);
+				_rebuildTimer = setTimeout(applyStroke, 30);
+			}
+			function debouncedApplyShadow() {
+				clearTimeout(_rebuildTimer);
+				_rebuildTimer = setTimeout(applyShadow, 30);
+			}
+
+			document.getElementById('ctrlFillColor').oninput = function () {
+				slugText.color = hexToRGBA(document.getElementById('ctrlFillColor').value);
+			};
+
+			function applyWordWrap() {
+				slugText.wordWrap = document.getElementById('ctrlWordWrap').checked;
+				slugText.wordWrapWidth = parseFloat(document.getElementById('ctrlWrapWidth').value) || 400;
+				slugText.breakWords = document.getElementById('ctrlBreakWords').checked;
+			}
+			document.getElementById('ctrlWordWrap').onchange = applyWordWrap;
+			document.getElementById('ctrlBreakWords').onchange = applyWordWrap;
+			linkSlider('ctrlWrapWidth', 'ctrlWrapWidthVal', applyWordWrap);
+
 			document.getElementById('ctrlStroke').onchange = applyStroke;
 			linkSlider('ctrlStrokeWidth', 'ctrlStrokeWidthVal', applyStroke);
-			document.getElementById('ctrlStrokeColor').oninput = debStroke;
+			document.getElementById('ctrlStrokeColor').oninput = debouncedApplyStroke;
 			document.getElementById('ctrlStrokeAlphaMode').onchange = applyStroke;
 			linkSlider('ctrlStrokeAlphaStart', 'ctrlStrokeAlphaStartVal', applyStroke);
 			linkSlider('ctrlStrokeAlphaRate', 'ctrlStrokeAlphaRateVal', applyStroke);
+
 			document.getElementById('ctrlShadow').onchange = applyShadow;
 			linkSlider('ctrlShadowDist', 'ctrlShadowDistVal', applyShadow);
-			linkSlider('ctrlShadowAngle', 'ctrlShadowAngleVal', debShadow);
+			linkSlider('ctrlShadowAngle', 'ctrlShadowAngleVal', function () {
+				debouncedApplyShadow();
+			});
 			linkSlider('ctrlShadowAlpha', 'ctrlShadowAlphaVal', applyShadow);
 			linkSlider('ctrlShadowBlur', 'ctrlShadowBlurVal', applyShadow);
-			document.getElementById('ctrlShadowColor').oninput = debShadow;
+			document.getElementById('ctrlShadowColor').oninput = debouncedApplyShadow;
 		})();
 	</script>
 </body>
