@@ -34,7 +34,12 @@
       "Bash(xargs grep *)",
       "Bash(npm view *)",
       "Bash(node -e \"console.log\\(typeof atob, typeof FontFace, typeof fetch\\)\")",
-      "Bash(npm pack *)"
+      "Bash(npm pack *)",
+      "Bash(/c/Python313/python.exe --version)",
+      "Bash(/c/Python313/python.exe -m pip show fonttools brotli)",
+      "Bash(python3 -c \"import fontTools, brotli, zopfli; print\\('fontTools', fontTools.__version__\\); print\\('brotli OK'\\); print\\('zopfli OK'\\)\")",
+      "Bash(pnpm view *)",
+      "Bash(python3)"
     ]
   }
 }

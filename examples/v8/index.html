@@ -163,6 +163,16 @@
 	<div id="main">
 		<div id="sidebar">
 			<div class="ctrl-group">
+				<div class="ctrl-group-title">Font</div>
+				<div class="ctrl-row">
+					<select id="ctrlFont" style="width: 100%;"></select>
+				</div>
+				<div class="ctrl-row">
+					<span id="ctrlFontStatus" style="font-size: 12px; color: #8b949e;"></span>
+				</div>
+			</div>
+
+			<div class="ctrl-group">
 				<div class="ctrl-group-title">Text</div>
 				<div class="ctrl-row">
 					<textarea id="ctrlText" rows="2">The quick brown fox</textarea>
@@ -296,34 +306,64 @@
 				return;
 			}
 
-			var fontResponse = await fetch('font.ttf');
-			if (!fontResponse.ok) {
-				var info = new PIXI.Text({
-					text: 'Place a font.ttf file in examples/v8/ to see Slug rendering.',
-					style: { fill: '#ffffff', fontSize: 18 }
-				});
-				info.anchor = { x: 0.5, y: 0.5 };
-				info.x = Math.floor(app.screen.width / 2);
-				info.y = Math.floor(app.screen.height / 2);
-				app.stage.addChild(info);
-				return;
+			var FONTS = {
+				'Roboto TTF (default)':  'font.ttf',
+				'Roboto TTF (fallback)': '/assets/fonts/roboto-fallback.ttf',
+				'Roboto OTF (CFF)':      '/assets/fonts/roboto-fallback.otf',
+				'Roboto WOFF':           '/assets/fonts/roboto-fallback.woff',
+				'Roboto WOFF2':          '/assets/fonts/roboto-fallback.woff2'
+			};
+
+			var fontSelect = document.getElementById('ctrlFont');
+			Object.keys(FONTS).forEach(function (label) {
+				var opt = document.createElement('option');
+				opt.value = FONTS[label];
+				opt.textContent = label;
+				fontSelect.appendChild(opt);
+			});
+
+			var fontStatus = document.getElementById('ctrlFontStatus');
+			var slugText = null;
+
+			async function loadFont(url) {
+				fontStatus.style.color = '#8b949e';
+				fontStatus.textContent = 'Loading ' + url + '...';
+				try {
+					if (slugText) {
+						app.stage.removeChild(slugText);
+						slugText.destroy();
+						slugText = null;
+					}
+					slugText = new pixiSlug.SlugText({
+						text: document.getElementById('ctrlText').value,
+						font: url,
+						fallbackWhileLoading: false,
+						options: {
+							fontSize: parseInt(document.getElementById('ctrlFontSize').value, 10) || 48,
+							fill: hexToRGBA(document.getElementById('ctrlFillColor').value)
+						},
+						errorPolicy: {unknownInput: 'throw', loadFailed: 'throw', unsupportedFormat: 'throw'}
+					});
+					slugText.position.set(10, 10);
+					app.stage.addChild(slugText);
+
+					applyStroke();
+					applyShadow();
+					applyWordWrap();
+					slugText.underline = document.getElementById('ctrlUnderline').checked;
+					slugText.strikethrough = document.getElementById('ctrlStrikethrough').checked;
+
+					fontStatus.style.color = '#4ab07a';
+					fontStatus.textContent = 'Loaded ' + url;
+				} catch (e) {
+					fontStatus.style.color = '#ff6b6b';
+					fontStatus.textContent = 'Failed: ' + e.message;
+					console.error('Font load failed for ' + url, e);
+				}
 			}
 
-			var fontData = await fontResponse.arrayBuffer();
-			var font = new pixiSlug.SlugFont(4096);
-			await font.load(fontData);
-
-			// --- Create text ---
-			var slugText = new pixiSlug.SlugText({
-				text: document.getElementById('ctrlText').value,
-				slugFont: font,
-				options: {
-					fontSize: parseInt(document.getElementById('ctrlFontSize').value, 10) || 48,
-					fill: hexToRGBA(document.getElementById('ctrlFillColor').value)
-				}
-			});
-			slugText.position.set(10, 10);
-			app.stage.addChild(slugText);
+			fontSelect.onchange = function () { loadFont(this.value); };
+			await loadFont(fontSelect.value);
 
 			// --- Helpers ---
 			function hexToRGBA(hex) {

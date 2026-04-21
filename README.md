@@ -6,6 +6,15 @@
 
 # [`pixi-slug`](https://www.npmjs.com/package/pixi-slug)
 
+Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D transform.
+
+* No atlases or SDFs. Just Béziers on the GPU.
+* Perspective-correct antialiasing via dynamic dilation.
+* Supports TrueType (`.ttf`), OpenType (`.otf`), and WOFF/WOFF2 fonts — including cubic-outline (CFF) fonts.
+* Word wrap, newlines, underline, and strikethrough.
+* Works on PixiJS `v8`, `v7`, and `v6`.
+
+
 &nbsp;
 ## FAQ
 **Q: What does `pixi-slug` do?**
@@ -13,26 +22,33 @@
 A: It harnesses the power of bézier curves and their fancy maths to draw super crisp text using the GPU via shaders. 
 
 
-
-**Q: Why is it called `pixi-slug`?**
-
-A: `pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
-
-
 **Q: Is `pixi-slug` better than PIXI.Text?**
 
-A: `pixi-slug` is significantly more performant than `PIXI.Text` in several specific situations, but *better* depends on use case. Scenes with a small number of static `Text` objects probably won't see improvement. 
+A: `pixi-slug` outperforms `PIXI.Text` in several specific situations, but *better* is use case dependent. Scenes with a small number of static `Text` objects won't see improvement. 
 
 `SlugText` produces clear, crisp text for any resolution and can be resized with no performance hit.  See the performance section for a full comparison.
+
+
+**Q: Does pixi-slug support CFF (cubic Bézier) fonts?**
+
+A: Yes — cubic outlines are approximated as two quadratics per cubic segment, since the Slug algorithm operates on quadratic Béziers. Quality is indistinguishable at typical sizes; extreme zooms on cubic-heavy fonts may reveal the approximation."
 
 
 **Q: Can I use both `pixi-slug` and `PIXI.Text` together?**
 
 Yes they can be used together. `pixi-slug` doesn't replace or change `PIXI.Text`. You can use both together or just one. It's up to you. 
 
+**Q: Why is it called `pixi-slug`?**
+
+A: `pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
+
+
+
 ## Performance: `SlugText` vs `PIXI.Text`
 
 `PIXI.Text` is generally costly to create or modify, but efficient to render.
+
+
 
 
 &nbsp;
@@ -184,6 +200,35 @@ const caption = new SlugText({
 
 **Alias collision:** if `alias` is already registered to a different URL, the new binding is ignored — `console.error` is logged and the `SlugText` falls back. Call `SlugFonts.unregister('roboto')` before rebinding to a different URL.
 
+### Preload pattern — register once, reference everywhere by alias
+
+For apps that want fonts ready before any `SlugText` renders — e.g. a splash/loading screen or predictable typography across every view — call `SlugFonts` directly at startup. Every later `SlugText` can use the bare alias and resolves synchronously, with no fallback flash while a URL fetches.
+
+```typescript
+const {SlugFonts, SlugText} = require('pixi-slug'); // or '/v7' / '/v6'
+
+// Preload at app startup — typically inside an async bootstrap function.
+async function preloadFonts() {
+    const roboto = await SlugFonts.fromUrl('https://cdn.example.com/roboto.ttf');
+    const inter  = await SlugFonts.fromUrl('https://cdn.example.com/inter.ttf');
+
+    SlugFonts.register('roboto', roboto);
+    SlugFonts.register('inter',  inter);
+}
+
+await preloadFonts();
+
+// Every SlugText created afterwards hits the registry synchronously.
+// No URL fetch, no fallback font flash.
+const title    = new SlugText({text: 'Dashboard', font: 'roboto', options: {fontSize: 64}});
+const subtitle = new SlugText({text: 'Welcome back',           font: 'inter'});
+const footer   = new SlugText({text: '© 2026 Acme Corp',       font: 'roboto'});
+```
+
+**Why this pattern?** The inline tuple/object forms (`['roboto', 'https://…']`) work fine, but the first `SlugText` that references a new URL fetches asynchronously — it renders with the fallback font until the real font loads, then swaps. Preloading sidesteps the flash entirely and keeps construction sites terse (`font: 'roboto'`).
+
+If an alias is referenced before it's registered, the `SlugText` falls back to the bundled font and a `console.error` surfaces — so this pattern also acts as a startup sanity check.
+
 ## Loading fonts through PIXI's asset loader
 
 `PIXI.Assets.load()` (v7/v8) returns a browser `FontFace`, which `SlugText` accepts directly. For more efficient loading — skip the intermediate `FontFace` and receive raw bytes — call the version-specific installer once at app startup:
@@ -217,6 +262,55 @@ const bytes = await slugFontsFetchV6('roboto.ttf');
 const text = new SlugText({text: 'Hi', font: bytes});
 ```
 
+## Integrating with `PIXI.Application`
+
+The `SlugFonts` registry needs a ticker to run its auto-destroy sweep. Two ways to wire it up — pick whichever fits your app.
+
+### Quick path — shared ticker
+
+One call. Uses `Ticker.shared` in the background. Works even if you don't use `PIXI.Application` at all.
+
+```typescript
+const {slugFontsAttachTickerV8} = require('pixi-slug');
+slugFontsAttachTickerV8();
+```
+
+Per-version exports: `slugFontsAttachTickerV6`, `slugFontsAttachTickerV7`, `slugFontsAttachTickerV8`.
+
+### Plugin path — app lifecycle
+
+Register a plugin so the registry follows one specific `Application`'s ticker and tears down cleanly on `app.destroy()`.
+
+```typescript
+// v8
+const {Application, extensions} = require('pixi.js');
+const {SlugApplicationPluginV8} = require('pixi-slug');
+
+extensions.add(SlugApplicationPluginV8);
+const app = new Application();
+await app.init({width: 800, height: 600});
+// ... later
+app.destroy(); // ticker detaches, unused fonts freed immediately
+```
+
+v7 is identical with imports from `@pixi/core` and `pixi-slug/v7`:
+
+```typescript
+const {extensions} = require('@pixi/core');
+const {SlugApplicationPluginV7} = require('pixi-slug/v7');
+extensions.add(SlugApplicationPluginV7);
+```
+
+v6 uses the older registration surface:
+
+```typescript
+const {Application} = require('@pixi/app');
+const {SlugApplicationPluginV6} = require('pixi-slug/v6');
+Application.registerPlugin(SlugApplicationPluginV6);
+```
+
+**Conflict behavior:** both paths call `SlugFonts.attachTicker` under the hood. If one is already active and another tries to attach, `SlugFonts.reattachPolicy` decides what happens — `'throw'` by default, or `'error'` / `'warn'` / `'silent'`. Change it with `SlugFonts.setReattachPolicy('warn')` (validated — invalid modes are rejected and logged). Pass `{force: true}` as the second arg to `attachTicker` to replace silently. Full details in [_features/application_plugin.md](_features/application_plugin.md).
+
 # Slug Reference Code
 
 [Eric Lengyel](https://github.com/EricLengyel) created and patented the Slug algorithm. He published [reference code on Github](https://github.com/EricLengyel/Slug/tree/main).
@@ -232,6 +326,8 @@ Eric Lengyel created the patented slug algorithm in 2016. He graciously released
 ## License
 
 [MIT](LICENSE) &copy; Toreda, Inc.
+
+Bundled third-party components (currently the Roboto fallback font, Apache-2.0) are attributed in [NOTICES](NOTICES).
 
 ## Website
 

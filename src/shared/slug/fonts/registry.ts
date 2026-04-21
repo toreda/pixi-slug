@@ -1,8 +1,13 @@
 import {booleanValue, numberValue, swapPop} from '@toreda/strong-types';
 import {Defaults} from '../../../defaults';
 import {SlugFont} from '../font';
+import {isSlugFontErrorMode, type SlugFontErrorMode} from './error';
 import {SlugFontsRegistryEntry} from './registry/entry';
 import {type SlugFontsRegistryOptions} from './registry/options';
+
+function resolveErrorMode(raw: unknown, fallback: SlugFontErrorMode): SlugFontErrorMode {
+	return isSlugFontErrorMode(raw) ? raw : fallback;
+}
 
 
 /** Per-entry diagnostic snapshot returned by `SlugFontsRegistry.stats()`. */
@@ -45,8 +50,21 @@ export class SlugFontsRegistry {
 	/** `performance.now()` timestamp of the last sweep, 0 if never run. */
 	public lastUpdate: number;
 
+	/**
+	 * How `attachTicker` reacts to a second attach while already bound,
+	 * when the caller did not pass `force: true`. Mutable so callers
+	 * can change behavior at runtime via `SlugFonts.reattachPolicy`.
+	 */
+	public reattachPolicy: SlugFontErrorMode;
+
 	/** Detach handle set by `attachTicker`; null when no ticker is bound. */
 	public tickerDetach: (() => void) | null;
+	/**
+	 * The `subscribe` function passed to the last successful
+	 * `attachTicker`. Used to short-circuit idempotent re-attaches (same
+	 * source passed twice returns silently).
+	 */
+	public tickerSubscribe: ((cb: (deltaMs: number) => void) => () => void) | null;
 
 	constructor(options?: Partial<SlugFontsRegistryOptions>) {
 		this.byUrl = new Map<string, SlugFontsRegistryEntry>();
@@ -63,8 +81,10 @@ export class SlugFontsRegistry {
 		this.autoAttachTicker = booleanValue(options?.autoAttachTicker, Defaults.Registry.AutoAttachTicker);
 		this.updateRate = Math.max(0, numberValue(options?.updateRate, Defaults.Registry.UpdateRate));
 		this.lastUpdate = 0;
+		this.reattachPolicy = resolveErrorMode(options?.reattachPolicy, Defaults.Registry.ReattachPolicy);
 
 		this.tickerDetach = null;
+		this.tickerSubscribe = null;
 	}
 
 	/**
@@ -174,6 +194,30 @@ export class SlugFontsRegistry {
 		for (let i = this.marked.length - 1; i >= 0; i--) {
 			const e = this.marked[i];
 			if (e.markedForDestroy && e.refs === 0 && nowMs - e.markedAt >= this.autoDestroyDelayMs) {
+				this._destroyEntry(e);
+			}
+		}
+	}
+
+	/**
+	 * Force-destroy every marked-unused font right now, ignoring the
+	 * grace-period timer. Fonts with live refs (`refs > 0`) are left
+	 * alone — the caller cannot yank a font another SlugText is still
+	 * using.
+	 *
+	 * Intended for end-of-lifecycle teardown (e.g. the
+	 * `SlugApplicationPlugin.destroy` hook) where waiting out the
+	 * `autoDestroyDelay` is pointless because the app is going away.
+	 * Convention matches game-engine `destroyImmediate`-style APIs.
+	 */
+	public sweepImmediate(): void {
+		if (this.marked.length === 0) {
+			return;
+		}
+
+		for (let i = this.marked.length - 1; i >= 0; i--) {
+			const e = this.marked[i];
+			if (e.markedForDestroy && e.refs === 0) {
 				this._destroyEntry(e);
 			}
 		}

@@ -10,7 +10,7 @@ const config: Config = {
 		'^.+\\.m?js$': '@swc/jest'
 	},
 	transformIgnorePatterns: [
-		'/node_modules/(?!@shaderfrog/glsl-parser)'
+		'/node_modules/(?!(@shaderfrog/glsl-parser|woff2-encoder))'
 	],
 	coverageDirectory: 'coverage',
 	coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/tests/'],

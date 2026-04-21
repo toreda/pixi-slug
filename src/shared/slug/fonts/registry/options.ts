@@ -23,4 +23,10 @@ export interface SlugFontsRegistryOptions {
 	 * map iteration stays off the hot path.
 	 */
 	updateRate: number;
+	/**
+	 * How `SlugFonts.attachTicker()` reacts when a ticker is already
+	 * attached and the caller did not pass `force: true`. Pass `force`
+	 * to replace silently without firing this policy.
+	 */
+	reattachPolicy: 'throw' | 'error' | 'warn' | 'silent';
 }

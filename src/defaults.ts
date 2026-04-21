@@ -29,7 +29,16 @@ export class Defaults {
 		/** Version entry points auto-attach `Ticker.shared` when true. */
 		AutoAttachTicker: true as const,
 		/** Minimum milliseconds between sweep runs driven by `onUpdate`. */
-		UpdateRate: 1000 as const
+		UpdateRate: 1000 as const,
+		/**
+		 * How `SlugFonts.attachTicker()` reacts when a ticker is already
+		 * attached and the caller did not pass `force: true`. See
+		 * `SlugFontErrorMode` for mode semantics.
+		 *
+		 * Use `force: true` on the second attach to replace silently
+		 * without triggering this policy.
+		 */
+		ReattachPolicy: 'throw' as 'throw' | 'error' | 'warn' | 'silent'
 	} as const;
 
 	public static readonly SlugText = {

@@ -1,0 +1,23 @@
+pixi-slug bundles third-party components. This file collects their
+attribution and license notices. The pixi-slug code itself is covered
+by the MIT License in LICENSE; this file covers only the bundled
+content enumerated below.
+
+================================================================================
+Roboto (bundled fallback font)
+================================================================================
+
+This product bundles a subset of the Roboto font (src/shared/slug/fonts/
+fallback/roboto.ts, generated from assets/fonts/roboto-fallback.ttf) as a
+fallback font for SlugText when no font is otherwise available.
+
+Roboto is Copyright Google LLC and licensed under the Apache License,
+Version 2.0. You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.

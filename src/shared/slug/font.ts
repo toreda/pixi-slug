@@ -4,6 +4,7 @@ import type {SlugGlyphData} from './glyph/data';
 import {slugGlyphCurves} from './glyph/curves';
 import {slugGlyphBands} from './glyph/bands';
 import {slugTexturePack} from './texture/pack';
+import {slugWoff2Decompress} from './fonts/woff2';
 /**
  * Preprocesses font glyph outlines into GPU-ready curve and band textures
  * for the Slug rendering algorithm.
@@ -100,17 +101,43 @@ export class SlugFont {
 	}
 
 	public async load(fontData: ArrayBuffer): Promise<void> {
+		// WOFF2 files start with the signature "wOF2" (0x77 0x4F 0x46 0x32).
+		// opentype.js cannot decode brotli-compressed WOFF2, so decompress
+		// to a plain sfnt buffer first. The wasm decompressor is inlined
+		// base64 in the woff2-encoder package — bundled at build time, no
+		// runtime asset fetch needed.
+		const bytes = new Uint8Array(fontData);
+		if (bytes.length >= 4 && bytes[0] === 0x77 && bytes[1] === 0x4f && bytes[2] === 0x46 && bytes[3] === 0x32) {
+			const sfnt = await slugWoff2Decompress(bytes);
+			const copy = new Uint8Array(sfnt.byteLength);
+			copy.set(sfnt);
+			this.loadSync(copy.buffer);
+			return;
+		}
 		this.loadSync(fontData);
 	}
 
 	/**
-	 * Synchronous equivalent of {@link load}. `opentype.parse` and all
-	 * downstream glyph processing are CPU-bound, so there is no reason
-	 * to wrap them in a Promise — but {@link load} is kept async for
-	 * API compatibility with callers that `await` it.
+	 * Synchronous equivalent of {@link load}. Accepts TTF/OTF/WOFF bytes
+	 * only — WOFF2 requires async brotli decompression via
+	 * {@link load}. `opentype.parse` and all downstream glyph processing
+	 * are CPU-bound, so there is no reason to wrap them in a Promise —
+	 * but {@link load} is kept async for API compatibility with callers
+	 * that `await` it, and to support WOFF2 decompression.
 	 */
 	public loadSync(fontData: ArrayBuffer): void {
+		const bytes = new Uint8Array(fontData);
+		if (bytes.length >= 4 && bytes[0] === 0x77 && bytes[1] === 0x4f && bytes[2] === 0x46 && bytes[3] === 0x32) {
+			throw new Error('WOFF2 fonts cannot be parsed synchronously; call load() instead.');
+		}
 		const font = opentype.parse(fontData);
+		console.log('[SlugFont.loadSync] opentype.parse:', {
+			inputBytes: fontData.byteLength,
+			numGlyphs: font.glyphs?.length,
+			unitsPerEm: font.unitsPerEm,
+			hasCFF: !!(font as any).tables?.cff,
+			hasGlyf: !!(font as any).tables?.glyf
+		});
 		this.unitsPerEm = font.unitsPerEm;
 		this.ascender = font.ascender;
 		this.descender = font.descender;

@@ -7,3 +7,4 @@ export {slugFontGpuV7} from './slug/font/gpu';
 export type {SlugFontGpuV7} from './slug/font/gpu';
 export {slugFontsAttachTickerV7} from './slug/fonts/ticker';
 export {slugFontsInstallLoaderV7} from './slug/fonts/loader';
+export {SlugApplicationPluginV7} from './slug/plugin';

@@ -1,6 +1,17 @@
 /** How the font resolver should react when an input can't be resolved. */
 export type SlugFontErrorMode = 'throw' | 'error' | 'warn' | 'silent';
 
+/**
+ * Exhaustive list of valid `SlugFontErrorMode` literals. Use for strict
+ * equality checks when validating user input (settings, options).
+ */
+export const SLUG_FONT_ERROR_MODES: readonly SlugFontErrorMode[] = ['throw', 'error', 'warn', 'silent'];
+
+/** True when `value` is exactly one of the `SlugFontErrorMode` literals. */
+export function isSlugFontErrorMode(value: unknown): value is SlugFontErrorMode {
+	return typeof value === 'string' && (SLUG_FONT_ERROR_MODES as readonly string[]).includes(value);
+}
+
 /** Distinct failure cases in the font resolver. */
 export type SlugFontErrorCase =
 	| 'unknownInput'
@@ -11,6 +22,7 @@ export type SlugFontErrorCase =
 	| 'aliasNotFound'
 	| 'aliasCollision'
 	| 'emptyInput';
+
 
 /**
  * Per-case error policy. Users pass a partial override via

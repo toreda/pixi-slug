@@ -1,8 +1,19 @@
+import {booleanValue} from '@toreda/strong-types';
 import {Defaults} from '../../defaults';
 import {SlugFont} from './font';
+import {isSlugFontErrorMode, type SlugFontErrorMode} from './fonts/error';
 import {robotoFallbackBytes} from './fonts/fallback/roboto';
 import {SlugFontsRegistry, type SlugFontsRegistryStat} from './fonts/registry';
 import {SlugFontsRegistryEntry} from './fonts/registry/entry';
+
+/**
+ * Options accepted by `SlugFonts.attachTicker`. `force` bypasses the
+ * re-attach policy entirely when truthy — useful for apps that
+ * deliberately rebind the ticker (e.g. hot-reload, test teardown).
+ */
+export interface SlugFontsAttachTickerOptions {
+	force?: boolean | null;
+}
 
 /**
  * Central Slug Font Registry. Loads, caches, and hands out `SlugFont`
@@ -104,7 +115,8 @@ export class SlugFonts {
 				reg.byUrl.set(url, entry);
 				reg.addToAll(entry);
 				return font;
-			} catch {
+			} catch (e) {
+				console.error(`[SlugFonts.fromUrl] Failed to load "${url}":`, e);
 				return null;
 			} finally {
 				reg.inflight.delete(url);
@@ -249,15 +261,39 @@ export class SlugFonts {
 
 	/**
 	 * Bind the registry to a tick source. `subscribe` should register
-	 * the callback and return a detach function. Replaces any prior
-	 * attachment.
+	 * the callback and return a detach function.
+	 *
+	 * When called a second time while a ticker is already attached:
+	 *  - If the same `subscribe` function is passed, returns silently
+	 *    (idempotent — safe for hot-reload or benign double-init).
+	 *  - If `options.force` is true, the old attachment is detached and
+	 *    the new one takes its place silently.
+	 *  - Otherwise the `reattachPolicy` fires (`throw` by default).
 	 */
-	public static attachTicker(subscribe: (cb: (deltaMs: number) => void) => () => void): void {
+	public static attachTicker(
+		subscribe: (cb: (deltaMs: number) => void) => () => void,
+		options?: SlugFontsAttachTickerOptions
+	): void {
 		const reg = SlugFonts._reg();
+		const forceFlag = booleanValue(options?.force, false);
+
 		if (reg.tickerDetach) {
-			reg.tickerDetach();
-			reg.tickerDetach = null;
+			// Same subscribe reference → no-op, policy does not fire.
+			if (reg.tickerSubscribe === subscribe) {
+				return;
+			}
+
+			if (forceFlag) {
+				reg.tickerDetach();
+				reg.tickerDetach = null;
+				reg.tickerSubscribe = null;
+			} else {
+				SlugFonts._raiseReattachConflict(reg.reattachPolicy);
+				return;
+			}
 		}
+
+		reg.tickerSubscribe = subscribe;
 		reg.tickerDetach = subscribe((deltaMs) => SlugFonts.onUpdate(deltaMs));
 	}
 
@@ -268,6 +304,74 @@ export class SlugFonts {
 			reg.tickerDetach();
 			reg.tickerDetach = null;
 		}
+		reg.tickerSubscribe = null;
+	}
+
+	/** True when a ticker is currently attached. */
+	public static get tickerAttached(): boolean {
+		return SlugFonts._reg().tickerDetach !== null;
+	}
+
+	/**
+	 * Read the current re-attach policy. Mutate via
+	 * {@link setReattachPolicy} — the setter form validates the input,
+	 * direct property writes would bypass that check.
+	 */
+	public static get reattachPolicy(): SlugFontErrorMode {
+		return SlugFonts._reg().reattachPolicy;
+	}
+
+	/**
+	 * Update how `attachTicker` reacts on a re-attach attempt when the
+	 * caller did not pass `force: true`. Only accepts exact matches to
+	 * the {@link SlugFontErrorMode} literals (`'throw'`, `'error'`,
+	 * `'warn'`, `'silent'`). Returns `true` when the value was accepted
+	 * and applied, `false` when the input failed strict validation (in
+	 * which case the current policy stays unchanged and a
+	 * `console.error` surfaces).
+	 */
+	public static setReattachPolicy(mode: SlugFontErrorMode): boolean {
+		if (!isSlugFontErrorMode(mode)) {
+			console.error(`[SlugFonts:reattachPolicy] Invalid mode "${String(mode)}". Expected one of 'throw' | 'error' | 'warn' | 'silent'. Current policy unchanged.`);
+			return false;
+		}
+
+		SlugFonts._reg().reattachPolicy = mode;
+		return true;
+	}
+
+	/**
+	 * Force-destroy every currently marked-unused font, ignoring the
+	 * grace-period timer. Fonts still in use are left alone. Convention
+	 * matches game-engine `destroyImmediate`-style APIs — call at
+	 * end-of-lifecycle when waiting out the auto-destroy delay is
+	 * pointless.
+	 */
+	public static sweepImmediate(): void {
+		SlugFonts._reg().sweepImmediate();
+	}
+
+	/**
+	 * Internal: raise the configured re-attach conflict per policy.
+	 * Messages stay inline so the stack trace points at the caller.
+	 */
+	private static _raiseReattachConflict(mode: SlugFontErrorMode): void {
+		const message = '[SlugFonts:reattach] Ticker already attached. Pass {force: true} to replace, call detachTicker() first, or set SlugFonts.reattachPolicy to a non-throw mode.';
+		if (mode === 'throw') {
+			throw new Error(message);
+		}
+
+		if (mode === 'error') {
+			console.error(message);
+			return;
+		}
+
+		if (mode === 'warn') {
+			console.warn(message);
+			return;
+		}
+
+		// 'silent' → no output.
 	}
 
 	/** Per-entry diagnostics for inspection and tests. */
@@ -305,5 +409,6 @@ export class SlugFonts {
 			reg.tickerDetach();
 			reg.tickerDetach = null;
 		}
+		reg.tickerSubscribe = null;
 	}
 }
