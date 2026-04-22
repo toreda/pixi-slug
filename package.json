@@ -44,7 +44,7 @@
 		"build:fallback-font": "node scripts/build-fallback-font.mjs",
 		"build:types": "tsc -p tsconfig.v8.json --emitDeclarationOnly && tsc -p tsconfig.v7.json --emitDeclarationOnly && tsc -p tsconfig.v6.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
 		"test": "jest --coverage",
-		"test:ci": "jest --ci --coverage --forceExit --maxWorkers=50% --reporters=default --reporters=jest-junit",
+		"test:ci": "jest --ci --coverage --maxWorkers=50% --reporters=default --reporters=jest-junit",
 		"test:fast": "jest --bail --no-coverage",
 		"examples": "serve . -l 3000 --cors --no-clipboard",
 		"examples:watch": "webpack --watch --env version=all --env target=dev & serve . -l 3000 --cors --no-clipboard"
