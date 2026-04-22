@@ -21,15 +21,6 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
     devDependencies:
-      '@pixi/core':
-        specifier: ^7.4.3
-        version: 7.4.3
-      '@pixi/display':
-        specifier: ^7.4.3
-        version: 7.4.3(@pixi/core@7.4.3)
-      '@pixi/mesh':
-        specifier: ^7.4.3
-        version: 7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))
       '@shaderfrog/glsl-parser':
         specifier: ^7.0.1
         version: 7.0.1
@@ -69,6 +60,36 @@ importers:
       jest-junit:
         specifier: ^16.0.0
         version: 16.0.0
+      pixi-v6-constants:
+        specifier: npm:@pixi/constants@^6.5.10
+        version: '@pixi/constants@6.5.10'
+      pixi-v6-core:
+        specifier: npm:@pixi/core@^6.5.10
+        version: '@pixi/core@6.5.10(@pixi/constants@7.4.3)(@pixi/extensions@7.4.3)(@pixi/math@7.4.3)(@pixi/runner@7.4.3)(@pixi/settings@7.4.3)(@pixi/ticker@7.4.3)(@pixi/utils@7.4.3)'
+      pixi-v6-display:
+        specifier: npm:@pixi/display@^6.5.10
+        version: '@pixi/display@6.5.10(@pixi/constants@7.4.3)(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)'
+      pixi-v6-mesh:
+        specifier: npm:@pixi/mesh@^6.5.10
+        version: '@pixi/mesh@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)'
+      pixi-v6-ticker:
+        specifier: npm:@pixi/ticker@^6.5.10
+        version: '@pixi/ticker@6.5.10(@pixi/extensions@7.4.3)(@pixi/settings@7.4.3)'
+      pixi-v7-constants:
+        specifier: npm:@pixi/constants@^7.4.3
+        version: '@pixi/constants@7.4.3'
+      pixi-v7-core:
+        specifier: npm:@pixi/core@^7.4.3
+        version: '@pixi/core@7.4.3'
+      pixi-v7-display:
+        specifier: npm:@pixi/display@^7.4.3
+        version: '@pixi/display@7.4.3(@pixi/core@7.4.3)'
+      pixi-v7-mesh:
+        specifier: npm:@pixi/mesh@^7.4.3
+        version: '@pixi/mesh@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))'
+      pixi-v7-ticker:
+        specifier: npm:@pixi/ticker@^7.4.3
+        version: '@pixi/ticker@7.4.3'
       pixi.js:
         specifier: ^8.0.0
         version: 8.17.1
@@ -459,11 +480,33 @@ packages:
   '@pixi/colord@2.9.6':
     resolution: {integrity: sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA==}
 
+  '@pixi/constants@6.5.10':
+    resolution: {integrity: sha512-PUF2Y9YISRu5eVrVVHhHCWpc/KmxQTg3UH8rIUs8UI9dCK41/wsPd3pEahzf7H47v7x1HCohVZcFO3XQc1bUDw==}
+
   '@pixi/constants@7.4.3':
     resolution: {integrity: sha512-QGmwJUNQy/vVEHzL6VGQvnwawLZ1wceZMI8HwJAT4/I2uAzbBeFDdmCS8WsTpSWLZjF/DszDc1D8BFp4pVJ5UQ==}
 
+  '@pixi/core@6.5.10':
+    resolution: {integrity: sha512-Gdzp5ENypyglvsh5Gv3teUZnZnmizo4xOsL+QqmWALdFlJXJwLJMVhKVThV/q/095XR6i4Ou54oshn+m4EkuFw==}
+    peerDependencies:
+      '@pixi/constants': 6.5.10
+      '@pixi/extensions': 6.5.10
+      '@pixi/math': 6.5.10
+      '@pixi/runner': 6.5.10
+      '@pixi/settings': 6.5.10
+      '@pixi/ticker': 6.5.10
+      '@pixi/utils': 6.5.10
+
   '@pixi/core@7.4.3':
     resolution: {integrity: sha512-5YDs11faWgVVTL8VZtLU05/Fl47vaP5Tnsbf+y/WRR0VSW3KhRRGTBU1J3Gdc2xEWbJhUK07KGP7eSZpvtPVgA==}
+
+  '@pixi/display@6.5.10':
+    resolution: {integrity: sha512-NxFdDDxlbH5fQkzGHraLGoTMucW9pVgXqQm13TSmkA3NWIi/SItHL4qT2SI8nmclT9Vid1VDEBCJFAbdeuQw1Q==}
+    peerDependencies:
+      '@pixi/constants': 6.5.10
+      '@pixi/math': 6.5.10
+      '@pixi/settings': 6.5.10
+      '@pixi/utils': 6.5.10
 
   '@pixi/display@7.4.3':
     resolution: {integrity: sha512-b5m2dAaoNAVdxz1oDaxl3XZ059NEOcNtGkxTOZ4EYCw/jcp9sZXkgSROHRzsGn4k+NugH7+9MP4Id2Z0kkdUhw==}
@@ -476,6 +519,16 @@ packages:
   '@pixi/math@7.4.3':
     resolution: {integrity: sha512-/uJOVhR2DOZ+zgdI6Bs/CwcXT4bNRKsS+TqX3ekRIxPCwaLra+Qdm7aDxT5cTToDzdxbKL5+rwiLu3Y1egILDw==}
 
+  '@pixi/mesh@6.5.10':
+    resolution: {integrity: sha512-tUNPsdp5/t/yRsCmfxIcufIfbQVzgAlMNgQ1igWOkSxzhB7vlEbZ8ZLLW5tQcNyM/r7Nhjz+RoB+RD+/BCtvlA==}
+    peerDependencies:
+      '@pixi/constants': 6.5.10
+      '@pixi/core': 6.5.10
+      '@pixi/display': 6.5.10
+      '@pixi/math': 6.5.10
+      '@pixi/settings': 6.5.10
+      '@pixi/utils': 6.5.10
+
   '@pixi/mesh@7.4.3':
     resolution: {integrity: sha512-CikqFPtKvU3Zj986/MSoC8X39CWv5CEpiEW/tYp47p4tgQNDSkNWYnDiNYgb+4VX6pNsBrgX4DALLdTR17SlSA==}
     peerDependencies:
@@ -487,6 +540,12 @@ packages:
 
   '@pixi/settings@7.4.3':
     resolution: {integrity: sha512-SmGK8smc0PxRB9nr0UJioEtE9hl4gvj9OedCvZx3bxBwA3omA5BmP3CyhQfN8XJ29+o2OUL01r3zAPVol4l4lA==}
+
+  '@pixi/ticker@6.5.10':
+    resolution: {integrity: sha512-UqX1XYtzqFSirmTOy8QAK4Ccg4KkIZztrBdRPKwFSOEiKAJoGDCSBmyQBo/9aYQKGObbNnrJ7Hxv3/ucg3/1GA==}
+    peerDependencies:
+      '@pixi/extensions': 6.5.10
+      '@pixi/settings': 6.5.10
 
   '@pixi/ticker@7.4.3':
     resolution: {integrity: sha512-tHsAD0iOUb6QSGGw+c8cyRBvxsq/NlfzIFBZLEHhWZ+Bx4a0MmXup6I/yJDGmyPCYE+ctCcAfY13wKAzdiVFgQ==}
@@ -678,6 +737,9 @@ packages:
 
   '@types/node@25.5.0':
     resolution: {integrity: sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==}
+
+  '@types/offscreencanvas@2019.7.3':
+    resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
 
   '@types/opentype.js@1.3.9':
     resolution: {integrity: sha512-KOGywvDPncA4/tTWV5xKNhjpsoSSAHIx3mHOhL5l3XX+c6Xu2dQnHvGs7mRNQsQRte1EqmQ0cPQQ8Z14lkv+yw==}
@@ -3231,7 +3293,20 @@ snapshots:
 
   '@pixi/colord@2.9.6': {}
 
+  '@pixi/constants@6.5.10': {}
+
   '@pixi/constants@7.4.3': {}
+
+  '@pixi/core@6.5.10(@pixi/constants@7.4.3)(@pixi/extensions@7.4.3)(@pixi/math@7.4.3)(@pixi/runner@7.4.3)(@pixi/settings@7.4.3)(@pixi/ticker@7.4.3)(@pixi/utils@7.4.3)':
+    dependencies:
+      '@pixi/constants': 7.4.3
+      '@pixi/extensions': 7.4.3
+      '@pixi/math': 7.4.3
+      '@pixi/runner': 7.4.3
+      '@pixi/settings': 7.4.3
+      '@pixi/ticker': 7.4.3
+      '@pixi/utils': 7.4.3
+      '@types/offscreencanvas': 2019.7.3
 
   '@pixi/core@7.4.3':
     dependencies:
@@ -3244,6 +3319,13 @@ snapshots:
       '@pixi/ticker': 7.4.3
       '@pixi/utils': 7.4.3
 
+  '@pixi/display@6.5.10(@pixi/constants@7.4.3)(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)':
+    dependencies:
+      '@pixi/constants': 7.4.3
+      '@pixi/math': 7.4.3
+      '@pixi/settings': 7.4.3
+      '@pixi/utils': 7.4.3
+
   '@pixi/display@7.4.3(@pixi/core@7.4.3)':
     dependencies:
       '@pixi/core': 7.4.3
@@ -3251,6 +3333,15 @@ snapshots:
   '@pixi/extensions@7.4.3': {}
 
   '@pixi/math@7.4.3': {}
+
+  '@pixi/mesh@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)':
+    dependencies:
+      '@pixi/constants': 7.4.3
+      '@pixi/core': 7.4.3
+      '@pixi/display': 7.4.3(@pixi/core@7.4.3)
+      '@pixi/math': 7.4.3
+      '@pixi/settings': 7.4.3
+      '@pixi/utils': 7.4.3
 
   '@pixi/mesh@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))':
     dependencies:
@@ -3264,6 +3355,11 @@ snapshots:
       '@pixi/constants': 7.4.3
       '@types/css-font-loading-module': 0.0.12
       ismobilejs: 1.1.1
+
+  '@pixi/ticker@6.5.10(@pixi/extensions@7.4.3)(@pixi/settings@7.4.3)':
+    dependencies:
+      '@pixi/extensions': 7.4.3
+      '@pixi/settings': 7.4.3
 
   '@pixi/ticker@7.4.3':
     dependencies:
@@ -3446,6 +3542,8 @@ snapshots:
   '@types/node@25.5.0':
     dependencies:
       undici-types: 7.18.2
+
+  '@types/offscreencanvas@2019.7.3': {}
 
   '@types/opentype.js@1.3.9': {}
 

@@ -4,7 +4,14 @@
 		"outDir": "./dist/v6",
 		"rootDir": "./src",
 		"module": "esnext",
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"paths": {
+			"@pixi/constants": ["./node_modules/pixi-v6-constants"],
+			"@pixi/core": ["./node_modules/pixi-v6-core"],
+			"@pixi/display": ["./node_modules/pixi-v6-display"],
+			"@pixi/mesh": ["./node_modules/pixi-v6-mesh"],
+			"@pixi/ticker": ["./node_modules/pixi-v6-ticker"]
+		}
 	},
 	"include": ["src/shared", "src/v6", "src/defaults.ts", "src/glsl.d.ts"]
 }

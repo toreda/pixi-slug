@@ -1,4 +1,5 @@
-import {BaseTexture, FORMATS, Program, TYPES, Texture} from '@pixi/core';
+import {FORMATS, TYPES} from '@pixi/constants';
+import {BaseTexture, Program, Texture} from '@pixi/core';
 import type {SlugFont} from '../../../shared/slug/font';
 
 // v6 shares the v7 vertex shader (same uniform names: projectionMatrix, translationMatrix).

@@ -1,4 +1,5 @@
-import {BaseTexture, FORMATS, Program, TYPES, Texture} from '@pixi/core';
+import {FORMATS, TYPES} from '@pixi/constants';
+import {BaseTexture, Program, Texture} from '@pixi/core';
 import type {SlugFont} from '../../../shared/slug/font';
 
 import vertSource from '../../shader/slug/vert.glsl';

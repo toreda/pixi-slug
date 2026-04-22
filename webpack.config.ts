@@ -48,6 +48,11 @@ const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 		}
 	},
 	v7: {
+		'@pixi/constants': {
+			commonjs: '@pixi/constants',
+			commonjs2: '@pixi/constants',
+			root: 'PIXI'
+		},
 		'@pixi/core': {
 			commonjs: '@pixi/core',
 			commonjs2: '@pixi/core',
@@ -61,10 +66,20 @@ const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 		'@pixi/mesh': {
 			commonjs: '@pixi/mesh',
 			commonjs2: '@pixi/mesh',
+			root: 'PIXI'
+		},
+		'@pixi/ticker': {
+			commonjs: '@pixi/ticker',
+			commonjs2: '@pixi/ticker',
 			root: 'PIXI'
 		}
 	},
 	v6: {
+		'@pixi/constants': {
+			commonjs: '@pixi/constants',
+			commonjs2: '@pixi/constants',
+			root: 'PIXI'
+		},
 		'@pixi/core': {
 			commonjs: '@pixi/core',
 			commonjs2: '@pixi/core',
@@ -78,6 +93,11 @@ const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 		'@pixi/mesh': {
 			commonjs: '@pixi/mesh',
 			commonjs2: '@pixi/mesh',
+			root: 'PIXI'
+		},
+		'@pixi/ticker': {
+			commonjs: '@pixi/ticker',
+			commonjs2: '@pixi/ticker',
 			root: 'PIXI'
 		}
 	}

@@ -1,4 +1,5 @@
-import {Buffer, Geometry, TYPES} from '@pixi/core';
+import {TYPES} from '@pixi/constants';
+import {Buffer, Geometry} from '@pixi/core';
 import {Container} from '@pixi/display';
 import {Mesh} from '@pixi/mesh';
 import type {Shader} from '@pixi/core';
