@@ -9,6 +9,7 @@
 			"@pixi/constants": ["./node_modules/pixi-v6-constants"],
 			"@pixi/core": ["./node_modules/pixi-v6-core"],
 			"@pixi/display": ["./node_modules/pixi-v6-display"],
+			"@pixi/graphics": ["./node_modules/pixi-v6-graphics"],
 			"@pixi/mesh": ["./node_modules/pixi-v6-mesh"],
 			"@pixi/ticker": ["./node_modules/pixi-v6-ticker"]
 		}

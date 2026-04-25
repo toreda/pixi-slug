@@ -75,6 +75,9 @@ importers:
       pixi-v6-display:
         specifier: npm:@pixi/display@^6.5.10
         version: '@pixi/display@6.5.10(@pixi/constants@7.4.3)(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)'
+      pixi-v6-graphics:
+        specifier: npm:@pixi/graphics@^6.5.10
+        version: '@pixi/graphics@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/utils@7.4.3)'
       pixi-v6-mesh:
         specifier: npm:@pixi/mesh@^6.5.10
         version: '@pixi/mesh@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)'
@@ -90,6 +93,9 @@ importers:
       pixi-v7-display:
         specifier: npm:@pixi/display@^7.4.3
         version: '@pixi/display@7.4.3(@pixi/core@7.4.3)'
+      pixi-v7-graphics:
+        specifier: npm:@pixi/graphics@^7.4.3
+        version: '@pixi/graphics@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))'
       pixi-v7-mesh:
         specifier: npm:@pixi/mesh@^7.4.3
         version: '@pixi/mesh@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))'
@@ -524,6 +530,23 @@ packages:
 
   '@pixi/extensions@7.4.3':
     resolution: {integrity: sha512-FhoiYkHQEDYHUE7wXhqfsTRz6KxLXjuMbSiAwnLb9uG1vAgp6q6qd6HEsf4X30YaZbLFY8a4KY6hFZWjF+4Fdw==}
+
+  '@pixi/graphics@6.5.10':
+    resolution: {integrity: sha512-KPHGJ910fi8bRQQ+VcTIgrK+bKIm8yAQaZKPqMtm14HzHPGcES6HkgeNY1sd7m8J4aS9btm5wOSyFu0p5IzTpA==}
+    peerDependencies:
+      '@pixi/constants': 6.5.10
+      '@pixi/core': 6.5.10
+      '@pixi/display': 6.5.10
+      '@pixi/math': 6.5.10
+      '@pixi/sprite': 6.5.10
+      '@pixi/utils': 6.5.10
+
+  '@pixi/graphics@7.4.3':
+    resolution: {integrity: sha512-wWLivD8/URb8A7X4TqCZGG39C91IE+aOuWY/z9NCz5Z6WvA/VWnsc5fLTlO+ggjGHgKF0cSucCXZfUe1wm0AOQ==}
+    peerDependencies:
+      '@pixi/core': 7.4.3
+      '@pixi/display': 7.4.3
+      '@pixi/sprite': 7.4.3
 
   '@pixi/math@7.4.3':
     resolution: {integrity: sha512-/uJOVhR2DOZ+zgdI6Bs/CwcXT4bNRKsS+TqX3ekRIxPCwaLra+Qdm7aDxT5cTToDzdxbKL5+rwiLu3Y1egILDw==}
@@ -3350,6 +3373,19 @@ snapshots:
       '@pixi/core': 7.4.3
 
   '@pixi/extensions@7.4.3': {}
+
+  '@pixi/graphics@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/utils@7.4.3)':
+    dependencies:
+      '@pixi/constants': 7.4.3
+      '@pixi/core': 7.4.3
+      '@pixi/display': 7.4.3(@pixi/core@7.4.3)
+      '@pixi/math': 7.4.3
+      '@pixi/utils': 7.4.3
+
+  '@pixi/graphics@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))':
+    dependencies:
+      '@pixi/core': 7.4.3
+      '@pixi/display': 7.4.3(@pixi/core@7.4.3)
 
   '@pixi/math@7.4.3': {}
 

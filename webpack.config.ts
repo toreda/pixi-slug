@@ -63,6 +63,11 @@ const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 			commonjs2: '@pixi/display',
 			root: 'PIXI'
 		},
+		'@pixi/graphics': {
+			commonjs: '@pixi/graphics',
+			commonjs2: '@pixi/graphics',
+			root: 'PIXI'
+		},
 		'@pixi/mesh': {
 			commonjs: '@pixi/mesh',
 			commonjs2: '@pixi/mesh',
@@ -88,6 +93,11 @@ const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 		'@pixi/display': {
 			commonjs: '@pixi/display',
 			commonjs2: '@pixi/display',
+			root: 'PIXI'
+		},
+		'@pixi/graphics': {
+			commonjs: '@pixi/graphics',
+			commonjs2: '@pixi/graphics',
 			root: 'PIXI'
 		},
 		'@pixi/mesh': {

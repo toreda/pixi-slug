@@ -11,7 +11,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 * No atlases or SDFs. Just Béziers on the GPU.
 * Perspective-correct antialiasing via dynamic dilation.
 * Supports TrueType (`.ttf`), OpenType (`.otf`), and WOFF/WOFF2 fonts — including cubic-outline (CFF) fonts.
-* Word wrap, newlines, underline, and strikethrough.
+* Word wrap, newlines, underline, strikethrough, and overline.
 * Works on PixiJS `v8`, `v7`, and `v6`.
 
 
@@ -112,9 +112,9 @@ Do these advantages matter for you? It depends on your use case. This package pr
 | Font ref counting + autoDestroy      |  ✅  |  ✅  |  ✅  |
 | PIXI Ticker auto-hook                |  ✅  |  ✅  |  ✅  |
 | Application plugin                   |  ✅  |  ✅  |  ✅  |
-| Text decoration: `underline`           |  ✅  |  ❌  |  ❌  |
-| Text decoration: `strikethrough`       |  ✅  |  ❌  |  ❌  |
-| Text decoration: `overline`            |  ❌  |  ❌  |  ❌  |
+| Text decoration: `underline`           |  ✅  |  ✅  |  ✅  |
+| Text decoration: `strikethrough`       |  ✅  |  ✅  |  ✅  |
+| Text decoration: `overline`            |  ✅  |  ✅  |  ✅  |
 | `text-align`                           |  ❌  |  ❌  |  ❌  |
 | `text-justify`                         |  ❌  |  ❌  |  ❌  |
 | `superscript`                          |  ❌  |  ❌  |  ❌  |
@@ -378,6 +378,10 @@ Application.registerPlugin(SlugApplicationPluginV6);
 ```
 
 **Conflict behavior:** both paths call `SlugFonts.attachTicker` under the hood. If one is already active and another tries to attach, `SlugFonts.reattachPolicy` decides what happens — `'throw'` by default, or `'error'` / `'warn'` / `'silent'`. Change it with `SlugFonts.setReattachPolicy('warn')` (validated — invalid modes are rejected and logged). Pass `{force: true}` as the second arg to `attachTicker` to replace silently. Full details in [_features/application_plugin.md](_features/application_plugin.md).
+
+## Changelog
+
+Release history and unreleased changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## Slug Reference Code
 
