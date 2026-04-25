@@ -14,7 +14,7 @@ const config: Config = {
 	],
 	coverageDirectory: 'coverage',
 	coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/tests/'],
-	coverageReporters: ['text-summary', 'lcov'],
+	coverageReporters: process.env.COVERAGE === 'full' ? ['text', 'text-summary', 'lcov'] : ['text-summary', 'lcov'],
 	coverageThreshold: {
 		global: {
 			branches: 50,
