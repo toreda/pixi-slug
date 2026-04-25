@@ -4,20 +4,10 @@ import {SlugFont} from '../font';
 import {isSlugFontErrorMode, type SlugFontErrorMode} from './error';
 import {SlugFontsRegistryEntry} from './registry/entry';
 import {type SlugFontsRegistryOptions} from './registry/options';
+import {type SlugFontsRegistryStat} from './registry/stat';
 
 function resolveErrorMode(raw: unknown, fallback: SlugFontErrorMode): SlugFontErrorMode {
 	return isSlugFontErrorMode(raw) ? raw : fallback;
-}
-
-
-/** Per-entry diagnostic snapshot returned by `SlugFontsRegistry.stats()`. */
-export interface SlugFontsRegistryStat {
-	key: string;
-	source: 'url' | 'name';
-	refs: number;
-	markedForDestroy: boolean;
-	fileSize: number;
-	createdAt: number;
 }
 
 /**
@@ -75,7 +65,11 @@ export class SlugFontsRegistry {
 		this.fallback = null;
 		this.fallbackOverridden = false;
 
-		this.autoDestroyUnused = booleanValue(options?.autoDestroyUnused, Defaults.Registry.AutoDestroyUnused);
+		this.autoDestroyUnused = booleanValue(
+			options?.autoDestroyUnused,
+			Defaults.Registry.AutoDestroyUnused
+		);
+
 		const delaySec = numberValue(options?.autoDestroyDelay, Defaults.Registry.AutoDestroyDelay);
 		this.autoDestroyDelayMs = Math.max(0, delaySec) * 1000;
 		this.autoAttachTicker = booleanValue(options?.autoAttachTicker, Defaults.Registry.AutoAttachTicker);
@@ -121,8 +115,8 @@ export class SlugFontsRegistry {
 	/** Reverse-lookup an entry by its `SlugFont`. Null when not registry-owned. */
 	public entryForFont(font: SlugFont | null): SlugFontsRegistryEntry | null {
 		if (!font) {
-            return null;
-        }
+			return null;
+		}
 
 		for (let i = 0; i < this.all.length; i++) {
 			if (this.all[i].font === font) {
@@ -135,8 +129,8 @@ export class SlugFontsRegistry {
 
 	public incRef(entry: SlugFontsRegistryEntry | null): void {
 		if (!entry) {
-            return;
-        }
+			return;
+		}
 
 		if (entry.markedForDestroy) {
 			entry.markedForDestroy = false;
@@ -149,8 +143,8 @@ export class SlugFontsRegistry {
 
 	public decRef(entry: SlugFontsRegistryEntry | null): void {
 		if (!entry) {
-            return;
-        }
+			return;
+		}
 
 		if (entry.refs <= 0) {
 			entry.refs = 0;

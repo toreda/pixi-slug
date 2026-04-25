@@ -109,9 +109,9 @@ Do these advantages matter for you? It depends on your use case. This package pr
 
 # Examples
 
-Every version has the same `SlugText` / `SlugFonts` API. Only the import path and the surrounding PIXI scaffolding change between `v6`, `v7`, and `v8`.
+`pixi-slug` supports multiple versions by building & bundling a separate package for each of the three supported PIXI version (`v8`, `v7`, `v6`). PIXI's imports and API vary by version. All packages share core functionality but import paths and scaffolding differs by version. 
 
-## Creating a `SlugText`
+## Creating `SlugText`
 
 `font` accepts a URL string, a registered name, a pre-built `SlugFont`, raw `ArrayBuffer` / `Uint8Array` bytes, or a `FontFace` returned by PIXI's asset loader. Strings that look like URLs are fetched and cached automatically.
 

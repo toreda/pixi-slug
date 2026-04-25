@@ -4,7 +4,7 @@ import type {SlugGlyphData} from './glyph/data';
 import {slugGlyphCurves} from './glyph/curves';
 import {slugGlyphBands} from './glyph/bands';
 import {slugTexturePack} from './texture/pack';
-import {slugWoff2Decompress} from './fonts/woff2';
+import {slugWoff2Decompress} from './woff2/decompress';
 /**
  * Preprocesses font glyph outlines into GPU-ready curve and band textures
  * for the Slug rendering algorithm.

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@toreda/fate':
+        specifier: ^0.7.0
+        version: 0.7.0
       '@toreda/strong-types':
         specifier: ^0.28.5
         version: 0.28.5
@@ -657,6 +660,9 @@ packages:
 
   '@toreda/eslint-config@2.2.0':
     resolution: {integrity: sha512-iNbXSRlR98tacWc8pt2nk2+skREoLhlz0FXbcqgHqiAL9xR7wWulrCGBxR+ItstHl8jxS/5DmLOnX5QELsJIhg==}
+
+  '@toreda/fate@0.7.0':
+    resolution: {integrity: sha512-EIHjLuXDnS7G4z3jgnPuDfXpLHfmU0U5QxRRyMPVblFbk6x0IAwWV6Su2stXR9uFgqtR402XNmmVy880VF2DfQ==}
 
   '@toreda/log@0.6.16':
     resolution: {integrity: sha512-H/Q5wP6PXginemsBdZFwqi6l4Ul4j3i3VO8XRj4PWq+bm89+vfy74gHCY70778R+V9WCSnZmBw7+nrh2NPeYlw==}
@@ -3454,6 +3460,8 @@ snapshots:
       '@swc/counter': 0.1.3
 
   '@toreda/eslint-config@2.2.0': {}
+
+  '@toreda/fate@0.7.0': {}
 
   '@toreda/log@0.6.16': {}
 
