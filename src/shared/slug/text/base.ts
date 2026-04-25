@@ -5,6 +5,16 @@ import type {SlugFontErrorPolicy} from '../fonts/error';
 import {slugResolveFontInput, slugTryResolveFontInputSync} from '../fonts/resolve';
 import type {SlugDropShadow, SlugDropShadowResolved, SlugStroke, SlugTextInit} from './init';
 import {slugTextColorToRgba, type SlugTextColor} from './style/color';
+import {
+	decorationsEqual,
+	slugDrawDecorationDisabled,
+	slugResolveDecoration,
+	slugResolveDrawDecoration,
+	type SlugTextDecorationDraw,
+	type SlugTextDecorationInput,
+	type SlugTextDecorationResolved
+} from './style/decoration';
+import type {SlugTextDirection} from './style/direction';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
 import {booleanValue, numberValue, stringValue} from '@toreda/strong-types';
 
@@ -54,8 +64,16 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_wordWrap!: boolean;
 		_wordWrapWidth!: number;
 		_breakWords!: boolean;
-		_underline!: boolean;
-		_strikethrough!: boolean;
+		_direction!: SlugTextDirection;
+		_underline!: SlugTextDecorationResolved;
+		_strikethrough!: SlugTextDecorationResolved;
+		_overline!: SlugTextDecorationResolved;
+		// Concrete draw records — recomputed eagerly by `_resolveDecorations`
+		// whenever any input that feeds them changes (decoration setters,
+		// color, font, fontSize). Render code reads ONLY these.
+		_underlineDraw!: SlugTextDecorationDraw;
+		_strikethroughDraw!: SlugTextDecorationDraw;
+		_overlineDraw!: SlugTextDecorationDraw;
 		_vertexBytes!: number;
 		_indexBytes!: number;
 		_rebuildCount!: number;
@@ -103,6 +121,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 						this._font = resolved;
 						this._fontRef = new WeakRef(resolved);
 						SlugFonts.retain(resolved);
+						this._resolveDecorations();
 						this.rebuild();
 					}
 				});
@@ -117,8 +136,13 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
 			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapwidth);
 			this._breakWords = booleanValue(init.options?.breakWords, false);
-			this._underline = booleanValue(init.options?.underline, false);
-			this._strikethrough = booleanValue(init.options?.strikethrough, false);
+			this._direction = init.options?.direction === 'rtl' ? 'rtl' : Defaults.SlugText.Direction;
+			this._underline = slugResolveDecoration(init.options?.underline);
+			this._strikethrough = slugResolveDecoration(init.options?.strikethrough);
+			this._overline = slugResolveDecoration(init.options?.overline);
+			this._underlineDraw = slugDrawDecorationDisabled();
+			this._strikethroughDraw = slugDrawDecorationDisabled();
+			this._overlineDraw = slugDrawDecorationDisabled();
 			this._vertexBytes = 0;
 			this._indexBytes = 0;
 			this._rebuildCount = 0;
@@ -144,6 +168,27 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			} else {
 				this._dropShadow = null;
 			}
+
+			this._resolveDecorations();
+		}
+
+		/**
+		 * Recompute the concrete decoration draw records from the user
+		 * inputs (`_underline`/`_strikethrough`/`_overline`), the current
+		 * fill color, and the current font metrics. Called by every
+		 * setter that affects any of those inputs — never from the
+		 * render path. Render code reads only the resulting `*Draw`
+		 * fields and never re-runs inheritance per draw.
+		 */
+		public _resolveDecorations(): void {
+			const font = this._fontRef?.deref();
+			const scale = font && font.unitsPerEm > 0 ? this._fontSize / font.unitsPerEm : 0;
+			const ulDefault = font ? font.underlineThickness * scale : 1;
+			const stDefault = font ? font.strikethroughSize * scale : 1;
+			const dir = this._direction;
+			this._underlineDraw = slugResolveDrawDecoration(this._underline, this._color, ulDefault, dir);
+			this._strikethroughDraw = slugResolveDrawDecoration(this._strikethrough, this._color, stDefault, dir);
+			this._overlineDraw = slugResolveDrawDecoration(this._overline, this._color, ulDefault, dir);
 		}
 
 		/** Version-specific rebuild. Subclasses implement with their PixiJS APIs. */
@@ -183,6 +228,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._font = value;
 			this._fontRef = new WeakRef(value);
 			SlugFonts.retain(value);
+			this._resolveDecorations();
 			this.rebuild();
 		}
 
@@ -203,6 +249,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set fontSize(value: number) {
 			if (this._fontSize === value) return;
 			this._fontSize = value;
+			this._resolveDecorations();
 			this.rebuild();
 		}
 
@@ -215,6 +262,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._color[0] === next[0] && this._color[1] === next[1] &&
 				this._color[2] === next[2] && this._color[3] === next[3]) return;
 			this._color = next;
+			this._resolveDecorations();
 			this.rebuild();
 		}
 
@@ -248,23 +296,51 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._wordWrap) this.rebuild();
 		}
 
-		public get underline(): boolean {
-			return this._underline;
+		public get direction(): SlugTextDirection {
+			return this._direction;
 		}
 
-		public set underline(value: boolean) {
-			if (this._underline === value) return;
-			this._underline = value;
+		public set direction(value: SlugTextDirection) {
+			const next: SlugTextDirection = value === 'rtl' ? 'rtl' : 'ltr';
+			if (this._direction === next) return;
+			this._direction = next;
+			this._resolveDecorations();
 			this.rebuild();
 		}
 
-		public get strikethrough(): boolean {
+		public get underline(): SlugTextDecorationResolved {
+			return this._underline;
+		}
+
+		public set underline(value: SlugTextDecorationInput) {
+			const next = slugResolveDecoration(value);
+			if (decorationsEqual(this._underline, next)) return;
+			this._underline = next;
+			this._resolveDecorations();
+			this.rebuild();
+		}
+
+		public get strikethrough(): SlugTextDecorationResolved {
 			return this._strikethrough;
 		}
 
-		public set strikethrough(value: boolean) {
-			if (this._strikethrough === value) return;
-			this._strikethrough = value;
+		public set strikethrough(value: SlugTextDecorationInput) {
+			const next = slugResolveDecoration(value);
+			if (decorationsEqual(this._strikethrough, next)) return;
+			this._strikethrough = next;
+			this._resolveDecorations();
+			this.rebuild();
+		}
+
+		public get overline(): SlugTextDecorationResolved {
+			return this._overline;
+		}
+
+		public set overline(value: SlugTextDecorationInput) {
+			const next = slugResolveDecoration(value);
+			if (decorationsEqual(this._overline, next)) return;
+			this._overline = next;
+			this._resolveDecorations();
 			this.rebuild();
 		}
 

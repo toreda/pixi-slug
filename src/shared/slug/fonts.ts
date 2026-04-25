@@ -4,7 +4,7 @@ import {SlugFont} from './font';
 import {isSlugFontErrorMode, type SlugFontErrorMode} from './fonts/error';
 import {robotoFallbackBytes} from './fonts/fallback/roboto';
 import {SlugFontsRegistry} from './fonts/registry';
-import {SlugFontsRegistryStat} from './fonts/registry/stat';
+import {type SlugFontsRegistryStat} from './fonts/registry/stat';
 import {SlugFontsRegistryEntry} from './fonts/registry/entry';
 
 /**

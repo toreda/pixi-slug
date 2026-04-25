@@ -1,0 +1,227 @@
+<!--
+  Shared sidebar markup for v6/v7/v8 example pages. Loaded by wire.js
+  via fetch and injected into the page's #sidebar host. Sections that
+  need a runtime feature (e.g. text decorations on v6/v7) carry a
+  data-requires="<property>" attribute and are removed by the wire
+  helper if the constructed SlugText instance lacks that property.
+-->
+<div class="ctrl-group">
+	<div class="ctrl-group-title">Font</div>
+	<div class="ctrl-row">
+		<select id="ctrlFont" style="width: 100%;"></select>
+	</div>
+	<div class="ctrl-row">
+		<span id="ctrlFontStatus" style="font-size: 12px; color: #8b949e;"></span>
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="false">
+	<div class="ctrl-group-title">
+		<span>Text</span>
+		<button type="button" class="group-toggle" aria-label="Toggle Text section">−</button>
+	</div>
+	<div class="ctrl-row">
+		<textarea id="ctrlText" rows="2">The quick brown fox</textarea>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlFontSize">Size</label>
+		<input type="range" id="ctrlFontSize" value="120" min="4" max="400" step="1">
+		<input type="number" id="ctrlFontSizeVal" class="slider-val" value="120">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlFillColor">Fill</label>
+		<input type="color" id="ctrlFillColor" value="#ffffff">
+	</div>
+	<div class="ctrl-row" data-requires="direction">
+		<label for="ctrlDirection">Dir</label>
+		<select id="ctrlDirection">
+			<option value="ltr" selected>LTR</option>
+			<option value="rtl">RTL</option>
+		</select>
+	</div>
+	<div class="ctrl-row">
+		<input type="checkbox" id="ctrlWordWrap">
+		<label for="ctrlWordWrap">Word Wrap</label>
+		<input type="checkbox" id="ctrlBreakWords">
+		<label for="ctrlBreakWords">Break</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlWrapWidth">Width</label>
+		<input type="range" id="ctrlWrapWidth" value="400" min="50" max="2000" step="10">
+		<input type="number" id="ctrlWrapWidthVal" class="slider-val" value="400">
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="true" data-enable="ctrlUnderline" data-requires="underline">
+	<div class="ctrl-group-title">
+		<input type="checkbox" id="ctrlUnderline">
+		<label for="ctrlUnderline">Underline</label>
+		<button type="button" class="group-toggle" aria-label="Toggle Underline section">+</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlUnderlineColor">Color</label>
+		<input type="color" id="ctrlUnderlineColor" value="#ffffff">
+		<input type="checkbox" id="ctrlUnderlineColorAuto" checked>
+		<label for="ctrlUnderlineColorAuto" style="min-width: auto;">Use fill</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlUnderlineThickness">Thick</label>
+		<input type="range" id="ctrlUnderlineThickness" value="4" min="1" max="40" step="1">
+		<input type="number" id="ctrlUnderlineThicknessVal" class="slider-val" value="4">
+	</div>
+	<div class="ctrl-row">
+		<input type="checkbox" id="ctrlUnderlineThicknessAuto" checked>
+		<label for="ctrlUnderlineThicknessAuto" style="min-width: auto;">Auto thickness</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlUnderlineLength">Length</label>
+		<input type="range" id="ctrlUnderlineLength" value="1" min="0" max="1" step="0.05">
+		<input type="number" id="ctrlUnderlineLengthVal" class="slider-val" value="1" step="0.05">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlUnderlineAlign">Align</label>
+		<select id="ctrlUnderlineAlign">
+			<option value="start" selected>Start</option>
+			<option value="center">Center</option>
+			<option value="end">End</option>
+		</select>
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="true" data-enable="ctrlStrikethrough" data-requires="strikethrough">
+	<div class="ctrl-group-title">
+		<input type="checkbox" id="ctrlStrikethrough">
+		<label for="ctrlStrikethrough">Strikethrough</label>
+		<button type="button" class="group-toggle" aria-label="Toggle Strikethrough section">+</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrikethroughColor">Color</label>
+		<input type="color" id="ctrlStrikethroughColor" value="#ffffff">
+		<input type="checkbox" id="ctrlStrikethroughColorAuto" checked>
+		<label for="ctrlStrikethroughColorAuto" style="min-width: auto;">Use fill</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrikethroughThickness">Thick</label>
+		<input type="range" id="ctrlStrikethroughThickness" value="4" min="1" max="40" step="1">
+		<input type="number" id="ctrlStrikethroughThicknessVal" class="slider-val" value="4">
+	</div>
+	<div class="ctrl-row">
+		<input type="checkbox" id="ctrlStrikethroughThicknessAuto" checked>
+		<label for="ctrlStrikethroughThicknessAuto" style="min-width: auto;">Auto thickness</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrikethroughLength">Length</label>
+		<input type="range" id="ctrlStrikethroughLength" value="1" min="0" max="1" step="0.05">
+		<input type="number" id="ctrlStrikethroughLengthVal" class="slider-val" value="1" step="0.05">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrikethroughAlign">Align</label>
+		<select id="ctrlStrikethroughAlign">
+			<option value="start" selected>Start</option>
+			<option value="center">Center</option>
+			<option value="end">End</option>
+		</select>
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="true" data-enable="ctrlOverline" data-requires="overline">
+	<div class="ctrl-group-title">
+		<input type="checkbox" id="ctrlOverline">
+		<label for="ctrlOverline">Overline</label>
+		<button type="button" class="group-toggle" aria-label="Toggle Overline section">+</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlOverlineColor">Color</label>
+		<input type="color" id="ctrlOverlineColor" value="#ffffff">
+		<input type="checkbox" id="ctrlOverlineColorAuto" checked>
+		<label for="ctrlOverlineColorAuto" style="min-width: auto;">Use fill</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlOverlineThickness">Thick</label>
+		<input type="range" id="ctrlOverlineThickness" value="4" min="1" max="40" step="1">
+		<input type="number" id="ctrlOverlineThicknessVal" class="slider-val" value="4">
+	</div>
+	<div class="ctrl-row">
+		<input type="checkbox" id="ctrlOverlineThicknessAuto" checked>
+		<label for="ctrlOverlineThicknessAuto" style="min-width: auto;">Auto thickness</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlOverlineLength">Length</label>
+		<input type="range" id="ctrlOverlineLength" value="1" min="0" max="1" step="0.05">
+		<input type="number" id="ctrlOverlineLengthVal" class="slider-val" value="1" step="0.05">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlOverlineAlign">Align</label>
+		<select id="ctrlOverlineAlign">
+			<option value="start" selected>Start</option>
+			<option value="center">Center</option>
+			<option value="end">End</option>
+		</select>
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="true" data-enable="ctrlStroke">
+	<div class="ctrl-group-title">
+		<input type="checkbox" id="ctrlStroke">
+		<label for="ctrlStroke">Stroke</label>
+		<button type="button" class="group-toggle" aria-label="Toggle Stroke section">+</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrokeWidth">Width</label>
+		<input type="range" id="ctrlStrokeWidth" value="2" min="0" max="20" step="1">
+		<input type="number" id="ctrlStrokeWidthVal" class="slider-val" value="2">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrokeColor">Color</label>
+		<input type="color" id="ctrlStrokeColor" value="#000000">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrokeAlphaMode">Alpha</label>
+		<select id="ctrlStrokeAlphaMode">
+			<option value="uniform" selected>Uniform</option>
+			<option value="gradient">Gradient</option>
+		</select>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrokeAlphaStart">Start</label>
+		<input type="range" id="ctrlStrokeAlphaStart" value="1" min="0" max="1" step="0.05">
+		<input type="number" id="ctrlStrokeAlphaStartVal" class="slider-val" value="1" step="0.05">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlStrokeAlphaRate">Rate</label>
+		<input type="range" id="ctrlStrokeAlphaRate" value="0" min="-0.5" max="0.5" step="0.01">
+		<input type="number" id="ctrlStrokeAlphaRateVal" class="slider-val" value="0" step="0.01">
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="true" data-enable="ctrlShadow">
+	<div class="ctrl-group-title">
+		<input type="checkbox" id="ctrlShadow">
+		<label for="ctrlShadow">Shadow</label>
+		<button type="button" class="group-toggle" aria-label="Toggle Shadow section">+</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlShadowDist">Dist</label>
+		<input type="range" id="ctrlShadowDist" value="5" min="0" max="30" step="1">
+		<input type="number" id="ctrlShadowDistVal" class="slider-val" value="5">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlShadowAngle">Angle</label>
+		<input type="range" id="ctrlShadowAngle" min="0" max="360" step="1" value="30">
+		<input type="number" id="ctrlShadowAngleVal" class="slider-val" value="30">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlShadowAlpha">Alpha</label>
+		<input type="range" id="ctrlShadowAlpha" min="0" max="1" step="0.05" value="1">
+		<input type="number" id="ctrlShadowAlphaVal" class="slider-val" value="1" step="0.05">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlShadowBlur">Blur</label>
+		<input type="range" id="ctrlShadowBlur" min="0" max="20" step="1" value="0">
+		<input type="number" id="ctrlShadowBlurVal" class="slider-val" value="0">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlShadowColor">Color</label>
+		<input type="color" id="ctrlShadowColor" value="#000000">
+	</div>
+</div>

@@ -45,6 +45,14 @@ export class Defaults {
 		/** Default font size in pixels. */
 		FontSize: 24 as const,
 		Text: '' as const,
+		/**
+		 * Default text direction. Today only decoration `start`/`end`
+		 * alignment honors this — full RTL glyph layout (BiDi reordering,
+		 * shaping, line fill direction) lands as a separate feature. The
+		 * field is exposed now so app code can be written direction-aware
+		 * without API churn later.
+		 */
+		Direction: 'ltr' as 'ltr' | 'rtl',
 		WordWrap: false as const,
 		WordWrapwidth: 0 as const,
 		/**

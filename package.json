@@ -76,7 +76,7 @@
 		"webgl2"
 	],
 	"author": "Toreda, Inc.",
-	"license": "(MIT AND Apache-2.0)",
+	"license": "MIT",
 	"packageManager": "pnpm@10.11.1",
 	"prettier": "@toreda/prettier-config",
 	"peerDependencies": {

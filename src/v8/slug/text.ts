@@ -43,7 +43,7 @@ export class SlugText extends SlugTextV8Base {
 	private _meshes: Mesh<Geometry, Shader>[];
 	/** Uniforms for the fill pass (controls supersampling). */
 	private _uniforms: UniformGroup | null;
-	/** Graphics child for underline/strikethrough decorations. */
+	/** Graphics child for underline/strikethrough/overline decorations. */
 	private _decorations: Graphics | null;
 
 	constructor(init: SlugTextInit) {
@@ -222,11 +222,18 @@ export class SlugText extends SlugTextV8Base {
 			this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
 		}
 
-		// --- Text decorations (underline / strikethrough) ---
-		if ((this._underline || this._strikethrough) && font) {
+		// --- Text decorations (underline / strikethrough / overline) ---
+		// Reads only the concrete `_*Draw` records — base.ts has already
+		// folded user input + fill color + font metrics into final RGBA
+		// and pixel thickness. No fallback resolution happens here.
+		const ul = this._underlineDraw, st = this._strikethroughDraw, ol = this._overlineDraw;
+		if ((ul.enabled || st.enabled || ol.enabled) && font) {
 			const scale = this._fontSize / font.unitsPerEm;
 			const lineHeight = (font.ascender - font.descender) * scale;
-			const fillColor = (this._color[0] * 255) << 16 | (this._color[1] * 255) << 8 | (this._color[2] * 255);
+
+			const packColor = (rgba: [number, number, number, number]): number =>
+				((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
+			const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
 
 			// Determine lines for measurement — match the quad builder's decision.
 			const hasNewline = this._text.indexOf('\n') >= 0;
@@ -240,6 +247,19 @@ export class SlugText extends SlugTextV8Base {
 			}
 
 			const gfx = new Graphics();
+
+			// Compute the x-offset for a length-restricted line of width
+			// `drawW` inside a text line of width `lineW`. `align` is the
+			// physical alignment already resolved against text direction.
+			const xForAlign = (
+				lineW: number,
+				drawW: number,
+				align: 'left' | 'center' | 'right'
+			): number => {
+				if (align === 'right') return lineW - drawW;
+				if (align === 'center') return (lineW - drawW) / 2;
+				return 0;
+			};
 
 			for (let l = 0; l < lines.length; l++) {
 				const line = lines[l];
@@ -255,18 +275,33 @@ export class SlugText extends SlugTextV8Base {
 				}
 				const baselineY = maxGlyphTop * scale;
 
-				if (this._underline) {
+				if (ul.enabled && ul.length > 0) {
+					const drawW = lineW * ul.length;
+					const x = xForAlign(lineW, drawW, ul.align);
 					const ulY = baselineY + lineY - font.underlinePosition * scale;
-					const ulH = Math.max(font.underlineThickness * scale, 1);
-					gfx.rect(0, ulY, lineW, ulH);
-					gfx.fill({color: fillColor, alpha: this._color[3]});
+					gfx.rect(x, ulY, drawW, ul.thickness);
+					gfx.fill({color: ulPacked, alpha: ul.color[3]});
 				}
 
-				if (this._strikethrough) {
+				if (st.enabled && st.length > 0) {
+					const drawW = lineW * st.length;
+					const x = xForAlign(lineW, drawW, st.align);
 					const stY = baselineY + lineY - font.strikethroughPosition * scale;
-					const stH = Math.max(font.strikethroughSize * scale, 1);
-					gfx.rect(0, stY, lineW, stH);
-					gfx.fill({color: fillColor, alpha: this._color[3]});
+					gfx.rect(x, stY, drawW, st.thickness);
+					gfx.fill({color: stPacked, alpha: st.color[3]});
+				}
+
+				// Overline: font tables don't define an overline metric, so by
+				// CSS-engine convention reuse the underline thickness. Place the
+				// line's bottom edge at the top of the rendered glyphs (y=0 in
+				// local coords, which the quad builder pins to the tallest glyph
+				// on the line — see slugGlyphQuads).
+				if (ol.enabled && ol.length > 0) {
+					const drawW = lineW * ol.length;
+					const x = xForAlign(lineW, drawW, ol.align);
+					const olY = lineY - ol.thickness;
+					gfx.rect(x, olY, drawW, ol.thickness);
+					gfx.fill({color: olPacked, alpha: ol.color[3]});
 				}
 			}
 

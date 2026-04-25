@@ -2,9 +2,9 @@
 
 [![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/toreda/pixi-slug/master?style=for-the-badge)](https://github.com/toreda/pixi-slug/releases/latest) [![GitHub Release Date](https://img.shields.io/github/release-date/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/releases/latest) [![GitHub issues](https://img.shields.io/github/issues/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/issues)
 
-[![license](https://img.shields.io/github/license/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/blob/master/LICENSE)
+[![GitHub](https://img.shields.io/github/stars/toreda/pixi-slug?style=for-the-badge&logo=github&label=GitHub)](https://github.com/toreda/pixi-slug) [![NPM Downloads](https://img.shields.io/npm/dm/pixi-slug?style=for-the-badge&logo=npm&label=NPM)](https://www.npmjs.com/package/pixi-slug) [![license](https://img.shields.io/github/license/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/blob/master/LICENSE)
 
-# [`pixi-slug`](https://www.npmjs.com/package/pixi-slug)
+# `pixi-slug`
 
 Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D transform.
 
@@ -26,7 +26,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 
 <blockquote><p align="left">Q: Does pixi-slug replace PIXI.Text?</p></blockquote>
 
-**A**: No, it doesn't affect `PIXI.Text`. `pixi-slug` is a standalone plugin that uses its own `SlugText`.
+**A**: No, it doesn't replace or affect `PIXI.Text`. `pixi-slug` is a standalone plugin that uses its own `SlugText`.
 
 <p align="center">· · ·</p>
 
@@ -40,8 +40,8 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 <blockquote><p align="left">Q: What are the advantages of using pixi-slug instead of PIXI.Text?</p></blockquote>
 
 **A:**
-* Text always appears crisp & clear.
-* Font size changes don't affect rendering clarity.
+* Text is crisp & clear at any size.
+* Changing font size or text scale after instantiation does not affect render quality.
 * The same `SlugText` can be used on multiple resolutions.
 * `SlugText` content changes have only a minimal impact on performance. Replacing text content several times per second (or more) doesn't create intense GC pressure the way `PIXI.Text` does.
 
@@ -55,7 +55,7 @@ Do these advantages matter for you? It depends on your use case. This package pr
 
 <blockquote><p align="left">Q: Can it render emojis?</p></blockquote>
 
-**A**: Yes, but it requires using a font with emoji characters. Find one online, make one, or try one of these Google fonts:
+**A**: Yes. Drawing emojis as text requires a font with emoji characters. Find one online, make one, or try one of these Google fonts:
 * [Noto Sans Symbols 1](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols?preview.script=Latn)
 * [Noto Sans Symbols 2](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols+2)
 
@@ -65,6 +65,20 @@ Do these advantages matter for you? It depends on your use case. This package pr
 
 **A**: Yes — cubic outlines are approximated as two quadratics per cubic segment, since the Slug algorithm operates on quadratic Béziers. Quality is indistinguishable at typical sizes; extreme zooms on cubic-heavy fonts may reveal the approximation.
 
+<p align="center">· · ·</p>
+
+<blockquote><p align="left">Q: What font formats does it support?</p></blockquote>
+
+
+**A**: `pixi-slug` supports stand web font formats: `ttf`, `otf`, `woff`, and `woff2`.
+
+
+<p align="center">· · ·</p>
+
+<blockquote><p align="left">Q: Are SVG fonts supported?</p></blockquote>
+
+
+**A**: No, not currently. `pixi-slug` supports some of the same features as SVG while using standard web fonts, rather than SVG fonts specifically. There are no plans to add SVG support right now. If there's enough demand that may change.
 
 <p align="center">· · ·</p>
 
@@ -101,6 +115,8 @@ Do these advantages matter for you? It depends on your use case. This package pr
 | Text decoration: `underline`           |  ✅  |  ❌  |  ❌  |
 | Text decoration: `strikethrough`       |  ✅  |  ❌  |  ❌  |
 | Text decoration: `overline`            |  ❌  |  ❌  |  ❌  |
+| `text-align`                           |  ❌  |  ❌  |  ❌  |
+| `text-justify`                         |  ❌  |  ❌  |  ❌  |
 | `superscript`                          |  ❌  |  ❌  |  ❌  |
 | `subscript`                            |  ❌  |  ❌  |  ❌  |
 | `RTL` glyph support                    |  ❌  |  ❌  |  ❌  |

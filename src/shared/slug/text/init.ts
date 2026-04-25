@@ -3,6 +3,8 @@ import {TextStyleOptions} from 'pixi.js';
 import type {SlugFontErrorPolicy} from '../fonts/error';
 import {SlugTextStyleAlign} from './style/align';
 import type {SlugTextColor} from './style/color';
+import type {SlugTextDecorationInput} from './style/decoration';
+import type {SlugTextDirection} from './style/direction';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
 
 /**
@@ -114,10 +116,35 @@ export interface SlugTextStyleOptions {
 	wordWrapWidth?: number | null;
 	align?: SlugTextStyleAlign;
 	breakWords?: boolean;
-	/** Draw an underline below the text. @default false */
-	underline?: boolean;
-	/** Draw a strikethrough line through the text. @default false */
-	strikethrough?: boolean;
+	/**
+	 * Text direction. Today this only affects how decoration
+	 * `start`/`end` alignment resolves — glyph layout still runs
+	 * left-to-right regardless. Full RTL glyph layout will land as a
+	 * separate feature; the field is exposed now so application code
+	 * can be written direction-aware without API churn later.
+	 * @default 'ltr'
+	 */
+	direction?: SlugTextDirection | null;
+	/**
+	 * Draw an underline below the text. `true` enables with default
+	 * color (fill) and thickness (font metric). Pass an object to
+	 * override `color` and/or `thickness` independently — omitted
+	 * fields fall back to those same defaults.
+	 * @default false
+	 */
+	underline?: SlugTextDecorationInput;
+	/**
+	 * Draw a strikethrough line through the text. Same input shape as
+	 * `underline`.
+	 * @default false
+	 */
+	strikethrough?: SlugTextDecorationInput;
+	/**
+	 * Draw an overline above the text (aligned to the rendered glyph
+	 * top). Same input shape as `underline`.
+	 * @default false
+	 */
+	overline?: SlugTextDecorationInput;
 	/** Stroke configuration. Stroke is disabled when width is 0 or omitted. */
 	stroke?: SlugStroke | null;
 	/** Drop shadow configuration. Presence enables shadow. */
