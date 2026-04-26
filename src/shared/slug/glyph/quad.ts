@@ -1,16 +1,5 @@
-import type { SlugGlyphData } from './data';
-
-/**
- * Number of floats per vertex for each attribute.
- * All 5 attributes are vec4 (4 floats each), totaling 20 floats per vertex.
- */
-const FLOATS_PER_VERTEX = 20;
-
-/** Number of vertices per glyph quad. */
-const VERTICES_PER_QUAD = 4;
-
-/** Number of indices per glyph quad (2 triangles). */
-const INDICES_PER_QUAD = 6;
+import type {SlugGlyphData} from './data';
+import {Constants} from '../../../constants';
 
 /** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
 const _packBuf = new ArrayBuffer(4);
@@ -37,8 +26,8 @@ export interface SlugGlyphQuads {
  * Pack a float into a uint32 bit pattern, stored as a float.
  * Used to pass packed integer data through float vertex attributes.
  */
-function packUint16Pair(low: number, high: number): number {
-	_packU32[0] = ((high & 0xFFFF) << 16) | (low & 0xFFFF);
+export function packUint16Pair(low: number, high: number): number {
+	_packU32[0] = ((high & 0xffff) << 16) | (low & 0xffff);
 	return _packF32[0];
 }
 
@@ -47,7 +36,7 @@ function packUint16Pair(low: number, high: number): number {
  * low16 becomes glyphData.z (bandMax.x) in the shader → clamps vertical bandIndex.x.
  * high16 becomes glyphData.w (bandMax.y) in the shader → clamps horizontal bandIndex.y.
  */
-function packBandMax(low16_vBandMax: number, high16_hBandMax: number): number {
+export function packBandMax(low16_vBandMax: number, high16_hBandMax: number): number {
 	return packUint16Pair(low16_vBandMax, high16_hBandMax);
 }
 
@@ -107,8 +96,8 @@ export function slugGlyphQuads(
 	}
 	const baselineY = maxGlyphTop * scale;
 
-	const vertices = new Float32Array(quadCount * VERTICES_PER_QUAD * FLOATS_PER_VERTEX);
-	const indices = new Uint32Array(quadCount * INDICES_PER_QUAD);
+	const vertices = new Float32Array(quadCount * Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX);
+	const indices = new Uint32Array(quadCount * Constants.INDICES_PER_QUAD);
 
 	let cursorX = 0;
 	let quadIdx = 0;
@@ -125,7 +114,7 @@ export function slugGlyphQuads(
 			continue;
 		}
 
-		const { bounds, hBandCount, vBandCount, bandOffset } = glyph;
+		const {bounds, hBandCount, vBandCount, bandOffset} = glyph;
 
 		// Glyph quad corners in pixel space.
 		// Font Y is up (ascenders positive), screen Y is down.
@@ -158,12 +147,12 @@ export function slugGlyphQuads(
 		const glyphHeight = bounds.maxY - bounds.minY;
 		const maxDim = Math.max(glyphWidth, glyphHeight);
 		const bandCount = Math.max(hBandCount, vBandCount);
-		_f32[0] = maxDim > 0 ? bandCount / maxDim : 0;  // shared scale
+		_f32[0] = maxDim > 0 ? bandCount / maxDim : 0; // shared scale
 		const bandScale = _f32[0];
-		_f32[1] = -bounds.minX * bandScale;              // vBandOffset (X → vertical band)
-		_f32[2] = -bounds.minY * bandScale;              // hBandOffset (Y → horizontal band)
-		const bandScaleX  = bandScale;
-		const bandScaleY  = bandScale;
+		_f32[1] = -bounds.minX * bandScale; // vBandOffset (X → vertical band)
+		_f32[2] = -bounds.minY * bandScale; // hBandOffset (Y → horizontal band)
+		const bandScaleX = bandScale;
+		const bandScaleY = bandScale;
 		const bandOffsetX = _f32[1];
 		const bandOffsetY = _f32[2];
 
@@ -180,21 +169,21 @@ export function slugGlyphQuads(
 		// Layout per corner:
 		//   Screen: y0 = top (font maxY), y1 = bottom (font minY)
 		//   Font:   v0 = minY (bottom), v1 = maxY (top)
-		const baseVertex = quadIdx * VERTICES_PER_QUAD;
+		const baseVertex = quadIdx * Constants.VERTICES_PER_QUAD;
 
 		// Corner 0: screen top-left = font (minX, maxY)
-		let off = baseVertex * FLOATS_PER_VERTEX;
-		vertices[off]      = x0;          // posX
-		vertices[off + 1]  = y0;          // posY
-		vertices[off + 2]  = -1;          // normalX
-		vertices[off + 3]  = -1;          // normalY
-		vertices[off + 4]  = u0;          // emU
-		vertices[off + 5]  = v1;          // emV
-		vertices[off + 6]  = packedLocation;
-		vertices[off + 7]  = packedBands;
-		vertices[off + 8]  = invScale;    // jac.x
-		vertices[off + 9]  = 0;           // jac.y
-		vertices[off + 10] = 0;           // jac.z
+		let off = baseVertex * Constants.FLOATS_PER_VERTEX;
+		vertices[off] = x0; // posX
+		vertices[off + 1] = y0; // posY
+		vertices[off + 2] = -1; // normalX
+		vertices[off + 3] = -1; // normalY
+		vertices[off + 4] = u0; // emU
+		vertices[off + 5] = v1; // emV
+		vertices[off + 6] = packedLocation;
+		vertices[off + 7] = packedBands;
+		vertices[off + 8] = invScale; // jac.x
+		vertices[off + 9] = 0; // jac.y
+		vertices[off + 10] = 0; // jac.z
 		vertices[off + 11] = negInvScale; // jac.w
 		vertices[off + 12] = bandScaleX;
 		vertices[off + 13] = bandScaleY;
@@ -206,17 +195,17 @@ export function slugGlyphQuads(
 		vertices[off + 19] = ca;
 
 		// Corner 1: screen top-right = font (maxX, maxY)
-		off += FLOATS_PER_VERTEX;
-		vertices[off]      = x1;
-		vertices[off + 1]  = y0;
-		vertices[off + 2]  = 1;
-		vertices[off + 3]  = -1;
-		vertices[off + 4]  = u1;
-		vertices[off + 5]  = v1;
-		vertices[off + 6]  = packedLocation;
-		vertices[off + 7]  = packedBands;
-		vertices[off + 8]  = invScale;
-		vertices[off + 9]  = 0;
+		off += Constants.FLOATS_PER_VERTEX;
+		vertices[off] = x1;
+		vertices[off + 1] = y0;
+		vertices[off + 2] = 1;
+		vertices[off + 3] = -1;
+		vertices[off + 4] = u1;
+		vertices[off + 5] = v1;
+		vertices[off + 6] = packedLocation;
+		vertices[off + 7] = packedBands;
+		vertices[off + 8] = invScale;
+		vertices[off + 9] = 0;
 		vertices[off + 10] = 0;
 		vertices[off + 11] = negInvScale;
 		vertices[off + 12] = bandScaleX;
@@ -229,17 +218,17 @@ export function slugGlyphQuads(
 		vertices[off + 19] = ca;
 
 		// Corner 2: screen bottom-right = font (maxX, minY)
-		off += FLOATS_PER_VERTEX;
-		vertices[off]      = x1;
-		vertices[off + 1]  = y1;
-		vertices[off + 2]  = 1;
-		vertices[off + 3]  = 1;
-		vertices[off + 4]  = u1;
-		vertices[off + 5]  = v0;
-		vertices[off + 6]  = packedLocation;
-		vertices[off + 7]  = packedBands;
-		vertices[off + 8]  = invScale;
-		vertices[off + 9]  = 0;
+		off += Constants.FLOATS_PER_VERTEX;
+		vertices[off] = x1;
+		vertices[off + 1] = y1;
+		vertices[off + 2] = 1;
+		vertices[off + 3] = 1;
+		vertices[off + 4] = u1;
+		vertices[off + 5] = v0;
+		vertices[off + 6] = packedLocation;
+		vertices[off + 7] = packedBands;
+		vertices[off + 8] = invScale;
+		vertices[off + 9] = 0;
 		vertices[off + 10] = 0;
 		vertices[off + 11] = negInvScale;
 		vertices[off + 12] = bandScaleX;
@@ -252,17 +241,17 @@ export function slugGlyphQuads(
 		vertices[off + 19] = ca;
 
 		// Corner 3: screen bottom-left = font (minX, minY)
-		off += FLOATS_PER_VERTEX;
-		vertices[off]      = x0;
-		vertices[off + 1]  = y1;
-		vertices[off + 2]  = -1;
-		vertices[off + 3]  = 1;
-		vertices[off + 4]  = u0;
-		vertices[off + 5]  = v0;
-		vertices[off + 6]  = packedLocation;
-		vertices[off + 7]  = packedBands;
-		vertices[off + 8]  = invScale;
-		vertices[off + 9]  = 0;
+		off += Constants.FLOATS_PER_VERTEX;
+		vertices[off] = x0;
+		vertices[off + 1] = y1;
+		vertices[off + 2] = -1;
+		vertices[off + 3] = 1;
+		vertices[off + 4] = u0;
+		vertices[off + 5] = v0;
+		vertices[off + 6] = packedLocation;
+		vertices[off + 7] = packedBands;
+		vertices[off + 8] = invScale;
+		vertices[off + 9] = 0;
 		vertices[off + 10] = 0;
 		vertices[off + 11] = negInvScale;
 		vertices[off + 12] = bandScaleX;
@@ -275,7 +264,7 @@ export function slugGlyphQuads(
 		vertices[off + 19] = ca;
 
 		// Two triangles: [0,1,2] and [0,2,3]
-		const idxOffset = quadIdx * INDICES_PER_QUAD;
+		const idxOffset = quadIdx * Constants.INDICES_PER_QUAD;
 		indices[idxOffset] = baseVertex;
 		indices[idxOffset + 1] = baseVertex + 1;
 		indices[idxOffset + 2] = baseVertex + 2;
@@ -287,7 +276,7 @@ export function slugGlyphQuads(
 		quadIdx++;
 	}
 
-	return { vertices, indices, quadCount };
+	return {vertices, indices, quadCount};
 }
 
 /**
@@ -318,8 +307,14 @@ export function slugGlyphQuadsMultiline(
 ): SlugGlyphQuads {
 	if (lines.length <= 1) {
 		return slugGlyphQuads(
-			lines[0] || '', glyphs, advances, unitsPerEm,
-			fontSize, textureWidth, color, extraExpand
+			lines[0] || '',
+			glyphs,
+			advances,
+			unitsPerEm,
+			fontSize,
+			textureWidth,
+			color,
+			extraExpand
 		);
 	}
 
@@ -329,8 +324,14 @@ export function slugGlyphQuadsMultiline(
 
 	for (let l = 0; l < lines.length; l++) {
 		const q = slugGlyphQuads(
-			lines[l], glyphs, advances, unitsPerEm,
-			fontSize, textureWidth, color, extraExpand
+			lines[l],
+			glyphs,
+			advances,
+			unitsPerEm,
+			fontSize,
+			textureWidth,
+			color,
+			extraExpand
 		);
 		perLine.push(q);
 		totalQuads += q.quadCount;
@@ -340,8 +341,8 @@ export function slugGlyphQuadsMultiline(
 		return {vertices: new Float32Array(0), indices: new Uint32Array(0), quadCount: 0};
 	}
 
-	const totalVerts = totalQuads * VERTICES_PER_QUAD * FLOATS_PER_VERTEX;
-	const totalIdxs = totalQuads * INDICES_PER_QUAD;
+	const totalVerts = totalQuads * Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX;
+	const totalIdxs = totalQuads * Constants.INDICES_PER_QUAD;
 	const vertices = new Float32Array(totalVerts);
 	const indices = new Uint32Array(totalIdxs);
 
@@ -358,12 +359,12 @@ export function slugGlyphQuadsMultiline(
 		const srcIdxs = q.indices;
 
 		// Copy vertices with Y offset applied to position (float index 1 per vertex)
-		for (let v = 0; v < q.quadCount * VERTICES_PER_QUAD; v++) {
-			const srcOff = v * FLOATS_PER_VERTEX;
+		for (let v = 0; v < q.quadCount * Constants.VERTICES_PER_QUAD; v++) {
+			const srcOff = v * Constants.FLOATS_PER_VERTEX;
 			const dstOff = vertOffset + srcOff;
 
 			// Copy all 20 floats
-			for (let f = 0; f < FLOATS_PER_VERTEX; f++) {
+			for (let f = 0; f < Constants.FLOATS_PER_VERTEX; f++) {
 				vertices[dstOff + f] = srcVerts[srcOff + f];
 			}
 
@@ -376,9 +377,9 @@ export function slugGlyphQuadsMultiline(
 			indices[idxOffset + j] = srcIdxs[j] + baseVertex;
 		}
 
-		vertOffset += q.quadCount * VERTICES_PER_QUAD * FLOATS_PER_VERTEX;
+		vertOffset += q.quadCount * Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX;
 		idxOffset += srcIdxs.length;
-		baseVertex += q.quadCount * VERTICES_PER_QUAD;
+		baseVertex += q.quadCount * Constants.VERTICES_PER_QUAD;
 	}
 
 	return {vertices, indices, quadCount: totalQuads};

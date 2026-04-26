@@ -1,6 +1,6 @@
 import {SlugFont} from '../../../../src/shared/slug/font';
 import {SlugFonts} from '../../../../src/shared/slug/fonts';
-import type {SlugFontErrorPolicy} from '../../../../src/shared/slug/fonts/error';
+import type {SlugFontErrorPolicy} from '../../../../src/shared/slug/font/error/policy';
 import {
 	slugFontInputIsUrlLike,
 	slugResolveFontInput,

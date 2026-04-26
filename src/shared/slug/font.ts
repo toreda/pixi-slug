@@ -70,8 +70,13 @@ export class SlugFont {
 	 * Set the GPU cache cleanup function. Called by version-specific factories
 	 * (e.g. slugFontGpuV8) when they populate gpuCache.
 	 */
-	public setGpuDestroy(fn: () => void): void {
+	public setGpuDestroy(fn: () => void): boolean {
+		if (typeof fn !== 'function') {
+			return false;
+		}
+
 		this._gpuDestroy = fn;
+		return true;
 	}
 
 	/**
@@ -79,10 +84,12 @@ export class SlugFont {
 	 * Call only after all SlugText instances using this font are destroyed.
 	 */
 	public destroyGpu(): void {
-		if (this._gpuDestroy) {
+		if (typeof this._gpuDestroy === 'function') {
 			this._gpuDestroy();
-			this._gpuDestroy = null;
 		}
+		// `null` it after fn check, so its always cleared even when it's not
+		// a valid function.
+		this._gpuDestroy = null;
 		this.gpuCache = null;
 	}
 
