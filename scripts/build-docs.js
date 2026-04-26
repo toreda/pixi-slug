@@ -162,6 +162,14 @@ try {
 		'utf8'
 	);
 
+	// ----- Write docs/.nojekyll -----
+	// GitHub Pages runs Jekyll by default, which strips paths starting
+	// with `_` (e.g. docs/_shared/). The presence of .nojekyll disables
+	// Jekyll so files are served as-is. Must be re-created here because
+	// the docs/ rmSync above wipes it on every build.
+	console.log('Creating docs/.nojekyll...');
+	fs.writeFileSync(path.join(ROOT, 'docs/.nojekyll'), '', 'utf8');
+
 	console.log('Done. docs/ is ready for GitHub Pages.');
 	console.log('Configure GitHub Pages to serve from /docs on the main branch.');
 } catch (e) {
