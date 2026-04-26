@@ -8,94 +8,26 @@
 
 Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D transform.
 
+**[See Live demo →](https://toreda.github.io/pixi-slug/)**
+
 * No atlases or SDFs. Just Béziers on the GPU.
 * Perspective-correct antialiasing via dynamic dilation.
 * Supports TrueType (`.ttf`), OpenType (`.otf`), and WOFF/WOFF2 fonts — including cubic-outline (CFF) fonts.
 * Word wrap, newlines, underline, strikethrough, and overline.
 * Works with PixiJS `v8`, `v7`, and `v6`.
 
+&nbsp;
+
+# Contents
+* [Features](#features)
+* [FAQ](#faq)
+* [Examples](#examples)
+* [Legal](#legal)
+
 
 &nbsp;
-## FAQ
 
-<blockquote><p align="left">Q: What does pixi-slug do?</p></blockquote>
-
-**A**: It renders text using shaders.
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Does pixi-slug replace PIXI.Text?</p></blockquote>
-
-**A**: No, it doesn't replace or affect `PIXI.Text`. `pixi-slug` is a standalone plugin that uses its own `SlugText`.
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Is pixi-slug a drop-in replacement for PIXI.Text?</p></blockquote>
-
-**A**: Unfortunately no, it's not a drop-in replacement where you can just replace `new Text(...)` with `new SlugText(...)`. It's close but not identical.
-
-<p align="center">· · ·</p>
-
-
-<blockquote><p align="left">Q: What are the advantages of using pixi-slug instead of PIXI.Text?</p></blockquote>
-
-**A:**
-* Text is crisp & clear at any size.
-* Changing font size or text scale after instantiation does not affect render quality.
-* The same `SlugText` can be used on multiple resolutions.
-* `SlugText` content changes have only a minimal impact on performance. Replacing text content several times per second (or more) doesn't create intense GC pressure the way `PIXI.Text` does.
-
-
-Do these advantages matter for you? It depends on your use case. This package probably won't benefit you if:
-* Your PIXI scenes have a small number of Text objects.
-* Text rarely (or never) changes size or content.
-* Your scene can afford to render text at a large base size & scale the text down to the target font size to guarantee clear rendering.
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Can it render emojis?</p></blockquote>
-
-**A**: Yes. Drawing emojis as text requires a font with emoji characters. Find one online, make one, or try one of these Google fonts:
-* [Noto Sans Symbols 1](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols?preview.script=Latn)
-* [Noto Sans Symbols 2](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols+2)
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Does pixi-slug support CFF (cubic Bézier) fonts?</p></blockquote>
-
-**A**: Yes — cubic outlines are approximated as two quadratics per cubic segment, since the Slug algorithm operates on quadratic Béziers. Quality is indistinguishable at typical sizes; extreme zooms on cubic-heavy fonts may reveal the approximation.
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: What font formats does it support?</p></blockquote>
-
-
-**A**: `pixi-slug` supports stand web font formats: `ttf`, `otf`, `woff`, and `woff2`.
-
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Are SVG fonts supported?</p></blockquote>
-
-
-**A**: No, not currently. `pixi-slug` supports some of the same features as SVG while using standard web fonts, rather than SVG fonts specifically. There are no plans to add SVG support right now. If there's enough demand that may change.
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Can I use both pixi-slug and PIXI.Text together?</p></blockquote>
-
-
-**A**: Yes they can be used together. `pixi-slug` doesn't replace or change `PIXI.Text`. You can use both together or just one. It's up to you.
-
-<p align="center">· · ·</p>
-
-<blockquote><p align="left">Q: Why is it called pixi-slug?</p></blockquote>
-
-**A**: `pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
-
-
-
-## Features
+# Features
 
 | Feature                              |  v8  |  v7  |  v6  |
 | ------------------------------------ | :--: | :--: | :--: |
@@ -120,14 +52,110 @@ Do these advantages matter for you? It depends on your use case. This package pr
 | `superscript`                          |  ❌  |  ❌  |  ❌  |
 | `subscript`                            |  ❌  |  ❌  |  ❌  |
 | `RTL` glyph support                    |  ❌  |  ❌  |  ❌  |
+| `WebGL2` support                      |  ✅  |  ✅  |  ✅  |
+| `WebGL1` support                      |  ❌  |  ❌  |  ❌  |
+
+
 
 &nbsp;
+# FAQ
+
+## What does pixi-slug do?
+
+It renders text using shaders.
+
+<p align="center">· · ·</p>
+
+## Does pixi-slug replace PIXI.Text?
+
+No, it doesn't replace or affect `PIXI.Text`. `pixi-slug` is a standalone plugin that uses its own `SlugText`.
+
+<p align="center">· · ·</p>
+
+# Is pixi-slug a drop-in replacement for PIXI.Text?
+
+**No**. It's not a drop-in replacement where you can just replace `new Text(...)` with `new SlugText(...)`. It's close but not identical.
+
+<p align="center">· · ·</p>
+
+
+# What are the advantages of using pixi-slug instead of PIXI.Text?
+
+* Text is crisp & clear at any size.
+* Changing font size or text scale after instantiation does not affect render quality.
+* The same `SlugText` can be used on multiple resolutions.
+* `SlugText` content changes have only a minimal impact on performance. Replacing text content several times per second (or more) doesn't create intense GC pressure the way `PIXI.Text` does.
+
+&nbsp;
+
+Advantages depend on use case. This package probably won't benefit you if:
+* Your PIXI scenes have a small number of Text objects.
+* Text rarely (or never) changes size or content.
+* Your scene can afford to render text at a large base size & scale the text down to the target font size to guarantee clear rendering.
+
+<p align="center">· · ·</p>
+
+## Can it render emojis?
+
+**A**: Yes. Drawing emojis as text requires a font with emoji characters. Find one online, make one, or try one of these Google fonts:
+* [Noto Sans Symbols 1](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols?preview.script=Latn)
+* [Noto Sans Symbols 2](https://fonts.google.com/noto/specimen/Noto+Sans+Symbols+2)
+
+<p align="center">· · ·</p>
+
+## Does pixi-slug support CFF (cubic Bézier) fonts?
+
+**Yes** — cubic outlines are approximated as two quadratics per cubic segment, since the Slug algorithm operates on quadratic Béziers. Quality is indistinguishable at typical sizes; extreme zooms on cubic-heavy fonts may reveal the approximation.
+
+<p align="center">· · ·</p>
+
+## What font formats does it support?
+`pixi-slug` supports stand web font formats: `ttf`, `otf`, `woff`, and `woff2`.
+
+
+<p align="center">· · ·</p>
+
+## What version of WebGL does pixi-slug require?
+
+`pixi-slug` requires `WebGL2` to work. It does not work with `WebGL1`.
+* [See if your browser supports `WebGL2`](https://get.webgl.org/webgl2/)
+
+*95% of current browsers support `WebGL2` according to [caniuse.com/webgl2](https://caniuse.com/webgl2)*
+
+<p align="center">· · ·</p>
+
+
+## Q: What does pixi-slug do when loaded by a client that doesnt support `WebGL2` ?
+
+The shaders used by `pixi-slug` to render text require `WebGL2` and don't support `WebGL1`. The shaders fail to load in `WebGL1` and will simply not be drawn on screen, along with error messages in the console describing the shader error. 
+
+In the future, it would be nice to fall back to standard `PIXI.Text` when `WebGL2` isn't available.
+<p align="center">· · ·</p>
+
+## Are SVG fonts supported?
+**No**. `pixi-slug` supports some of the same features as SVG while using standard web fonts, rather than SVG fonts specifically. There are no plans to add SVG support right now. If there's enough demand that may change.
+
+<p align="center">· · ·</p>
+
+## Q: Can I use both pixi-slug and PIXI.Text together?
+
+**Yes** they can be used together. `pixi-slug` doesn't replace or change `PIXI.Text`. You can use both together or just one. It's up to you.
+
+<p align="center">· · ·</p>
+
+## Why is it called pixi-slug?
+`pixi-slug` is a plugin for the [PIXI.js](https://pixijs.com/) game engine which draws text using the slug algorithm. Read more about Slug at [sluglibrary.com](https://sluglibrary.com/).
+
+
+<p align="center">· · ·</p>
+
+
 
 # Examples
 
 `pixi-slug` supports multiple versions by building & bundling a separate package for each of the three supported PIXI version (`v8`, `v7`, `v6`). PIXI's imports and API vary by version. All packages share core functionality but import paths and scaffolding differs by version. 
 
-## Creating `SlugText`
+## Creating a `SlugText`
 
 `font` accepts a URL string, a registered name, a pre-built `SlugFont`, raw `ArrayBuffer` / `Uint8Array` bytes, or a `FontFace` returned by PIXI's asset loader. Strings that look like URLs are fetched and cached automatically.
 
@@ -194,7 +222,7 @@ app.stage.addChild(text);
 
 ## Updating a `SlugText`
 
-Mutate properties directly — `SlugText` rebuilds its geometry on change. This pattern is identical across v6, v7, and v8.
+`SlugText` geometry is rebuilt each time properties change. 
 
 ```typescript
 text.text = 'Updated!';
@@ -208,7 +236,7 @@ text.font = await SlugFonts.from('https://cdn.example.com/inter.ttf');
 
 ## Colors
 
-Every `SlugText` color field — `fill`, stroke color, drop shadow color, and the setter equivalents (`text.color`, `text.strokeColor`) — accepts the same flexible input set: hex strings, hex numbers, or numeric arrays.
+All color fields support a range of value types: hex strings, hex numbers, or numeric arrays.
 
 ```typescript
 text.color = '#FF0000';           // 6-digit hex, preserves existing alpha
