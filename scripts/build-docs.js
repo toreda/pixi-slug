@@ -29,6 +29,24 @@ function cp(src, dest) {
 	}
 }
 
+// Recursively copy a directory. Used for _shared/ and assets/ which
+// each contain a small fixed set of files we want to mirror into docs/.
+function cpDir(src, dest) {
+	const absSrc = path.join(ROOT, src);
+	const absDest = path.join(ROOT, dest);
+	if (!fs.existsSync(absSrc)) return;
+	fs.mkdirSync(absDest, {recursive: true});
+	for (const entry of fs.readdirSync(absSrc, {withFileTypes: true})) {
+		const from = path.join(src, entry.name);
+		const to = path.join(dest, entry.name);
+		if (entry.isDirectory()) {
+			cpDir(from, to);
+		} else if (entry.isFile()) {
+			cp(from, to);
+		}
+	}
+}
+
 function sedReplace(file, from, to) {
 	const abs = path.join(ROOT, file);
 	const content = fs.readFileSync(abs, 'utf8');
@@ -76,19 +94,28 @@ try {
 	cp('examples/comparison/font.ttf', 'docs/comparison/font.ttf');
 	cp('examples/benchmark/index.html', 'docs/benchmark/index.html');
 
+	// ----- Copy shared sidebar + bundled fonts -----
+	// _shared/ holds sidebar.html, sidebar.css, and wire.js which the
+	// per-version pages load via `../_shared/...`. Mirroring it next to
+	// the v6/v7/v8 directories keeps those relative paths working under
+	// the /pixi-slug/ project subpath that GitHub Pages serves at.
+	console.log('Copying _shared/ and assets/...');
+	cpDir('examples/_shared', 'docs/_shared');
+	cpDir('assets', 'docs/assets');
+
 	// ----- Fix paths -----
 	console.log('Fixing paths in docs/...');
-	sedReplace('docs/v6/index.html', "fetch('/examples/v6/font.ttf')", "fetch('./font.ttf')");
-	sedReplace('docs/v7/index.html', "fetch('/examples/v7/font.ttf')", "fetch('./font.ttf')");
-	sedReplace('docs/v8/index.html', "fetch('/examples/v8/font.ttf')", "fetch('./font.ttf')");
-	sedReplace('docs/comparison/index.html', "fetch('/examples/comparison/font.ttf')", "fetch('./font.ttf')");
-	sedReplace('docs/benchmark/index.html', "fetch('/examples/comparison/font.ttf')", "fetch('./font.ttf')");
-
 	sedReplace('docs/v6/index.html', '../../dist/v6/index.js', '../dist/v6/index.js');
 	sedReplace('docs/v7/index.html', '../../dist/v7/index.js', '../dist/v7/index.js');
 	sedReplace('docs/v8/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
 	sedReplace('docs/comparison/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
 	sedReplace('docs/benchmark/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
+
+	// wire.js references the bundled fallback fonts at `/assets/fonts/...`
+	// (absolute) which only resolves when the site is served at the
+	// domain root. On Pages we re-root them to `../assets/fonts/...`
+	// since wire.js lives at docs/_shared/ and assets at docs/assets/.
+	sedReplace('docs/_shared/wire.js', "'/assets/fonts/", "'../assets/fonts/");
 
 	// Fix nav links: /examples/X/ → ../X/ so they work on GitHub Pages
 	// where the base path is /pixi-slug/, not /.

@@ -1,0 +1,176 @@
+/* Shared example styles for v6/v7/v8 demo pages. Each page links this
+ * file and pulls in the shared sidebar markup via wire.js. */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+	background: #0a0a1a;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	color: #eee;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+h1 {
+	text-align: center;
+	padding: 12px;
+	font-size: 1.2rem;
+	background: #16213e;
+	width: 100%;
+}
+canvas { border: none; }
+#nav {
+	display: flex;
+	gap: 0;
+	background: #0d1117;
+	width: 100%;
+}
+#nav a {
+	padding: 8px 18px;
+	color: #8b949e;
+	text-decoration: none;
+	font-size: 13px;
+	border-bottom: 2px solid transparent;
+}
+#nav a:hover { color: #eee; background: #161b22; }
+#nav a.active { color: #eee; border-bottom-color: #4a6aae; }
+#main {
+	display: flex;
+	flex: 1;
+}
+#sidebar {
+	width: 220px;
+	min-width: 220px;
+	padding: 14px 12px;
+	background: #1a1a2e;
+	font-size: 13px;
+	color: #aaa;
+	overflow-y: auto;
+}
+#sidebar .ctrl-group {
+	margin-bottom: 14px;
+}
+#sidebar .ctrl-group-title {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: #667;
+	margin-bottom: 6px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #333;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+#sidebar .ctrl-group-title .group-toggle {
+	margin-left: auto;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: 1px solid #444;
+	color: #aaa;
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1;
+	padding: 0;
+	user-select: none;
+}
+#sidebar .ctrl-group-title .group-toggle:hover {
+	background: #2a2a4e;
+	color: #eee;
+}
+#sidebar .ctrl-group[data-collapsed="true"] > :not(.ctrl-group-title) {
+	display: none;
+}
+#sidebar .ctrl-group[data-collapsed="true"] .ctrl-group-title {
+	margin-bottom: 0;
+	border-bottom-color: transparent;
+}
+#sidebar .ctrl-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+#sidebar .ctrl-row label {
+	white-space: nowrap;
+	min-width: 50px;
+}
+#sidebar input[type="text"],
+#sidebar textarea {
+	width: 100%;
+	padding: 4px 8px;
+	border: 1px solid #444;
+	background: #2a2a4e;
+	color: #eee;
+	border-radius: 4px;
+	font-size: 13px;
+}
+#sidebar textarea {
+	resize: vertical;
+	min-height: 48px;
+	font-family: inherit;
+}
+#sidebar input[type="number"] {
+	width: 56px;
+	padding: 4px 6px;
+	border: 1px solid #444;
+	background: #2a2a4e;
+	color: #eee;
+	border-radius: 4px;
+	font-size: 13px;
+	text-align: center;
+}
+#sidebar input[type="color"] {
+	width: 28px; height: 24px;
+	border: 1px solid #444;
+	background: none;
+	cursor: pointer;
+	padding: 0;
+}
+#sidebar input[type="range"] {
+	width: 80px;
+	accent-color: #4a6aae;
+	cursor: pointer;
+}
+#sidebar input[type="checkbox"] {
+	accent-color: #4a6aae;
+	cursor: pointer;
+}
+#sidebar .slider-val {
+	width: 46px;
+	padding: 2px 4px;
+	border: 1px solid #444;
+	background: #2a2a4e;
+	color: #eee;
+	border-radius: 4px;
+	font-size: 12px;
+	text-align: center;
+	appearance: textfield;
+	-moz-appearance: textfield;
+}
+#sidebar .slider-val::-webkit-inner-spin-button,
+#sidebar .slider-val::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+#sidebar select {
+	padding: 3px 6px;
+	border: 1px solid #444;
+	background: #2a2a4e;
+	color: #eee;
+	border-radius: 4px;
+	font-size: 13px;
+	cursor: pointer;
+}
+#app {
+	flex: 1;
+	overflow: hidden;
+}
+#app canvas {
+	display: block;
+	width: 100% !important;
+	height: 100% !important;
+}
