@@ -5611,7 +5611,7 @@ var __webpack_exports__={};
 // ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__),
 // EXPORTS
-__webpack_require__.d(__webpack_exports__,{SlugApplicationPluginV7:()=>/* reexport */SlugApplicationPluginV7,SlugFont:()=>/* reexport */SlugFont,SlugFonts:()=>/* reexport */SlugFonts,SlugText:()=>/* reexport */SlugText,slugFontGpuV7:()=>/* reexport */slugFontGpuV7,slugFontsAttachTickerV7:()=>/* reexport */slugFontsAttachTickerV7,slugFontsInstallLoaderV7:()=>/* reexport */slugFontsInstallLoaderV7,slugShader:()=>/* reexport */slugShader});
+__webpack_require__.d(__webpack_exports__,{SLUG_FONT_ERROR_MODES:()=>/* reexport */SLUG_FONT_ERROR_MODES,SlugApplicationPluginV7:()=>/* reexport */SlugApplicationPluginV7,SlugFont:()=>/* reexport */SlugFont,SlugFonts:()=>/* reexport */SlugFonts,SlugText:()=>/* reexport */SlugText,isSlugFontErrorMode:()=>/* reexport */isSlugFontErrorMode,slugFontErrorRaise:()=>/* reexport */slugFontErrorRaise,slugFontGpuV7:()=>/* reexport */slugFontGpuV7,slugFontsAttachTickerV7:()=>/* reexport */slugFontsAttachTickerV7,slugFontsInstallLoaderV7:()=>/* reexport */slugFontsInstallLoaderV7,slugShader:()=>/* reexport */slugShader});
 // EXTERNAL MODULE: external {"commonjs":"@pixi/ticker","commonjs2":"@pixi/ticker","root":"PIXI"}
 var ticker_root_PIXI_=__webpack_require__(1186);// ./src/defaults.ts
 /**
@@ -9951,11 +9951,14 @@ _gpuDestroy;constructor(textureWidth=Defaults.TEXTURE_SIZE){if(textureWidth<=0||
 /**
      * Set the GPU cache cleanup function. Called by version-specific factories
      * (e.g. slugFontGpuV8) when they populate gpuCache.
-     */setGpuDestroy(fn){this._gpuDestroy=fn}
+     */setGpuDestroy(fn){return"function"==typeof fn&&(this._gpuDestroy=fn,!0)}
 /**
      * Destroy GPU resources (textures, etc.) owned by this font.
      * Call only after all SlugText instances using this font are destroyed.
-     */destroyGpu(){this._gpuDestroy&&(this._gpuDestroy(),this._gpuDestroy=null),this.gpuCache=null}
+     */destroyGpu(){"function"==typeof this._gpuDestroy&&this._gpuDestroy(),
+// `null` it after fn check, so its always cleared even when it's not
+// a valid function.
+this._gpuDestroy=null,this.gpuCache=null}
 /**
      * GPU memory consumed by this font's curve and band textures, in bytes.
      * Both textures use rgba32float (4 channels × 4 bytes per texel).
@@ -10037,12 +10040,7 @@ this.destroyGpu()}}// ./src/shared/slug/fonts/error.ts
  * equality checks when validating user input (settings, options).
  */
 const SLUG_FONT_ERROR_MODES=["throw","error","warn","silent"];
-/** True when `value` is exactly one of the `SlugFontErrorMode` literals. */function isSlugFontErrorMode(value){return"string"==typeof value&&SLUG_FONT_ERROR_MODES.includes(value)}
-/**
- * React to a resolver failure according to `policy[which]`. Throws,
- * warns, or silently no-ops. Messages are formatted here so every call
- * site produces the same `[SlugText:<case>] …` prefix.
- */function slugFontErrorRaise(policy,which,message){const mode=policy[which],formatted=`[SlugText:${which}] ${message}`;if("throw"===mode)throw new Error(formatted);"error"!==mode?"warn"!==mode||console.warn(formatted):console.error(formatted)}// ./src/shared/slug/fonts/fallback/roboto.ts
+/** True when `value` is exactly one of the `SlugFontErrorMode` literals. */function isSlugFontErrorMode(value){return"string"==typeof value&&SLUG_FONT_ERROR_MODES.includes(value)}// ./src/shared/slug/fonts/fallback/roboto.ts
 // AUTO-GENERATED — DO NOT EDIT.
 // Regenerate via: node scripts/build-fallback-font.mjs
 // Source: assets/fonts/roboto-fallback.ttf
@@ -10267,13 +10265,29 @@ function slugFontsAttachTickerV7(){Defaults.Registry.AutoAttachTicker&&SlugFonts
 // EXTERNAL MODULE: external {"commonjs":"@pixi/constants","commonjs2":"@pixi/constants","root":"PIXI"}
 var constants_root_PIXI_=__webpack_require__(5772),core_root_PIXI_=__webpack_require__(3780),display_root_PIXI_=__webpack_require__(6492),graphics_root_PIXI_=__webpack_require__(2972),mesh_root_PIXI_=__webpack_require__(9564);
 // EXTERNAL MODULE: external {"commonjs":"@pixi/core","commonjs2":"@pixi/core","root":"PIXI"}
-// ./src/shared/slug/glyph/quad.ts
+// ./src/constants.ts
 /**
- * Number of floats per vertex for each attribute.
- * All 5 attributes are vec4 (4 floats each), totaling 20 floats per vertex.
+ * Structural invariants of the package — values that are NOT configurable
+ * because they are dictated by the shader contract or fixed geometry.
+ *
+ * Unlike `Defaults`, these are not meant to be edited. Each constant exists
+ * here only so that magic numbers don't appear inline at call sites and so
+ * that any code that needs the value reads from a single source of truth.
  */
+class Constants{
+/**
+     * Number of floats per vertex in the Slug glyph vertex layout.
+     * Five vec4 attributes (aPositionNormal, aTexcoord, aJacobian,
+     * aBanding, aColor) × 4 floats each = 20. Tied 1:1 to the shader's
+     * input declarations.
+     */
+static FLOATS_PER_VERTEX=20;
+/** Number of vertices per glyph quad (one quad = 4 corners). */
+static VERTICES_PER_QUAD=4;
+/** Number of indices per glyph quad (two triangles × 3 indices). */
+static INDICES_PER_QUAD=6}// ./src/shared/slug/glyph/quad.ts
+/** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
 const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
-/** Number of vertices per glyph quad. */
 /**
  * Pack a float into a uint32 bit pattern, stored as a float.
  * Used to pass packed integer data through float vertex attributes.
@@ -10309,7 +10323,7 @@ function packUint16Pair(low,high){return _packU32[0]=(65535&high)<<16|65535&low,
 // so that position(0,0) aligns the top of the tallest rendered glyph to y=0,
 // matching PixiJS Text behavior. The typographic ascender from the OS/2 table
 // includes extra line-gap space that would produce a visible offset.
-let quadCount=0,maxGlyphTop=0;for(let i=0;i<text.length;i++){const g=glyphs.get(text.charCodeAt(i));g&&(quadCount++,g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY))}const baselineY=maxGlyphTop*scale,vertices=new Float32Array(4*quadCount*20),indices=new Uint32Array(6*quadCount);let cursorX=0,quadIdx=0;for(let i=0;i<text.length;i++){const charCode=text.charCodeAt(i),glyph=glyphs.get(charCode);if(!glyph){
+let quadCount=0,maxGlyphTop=0;for(let i=0;i<text.length;i++){const g=glyphs.get(text.charCodeAt(i));g&&(quadCount++,g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY))}const baselineY=maxGlyphTop*scale,vertices=new Float32Array(quadCount*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX),indices=new Uint32Array(quadCount*Constants.INDICES_PER_QUAD);let cursorX=0,quadIdx=0;for(let i=0;i<text.length;i++){const charCode=text.charCodeAt(i),glyph=glyphs.get(charCode);if(!glyph){
 // No curves for this char (e.g. space) — advance cursor using advance width
 const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds,hBandCount,vBandCount,bandOffset}=glyph,x0=cursorX+bounds.minX*scale-extraExpand,y0=-bounds.maxY*scale+baselineY-extraExpand,x1=cursorX+bounds.maxX*scale+extraExpand,y1=-bounds.minY*scale+baselineY+extraExpand,emExpand=extraExpand*invScale,u0=bounds.minX-emExpand,v0=bounds.minY-emExpand,u1=bounds.maxX+emExpand,v1=bounds.maxY+emExpand,glyphWidth=bounds.maxX-bounds.minX,glyphHeight=bounds.maxY-bounds.minY,maxDim=Math.max(glyphWidth,glyphHeight),bandCount=Math.max(hBandCount,vBandCount);
 // Glyph quad corners in pixel space.
@@ -10320,9 +10334,9 @@ const adv=advances.get(charCode);adv&&(cursorX+=adv*scale);continue}const{bounds
 _f32[0]=maxDim>0?bandCount/maxDim:0;// shared scale
 const bandScale=_f32[0];_f32[1]=-bounds.minX*bandScale,// vBandOffset (X → vertical band)
 _f32[2]=-bounds.minY*bandScale;// hBandOffset (Y → horizontal band)
-const bandScaleX=bandScale,bandScaleY=bandScale,bandOffsetX=_f32[1],bandOffsetY=_f32[2],packedLocation=packUint16Pair(bandOffset%textureWidth,Math.floor(bandOffset/textureWidth)),packedBands=packBandMax(vBandCount-1,hBandCount-1),baseVertex=4*quadIdx;
+const bandScaleX=bandScale,bandScaleY=bandScale,bandOffsetX=_f32[1],bandOffsetY=_f32[2],packedLocation=packUint16Pair(bandOffset%textureWidth,Math.floor(bandOffset/textureWidth)),packedBands=packBandMax(vBandCount-1,hBandCount-1),baseVertex=quadIdx*Constants.VERTICES_PER_QUAD;
 // Corner 0: screen top-left = font (minX, maxY)
-let off=20*baseVertex;vertices[off]=x0,// posX
+let off=baseVertex*Constants.FLOATS_PER_VERTEX;vertices[off]=x0,// posX
 vertices[off+1]=y0,// posY
 vertices[off+2]=-1,// normalX
 vertices[off+3]=-1,// normalY
@@ -10334,13 +10348,13 @@ vertices[off+10]=0,// jac.z
 vertices[off+11]=negInvScale,// jac.w
 vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
 // Corner 1: screen top-right = font (maxX, maxY)
-off+=20,vertices[off]=x1,vertices[off+1]=y0,vertices[off+2]=1,vertices[off+3]=-1,vertices[off+4]=u1,vertices[off+5]=v1,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
+off+=Constants.FLOATS_PER_VERTEX,vertices[off]=x1,vertices[off+1]=y0,vertices[off+2]=1,vertices[off+3]=-1,vertices[off+4]=u1,vertices[off+5]=v1,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
 // Corner 2: screen bottom-right = font (maxX, minY)
-off+=20,vertices[off]=x1,vertices[off+1]=y1,vertices[off+2]=1,vertices[off+3]=1,vertices[off+4]=u1,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
+off+=Constants.FLOATS_PER_VERTEX,vertices[off]=x1,vertices[off+1]=y1,vertices[off+2]=1,vertices[off+3]=1,vertices[off+4]=u1,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca,
 // Corner 3: screen bottom-left = font (minX, minY)
-off+=20,vertices[off]=x0,vertices[off+1]=y1,vertices[off+2]=-1,vertices[off+3]=1,vertices[off+4]=u0,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca;
+off+=Constants.FLOATS_PER_VERTEX,vertices[off]=x0,vertices[off+1]=y1,vertices[off+2]=-1,vertices[off+3]=1,vertices[off+4]=u0,vertices[off+5]=v0,vertices[off+6]=packedLocation,vertices[off+7]=packedBands,vertices[off+8]=invScale,vertices[off+9]=0,vertices[off+10]=0,vertices[off+11]=negInvScale,vertices[off+12]=bandScaleX,vertices[off+13]=bandScaleY,vertices[off+14]=bandOffsetX,vertices[off+15]=bandOffsetY,vertices[off+16]=cr,vertices[off+17]=cg,vertices[off+18]=cb,vertices[off+19]=ca;
 // Two triangles: [0,1,2] and [0,2,3]
-const idxOffset=6*quadIdx;indices[idxOffset]=baseVertex,indices[idxOffset+1]=baseVertex+1,indices[idxOffset+2]=baseVertex+2,indices[idxOffset+3]=baseVertex,indices[idxOffset+4]=baseVertex+2,indices[idxOffset+5]=baseVertex+3,cursorX+=glyph.advanceWidth*scale,quadIdx++}return{vertices,indices,quadCount}}
+const idxOffset=quadIdx*Constants.INDICES_PER_QUAD;indices[idxOffset]=baseVertex,indices[idxOffset+1]=baseVertex+1,indices[idxOffset+2]=baseVertex+2,indices[idxOffset+3]=baseVertex,indices[idxOffset+4]=baseVertex+2,indices[idxOffset+5]=baseVertex+3,cursorX+=glyph.advanceWidth*scale,quadIdx++}return{vertices,indices,quadCount}}
 /**
  * Build quads for multiple lines of text with vertical line spacing.
  * Each line is laid out at a Y offset of `lineIndex * lineHeight` pixels.
@@ -10410,7 +10424,13 @@ return font.gpuCache=cache,font.setGpuDestroy(()=>{curveTexture.destroy(!0),band
  * The uResolution uniform must be set manually before each render since
  * PixiJS v7 does not provide a built-in viewport size uniform.
  */
-function slugShader(program,curveTexture,bandTexture,resolution){const uniforms={uCurveTexture:curveTexture,uBandTexture:bandTexture,uResolution:new Float32Array(resolution),uSupersampleCount:0,uStrokeExpand:0,uStrokeAlphaStart:1,uStrokeAlphaRate:0};return new core_root_PIXI_.Shader(program,uniforms)}
+function slugShader(program,curveTexture,bandTexture,resolution){const uniforms={uCurveTexture:curveTexture,uBandTexture:bandTexture,uResolution:new Float32Array(resolution),uSupersampleCount:0,uStrokeExpand:0,uStrokeAlphaStart:1,uStrokeAlphaRate:0};return new core_root_PIXI_.Shader(program,uniforms)}// ./src/shared/slug/font/error/raise.ts
+/**
+ * React to a resolver failure according to `policy[which]`. Throws,
+ * warns, or silently no-ops. Messages are formatted here so every call
+ * site produces the same `[SlugText:<case>] …` prefix.
+ */
+function slugFontErrorRaise(policy,which,message){const mode=policy[which],formatted=`[SlugText:${which}] ${message}`;if("throw"===mode)throw new Error(formatted);"error"!==mode?"warn"!==mode||console.warn(formatted):console.error(formatted)}
 /**
  * Classify a raw string as URL-like. Returns true when the string should
  * be fetched as a font file; false means alias lookup. User strings pass
@@ -10654,15 +10674,15 @@ var Base;class SlugText extends SlugTextV7Base{_meshes;
 /** Graphics child for underline/strikethrough/overline decorations. */
 _decorations;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this.rebuild()}_makeQuads(font,text,color,extraExpand=0){const hasNewline=text.indexOf("\n")>=0,wrapping=this._wordWrap&&this._wordWrapWidth>0;if(wrapping||hasNewline){const scale=this._fontSize/font.unitsPerEm,width=wrapping?this._wordWrapWidth:0,{lines}=slugTextWrap(text,font.advances,scale,width,this._breakWords),lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
 // Build quads per line, then merge into a single buffer.
-const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalIdxs=6*totalQuads,vertices=new Float32Array(4*totalQuads*20),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
+const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalIdxs=totalQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(totalQuads*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
 // Copy vertices with Y offset applied to position (float index 1 per vertex)
-for(let v=0;v<4*q.quadCount;v++){const srcOff=20*v,dstOff=vertOffset+srcOff;
+for(let v=0;v<q.quadCount*Constants.VERTICES_PER_QUAD;v++){const srcOff=v*Constants.FLOATS_PER_VERTEX,dstOff=vertOffset+srcOff;
 // Copy all 20 floats
-for(let f=0;f<20;f++)vertices[dstOff+f]=srcVerts[srcOff+f];
+for(let f=0;f<Constants.FLOATS_PER_VERTEX;f++)vertices[dstOff+f]=srcVerts[srcOff+f];
 // Shift posY (index 1) by line offset
 vertices[dstOff+1]+=yShift}
 // Copy indices with base vertex offset
-for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=4*q.quadCount*20,idxOffset+=srcIdxs.length,baseVertex+=4*q.quadCount}return{vertices,indices,quadCount:totalQuads}}(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return slugGlyphQuads(text,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}_buildMesh(quads,gpu){const vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,16),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,32),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,48),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,64);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,{mesh:new mesh_root_PIXI_.Mesh(geometry,shader),shader}}rebuild(){this._rebuildCount++;for(const mesh of this._meshes)this.removeChild(mesh),mesh.destroy();this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null);const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV7(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0;if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,this._text,shadowColor,blur);if(shadowQuads.quadCount>0){const{mesh,shader}=this._buildMesh(shadowQuads,gpu);shader.uniforms.uStrokeExpand=blur,blur>0&&(shader.uniforms.uStrokeAlphaStart=shadowAlpha,shader.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}if(hasStroke){const strokeQuads=this._makeQuads(font,this._text,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){const{mesh,shader}=this._buildMesh(strokeQuads,gpu);shader.uniforms.uStrokeExpand=this._strokeWidth,shader.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,shader.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}const fillQuads=this._makeQuads(font,this._text,this._color);if(fillQuads.quadCount>0){const{mesh}=this._buildMesh(fillQuads,gpu);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=fillQuads.vertices.byteLength,this._indexBytes=fillQuads.indices.byteLength}
+for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=q.quadCount*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,idxOffset+=srcIdxs.length,baseVertex+=q.quadCount*Constants.VERTICES_PER_QUAD}return{vertices,indices,quadCount:totalQuads}}(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return slugGlyphQuads(text,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}_buildMesh(quads,gpu){const vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,16),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,32),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,48),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,64);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,{mesh:new mesh_root_PIXI_.Mesh(geometry,shader),shader}}rebuild(){this._rebuildCount++;for(const mesh of this._meshes)this.removeChild(mesh),mesh.destroy();this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null);const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV7(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0;if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,this._text,shadowColor,blur);if(shadowQuads.quadCount>0){const{mesh,shader}=this._buildMesh(shadowQuads,gpu);shader.uniforms.uStrokeExpand=blur,blur>0&&(shader.uniforms.uStrokeAlphaStart=shadowAlpha,shader.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}if(hasStroke){const strokeQuads=this._makeQuads(font,this._text,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){const{mesh,shader}=this._buildMesh(strokeQuads,gpu);shader.uniforms.uStrokeExpand=this._strokeWidth,shader.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,shader.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}const fillQuads=this._makeQuads(font,this._text,this._color);if(fillQuads.quadCount>0){const{mesh}=this._buildMesh(fillQuads,gpu);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=fillQuads.vertices.byteLength,this._indexBytes=fillQuads.indices.byteLength}
 // --- Text decorations (underline / strikethrough / overline) ---
 // Reads only the concrete `_*Draw` records — base.ts has already
 // folded user input + fill color + font metrics into final RGBA
