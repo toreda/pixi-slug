@@ -1,7 +1,8 @@
 import {Defaults} from '../../../defaults';
 import {SlugFont} from '../font';
+import {SlugFontErrorPolicy} from '../font/error/policy';
 import {SlugFonts} from '../fonts';
-import type {SlugFontErrorPolicy} from '../fonts/error';
+
 import {slugResolveFontInput, slugTryResolveFontInputSync} from '../fonts/resolve';
 import type {SlugDropShadow, SlugDropShadowResolved, SlugStroke, SlugTextInit} from './init';
 import {slugTextColorToRgba, type SlugTextColor} from './style/color';
@@ -187,7 +188,12 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			const stDefault = font ? font.strikethroughSize * scale : 1;
 			const dir = this._direction;
 			this._underlineDraw = slugResolveDrawDecoration(this._underline, this._color, ulDefault, dir);
-			this._strikethroughDraw = slugResolveDrawDecoration(this._strikethrough, this._color, stDefault, dir);
+			this._strikethroughDraw = slugResolveDrawDecoration(
+				this._strikethrough,
+				this._color,
+				stDefault,
+				dir
+			);
 			this._overlineDraw = slugResolveDrawDecoration(this._overline, this._color, ulDefault, dir);
 		}
 
@@ -259,8 +265,13 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		public set color(value: SlugTextColor) {
 			const next = slugTextColorToRgba(value, this._color);
-			if (this._color[0] === next[0] && this._color[1] === next[1] &&
-				this._color[2] === next[2] && this._color[3] === next[3]) return;
+			if (
+				this._color[0] === next[0] &&
+				this._color[1] === next[1] &&
+				this._color[2] === next[2] &&
+				this._color[3] === next[3]
+			)
+				return;
 			this._color = next;
 			this._resolveDecorations();
 			this.rebuild();
@@ -424,9 +435,12 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			const newAlphaMode = value?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
 			const newAlphaStart = numberValue(value?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
 			const newAlphaRate = numberValue(value?.alphaRate, Defaults.SlugText.StrokeAlphaRate);
-			const changed = this._strokeWidth !== newWidth ||
-				this._strokeColor[0] !== newColor[0] || this._strokeColor[1] !== newColor[1] ||
-				this._strokeColor[2] !== newColor[2] || this._strokeColor[3] !== newColor[3] ||
+			const changed =
+				this._strokeWidth !== newWidth ||
+				this._strokeColor[0] !== newColor[0] ||
+				this._strokeColor[1] !== newColor[1] ||
+				this._strokeColor[2] !== newColor[2] ||
+				this._strokeColor[3] !== newColor[3] ||
 				this._strokeAlphaMode !== newAlphaMode ||
 				this._strokeAlphaStart !== newAlphaStart ||
 				this._strokeAlphaRate !== newAlphaRate;

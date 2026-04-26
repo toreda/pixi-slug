@@ -4,5 +4,6 @@ export async function slugWoff2Decompress(woff2Bytes: Uint8Array): Promise<Uint8
 	if (!result || result.byteLength === 0) {
 		throw new Error('WOFF2 decompression failed');
 	}
+
 	return result;
 }

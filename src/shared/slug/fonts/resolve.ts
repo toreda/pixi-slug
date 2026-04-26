@@ -1,9 +1,7 @@
 import {SlugFont} from '../font';
 import {SlugFonts} from '../fonts';
-import {
-	type SlugFontErrorPolicy,
-	slugFontErrorRaise
-} from './error';
+import {slugFontErrorRaise} from '../font/error/raise';
+import {type SlugFontErrorPolicy} from '../font/error/policy';
 
 /** Duck-type guard for a browser `FontFace`. Avoids depending on the global. */
 function isFontFaceLike(v: unknown): v is FontFace {
@@ -12,7 +10,12 @@ function isFontFaceLike(v: unknown): v is FontFace {
 	}
 
 	const o = v as Record<string, unknown>;
-	return 'family' in o && 'status' in o && 'loaded' in o && typeof (o.loaded as {then?: unknown})?.then === 'function';
+	return (
+		'family' in o &&
+		'status' in o &&
+		'loaded' in o &&
+		typeof (o.loaded as {then?: unknown})?.then === 'function'
+	);
 }
 
 /**
@@ -40,7 +43,13 @@ export function slugFontInputIsUrlLike(input: string): boolean {
 		return true;
 	}
 
-	if (input.startsWith('//') || input.startsWith('/') || input.startsWith('./') || input.startsWith('../') || input.startsWith('data:')) {
+	if (
+		input.startsWith('//') ||
+		input.startsWith('/') ||
+		input.startsWith('./') ||
+		input.startsWith('../') ||
+		input.startsWith('data:')
+	) {
 		return true;
 	}
 
@@ -49,7 +58,12 @@ export function slugFontInputIsUrlLike(input: string): boolean {
 	}
 
 	const pathOnly = input.split(/[?#]/, 1)[0].toLowerCase();
-	if (pathOnly.endsWith('.ttf') || pathOnly.endsWith('.otf') || pathOnly.endsWith('.woff') || pathOnly.endsWith('.woff2')) {
+	if (
+		pathOnly.endsWith('.ttf') ||
+		pathOnly.endsWith('.otf') ||
+		pathOnly.endsWith('.woff') ||
+		pathOnly.endsWith('.woff2')
+	) {
 		return true;
 	}
 
@@ -117,10 +131,7 @@ function decodeBase64DataUri(src: string): Uint8Array | null {
  *  - no alias, url given → bare URL path; URL doubles as its own alias
  *    via the existing byUrl cache.
  */
-async function resolveAliasUrlRef(
-	ref: AliasUrl,
-	policy: SlugFontErrorPolicy
-): Promise<SlugFont | null> {
+async function resolveAliasUrlRef(ref: AliasUrl, policy: SlugFontErrorPolicy): Promise<SlugFont | null> {
 	const {alias, url} = ref;
 
 	if (!alias && !url) {
@@ -169,7 +180,11 @@ async function resolveAliasUrlRef(
 
 		const font = await SlugFonts.fromUrl(url);
 		if (!font) {
-			slugFontErrorRaise(policy, 'loadFailed', `Failed to load font from "${url}" for alias "${alias}".`);
+			slugFontErrorRaise(
+				policy,
+				'loadFailed',
+				`Failed to load font from "${url}" for alias "${alias}".`
+			);
 			return null;
 		}
 
@@ -203,9 +218,7 @@ export async function slugResolveFontInput(
 
 	if (typeof input === 'string') {
 		return resolveAliasUrlRef(
-			slugFontInputIsUrlLike(input)
-				? {url: input, explicit: false}
-				: {alias: input, explicit: false},
+			slugFontInputIsUrlLike(input) ? {url: input, explicit: false} : {alias: input, explicit: false},
 			policy
 		);
 	}

@@ -131,13 +131,6 @@ export class SlugFont {
 			throw new Error('WOFF2 fonts cannot be parsed synchronously; call load() instead.');
 		}
 		const font = opentype.parse(fontData);
-		console.log('[SlugFont.loadSync] opentype.parse:', {
-			inputBytes: fontData.byteLength,
-			numGlyphs: font.glyphs?.length,
-			unitsPerEm: font.unitsPerEm,
-			hasCFF: !!(font as any).tables?.cff,
-			hasGlyf: !!(font as any).tables?.glyf
-		});
 		this.unitsPerEm = font.unitsPerEm;
 		this.ascender = font.ascender;
 		this.descender = font.descender;

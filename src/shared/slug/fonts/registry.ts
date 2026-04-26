@@ -1,10 +1,11 @@
 import {booleanValue, numberValue, swapPop} from '@toreda/strong-types';
 import {Defaults} from '../../../defaults';
 import {SlugFont} from '../font';
-import {isSlugFontErrorMode, type SlugFontErrorMode} from './error';
+import {isSlugFontErrorMode} from './error';
 import {SlugFontsRegistryEntry} from './registry/entry';
 import {type SlugFontsRegistryOptions} from './registry/options';
 import {type SlugFontsRegistryStat} from './registry/stat';
+import { SlugFontErrorMode } from '../font/error/mode';
 
 function resolveErrorMode(raw: unknown, fallback: SlugFontErrorMode): SlugFontErrorMode {
 	return isSlugFontErrorMode(raw) ? raw : fallback;

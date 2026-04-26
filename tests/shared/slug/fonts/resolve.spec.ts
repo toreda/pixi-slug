@@ -2,6 +2,7 @@ import {SlugFont} from '../../../../src/shared/slug/font';
 import {SlugFonts} from '../../../../src/shared/slug/fonts';
 import type {SlugFontErrorPolicy} from '../../../../src/shared/slug/fonts/error';
 import {
+	slugFontInputIsUrlLike,
 	slugResolveFontInput,
 	slugTryResolveFontInputSync
 } from '../../../../src/shared/slug/fonts/resolve';
@@ -413,6 +414,92 @@ describe('slugResolveFontInput', () => {
 				errorSpy.mockRestore();
 			});
 		});
+
+		describe('case 3: alias miss but url already cached', () => {
+			it('binds alias to the cached url entry without re-fetching', async () => {
+				const cached = new SlugFont();
+				// alias miss, url hit.
+				getSpy.mockImplementation((key: string) =>
+					key === 'https://example.com/roboto.ttf' ? cached : null
+				);
+
+				const out = await slugResolveFontInput(
+					['roboto', 'https://example.com/roboto.ttf'],
+					throwingPolicy
+				);
+				expect(out).toBe(cached);
+				expect(fromUrlSpy).not.toHaveBeenCalled();
+				expect(registerSpy).toHaveBeenCalledWith('roboto', cached);
+			});
+		});
+
+		describe('case 4: url-only path raises loadFailed when fromUrl returns null', () => {
+			it('raises loadFailed under throw policy for {url} object', async () => {
+				fromUrlSpy.mockResolvedValue(null);
+				await expect(
+					slugResolveFontInput({url: 'https://example.com/missing.ttf'}, throwingPolicy)
+				).rejects.toThrow(/loadFailed/);
+			});
+
+			it('raises loadFailed under throw policy for [alias, url] when fetch fails', async () => {
+				fromUrlSpy.mockResolvedValue(null);
+				await expect(
+					slugResolveFontInput(['roboto', 'https://example.com/missing.ttf'], throwingPolicy)
+				).rejects.toThrow(/loadFailed/);
+			});
+		});
+	});
+
+	describe('three-or-more-element string arrays', () => {
+		it('falls through to FontFace[] handling and recurses on the first element', async () => {
+			const getSpy = jest.spyOn(SlugFonts, 'get').mockReturnValue(null);
+			// Three strings → tuple branch is skipped (only handles 1 and 2),
+			// so it falls into the FontFace[] branch which recurses on input[0].
+			// 'roboto.ttf' is URL-like, so the recursion routes to fromUrl.
+			await slugResolveFontInput(
+				['roboto.ttf', 'extra', 'more'],
+				throwingPolicy
+			);
+			expect(fromUrlSpy).toHaveBeenCalledWith('roboto.ttf');
+			getSpy.mockRestore();
+		});
+	});
+
+	describe('mixed-type arrays', () => {
+		it('treats an array with non-string elements as a FontFace[] and recurses on the first', async () => {
+			// Array fails the .every(string) test, so it goes to the
+			// FontFace[] branch and recurses on input[0]. With a SlugFont
+			// instance at index 0, that recursion returns it directly.
+			const first = new SlugFont();
+			const out = await slugResolveFontInput([first, 'tail'], throwingPolicy);
+			expect(out).toBe(first);
+		});
+	});
+
+	describe('{alias, url} object via the isAliasUrlRef branch', () => {
+		// These exercise the `isAliasUrlRef` branch directly (not the
+		// array tuple branch), confirming the object form sets
+		// `explicit: true` semantics by reaching the same resolveAliasUrlRef.
+		it('treats a non-string alias as missing', async () => {
+			// alias is a number → typeof check filters it out → only url
+			// remains → routes through url-only path.
+			const out = await slugResolveFontInput(
+				{alias: 42 as unknown as string, url: 'https://example.com/x.ttf'},
+				throwingPolicy
+			);
+			expect(out).toBe(sentinelFont);
+			expect(fromUrlSpy).toHaveBeenCalledWith('https://example.com/x.ttf');
+		});
+
+		it('treats a non-string url as missing and raises aliasNotFound when alias is unregistered', async () => {
+			jest.spyOn(SlugFonts, 'get').mockReturnValue(null);
+			await expect(
+				slugResolveFontInput(
+					{alias: 'unknown', url: 42 as unknown as string},
+					throwingPolicy
+				)
+			).rejects.toThrow(/aliasNotFound/);
+		});
 	});
 });
 
@@ -451,5 +538,205 @@ describe('slugTryResolveFontInputSync', () => {
 		expect(slugTryResolveFontInputSync({})).toBeNull();
 		expect(slugTryResolveFontInputSync(null)).toBeNull();
 		expect(slugTryResolveFontInputSync(undefined)).toBeNull();
+	});
+
+	describe('array inputs', () => {
+		it('returns null for an empty array', () => {
+			expect(slugTryResolveFontInputSync([])).toBeNull();
+		});
+
+		it('returns null for an array containing non-strings', () => {
+			expect(slugTryResolveFontInputSync(['name', 42 as unknown as string])).toBeNull();
+		});
+
+		it('returns the cached font for a [name] tuple when registered', () => {
+			const cached = new SlugFont();
+			jest.spyOn(SlugFonts, 'get').mockImplementation((k) => (k === 'name' ? cached : null));
+			expect(slugTryResolveFontInputSync(['name'])).toBe(cached);
+		});
+
+		it('returns null for a [name] tuple when not registered', () => {
+			jest.spyOn(SlugFonts, 'get').mockReturnValue(null);
+			expect(slugTryResolveFontInputSync(['name'])).toBeNull();
+		});
+
+		it('uses the first element of a [alias, url] tuple as the lookup key', () => {
+			const cached = new SlugFont();
+			const getSpy = jest.spyOn(SlugFonts, 'get').mockImplementation((k) =>
+				k === 'alias' ? cached : null
+			);
+			expect(slugTryResolveFontInputSync(['alias', 'https://example.com/x.ttf'])).toBe(cached);
+			expect(getSpy).toHaveBeenCalledWith('alias');
+		});
+	});
+
+	describe('{alias?, url?} object inputs', () => {
+		it('returns the cached font when alias hits', () => {
+			const cached = new SlugFont();
+			jest.spyOn(SlugFonts, 'get').mockImplementation((k) => (k === 'roboto' ? cached : null));
+			expect(slugTryResolveFontInputSync({alias: 'roboto'})).toBe(cached);
+		});
+
+		it('falls back to the url when alias misses but url is cached', () => {
+			const cached = new SlugFont();
+			jest.spyOn(SlugFonts, 'get').mockImplementation((k) =>
+				k === 'https://example.com/r.ttf' ? cached : null
+			);
+			expect(
+				slugTryResolveFontInputSync({alias: 'roboto', url: 'https://example.com/r.ttf'})
+			).toBe(cached);
+		});
+
+		it('returns null when neither alias nor url is cached', () => {
+			jest.spyOn(SlugFonts, 'get').mockReturnValue(null);
+			expect(
+				slugTryResolveFontInputSync({alias: 'roboto', url: 'https://example.com/r.ttf'})
+			).toBeNull();
+		});
+
+		it('returns null for an empty {} object', () => {
+			expect(slugTryResolveFontInputSync({})).toBeNull();
+		});
+
+		it('ignores non-string alias / url fields', () => {
+			jest.spyOn(SlugFonts, 'get').mockReturnValue(null);
+			expect(
+				slugTryResolveFontInputSync({alias: 42 as unknown as string, url: null as unknown as string})
+			).toBeNull();
+		});
+	});
+});
+
+/**
+ * Contract tests for `slugFontInputIsUrlLike`. The function is the
+ * single source of truth for whether a bare string should be fetched
+ * vs treated as an alias, so each documented rule gets at least one
+ * positive and one negative case.
+ */
+describe('slugFontInputIsUrlLike', () => {
+	describe('returns false for non-URL inputs', () => {
+		it('rejects an empty string', () => {
+			expect(slugFontInputIsUrlLike('')).toBe(false);
+		});
+
+		it('rejects a bare alias with no separators or extension', () => {
+			expect(slugFontInputIsUrlLike('Roboto')).toBe(false);
+		});
+
+		it('rejects a name with spaces', () => {
+			expect(slugFontInputIsUrlLike('Times New Roman')).toBe(false);
+		});
+
+		it('rejects an extension-less filename when no path separator is present', () => {
+			expect(slugFontInputIsUrlLike('roboto')).toBe(false);
+		});
+
+		it('rejects an unknown extension', () => {
+			expect(slugFontInputIsUrlLike('mystery.bin')).toBe(false);
+		});
+	});
+
+	describe('rule 1: contains "://"', () => {
+		it('accepts https://', () => {
+			expect(slugFontInputIsUrlLike('https://example.com/r.ttf')).toBe(true);
+		});
+
+		it('accepts http://', () => {
+			expect(slugFontInputIsUrlLike('http://example.com/r.ttf')).toBe(true);
+		});
+
+		it('accepts arbitrary scheme like ftp://', () => {
+			expect(slugFontInputIsUrlLike('ftp://files.example.com/font')).toBe(true);
+		});
+	});
+
+	describe('rule 2: starts with "//"', () => {
+		it('accepts a protocol-relative URL', () => {
+			expect(slugFontInputIsUrlLike('//cdn.example.com/r.ttf')).toBe(true);
+		});
+	});
+
+	describe('rule 3: starts with "/"', () => {
+		it('accepts a root-relative path', () => {
+			expect(slugFontInputIsUrlLike('/assets/r.ttf')).toBe(true);
+		});
+
+		it('accepts a single "/"', () => {
+			expect(slugFontInputIsUrlLike('/')).toBe(true);
+		});
+	});
+
+	describe('rule 4: starts with "./" or "../"', () => {
+		it('accepts ./relative', () => {
+			expect(slugFontInputIsUrlLike('./fonts/r.ttf')).toBe(true);
+		});
+
+		it('accepts ../relative', () => {
+			expect(slugFontInputIsUrlLike('../fonts/r.ttf')).toBe(true);
+		});
+
+		it('does NOT accept a bare "." or ".." (no trailing slash)', () => {
+			// Neither rule 4 nor any other rule matches these — they have
+			// no `/` and no font extension, so they fall through to false.
+			expect(slugFontInputIsUrlLike('.')).toBe(false);
+			expect(slugFontInputIsUrlLike('..')).toBe(false);
+		});
+	});
+
+	describe('rule 5: starts with "data:"', () => {
+		it('accepts a data URI', () => {
+			expect(slugFontInputIsUrlLike('data:font/ttf;base64,AAAA')).toBe(true);
+		});
+
+		it('accepts data: even without trailing content', () => {
+			expect(slugFontInputIsUrlLike('data:')).toBe(true);
+		});
+	});
+
+	describe('rule 6: contains "/" anywhere', () => {
+		it('accepts a relative path without a leading dot', () => {
+			expect(slugFontInputIsUrlLike('fonts/roboto')).toBe(true);
+		});
+
+		it('accepts an extension-less nested path', () => {
+			expect(slugFontInputIsUrlLike('a/b/c')).toBe(true);
+		});
+	});
+
+	describe('rule 7: ends with a font extension after stripping query/fragment', () => {
+		it('accepts .ttf', () => {
+			expect(slugFontInputIsUrlLike('roboto.ttf')).toBe(true);
+		});
+
+		it('accepts .otf', () => {
+			expect(slugFontInputIsUrlLike('roboto.otf')).toBe(true);
+		});
+
+		it('accepts .woff', () => {
+			expect(slugFontInputIsUrlLike('roboto.woff')).toBe(true);
+		});
+
+		it('accepts .woff2', () => {
+			expect(slugFontInputIsUrlLike('roboto.woff2')).toBe(true);
+		});
+
+		it('is case-insensitive on the extension', () => {
+			expect(slugFontInputIsUrlLike('Roboto.TTF')).toBe(true);
+			expect(slugFontInputIsUrlLike('Roboto.WoFf2')).toBe(true);
+		});
+
+		it('strips ?query before checking the extension', () => {
+			expect(slugFontInputIsUrlLike('roboto.ttf?v=2')).toBe(true);
+		});
+
+		it('strips #fragment before checking the extension', () => {
+			expect(slugFontInputIsUrlLike('roboto.ttf#anchor')).toBe(true);
+		});
+
+		it('rejects when the extension only appears inside the query', () => {
+			// Path is "name", query is "file=x.ttf". Path has no extension
+			// and no slash, so the function returns false.
+			expect(slugFontInputIsUrlLike('name?file=x.ttf')).toBe(false);
+		});
 	});
 });

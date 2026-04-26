@@ -1,12 +1,12 @@
 import {booleanValue} from '@toreda/strong-types';
 import {Defaults} from '../../defaults';
 import {SlugFont} from './font';
-import {isSlugFontErrorMode, type SlugFontErrorMode} from './fonts/error';
+import {isSlugFontErrorMode} from './fonts/error';
 import {robotoFallbackBytes} from './fonts/fallback/roboto';
 import {SlugFontsRegistry} from './fonts/registry';
 import {type SlugFontsRegistryStat} from './fonts/registry/stat';
 import {SlugFontsRegistryEntry} from './fonts/registry/entry';
-
+import {type SlugFontErrorMode} from './font/error/mode';
 /**
  * Options accepted by `SlugFonts.attachTicker`. `force` bypasses the
  * re-attach policy entirely when truthy — useful for apps that
@@ -333,7 +333,9 @@ export class SlugFonts {
 	 */
 	public static setReattachPolicy(mode: SlugFontErrorMode): boolean {
 		if (!isSlugFontErrorMode(mode)) {
-			console.error(`[SlugFonts:reattachPolicy] Invalid mode "${String(mode)}". Expected one of 'throw' | 'error' | 'warn' | 'silent'. Current policy unchanged.`);
+			console.error(
+				`[SlugFonts:reattachPolicy] Invalid mode "${String(mode)}". Expected one of 'throw' | 'error' | 'warn' | 'silent'. Current policy unchanged.`
+			);
 			return false;
 		}
 
@@ -357,7 +359,8 @@ export class SlugFonts {
 	 * Messages stay inline so the stack trace points at the caller.
 	 */
 	private static _raiseReattachConflict(mode: SlugFontErrorMode): void {
-		const message = '[SlugFonts:reattach] Ticker already attached. Pass {force: true} to replace, call detachTicker() first, or set SlugFonts.reattachPolicy to a non-throw mode.';
+		const message =
+			'[SlugFonts:reattach] Ticker already attached. Pass {force: true} to replace, call detachTicker() first, or set SlugFonts.reattachPolicy to a non-throw mode.';
 		if (mode === 'throw') {
 			throw new Error(message);
 		}

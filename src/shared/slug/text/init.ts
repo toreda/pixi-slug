@@ -1,6 +1,6 @@
 import {SlugFont} from '../font';
 import {TextStyleOptions} from 'pixi.js';
-import type {SlugFontErrorPolicy} from '../fonts/error';
+import type {SlugFontErrorPolicy} from '../font/error/policy';
 import {SlugTextStyleAlign} from './style/align';
 import type {SlugTextColor} from './style/color';
 import type {SlugTextDecorationInput} from './style/decoration';

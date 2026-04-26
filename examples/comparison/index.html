@@ -89,9 +89,9 @@
 	</nav>
 	<h1>Live Rendering Comparison</h1>
 	<div style="padding:8px 20px;background:#1a1a2e;border-bottom:1px solid #333">
-		<label for="sampleTextInput" style="font-size:13px;color:#aaa;margin-right:8px">Text:</label>
-		<input type="text" id="sampleTextInput" value="The quick brown fox"
-			style="width:500px;padding:5px 8px;border:1px solid #444;background:#2a2a4e;color:#eee;border-radius:4px;font-size:14px">
+		<label for="sampleTextInput" style="font-size:13px;color:#aaa;margin-right:8px;vertical-align:top">Text:</label>
+		<textarea id="sampleTextInput" rows="3"
+			style="width:500px;padding:5px 8px;border:1px solid #444;background:#2a2a4e;color:#eee;border-radius:4px;font-size:14px;font-family:inherit;resize:vertical;vertical-align:top">The quick brown fox</textarea>
 	</div>
 	<div id="controls">
 		<button id="btnScale" class="active">Scale</button>
@@ -270,7 +270,7 @@
 				yOffset += 16;
 
 				// pixi-slug text
-				var slugText = new pixiSlug.SlugText({text: sampleText, slugFont: slugFont, options: {fontSize: sz}});
+				var slugText = new pixiSlug.SlugText({text: sampleText, font: slugFont, options: {fontSize: sz}});
 				slugText.y = yOffset;
 				slugGroup.addChild(slugText);
 				slugTexts.push(slugText);

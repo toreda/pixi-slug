@@ -22,6 +22,7 @@ jest.config.ts
 
 # Build artifacts that aren't the published one
 coverage/
+*.tsbuildinfo
 
 # CI/CD & workspace
 .github/

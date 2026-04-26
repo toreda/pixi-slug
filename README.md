@@ -2,7 +2,7 @@
 
 [![GitHub package.json version (branch)](https://img.shields.io/github/package-json/v/toreda/pixi-slug/master?style=for-the-badge)](https://github.com/toreda/pixi-slug/releases/latest) [![GitHub Release Date](https://img.shields.io/github/release-date/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/releases/latest) [![GitHub issues](https://img.shields.io/github/issues/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/issues)
 
-[![GitHub](https://img.shields.io/github/stars/toreda/pixi-slug?style=for-the-badge&logo=github&label=GitHub)](https://github.com/toreda/pixi-slug) [![NPM Downloads](https://img.shields.io/npm/dm/pixi-slug?style=for-the-badge&logo=npm&label=NPM)](https://www.npmjs.com/package/pixi-slug) [![license](https://img.shields.io/github/license/toreda/pixi-slug?style=for-the-badge)](https://github.com/toreda/pixi-slug/blob/master/LICENSE)
+[![GitHub](https://img.shields.io/github/stars/toreda/pixi-slug?style=for-the-badge&logo=github&label=GitHub)](https://github.com/toreda/pixi-slug) [![NPM Downloads](https://img.shields.io/npm/dm/pixi-slug?style=for-the-badge&logo=npm&label=NPM)](https://www.npmjs.com/package/pixi-slug) [![license](https://img.shields.io/github/license/toreda/pixi-slug?style=for-the-badge&t=11)](https://github.com/toreda/pixi-slug/blob/master/LICENSE?t=122)
 
 # `pixi-slug`
 
@@ -12,7 +12,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 * Perspective-correct antialiasing via dynamic dilation.
 * Supports TrueType (`.ttf`), OpenType (`.otf`), and WOFF/WOFF2 fonts — including cubic-outline (CFF) fonts.
 * Word wrap, newlines, underline, strikethrough, and overline.
-* Works on PixiJS `v8`, `v7`, and `v6`.
+* Works with PixiJS `v8`, `v7`, and `v6`.
 
 
 &nbsp;

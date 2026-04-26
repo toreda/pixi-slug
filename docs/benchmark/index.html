@@ -1451,7 +1451,7 @@
 				color: '#4a9aff',
 				enableId: 'enableSlug',
 				factory: function (text, size, resources, settings) {
-					var t = new pixiSlug.SlugText({text: text, slugFont: resources.slugFont, options: {fontSize: size}});
+					var t = new pixiSlug.SlugText({text: text, font: resources.slugFont, options: {fontSize: size}});
 					t.supersampling = settings.slugSupersampling;
 					t.supersampleCount = settings.slugSamples;
 					return t;
