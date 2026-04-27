@@ -50,7 +50,7 @@ function cpDir(src, dest) {
 function sedReplace(file, from, to) {
 	const abs = path.join(ROOT, file);
 	const content = fs.readFileSync(abs, 'utf8');
-	fs.writeFileSync(abs, content.split(from).join(to), 'utf8');
+	fs.writeFileSync(abs, content.replaceAll(from, to), 'utf8');
 }
 
 try {

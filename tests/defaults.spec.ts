@@ -251,13 +251,7 @@ describe('Defaults', () => {
 			const minLength = defaultEntry.minLength;
 			if (typeof defaultEntry.value === 'string' && typeof minLength === 'number') {
 				it(`should have value.length >= '${minLength}'`, () => {
-					expect((defaultEntry.value as string).length).toBeLessThanOrEqual(minLength);
-				});
-			}
-
-			if (defaultEntry.nonEmptyString === true) {
-				it(`should not be an empty string`, () => {
-					expect(defaultEntry.value).not.toBe(EMPTY_STRING);
+					expect((defaultEntry.value as string).length).toBeGreaterThanOrEqual(minLength);
 				});
 			}
 

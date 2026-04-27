@@ -8,4 +8,5 @@ coverage/
 dist/
 !docs/dist/
 test-report.xml
+junit.xml
 .webpack/
