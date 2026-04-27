@@ -91,12 +91,12 @@ describe('packUint16Pair', () => {
 		expect(bitsOf(first)).toBe(firstBits);
 	});
 
-	it('should round-trip the high boundary (low=0xffff, high=0x0000)', () => {
+	it('should pack maximum low value with zero high value', () => {
 		const packed = packUint16Pair(0xffff, 0x0000);
 		expect(bitsOf(packed) >>> 0).toBe(0x0000ffff);
 	});
 
-	it('should round-trip the high boundary (low=0x0000, high=0xffff)', () => {
+	it('should pack zero low value with maximum high value', () => {
 		const packed = packUint16Pair(0x0000, 0xffff);
 		expect(bitsOf(packed) >>> 0).toBe(0xffff0000);
 	});
