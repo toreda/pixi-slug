@@ -135,7 +135,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._supersampling = booleanValue(init.supersampling, Defaults.SlugText.Supersampling);
 			this._supersampleCount = numberValue(init.supersampleCount, Defaults.SlugText.SupersampleCount);
 			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
-			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapwidth);
+			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapWidth);
 			this._breakWords = booleanValue(init.options?.breakWords, false);
 			this._direction = init.options?.direction === 'rtl' ? 'rtl' : Defaults.SlugText.Direction;
 			this._underline = slugResolveDecoration(init.options?.underline);

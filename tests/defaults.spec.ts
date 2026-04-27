@@ -75,7 +75,7 @@ const DEFAULT_ENTRIES: DefaultKeyTest<number | boolean | string | readonly numbe
 	{value: Defaults.SlugText.FontSize, key: 'Defaults.SlugText.FontSize', type: 'int'},
 	{value: Defaults.SlugText.Text, key: 'Defaults.SlugText.Text', type: 'string'},
 	{value: Defaults.SlugText.WordWrap, key: 'Defaults.SlugText.WordWrap', type: 'boolean'},
-	{value: Defaults.SlugText.WordWrapwidth, key: 'Defaults.SlugText.WordWrapwidth', type: 'intPos'},
+	{value: Defaults.SlugText.WordWrapWidth, key: 'Defaults.SlugText.WordWrapWidth', type: 'intPos'},
 	{
 		value: Defaults.SlugText.FallbackWhileLoading,
 		key: 'Defaults.SlugText.FallbackWhileLoading',

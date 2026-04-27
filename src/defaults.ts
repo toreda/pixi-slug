@@ -54,7 +54,7 @@ export class Defaults {
 		 */
 		Direction: 'ltr' as 'ltr' | 'rtl',
 		WordWrap: false as const,
-		WordWrapwidth: 0 as const,
+		WordWrapWidth: 0 as const,
 		/**
 		 * When a font is passed to `SlugText` by URL/name and is not yet
 		 * loaded, render using the `SlugFonts` fallback font while the

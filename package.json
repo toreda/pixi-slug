@@ -142,7 +142,8 @@
 			"lodash": ">=4.17.21",
 			"uuid": ">=14.0.0",
 			"picomatch@2": "2.3.2",
-			"picomatch@>=3": ">=4.0.4"
+			"picomatch@>=3": ">=4.0.4",
+			"tmp": ">=0.2.4"
 		},
 		"onlyBuiltDependencies": [
 			"@swc/core"

@@ -70,7 +70,7 @@ describe('packUint16Pair', () => {
 		expect(bitsOf(packed) >>> 0).toBe(0x00020001);
 	});
 
-	it('should treat negative values as their two-complement low 16 bits', () => {
+	it("should treat negative values as their two's complement low 16 bits", () => {
 		// (-1 & 0xffff) === 0xffff. Both inputs collapse to 0xffff.
 		const packed = packUint16Pair(-1, -1);
 		expect(bitsOf(packed) >>> 0).toBe(0xffffffff);
