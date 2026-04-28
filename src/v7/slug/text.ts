@@ -6,6 +6,9 @@ import {Mesh} from '@pixi/mesh';
 import type {Shader} from '@pixi/core';
 import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
+import {slugApplyLineLayoutX} from '../../shared/slug/glyph/shift';
+import {slugComputeLineLayout} from '../../shared/slug/text/layout/align';
+import {slugResolvePhysicalAlign} from '../../shared/slug/text/style/align';
 import {slugMeasureText} from '../../shared/slug/text/measure';
 import {slugTextWrap} from '../../shared/slug/text/wrap';
 import {slugFontGpuV7} from './font/gpu';
@@ -36,16 +39,12 @@ export class SlugText extends SlugTextV7Base {
 
 	private _makeQuads(
 		font: SlugFont,
-		text: string,
+		lines: string[],
 		color: [number, number, number, number],
 		extraExpand: number = 0
 	): SlugGlyphQuads {
-		const hasNewline = text.indexOf('\n') >= 0;
-		const wrapping = this._wordWrap && this._wordWrapWidth > 0;
-		if (wrapping || hasNewline) {
+		if (lines.length > 1) {
 			const scale = this._fontSize / font.unitsPerEm;
-			const width = wrapping ? this._wordWrapWidth : 0;
-			const {lines} = slugTextWrap(text, font.advances, scale, width, this._breakWords);
 			const lineHeight = (font.ascender - font.descender) * scale;
 			return slugGlyphQuadsMultiline(
 				lines, font.glyphs, font.advances, font.unitsPerEm,
@@ -53,7 +52,7 @@ export class SlugText extends SlugTextV7Base {
 			);
 		}
 		return slugGlyphQuads(
-			text, font.glyphs, font.advances, font.unitsPerEm,
+			lines[0] || '', font.glyphs, font.advances, font.unitsPerEm,
 			this._fontSize, font.textureWidth, color, extraExpand
 		);
 	}
@@ -107,6 +106,46 @@ export class SlugText extends SlugTextV7Base {
 		const hasShadow = this._dropShadow !== null;
 		const hasStroke = this._strokeWidth > 0;
 
+		// --- Line layout (text-align / text-justify) ---
+		const scale = this._fontSize / font.unitsPerEm;
+		const wrapping = this._wordWrap && this._wordWrapWidth > 0;
+		const hasNewline = this._text.indexOf('\n') >= 0;
+		let lines: string[];
+		if (wrapping || hasNewline) {
+			const width = wrapping ? this._wordWrapWidth : 0;
+			lines = slugTextWrap(this._text, font.advances, scale, width, this._breakWords).lines;
+		} else {
+			lines = [this._text];
+		}
+
+		const lineWidths = new Float32Array(lines.length);
+		const lineQuadCounts = new Int32Array(lines.length);
+		let widestLine = 0;
+		for (let l = 0; l < lines.length; l++) {
+			const line = lines[l];
+			lineWidths[l] = slugMeasureText(line, font.advances, scale);
+			if (lineWidths[l] > widestLine) widestLine = lineWidths[l];
+			let count = 0;
+			for (let i = 0; i < line.length; i++) {
+				if (font.glyphs.has(line.charCodeAt(i))) count++;
+			}
+			lineQuadCounts[l] = count;
+		}
+
+		const boxWidth = wrapping ? this._wordWrapWidth : widestLine;
+		const physicalAlign = slugResolvePhysicalAlign(this._align, this._direction);
+		const layout = slugComputeLineLayout(
+			lines,
+			lineWidths,
+			boxWidth,
+			physicalAlign,
+			this._textJustify,
+			(c) => font.glyphs.has(c)
+		);
+		const needsShift =
+			layout.perGlyphShiftX !== null ||
+			layout.lineOffsetX.some((x) => x !== 0);
+
 		if (hasShadow) {
 			const ds = this._dropShadow!;
 			const shadowAlpha = ds.alpha ?? 1;
@@ -115,9 +154,12 @@ export class SlugText extends SlugTextV7Base {
 				: [0, 0, 0, shadowAlpha];
 			const blur = ds.blur ?? 0;
 
-			const shadowQuads = this._makeQuads(font, this._text, shadowColor, blur);
+			const shadowQuads = this._makeQuads(font, lines, shadowColor, blur);
 
 			if (shadowQuads.quadCount > 0) {
+				if (needsShift) {
+					slugApplyLineLayoutX(shadowQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+				}
 				const {mesh, shader} = this._buildMesh(shadowQuads, gpu);
 				shader.uniforms.uStrokeExpand = blur;
 				if (blur > 0) {
@@ -134,9 +176,12 @@ export class SlugText extends SlugTextV7Base {
 		}
 
 		if (hasStroke) {
-			const strokeQuads = this._makeQuads(font, this._text, this._strokeColor, this._strokeWidth);
+			const strokeQuads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
 
 			if (strokeQuads.quadCount > 0) {
+				if (needsShift) {
+					slugApplyLineLayoutX(strokeQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+				}
 				const {mesh, shader} = this._buildMesh(strokeQuads, gpu);
 				shader.uniforms.uStrokeExpand = this._strokeWidth;
 				shader.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
@@ -147,7 +192,10 @@ export class SlugText extends SlugTextV7Base {
 			}
 		}
 
-		const fillQuads = this._makeQuads(font, this._text, this._color);
+		const fillQuads = this._makeQuads(font, lines, this._color);
+		if (fillQuads.quadCount > 0 && needsShift) {
+			slugApplyLineLayoutX(fillQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+		}
 
 		if (fillQuads.quadCount > 0) {
 			const {mesh} = this._buildMesh(fillQuads, gpu);
@@ -159,35 +207,20 @@ export class SlugText extends SlugTextV7Base {
 		}
 
 		// --- Text decorations (underline / strikethrough / overline) ---
-		// Reads only the concrete `_*Draw` records — base.ts has already
-		// folded user input + fill color + font metrics into final RGBA
-		// and pixel thickness. No fallback resolution happens here.
+		// Decorations sit above/below the glyphs on each line, so they
+		// share the per-line offset (`layout`) and effective width
+		// (post-justify) the quad shifter applied above.
 		const ul = this._underlineDraw, st = this._strikethroughDraw, ol = this._overlineDraw;
 		if ((ul.enabled || st.enabled || ol.enabled) && font) {
-			const scale = this._fontSize / font.unitsPerEm;
 			const lineHeight = (font.ascender - font.descender) * scale;
 
 			const packColor = (rgba: [number, number, number, number]): number =>
 				((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
 			const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
 
-			// Determine lines for measurement — match the quad builder's decision.
-			const hasNewline = this._text.indexOf('\n') >= 0;
-			const wrapping = this._wordWrap && this._wordWrapWidth > 0;
-			let lines: string[];
-			if (wrapping || hasNewline) {
-				const width = wrapping ? this._wordWrapWidth : 0;
-				lines = slugTextWrap(this._text, font.advances, scale, width, this._breakWords).lines;
-			} else {
-				lines = [this._text];
-			}
-
 			const gfx = new Graphics();
 
-			// Compute the x-offset for a length-restricted line of width
-			// `drawW` inside a text line of width `lineW`. `align` is the
-			// physical alignment already resolved against text direction.
-			const xForAlign = (
+			const xForDecoration = (
 				lineW: number,
 				drawW: number,
 				align: 'left' | 'center' | 'right'
@@ -199,11 +232,10 @@ export class SlugText extends SlugTextV7Base {
 
 			for (let l = 0; l < lines.length; l++) {
 				const line = lines[l];
-				const lineW = slugMeasureText(line, font.advances, scale);
+				const effLineW = layout.effectiveLineWidth[l];
+				const lineX = layout.lineOffsetX[l];
 				const lineY = l * lineHeight;
 
-				// Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
-				// so decorations align with the actual glyph positions on this line.
 				let maxGlyphTop = 0;
 				for (let i = 0; i < line.length; i++) {
 					const g = font.glyphs.get(line.charCodeAt(i));
@@ -212,8 +244,8 @@ export class SlugText extends SlugTextV7Base {
 				const baselineY = maxGlyphTop * scale;
 
 				if (ul.enabled && ul.length > 0) {
-					const drawW = lineW * ul.length;
-					const x = xForAlign(lineW, drawW, ul.align);
+					const drawW = effLineW * ul.length;
+					const x = lineX + xForDecoration(effLineW, drawW, ul.align);
 					const ulY = baselineY + lineY - font.underlinePosition * scale;
 					gfx.beginFill(ulPacked, ul.color[3]);
 					gfx.drawRect(x, ulY, drawW, ul.thickness);
@@ -221,22 +253,17 @@ export class SlugText extends SlugTextV7Base {
 				}
 
 				if (st.enabled && st.length > 0) {
-					const drawW = lineW * st.length;
-					const x = xForAlign(lineW, drawW, st.align);
+					const drawW = effLineW * st.length;
+					const x = lineX + xForDecoration(effLineW, drawW, st.align);
 					const stY = baselineY + lineY - font.strikethroughPosition * scale;
 					gfx.beginFill(stPacked, st.color[3]);
 					gfx.drawRect(x, stY, drawW, st.thickness);
 					gfx.endFill();
 				}
 
-				// Overline: font tables don't define an overline metric, so by
-				// CSS-engine convention reuse the underline thickness. Place the
-				// line's bottom edge at the top of the rendered glyphs (y=0 in
-				// local coords, which the quad builder pins to the tallest glyph
-				// on the line — see slugGlyphQuads).
 				if (ol.enabled && ol.length > 0) {
-					const drawW = lineW * ol.length;
-					const x = xForAlign(lineW, drawW, ol.align);
+					const drawW = effLineW * ol.length;
+					const x = lineX + xForDecoration(effLineW, drawW, ol.align);
 					const olY = lineY - ol.thickness;
 					gfx.beginFill(olPacked, ol.color[3]);
 					gfx.drawRect(x, olY, drawW, ol.thickness);

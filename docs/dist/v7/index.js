@@ -5659,7 +5659,19 @@ FontSize:24,Text:"",
          * field is exposed now so app code can be written direction-aware
          * without API churn later.
          */
-Direction:"ltr",WordWrap:!1,WordWrapWidth:0,
+Direction:"ltr",
+/**
+         * Default block-level text alignment. `start` follows the text
+         * direction (LTR → left, RTL → right), matching CSS.
+         */
+Align:"start",
+/**
+         * Default justify strategy. Mirrors CSS `text-justify` and is
+         * consulted only when `align === 'justify'`. `'inter-word'`
+         * matches CSS's default and is the right behavior for Latin /
+         * Cyrillic / similar scripts.
+         */
+TextJustify:"inter-word",WordWrap:!1,WordWrapWidth:0,
 /**
          * When a font is passed to `SlugText` by URL/name and is not yet
          * loaded, render using the `SlugFonts` fallback font while the
@@ -10369,7 +10381,118 @@ const idxOffset=quadIdx*Constants.INDICES_PER_QUAD;indices[idxOffset]=baseVertex
  * @param lineHeight	Vertical distance between lines in pixels.
  * @param color			Text color as [r, g, b, a] in 0-1 range.
  * @param extraExpand	Extra outward expansion in pixels per side.
- */ // ./src/shared/slug/text/measure.ts
+ */ // ./src/shared/slug/glyph/shift.ts
+/**
+ * Shift the X coordinate of every vertex in a quad buffer by a
+ * per-line offset, plus an optional per-glyph offset (used by
+ * text-align justify to expand inter-word gaps).
+ *
+ * Mutates `quads.vertices` in place. The buffer's per-glyph emission
+ * order matches `slugGlyphQuadsMultiline`'s line-major order, so
+ * `lineQuadCounts[l]` quads on line `l` are consumed before line
+ * `l + 1`.
+ *
+ * O(n) over total vertex count — one extra pass per quad buffer.
+ *
+ * @param quads				Quad buffer to mutate.
+ * @param lineQuadCounts	Number of quads emitted on each line, in
+ *							order. Sum must equal `quads.quadCount`.
+ * @param lineOffsetX		Per-line whole-line X offset (length matches
+ *							`lineQuadCounts`).
+ * @param perGlyphShiftX	Optional per-glyph cumulative X shift (used
+ *							for justify). Length equals total renderable
+ *							glyphs across all lines, in line-major
+ *							order. Pass `null` when no justify is in
+ *							effect — saves the per-glyph add.
+ */
+function slugApplyLineLayoutX(quads,lineQuadCounts,lineOffsetX,perGlyphShiftX){const verts=quads.vertices,fpv=Constants.FLOATS_PER_VERTEX,vpq=Constants.VERTICES_PER_QUAD,lineCount=lineQuadCounts.length,floatsPerQuad=vpq*fpv;let quadCursor=0;for(let l=0;l<lineCount;l++){const count=lineQuadCounts[l];if(0===count)continue;const offset=lineOffsetX[l],base=quadCursor*floatsPerQuad;if(null!==perGlyphShiftX)for(let q=0;q<count;q++){const total=offset+perGlyphShiftX[quadCursor+q];if(0===total)continue;const quadStart=base+q*floatsPerQuad;for(let v=0;v<vpq;v++)verts[quadStart+v*fpv]+=total}else if(0!==offset){const end=base+count*floatsPerQuad;for(let off=base;off<end;off+=fpv)verts[off]+=offset}quadCursor+=count}}// ./src/shared/slug/text/layout/align.ts
+/**
+ * Compute the per-line X offset and (for `justify`) per-glyph X shift
+ * needed to apply block-level text-align to a multi-line buffer.
+ *
+ * Inputs use the natural per-line widths from `slugMeasureText` and
+ * the text strings (needed only when justify is active, to count word
+ * gaps and renderable glyphs per line). All counts are independent of
+ * the GPU buffer — the helper that applies them walks the buffer in
+ * the same line-major order the quad builder uses.
+ *
+ * Justify falls back to `start` (CSS default) on:
+ *  - the last line of the block,
+ *  - lines with zero gaps in the chosen strategy (e.g. inter-word
+ *    on a line with no spaces, or inter-character on a line with one
+ *    or zero renderable glyphs),
+ *  - lines whose natural width already meets/exceeds `boxWidth`.
+ *
+ * @param lines				Per-line text strings — only used for justify
+ *							(space-counting and glyph-counting). Pass the
+ *							same array used by the quad builder.
+ * @param lineWidths		Per-line natural widths in pixels.
+ * @param boxWidth			Block width in pixels. For `justify` and
+ *							`center` / `right`, this is the box edge
+ *							alignment is measured against.
+ * @param physicalAlign		Resolved physical alignment.
+ * @param justifyMode		Strategy used when `physicalAlign === 'justify'`.
+ *							Ignored otherwise.
+ * @param glyphsPresent		Predicate returning whether a char code at a
+ *							given line/index produces a quad. Mirrors
+ *							the `glyphs.has(...)` test in the quad
+ *							builder so per-glyph indices line up.
+ */
+function slugComputeLineLayout(lines,lineWidths,boxWidth,physicalAlign,justifyMode,glyphsPresent){const lineCount=lines.length,lineOffsetX=new Float32Array(lineCount),effectiveLineWidth=new Float32Array(lineCount);let perGlyphShiftX=null;if("justify"===physicalAlign){const totalRenderable=
+/** Total renderable glyphs across all lines. */
+function(lines,glyphsPresent){let n=0;for(let l=0;l<lines.length;l++)n+=countLineRenderable(lines[l],glyphsPresent);return n}(lines,glyphsPresent);perGlyphShiftX=new Float32Array(totalRenderable)}let glyphCursor=0;const isLastLine=l=>l===lineCount-1;for(let l=0;l<lineCount;l++){const line=lines[l],lineW=lineWidths[l];let effW=lineW;if("justify"===physicalAlign&&!isLastLine(l)&&lineW<boxWidth&&null!==perGlyphShiftX){const extra=boxWidth-lineW;let applied=!1;if("inter-character"===justifyMode){
+// Distribute extra width across every gap between
+// adjacent renderable glyphs on the line — both word
+// gaps and inter-letter gaps stretch by the same
+// amount. A line with 0 or 1 renderable glyphs has
+// nowhere to put the extra width and falls back to
+// `start`.
+const renderable=countLineRenderable(line,glyphsPresent);if(renderable>=2){distributeInterCharacterShifts(line,extra/(renderable-1),perGlyphShiftX,glyphCursor,glyphsPresent),applied=!0}}else{
+// inter-word: collapse runs of spaces to a single gap.
+// Trailing space is not a gap because no glyph follows
+// it. Lines with zero gaps fall back to `start`.
+const gaps=countInterWordGaps(line);if(gaps>0){distributeInterWordShifts(line,extra/gaps,perGlyphShiftX,glyphCursor,glyphsPresent),applied=!0}}applied&&(effW=boxWidth)}
+// Whole-line offset against the (possibly justified) effective
+// width. For justify lines that fall back to start, effW ===
+// lineW so the offset is 0.
+lineOffsetX[l]=xForBlockAlign(boxWidth,effW,physicalAlign),effectiveLineWidth[l]=effW,
+// Advance the per-line glyph cursor regardless of justify, so
+// the cursor stays in sync with the quad builder's emission.
+null!==perGlyphShiftX&&(glyphCursor+=countLineRenderable(line,glyphsPresent))}return{lineOffsetX,perGlyphShiftX,effectiveLineWidth}}
+/**
+ * Block-level x-offset for a non-justify alignment. `justify` returns
+ * 0 here — its width fill happens via `perGlyphShiftX`, not a whole-
+ * line offset.
+ */function xForBlockAlign(boxW,lineW,align){return"right"===align?boxW-lineW:"center"===align?(boxW-lineW)/2:0}
+/**
+ * Count inter-word gaps in a line. Consecutive spaces collapse to a
+ * single gap (matching the natural rendering — they all expand
+ * together in CSS inter-word justify). Trailing spaces don't count
+ * because no glyph follows them on this line.
+ */function countInterWordGaps(line){let gaps=0,inSpace=!1,sawNonSpace=!1,trailingSpace=!1;for(let i=0;i<line.length;i++){32===line.charCodeAt(i)?sawNonSpace&&!inSpace&&(gaps++,inSpace=!0,trailingSpace=!0):(sawNonSpace=!0,inSpace=!1,trailingSpace=!1)}return trailingSpace&&gaps--,gaps}
+/**
+ * Walk a line's characters, writing the cumulative inter-word shift
+ * for each renderable glyph into `out` starting at `outOffset`. Each
+ * inter-word gap (collapsed runs of spaces between glyphs) increments
+ * the running shift by `perGap`; trailing spaces are ignored.
+ */function distributeInterWordShifts(line,perGap,out,outOffset,glyphsPresent){let shift=0,inSpace=!1,sawNonSpace=!1,pendingGap=!1,writeIdx=outOffset;for(let i=0;i<line.length;i++){const c=line.charCodeAt(i);32!==c?(
+// Non-space glyph (or invisible char without quad — same logic).
+pendingGap&&(shift+=perGap,pendingGap=!1),sawNonSpace=!0,inSpace=!1,glyphsPresent(c)&&(out[writeIdx++]=shift)):sawNonSpace&&!inSpace&&(inSpace=!0,pendingGap=!0)}}
+/**
+ * Walk a line's renderable glyphs, writing the cumulative inter-
+ * character shift for each into `out` starting at `outOffset`. The
+ * first renderable glyph stays at shift 0; each subsequent renderable
+ * glyph is offset by an additional `perGap`. Whether or not a space
+ * (or any other unrenderable char) sits between two renderable
+ * glyphs, the gap counts once — every adjacent pair of renderables on
+ * the line gets the same stretch.
+ */function distributeInterCharacterShifts(line,perGap,out,outOffset,glyphsPresent){let shift=0,writeIdx=outOffset,seenAny=!1;for(let i=0;i<line.length;i++){glyphsPresent(line.charCodeAt(i))&&(seenAny&&(shift+=perGap),out[writeIdx++]=shift,seenAny=!0)}}
+/** Number of glyphs that produce quads for a single line. */function countLineRenderable(line,glyphsPresent){let n=0;for(let i=0;i<line.length;i++)glyphsPresent(line.charCodeAt(i))&&n++;return n}// ./src/shared/slug/text/style/align.ts
+/**
+ * Resolve a logical block-level alignment to its physical form by
+ * folding in the current text direction.
+ */
+function slugResolvePhysicalAlign(align,direction){return"start"===align?"rtl"===direction?"right":"left":"end"===align?"rtl"===direction?"left":"right":align}// ./src/shared/slug/text/measure.ts
 /**
  * Measure the pixel width of a text string using advance widths.
  *
@@ -10377,37 +10500,7 @@ const idxOffset=quadIdx*Constants.INDICES_PER_QUAD;indices[idxOffset]=baseVertex
  * @param advances	Advance width map (char code → em-space width).
  * @param scale		Conversion factor from em-space to pixels (fontSize / unitsPerEm).
  */
-function slugMeasureText(text,advances,scale){let width=0;for(let i=0;i<text.length;i++)width+=(advances.get(text.charCodeAt(i))??0)*scale;return width}// ./src/shared/slug/text/wrap.ts
-/**
- * Break a text string into lines that fit within a maximum pixel width.
- * Uses a greedy word-wrap algorithm: fills each line as much as possible
- * before breaking to the next line.
- *
- * @param text			The full text string.
- * @param advances		Advance width map (char code → em-space width).
- * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
- * @param maxWidth		Maximum line width in pixels. Pass 0 (or a negative value)
- *						to disable width-based wrapping; newlines will still
- *						force line breaks.
- * @param breakWords	If true, break mid-word when a single word exceeds maxWidth.
- */
-function slugTextWrap(text,advances,scale,maxWidth,breakWords=!1){const lines=[];let lineStart=0,lastBreak=-1,lineWidth=0;for(let i=0;i<text.length;i++){const code=text.charCodeAt(i);
-// Newline forces a line break
-if(10===code){lines.push(text.substring(lineStart,i)),lineStart=i+1,lastBreak=-1,lineWidth=0;continue}if(
-// Track word boundaries (space is a valid break point)
-32===code&&(lastBreak=i),lineWidth+=(advances.get(code)??0)*scale,maxWidth>0&&lineWidth>maxWidth&&i>lineStart){if(lastBreak>=lineStart)
-// Break at last space
-lines.push(text.substring(lineStart,lastBreak)),lineStart=lastBreak+1;else{if(!breakWords)
-// No valid break point — let the word overflow until a space is found
-continue;
-// Break mid-word at current character
-lines.push(text.substring(lineStart,i)),lineStart=i}lastBreak=-1,
-// Recalculate width from lineStart to current position
-lineWidth=0;for(let j=lineStart;j<=i;j++)lineWidth+=(advances.get(text.charCodeAt(j))??0)*scale}}
-// Push remaining text
-return lineStart<text.length?lines.push(text.substring(lineStart)):text.length>0&&lineStart===text.length&&
-// Text ended with a newline — add empty final line
-lines.push(""),{lines}}// ./src/v7/shader/slug/vert.glsl
+function slugMeasureText(text,advances,scale){let width=0;for(let i=0;i<text.length;i++)width+=(advances.get(text.charCodeAt(i))??0)*scale;return width}// ./src/v7/shader/slug/vert.glsl
 const vert_namespaceObject="#version 300 es\n// ===================================================\n// Slug algorithm vertex shader — GLSL ES 3.00 port.\n// PixiJS v7 variant: uses v7 uniform names.\n// ===================================================\n\n// Per-vertex attribute layout:\n//\n// 0 - pos  : object-space vertex coords (xy) and normal vector (zw)\n// 1 - tex  : em-space sample coords (xy), packed glyph data location (z), packed band max + flags (w)\n// 2 - jac  : inverse Jacobian matrix entries (00, 01, 10, 11)\n// 3 - bnd  : band scale x, band scale y, band offset x, band offset y\n// 4 - col  : vertex color (rgba)\n\nprecision highp float;\nprecision highp int;\n\nlayout(location = 0) in vec4 aPositionNormal; // pos xy + normal zw\nlayout(location = 1) in vec4 aTexcoord;       // em-space uv + packed glyph loc + packed bands\nlayout(location = 2) in vec4 aJacobian;       // inverse Jacobian (00, 01, 10, 11)\nlayout(location = 3) in vec4 aBanding;        // band scale xy + band offset xy\nlayout(location = 4) in vec4 aColor;          // vertex color rgba\n\n// PixiJS v7 uniforms — names differ from v8.\n// projectionMatrix is auto-populated via renderer.globalUniforms.\n// translationMatrix is set per-mesh by Mesh._renderDefault().\nuniform mat3 projectionMatrix;\nuniform mat3 translationMatrix;\n\n// Viewport size must be provided manually in v7 (no built-in uResolution).\nuniform vec2 uResolution;\n\nout vec4 vColor;\nout vec2 vTexcoord;\nflat out vec4 vBanding;\nflat out ivec4 vGlyph;\n\nvoid SlugUnpack(vec4 tex, vec4 bnd, out vec4 vbnd, out ivec4 vgly)\n{\n\tuvec2 g = floatBitsToUint(tex.zw);\n\tvgly = ivec4(\n\t\tint(g.x & 0xFFFFu),\n\t\tint(g.x >> 16u),\n\t\tint(g.y & 0xFFFFu),\n\t\tint(g.y >> 16u)\n\t);\n\tvbnd = bnd;\n}\n\nvec2 SlugDilate(vec4 pos, vec4 tex, vec4 jac, mat4 mvp, vec2 dim, out vec2 vpos)\n{\n\t// INVARIANT: pos.zw (normal) must be nonzero.\n\tvec2 n = normalize(pos.zw);\n\n\tvec4 Mpos = mvp * vec4(pos.xy, 0.0, 1.0);\n\tvec4 Mn   = mvp * vec4(n,      0.0, 0.0);\n\n\tfloat s = Mpos.w;\n\tfloat t = Mn.w;\n\n\tfloat u = (s * Mn.x - t * Mpos.x) * dim.x;\n\tfloat v = (s * Mn.y - t * Mpos.y) * dim.y;\n\n\tfloat s2 = s * s;\n\tfloat st = s * t;\n\tfloat uv = u * u + v * v;\n\n\tfloat denom = uv - st * st;\n\tif (abs(denom) < 1e-10)\n\t{\n\t\tvpos = pos.xy;\n\t\treturn tex.xy;\n\t}\n\n\tvec2 d = pos.zw * (s2 * (st + sqrt(uv)) / denom);\n\n\tvpos = pos.xy + d;\n\treturn vec2(tex.x + dot(d, jac.xy), tex.y + dot(d, jac.zw));\n}\n\nvoid main()\n{\n\t// Combine projection and world transform into a single 2D affine mat3,\n\t// then lift it to a column-major mat4 for the Slug dilation algorithm.\n\t// The W row is (0,0,0,1) — correct for orthographic projection.\n\tmat3 m = projectionMatrix * translationMatrix;\n\tmat4 mvp = mat4(\n\t\tm[0][0], m[0][1], 0.0, 0.0,  // column 0\n\t\tm[1][0], m[1][1], 0.0, 0.0,  // column 1\n\t\t0.0,     0.0,     1.0, 0.0,  // column 2\n\t\tm[2][0], m[2][1], 0.0, 1.0   // column 3\n\t);\n\n\tvec2 dim = uResolution * 0.5;\n\n\tvec2 p;\n\tvTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);\n\n\tgl_Position = mvp * vec4(p, 0.0, 1.0);\n\n\tSlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);\n\tvColor = aColor;\n}\n",frag_namespaceObject="#version 300 es\n// ===================================================\n// Slug algorithm fragment shader — GLSL ES 3.00 port.\n// Based on the reference Slug shader by Eric Lengyel.\n// ===================================================\nprecision highp float;\nprecision highp int;\nprecision highp sampler2D;\n\n#define kLogBandTextureWidth 12\n#define kMaxCurvesPerBand 512\n#define kQuadraticEpsilon 0.0001\n\nin vec4 vColor;\nin vec2 vTexcoord;\nflat in vec4 vBanding;\nflat in ivec4 vGlyph;\n\nuniform sampler2D uCurveTexture;\nuniform sampler2D uBandTexture;\nuniform int uSupersampleCount;\nuniform float uStrokeExpand;     // Stroke expansion in pixels. 0 = normal fill.\nuniform float uStrokeAlphaStart; // Starting alpha at inner stroke edge. @default 1.0\nuniform float uStrokeAlphaRate;  // Alpha change per pixel outward. 0 = uniform. @default 0.0\n\n// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).\n// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.\nuvec2 fetchBand(ivec2 coord)\n{\n\tvec2 raw = texelFetch(uBandTexture, coord, 0).xy;\n\treturn uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));\n}\n\nivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)\n{\n\tivec2 bandLoc = ivec2(glyphLoc.x + int(offset), glyphLoc.y);\n\tbandLoc.y += bandLoc.x >> kLogBandTextureWidth;\n\tbandLoc.x &= (1 << kLogBandTextureWidth) - 1;\n\treturn bandLoc;\n}\n\n// Combine horizontal and vertical fractional winding into coverage.\n// Near edges (high weight): weighted average provides smooth antialiasing.\n// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.\n// max() is used instead of min() to handle glyphs with oppositely-wound\n// contours where one axis cancels to ~0 while the other reads ~1.\nfloat CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)\n{\n\tfloat coverage = max(\n\t\tabs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),\n\t\tmax(abs(xcov), abs(ycov))\n\t);\n\n\treturn clamp(sqrt(abs(coverage)), 0.0, 1.0);\n}\n\nout vec4 fragColor;\n\n// Returns vec2(coverage, minBoundaryDist).\n// minBoundaryDist is the minimum absolute distance (in pixels) from this\n// pixel to any curve crossing — an approximation of the distance to the\n// nearest glyph boundary. Used for stroke alpha gradient.\nvec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\n\t// Early-out threshold: expanded by stroke so curves within stroke range\n\t// are not skipped. When strokePx is 0 this reduces to the original -0.5.\n\tfloat earlyOutBias = -0.5 - strokePx;\n\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tfloat xcov = 0.0;\n\tfloat xwgt = 0.0;\n\tfloat minDist = 1e10;\n\n\t// ---------------------------------------------------------------\n\t// Horizontal ray (+X direction)\n\t// ---------------------------------------------------------------\n\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +\n\t\t        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat bx = p12.x - p12.z;\n\t\t\tfloat by = p12.y - p12.w;\n\t\t\tfloat ra = 1.0 / ay;\n\n\t\t\tfloat d = sqrt(max(by * by - ay * p12.y, 0.0));\n\t\t\tfloat t1 = (by - d) * ra;\n\t\t\tfloat t2 = (by + d) * ra;\n\n\t\t\tif (abs(ay) < kQuadraticEpsilon)\n\t\t\t{\n\t\t\t\tif (abs(by) < kQuadraticEpsilon) continue;\n\t\t\t\tt1 = p12.y * 0.5 / by;\n\t\t\t\tt2 = t1;\n\t\t\t}\n\n\t\t\tfloat x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;\n\t\t\tfloat x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;\n\t\t\tx1 *= pixelsPerEm.x;\n\t\t\tx2 *= pixelsPerEm.x;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(x1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(x2));\n\n\t\t\t// Stroke dilation: entry crossings shift inward (+strokePx),\n\t\t\t// exit crossings shift outward (-strokePx).\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sx1 = x1 + strokePx;\n\t\t\t\txcov += clamp(sx1 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sx2 = x2 - strokePx;\n\t\t\t\txcov -= clamp(sx2 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\t// ---------------------------------------------------------------\n\t// Vertical ray (+Y direction)\n\t// Same solver as horizontal with x↔y roles swapped.\n\t// ---------------------------------------------------------------\n\n\tfloat ycov = 0.0;\n\tfloat ywgt = 0.0;\n\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +\n\t\t        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat bx = p12.y - p12.w;\n\t\t\tfloat by = p12.x - p12.z;\n\t\t\tfloat ra = 1.0 / ay;\n\n\t\t\tfloat d = sqrt(max(by * by - ay * p12.x, 0.0));\n\t\t\tfloat t1 = (by - d) * ra;\n\t\t\tfloat t2 = (by + d) * ra;\n\n\t\t\tif (abs(ay) < kQuadraticEpsilon)\n\t\t\t{\n\t\t\t\tif (abs(by) < kQuadraticEpsilon) continue;\n\t\t\t\tt1 = p12.x * 0.5 / by;\n\t\t\t\tt2 = t1;\n\t\t\t}\n\n\t\t\tfloat y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;\n\t\t\tfloat y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;\n\t\t\ty1 *= pixelsPerEm.y;\n\t\t\ty2 *= pixelsPerEm.y;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(y1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(y2));\n\n\t\t\t// Vertical stroke dilation: signs flipped from horizontal\n\t\t\t// because +Y em-space is up but +Y screen-space is down.\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sy1 = y1 - strokePx;\n\t\t\t\tycov += clamp(sy1 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sy2 = y2 + strokePx;\n\t\t\t\tycov -= clamp(sy2 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\tfloat coverage = CalcCoverage(xcov, ycov, xwgt, ywgt);\n\treturn vec2(coverage, minDist);\n}\n\n// Convenience wrapper that returns only coverage (used by fill pass and supersampling).\nfloat SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\treturn SlugRenderEx(renderCoord, bandTransform, glyphData, strokePx).x;\n}\n\nvoid main()\n{\n\tfloat coverage;\n\tint sampleCount = min(uSupersampleCount, 16);\n\tfloat strokePx = uStrokeExpand;\n\tbool useGradientAlpha = (strokePx > 0.0 && uStrokeAlphaRate != 0.0);\n\n\t// When gradient alpha is active and no supersampling, use SlugRenderEx\n\t// to get both coverage and boundary distance in a single pass.\n\tif (useGradientAlpha && sampleCount <= 1)\n\t{\n\t\tvec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);\n\t\tcoverage = result.x;\n\n\t\t// minDist is the distance from the pixel to the nearest original\n\t\t// glyph boundary (before stroke expansion). Pixels at the inner\n\t\t// stroke edge have minDist ≈ 0, outer edge have minDist ≈ strokePx.\n\t\t// The per-pixel alpha is: alphaStart + alphaRate * minDist\n\t\tfloat dist = clamp(result.y, 0.0, strokePx);\n\t\tfloat alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);\n\t\tfragColor = vColor * coverage * alpha;\n\t\treturn;\n\t}\n\n\tif (sampleCount <= 1)\n\t{\n\t\tcoverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);\n\t}\n\telse\n\t{\n\t\t// Supersampling with configurable sample count.\n\t\t// Offsets are in em-space, derived from screen-space derivatives so they\n\t\t// scale correctly at any font size or transform.\n\t\tvec2 dx = dFdx(vTexcoord) * 0.5;\n\t\tvec2 dy = dFdy(vTexcoord) * 0.5;\n\n\t\tif (sampleCount <= 2)\n\t\t{\n\t\t\t// 2-sample: diagonal pair\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1) * 0.5;\n\t\t}\n\t\telse if (sampleCount <= 4)\n\t\t{\n\t\t\t// 4-sample rotated-grid supersampling (RGSS pattern).\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3) * 0.25;\n\t\t}\n\t\telse if (sampleCount <= 8)\n\t\t{\n\t\t\t// 8-sample: 8-queens pattern (good spatial distribution)\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7) * 0.125;\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// 16-sample: 4x4 jittered grid for maximum quality\n\t\t\tfloat sum = 0.0;\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = sum * 0.0625;\n\t\t}\n\t}\n\n\t// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)\n\t// uStrokeAlphaStart defaults to 1.0, so this is a no-op.\n\tfragColor = vColor * coverage * uStrokeAlphaStart;\n}\n";// ./src/v7/slug/font/gpu.ts
 /**
  * Create or retrieve cached V7 GPU resources for a SlugFont.
@@ -10544,9 +10637,10 @@ const u=n>>>0;return{r:(u>>>24&255)/255,g:(u>>>16&255)/255,b:(u>>>8&255)/255,alp
  */
 function decorationsEqual(a,b){if(a.enabled!==b.enabled)return!1;if(a.thickness!==b.thickness)return!1;if(a.length!==b.length)return!1;if(a.align!==b.align)return!1;const ac=a.color,bc=b.color;return null===ac&&null===bc||null!==ac&&null!==bc&&(ac[0]===bc[0]&&ac[1]===bc[1]&&ac[2]===bc[2]&&ac[3]===bc[3])}
 /**
- * Resolve logical `start`/`center`/`end` alignment to a physical
- * `left`/`center`/`right` based on text direction.
- */function physicalAlign(align,direction){return"center"===align?"center":"rtl"===direction?"start"===align?"right":"left":"start"===align?"left":"right"}
+ * Resolve a decoration's logical alignment to physical. Delegates to
+ * the shared block-level resolver — `justify` is excluded at the type
+ * level, so the cast is safe.
+ */function physicalAlign(align,direction){return slugResolvePhysicalAlign(align,direction)}
 /**
  * Fold the user's resolved input plus the current fill color, font
  * metric, and text direction into a fully-concrete draw record.
@@ -10572,8 +10666,42 @@ function decorationsEqual(a,b){if(a.enabled!==b.enabled)return!1;if(a.thickness!
  * Unlike `slugTextColorToRgba`, an explicit `color: null` here does NOT
  * preserve any prior color — it means "inherit the fill".
  */
-function slugResolveDecoration(input){if(!0===input)return{enabled:!0,color:null,thickness:null,length:1,align:"start"};if(!1===input||null==input)return{enabled:!1,color:null,thickness:null,length:1,align:"start"};const color=null===input.color||void 0===input.color?null:slugTextColorToRgba(input.color,[0,0,0,1]),thickness=null===input.thickness||void 0===input.thickness?null:(0,dist/* numberValue */.Vg)(input.thickness,0),rawLength=null===input.length||void 0===input.length?1:(0,dist/* numberValue */.Vg)(input.length,1);return{enabled:!0,color,thickness,length:Math.min(Math.max(rawLength,0),1),align:"center"===input.align||"end"===input.align?input.align:"start"}}// ./src/v7/slug/text.ts
-const SlugTextV7Base=(Base=display_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWords;_direction;_underline;_strikethrough;_overline;
+function slugResolveDecoration(input){if(!0===input)return{enabled:!0,color:null,thickness:null,length:1,align:"start"};if(!1===input||null==input)return{enabled:!1,color:null,thickness:null,length:1,align:"start"};const color=null===input.color||void 0===input.color?null:slugTextColorToRgba(input.color,[0,0,0,1]),thickness=null===input.thickness||void 0===input.thickness?null:(0,dist/* numberValue */.Vg)(input.thickness,0),rawLength=null===input.length||void 0===input.length?1:(0,dist/* numberValue */.Vg)(input.length,1);return{enabled:!0,color,thickness,length:Math.min(Math.max(rawLength,0),1),align:"center"===input.align||"end"===input.align||"left"===input.align||"right"===input.align?input.align:"start"}}// ./src/shared/slug/text/base.ts
+/**
+ * Coerce a user-supplied `align` value into a known `SlugTextStyleAlign`.
+ * Anything outside the union (including `null`/`undefined`) falls back
+ * to the configured default — typically `'start'`.
+ */
+function resolveAlignInput(value){switch(value){case"start":case"end":case"left":case"center":case"right":case"justify":return value;default:return Defaults.SlugText.Align}}
+/**
+ * Coerce a user-supplied `textJustify` value into a known
+ * `SlugTextJustify`. Anything outside the union (including `null` /
+ * `undefined`) falls back to the configured default — typically
+ * `'inter-word'`.
+ */function resolveTextJustifyInput(value){switch(value){case"inter-word":case"inter-character":return value;default:return Defaults.SlugText.TextJustify}}
+/**
+ * Mixin that adds shared SlugText state and property accessors to a
+ * Container base class. Each PixiJS version passes its own Container:
+ *
+ * ```typescript
+ * // v8
+ * import {Container} from 'pixi.js';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ *
+ * // v6/v7
+ * import {Container} from '@pixi/display';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ * ```
+ *
+ * The returned class manages text, font, fontSize, color, wordWrap,
+ * supersampling, memory tracking, and rebuild lifecycle. Subclasses
+ * implement `rebuild()` with version-specific GPU APIs.
+ *
+ * Fields use public `_` prefix instead of `protected` to avoid TS4094
+ * ("Property of exported anonymous class type may not be private or
+ * protected"). The `_` convention signals internal use.
+ */ // ./src/v7/slug/text.ts
+const SlugTextV7Base=(Base=display_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWords;_direction;_align;_textJustify;_underline;_strikethrough;_overline;
 // Concrete draw records — recomputed eagerly by `_resolveDecorations`
 // whenever any input that feeds them changes (decoration setters,
 // color, font, fontSize). Render code reads ONLY these.
@@ -10589,7 +10717,7 @@ _dropShadow;
          * Called by the subclass constructor after super().
          * Subclass must call rebuild() separately after version-specific init.
          */
-initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),this._color=slugTextColorToRgba(init.options?.fill,Defaults.SlugText.FillColor),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
+initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),this._color=slugTextColorToRgba(init.options?.fill,Defaults.SlugText.FillColor),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._align=resolveAlignInput(init.options?.align),this._textJustify=resolveTextJustifyInput(init.options?.textJustify),this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
 // Stroke
 const stroke=init.options?.stroke;this._strokeWidth=(0,dist/* numberValue */.Vg)(stroke?.width,Defaults.SlugText.StrokeWidth),this._strokeColor=slugTextColorToRgba(stroke?.color,Defaults.SlugText.StrokeColor),this._strokeAlphaMode=stroke?.alphaMode??Defaults.SlugText.StrokeAlphaMode,this._strokeAlphaStart=(0,dist/* numberValue */.Vg)(stroke?.alphaStart,Defaults.SlugText.StrokeAlphaStart),this._strokeAlphaRate=(0,dist/* numberValue */.Vg)(stroke?.alphaRate,Defaults.SlugText.StrokeAlphaRate);
 // Drop shadow — presence of the object enables it
@@ -10617,7 +10745,20 @@ get text(){return this._text}set text(value){this._text!==value&&(this._text=val
          * Version-specific subclasses must call this from their `destroy()`
          * override so the registry's ref counter can mark the font for
          * auto-destroy when no other text instances hold it.
-         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3]||(this._color=next,this._resolveDecorations(),this.rebuild())}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}get underline(){return this._underline}set underline(value){const next=slugResolveDecoration(value);decorationsEqual(this._underline,next)||(this._underline=next,this._resolveDecorations(),this.rebuild())}get strikethrough(){return this._strikethrough}set strikethrough(value){const next=slugResolveDecoration(value);decorationsEqual(this._strikethrough,next)||(this._strikethrough=next,this._resolveDecorations(),this.rebuild())}get overline(){return this._overline}set overline(value){const next=slugResolveDecoration(value);decorationsEqual(this._overline,next)||(this._overline=next,this._resolveDecorations(),this.rebuild())}
+         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3]||(this._color=next,this._resolveDecorations(),this.rebuild())}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}
+/**
+         * Block-level text alignment. Stored in logical form — the
+         * physical resolution (folding in `direction`) happens in the
+         * version-specific `rebuild()`.
+         */get align(){return this._align}set align(value){const next=resolveAlignInput(value);this._align!==next&&(this._align=next,this.rebuild())}
+/**
+         * Justify strategy used when `align === 'justify'`. Stored even
+         * when `align` is not `'justify'` so toggling `align` doesn't
+         * lose the user's preference.
+         */get textJustify(){return this._textJustify}set textJustify(value){const next=resolveTextJustifyInput(value);this._textJustify!==next&&(this._textJustify=next,
+// No effect when align !== 'justify'; rebuild() is cheap
+// enough to skip the conditional.
+"justify"===this._align&&this.rebuild())}get underline(){return this._underline}set underline(value){const next=slugResolveDecoration(value);decorationsEqual(this._underline,next)||(this._underline=next,this._resolveDecorations(),this.rebuild())}get strikethrough(){return this._strikethrough}set strikethrough(value){const next=slugResolveDecoration(value);decorationsEqual(this._strikethrough,next)||(this._strikethrough=next,this._resolveDecorations(),this.rebuild())}get overline(){return this._overline}set overline(value){const next=slugResolveDecoration(value);decorationsEqual(this._overline,next)||(this._overline=next,this._resolveDecorations(),this.rebuild())}
 // --- Stroke ---
 /** Stroke width in pixels. 0 = no stroke. */
 get strokeWidth(){return this._strokeWidth}set strokeWidth(value){this._strokeWidth!==value&&(this._strokeWidth=value,this.rebuild())}
@@ -10647,32 +10788,9 @@ get supersampling(){return this._supersampling}set supersampling(value){this._su
 /**
  * Renderable text element using the Slug algorithm for PixiJS v7.
  * Extends Container (via SlugTextMixin) for scene graph compatibility.
- */ // ./src/shared/slug/text/base.ts
-/**
- * Mixin that adds shared SlugText state and property accessors to a
- * Container base class. Each PixiJS version passes its own Container:
- *
- * ```typescript
- * // v8
- * import {Container} from 'pixi.js';
- * class SlugText extends SlugTextMixin(Container) { ... }
- *
- * // v6/v7
- * import {Container} from '@pixi/display';
- * class SlugText extends SlugTextMixin(Container) { ... }
- * ```
- *
- * The returned class manages text, font, fontSize, color, wordWrap,
- * supersampling, memory tracking, and rebuild lifecycle. Subclasses
- * implement `rebuild()` with version-specific GPU APIs.
- *
- * Fields use public `_` prefix instead of `protected` to avoid TS4094
- * ("Property of exported anonymous class type may not be private or
- * protected"). The `_` convention signals internal use.
- */
-var Base;class SlugText extends SlugTextV7Base{_meshes;
+ */var Base;class SlugText extends SlugTextV7Base{_meshes;
 /** Graphics child for underline/strikethrough/overline decorations. */
-_decorations;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this.rebuild()}_makeQuads(font,text,color,extraExpand=0){const hasNewline=text.indexOf("\n")>=0,wrapping=this._wordWrap&&this._wordWrapWidth>0;if(wrapping||hasNewline){const scale=this._fontSize/font.unitsPerEm,width=wrapping?this._wordWrapWidth:0,{lines}=slugTextWrap(text,font.advances,scale,width,this._breakWords),lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
+_decorations;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this.rebuild()}_makeQuads(font,lines,color,extraExpand=0){if(lines.length>1){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
 // Build quads per line, then merge into a single buffer.
 const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalIdxs=totalQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(totalQuads*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
 // Copy vertices with Y offset applied to position (float index 1 per vertex)
@@ -10682,25 +10800,42 @@ for(let f=0;f<Constants.FLOATS_PER_VERTEX;f++)vertices[dstOff+f]=srcVerts[srcOff
 // Shift posY (index 1) by line offset
 vertices[dstOff+1]+=yShift}
 // Copy indices with base vertex offset
-for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=q.quadCount*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,idxOffset+=srcIdxs.length,baseVertex+=q.quadCount*Constants.VERTICES_PER_QUAD}return{vertices,indices,quadCount:totalQuads}}(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return slugGlyphQuads(text,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}_buildMesh(quads,gpu){const vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,16),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,32),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,48),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,64);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,{mesh:new mesh_root_PIXI_.Mesh(geometry,shader),shader}}rebuild(){this._rebuildCount++;for(const mesh of this._meshes)this.removeChild(mesh),mesh.destroy();this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null);const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV7(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0;if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,this._text,shadowColor,blur);if(shadowQuads.quadCount>0){const{mesh,shader}=this._buildMesh(shadowQuads,gpu);shader.uniforms.uStrokeExpand=blur,blur>0&&(shader.uniforms.uStrokeAlphaStart=shadowAlpha,shader.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}if(hasStroke){const strokeQuads=this._makeQuads(font,this._text,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){const{mesh,shader}=this._buildMesh(strokeQuads,gpu);shader.uniforms.uStrokeExpand=this._strokeWidth,shader.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,shader.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}const fillQuads=this._makeQuads(font,this._text,this._color);if(fillQuads.quadCount>0){const{mesh}=this._buildMesh(fillQuads,gpu);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=fillQuads.vertices.byteLength,this._indexBytes=fillQuads.indices.byteLength}
+for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=q.quadCount*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,idxOffset+=srcIdxs.length,baseVertex+=q.quadCount*Constants.VERTICES_PER_QUAD}return{vertices,indices,quadCount:totalQuads}}(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return slugGlyphQuads(lines[0]||"",font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}_buildMesh(quads,gpu){const vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,16),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,32),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,48),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,64);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,{mesh:new mesh_root_PIXI_.Mesh(geometry,shader),shader}}rebuild(){this._rebuildCount++;for(const mesh of this._meshes)this.removeChild(mesh),mesh.destroy();this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null);const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV7(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0,scale=this._fontSize/font.unitsPerEm,wrapping=this._wordWrap&&this._wordWrapWidth>0,hasNewline=this._text.indexOf("\n")>=0;let lines;if(wrapping||hasNewline){const width=wrapping?this._wordWrapWidth:0;lines=// ./src/shared/slug/text/wrap.ts
+/**
+ * Break a text string into lines that fit within a maximum pixel width.
+ * Uses a greedy word-wrap algorithm: fills each line as much as possible
+ * before breaking to the next line.
+ *
+ * @param text			The full text string.
+ * @param advances		Advance width map (char code → em-space width).
+ * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
+ * @param maxWidth		Maximum line width in pixels. Pass 0 (or a negative value)
+ *						to disable width-based wrapping; newlines will still
+ *						force line breaks.
+ * @param breakWords	If true, break mid-word when a single word exceeds maxWidth.
+ */
+function(text,advances,scale,maxWidth,breakWords=!1){const lines=[];let lineStart=0,lastBreak=-1,lineWidth=0;for(let i=0;i<text.length;i++){const code=text.charCodeAt(i);
+// Newline forces a line break
+if(10!==code){if(
+// Track word boundaries (space is a valid break point)
+32===code&&(lastBreak=i),lineWidth+=(advances.get(code)??0)*scale,maxWidth>0&&lineWidth>maxWidth&&i>lineStart){if(lastBreak>=lineStart)
+// Break at last space
+lines.push(text.substring(lineStart,lastBreak)),lineStart=lastBreak+1;else{if(!breakWords)
+// No valid break point — let the word overflow until a space is found
+continue;
+// Break mid-word at current character
+lines.push(text.substring(lineStart,i)),lineStart=i}lastBreak=-1,
+// Recalculate width from lineStart to current position
+lineWidth=0;for(let j=lineStart;j<=i;j++)lineWidth+=(advances.get(text.charCodeAt(j))??0)*scale}}else lines.push(text.substring(lineStart,i)),lineStart=i+1,lastBreak=-1,lineWidth=0}
+// Push remaining text
+return lineStart<text.length?lines.push(text.substring(lineStart)):text.length>0&&lineStart===text.length&&
+// Text ended with a newline — add empty final line
+lines.push(""),{lines}}(this._text,font.advances,scale,width,this._breakWords).lines}else lines=[this._text];const lineWidths=new Float32Array(lines.length),lineQuadCounts=new Int32Array(lines.length);let widestLine=0;for(let l=0;l<lines.length;l++){const line=lines[l];lineWidths[l]=slugMeasureText(line,font.advances,scale),lineWidths[l]>widestLine&&(widestLine=lineWidths[l]);let count=0;for(let i=0;i<line.length;i++)font.glyphs.has(line.charCodeAt(i))&&count++;lineQuadCounts[l]=count}const layout=slugComputeLineLayout(lines,lineWidths,wrapping?this._wordWrapWidth:widestLine,slugResolvePhysicalAlign(this._align,this._direction),this._textJustify,c=>font.glyphs.has(c)),needsShift=null!==layout.perGlyphShiftX||layout.lineOffsetX.some(x=>0!==x);if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,lines,shadowColor,blur);if(shadowQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(shadowQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const{mesh,shader}=this._buildMesh(shadowQuads,gpu);shader.uniforms.uStrokeExpand=blur,blur>0&&(shader.uniforms.uStrokeAlphaStart=shadowAlpha,shader.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}if(hasStroke){const strokeQuads=this._makeQuads(font,lines,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(strokeQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const{mesh,shader}=this._buildMesh(strokeQuads,gpu);shader.uniforms.uStrokeExpand=this._strokeWidth,shader.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,shader.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}const fillQuads=this._makeQuads(font,lines,this._color);if(fillQuads.quadCount>0&&needsShift&&slugApplyLineLayoutX(fillQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX),fillQuads.quadCount>0){const{mesh}=this._buildMesh(fillQuads,gpu);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=fillQuads.vertices.byteLength,this._indexBytes=fillQuads.indices.byteLength}
 // --- Text decorations (underline / strikethrough / overline) ---
-// Reads only the concrete `_*Draw` records — base.ts has already
-// folded user input + fill color + font metrics into final RGBA
-// and pixel thickness. No fallback resolution happens here.
-const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if((ul.enabled||st.enabled||ol.enabled)&&font){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),hasNewline=this._text.indexOf("\n")>=0,wrapping=this._wordWrap&&this._wordWrapWidth>0;let lines;if(wrapping||hasNewline){const width=wrapping?this._wordWrapWidth:0;lines=slugTextWrap(this._text,font.advances,scale,width,this._breakWords).lines}else lines=[this._text];const gfx=new graphics_root_PIXI_.Graphics,xForAlign=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;
-// Compute the x-offset for a length-restricted line of width
-// `drawW` inside a text line of width `lineW`. `align` is the
-// physical alignment already resolved against text direction.
-for(let l=0;l<lines.length;l++){const line=lines[l],lineW=slugMeasureText(line,font.advances,scale),lineY=l*lineHeight;
-// Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
-// so decorations align with the actual glyph positions on this line.
-let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=lineW*ul.length,x=xForAlign(lineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;gfx.beginFill(ulPacked,ul.color[3]),gfx.drawRect(x,ulY,drawW,ul.thickness),gfx.endFill()}if(st.enabled&&st.length>0){const drawW=lineW*st.length,x=xForAlign(lineW,drawW,st.align),stY=baselineY+lineY-font.strikethroughPosition*scale;gfx.beginFill(stPacked,st.color[3]),gfx.drawRect(x,stY,drawW,st.thickness),gfx.endFill()}
-// Overline: font tables don't define an overline metric, so by
-// CSS-engine convention reuse the underline thickness. Place the
-// line's bottom edge at the top of the rendered glyphs (y=0 in
-// local coords, which the quad builder pins to the tallest glyph
-// on the line — see slugGlyphQuads).
-if(ol.enabled&&ol.length>0){const drawW=lineW*ol.length,x=xForAlign(lineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.beginFill(olPacked,ol.color[3]),gfx.drawRect(x,olY,drawW,ol.thickness),gfx.endFill()}}this._decorations=gfx,this.addChild(gfx)}}destroy(){this._releaseFontOnDestroy();for(const mesh of this._meshes)mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),super.destroy()}}// ./src/v7/slug/fonts/loader.ts
+// Decorations sit above/below the glyphs on each line, so they
+// share the per-line offset (`layout`) and effective width
+// (post-justify) the quad shifter applied above.
+const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if((ul.enabled||st.enabled||ol.enabled)&&font){const lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),gfx=new graphics_root_PIXI_.Graphics,xForDecoration=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=effLineW*ul.length,x=lineX+xForDecoration(effLineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;gfx.beginFill(ulPacked,ul.color[3]),gfx.drawRect(x,ulY,drawW,ul.thickness),gfx.endFill()}if(st.enabled&&st.length>0){const drawW=effLineW*st.length,x=lineX+xForDecoration(effLineW,drawW,st.align),stY=baselineY+lineY-font.strikethroughPosition*scale;gfx.beginFill(stPacked,st.color[3]),gfx.drawRect(x,stY,drawW,st.thickness),gfx.endFill()}if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoration(effLineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.beginFill(olPacked,ol.color[3]),gfx.drawRect(x,olY,drawW,ol.thickness),gfx.endFill()}}this._decorations=gfx,this.addChild(gfx)}}destroy(){this._releaseFontOnDestroy();for(const mesh of this._meshes)mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),super.destroy()}}// ./src/v7/slug/fonts/loader.ts
 const FONT_URL_RE=/\.(ttf|otf|woff2?)(\?|#|$)/i;
 /**
  * Registered once `slugFontsInstallLoaderV7` is called. Kept at module

@@ -1,26 +1,29 @@
+import {slugResolvePhysicalAlign, type SlugTextStyleAlign, type SlugTextStylePhysicalAlign} from './align';
 import {slugTextColorToRgba, type SlugTextColor, type SlugTextColorRgba} from './color';
 import type {SlugTextDirection} from './direction';
 import {numberValue} from '@toreda/strong-types';
 
 /**
- * Logical alignment for a length-restricted decoration line. Resolved
- * against the current text direction at draw-record build time:
+ * Logical alignment for a length-restricted decoration line. Reuses
+ * the block-level alignment vocabulary minus `justify` (a single line
+ * has nothing to fill against). Resolved against the current text
+ * direction at draw-record build time:
  *  - LTR: `start` → physical-left, `end` → physical-right
  *  - RTL: `start` → physical-right, `end` → physical-left
- *  - `center` is direction-agnostic.
+ *  - `left`/`right`/`center` are direction-agnostic.
  *
  * Only meaningful when `length < 1` — at full width there's no offset
  * for alignment to control.
  */
-export type SlugTextDecorationAlign = 'start' | 'center' | 'end';
+export type SlugTextDecorationAlign = Exclude<SlugTextStyleAlign, 'justify'>;
 
 /**
- * Physical alignment used by the renderer. Decoration alignment input
- * is `start | center | end`; resolution folds in the text direction
- * to produce one of these. The render loop reads only this form and
- * is locale-agnostic.
+ * Physical alignment used by the renderer. Decoration input is the
+ * full logical set; resolution folds in the text direction to produce
+ * one of these. The render loop reads only this form and is locale-
+ * agnostic.
  */
-export type SlugTextDecorationPhysicalAlign = 'left' | 'center' | 'right';
+export type SlugTextDecorationPhysicalAlign = Exclude<SlugTextStylePhysicalAlign, 'justify'>;
 
 /**
  * User-facing decoration config. Every field is optional — anything
@@ -55,10 +58,12 @@ export interface SlugTextDecoration {
 	length?: number | null;
 	/**
 	 * Where a length-restricted line is anchored within the text line.
-	 * Resolved against the text direction:
-	 *  - `'start'` (default) → first character of the line.
-	 *  - `'end'` → last character of the line.
+	 * `start`/`end` are resolved against text direction; `left`/`right`
+	 * are direction-agnostic.
+	 *  - `'start'` (default) → leading edge of the line in current direction.
+	 *  - `'end'` → trailing edge of the line in current direction.
 	 *  - `'center'` → centered in the line.
+	 *  - `'left'` / `'right'` → physical left/right regardless of direction.
 	 *
 	 * Ignored at full width (`length === 1`).
 	 */
@@ -136,18 +141,15 @@ export function decorationsEqual(a: SlugTextDecorationResolved, b: SlugTextDecor
 }
 
 /**
- * Resolve logical `start`/`center`/`end` alignment to a physical
- * `left`/`center`/`right` based on text direction.
+ * Resolve a decoration's logical alignment to physical. Delegates to
+ * the shared block-level resolver — `justify` is excluded at the type
+ * level, so the cast is safe.
  */
 function physicalAlign(
 	align: SlugTextDecorationAlign,
 	direction: SlugTextDirection
 ): SlugTextDecorationPhysicalAlign {
-	if (align === 'center') return 'center';
-	if (direction === 'rtl') {
-		return align === 'start' ? 'right' : 'left';
-	}
-	return align === 'start' ? 'left' : 'right';
+	return slugResolvePhysicalAlign(align, direction) as SlugTextDecorationPhysicalAlign;
 }
 
 /**
@@ -216,6 +218,11 @@ export function slugResolveDecoration(input: SlugTextDecorationInput | undefined
 		: numberValue(input.length, 1);
 	const length = Math.min(Math.max(rawLength, 0), 1);
 	const align: SlugTextDecorationAlign =
-		input.align === 'center' || input.align === 'end' ? input.align : 'start';
+		input.align === 'center' ||
+		input.align === 'end' ||
+		input.align === 'left' ||
+		input.align === 'right'
+			? input.align
+			: 'start';
 	return {enabled: true, color, thickness, length, align};
 }

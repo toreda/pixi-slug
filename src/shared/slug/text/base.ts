@@ -5,7 +5,9 @@ import {SlugFonts} from '../fonts';
 
 import {slugResolveFontInput, slugTryResolveFontInputSync} from '../fonts/resolve';
 import type {SlugDropShadow, SlugDropShadowResolved, SlugStroke, SlugTextInit} from './init';
+import type {SlugTextStyleAlign} from './style/align';
 import {slugTextColorToRgba, type SlugTextColor} from './style/color';
+import type {SlugTextJustify} from './style/justify';
 import {
 	decorationsEqual,
 	slugDrawDecorationDisabled,
@@ -30,6 +32,41 @@ interface ContainerLike {
 }
 
 type Constructor<T = ContainerLike> = new (...args: any[]) => T;
+
+/**
+ * Coerce a user-supplied `align` value into a known `SlugTextStyleAlign`.
+ * Anything outside the union (including `null`/`undefined`) falls back
+ * to the configured default — typically `'start'`.
+ */
+function resolveAlignInput(value: SlugTextStyleAlign | null | undefined): SlugTextStyleAlign {
+	switch (value) {
+		case 'start':
+		case 'end':
+		case 'left':
+		case 'center':
+		case 'right':
+		case 'justify':
+			return value;
+		default:
+			return Defaults.SlugText.Align;
+	}
+}
+
+/**
+ * Coerce a user-supplied `textJustify` value into a known
+ * `SlugTextJustify`. Anything outside the union (including `null` /
+ * `undefined`) falls back to the configured default — typically
+ * `'inter-word'`.
+ */
+function resolveTextJustifyInput(value: SlugTextJustify | null | undefined): SlugTextJustify {
+	switch (value) {
+		case 'inter-word':
+		case 'inter-character':
+			return value;
+		default:
+			return Defaults.SlugText.TextJustify;
+	}
+}
 
 /**
  * Mixin that adds shared SlugText state and property accessors to a
@@ -66,6 +103,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_wordWrapWidth!: number;
 		_breakWords!: boolean;
 		_direction!: SlugTextDirection;
+		_align!: SlugTextStyleAlign;
+		_textJustify!: SlugTextJustify;
 		_underline!: SlugTextDecorationResolved;
 		_strikethrough!: SlugTextDecorationResolved;
 		_overline!: SlugTextDecorationResolved;
@@ -138,6 +177,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapWidth);
 			this._breakWords = booleanValue(init.options?.breakWords, false);
 			this._direction = init.options?.direction === 'rtl' ? 'rtl' : Defaults.SlugText.Direction;
+			this._align = resolveAlignInput(init.options?.align);
+			this._textJustify = resolveTextJustifyInput(init.options?.textJustify);
 			this._underline = slugResolveDecoration(init.options?.underline);
 			this._strikethrough = slugResolveDecoration(init.options?.strikethrough);
 			this._overline = slugResolveDecoration(init.options?.overline);
@@ -317,6 +358,40 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._direction = next;
 			this._resolveDecorations();
 			this.rebuild();
+		}
+
+		/**
+		 * Block-level text alignment. Stored in logical form — the
+		 * physical resolution (folding in `direction`) happens in the
+		 * version-specific `rebuild()`.
+		 */
+		public get align(): SlugTextStyleAlign {
+			return this._align;
+		}
+
+		public set align(value: SlugTextStyleAlign) {
+			const next = resolveAlignInput(value);
+			if (this._align === next) return;
+			this._align = next;
+			this.rebuild();
+		}
+
+		/**
+		 * Justify strategy used when `align === 'justify'`. Stored even
+		 * when `align` is not `'justify'` so toggling `align` doesn't
+		 * lose the user's preference.
+		 */
+		public get textJustify(): SlugTextJustify {
+			return this._textJustify;
+		}
+
+		public set textJustify(value: SlugTextJustify) {
+			const next = resolveTextJustifyInput(value);
+			if (this._textJustify === next) return;
+			this._textJustify = next;
+			// No effect when align !== 'justify'; rebuild() is cheap
+			// enough to skip the conditional.
+			if (this._align === 'justify') this.rebuild();
 		}
 
 		public get underline(): SlugTextDecorationResolved {

@@ -53,6 +53,18 @@ export class Defaults {
 		 * without API churn later.
 		 */
 		Direction: 'ltr' as 'ltr' | 'rtl',
+		/**
+		 * Default block-level text alignment. `start` follows the text
+		 * direction (LTR → left, RTL → right), matching CSS.
+		 */
+		Align: 'start' as 'start' | 'end' | 'left' | 'center' | 'right' | 'justify',
+		/**
+		 * Default justify strategy. Mirrors CSS `text-justify` and is
+		 * consulted only when `align === 'justify'`. `'inter-word'`
+		 * matches CSS's default and is the right behavior for Latin /
+		 * Cyrillic / similar scripts.
+		 */
+		TextJustify: 'inter-word' as 'inter-word' | 'inter-character',
 		WordWrap: false as const,
 		WordWrapWidth: 0 as const,
 		/**

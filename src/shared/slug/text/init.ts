@@ -5,6 +5,7 @@ import {SlugTextStyleAlign} from './style/align';
 import type {SlugTextColor} from './style/color';
 import type {SlugTextDecorationInput} from './style/decoration';
 import type {SlugTextDirection} from './style/direction';
+import type {SlugTextJustify} from './style/justify';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
 
 /**
@@ -115,6 +116,15 @@ export interface SlugTextStyleOptions {
 	wordWrap?: boolean | null;
 	wordWrapWidth?: number | null;
 	align?: SlugTextStyleAlign;
+	/**
+	 * Justify strategy used when `align === 'justify'`. Mirrors CSS
+	 * `text-justify`. Ignored for any other alignment.
+	 *  - `'inter-word'` (default) → expand inter-word gaps only.
+	 *  - `'inter-character'` → distribute extra width across every
+	 *    inter-glyph gap (CJK-style "distribute" justification).
+	 * @default 'inter-word'
+	 */
+	textJustify?: SlugTextJustify;
 	breakWords?: boolean;
 	/**
 	 * Text direction. Today this only affects how decoration

@@ -5654,7 +5654,19 @@ FontSize:24,Text:"",
          * field is exposed now so app code can be written direction-aware
          * without API churn later.
          */
-Direction:"ltr",WordWrap:!1,WordWrapWidth:0,
+Direction:"ltr",
+/**
+         * Default block-level text alignment. `start` follows the text
+         * direction (LTR → left, RTL → right), matching CSS.
+         */
+Align:"start",
+/**
+         * Default justify strategy. Mirrors CSS `text-justify` and is
+         * consulted only when `align === 'justify'`. `'inter-word'`
+         * matches CSS's default and is the right behavior for Latin /
+         * Cyrillic / similar scripts.
+         */
+TextJustify:"inter-word",WordWrap:!1,WordWrapWidth:0,
 /**
          * When a font is passed to `SlugText` by URL/name and is not yet
          * loaded, render using the `SlugFonts` fallback font while the
@@ -10360,37 +10372,118 @@ const idxOffset=quadIdx*Constants.INDICES_PER_QUAD;indices[idxOffset]=baseVertex
  * @param lineHeight	Vertical distance between lines in pixels.
  * @param color			Text color as [r, g, b, a] in 0-1 range.
  * @param extraExpand	Extra outward expansion in pixels per side.
- */ // ./src/shared/slug/text/wrap.ts
+ */ // ./src/shared/slug/glyph/shift.ts
 /**
- * Break a text string into lines that fit within a maximum pixel width.
- * Uses a greedy word-wrap algorithm: fills each line as much as possible
- * before breaking to the next line.
+ * Shift the X coordinate of every vertex in a quad buffer by a
+ * per-line offset, plus an optional per-glyph offset (used by
+ * text-align justify to expand inter-word gaps).
  *
- * @param text			The full text string.
- * @param advances		Advance width map (char code → em-space width).
- * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
- * @param maxWidth		Maximum line width in pixels. Pass 0 (or a negative value)
- *						to disable width-based wrapping; newlines will still
- *						force line breaks.
- * @param breakWords	If true, break mid-word when a single word exceeds maxWidth.
+ * Mutates `quads.vertices` in place. The buffer's per-glyph emission
+ * order matches `slugGlyphQuadsMultiline`'s line-major order, so
+ * `lineQuadCounts[l]` quads on line `l` are consumed before line
+ * `l + 1`.
+ *
+ * O(n) over total vertex count — one extra pass per quad buffer.
+ *
+ * @param quads				Quad buffer to mutate.
+ * @param lineQuadCounts	Number of quads emitted on each line, in
+ *							order. Sum must equal `quads.quadCount`.
+ * @param lineOffsetX		Per-line whole-line X offset (length matches
+ *							`lineQuadCounts`).
+ * @param perGlyphShiftX	Optional per-glyph cumulative X shift (used
+ *							for justify). Length equals total renderable
+ *							glyphs across all lines, in line-major
+ *							order. Pass `null` when no justify is in
+ *							effect — saves the per-glyph add.
  */
-function slugTextWrap(text,advances,scale,maxWidth,breakWords=!1){const lines=[];let lineStart=0,lastBreak=-1,lineWidth=0;for(let i=0;i<text.length;i++){const code=text.charCodeAt(i);
-// Newline forces a line break
-if(10===code){lines.push(text.substring(lineStart,i)),lineStart=i+1,lastBreak=-1,lineWidth=0;continue}if(
-// Track word boundaries (space is a valid break point)
-32===code&&(lastBreak=i),lineWidth+=(advances.get(code)??0)*scale,maxWidth>0&&lineWidth>maxWidth&&i>lineStart){if(lastBreak>=lineStart)
-// Break at last space
-lines.push(text.substring(lineStart,lastBreak)),lineStart=lastBreak+1;else{if(!breakWords)
-// No valid break point — let the word overflow until a space is found
-continue;
-// Break mid-word at current character
-lines.push(text.substring(lineStart,i)),lineStart=i}lastBreak=-1,
-// Recalculate width from lineStart to current position
-lineWidth=0;for(let j=lineStart;j<=i;j++)lineWidth+=(advances.get(text.charCodeAt(j))??0)*scale}}
-// Push remaining text
-return lineStart<text.length?lines.push(text.substring(lineStart)):text.length>0&&lineStart===text.length&&
-// Text ended with a newline — add empty final line
-lines.push(""),{lines}}// ./src/shared/slug/text/measure.ts
+function slugApplyLineLayoutX(quads,lineQuadCounts,lineOffsetX,perGlyphShiftX){const verts=quads.vertices,fpv=Constants.FLOATS_PER_VERTEX,vpq=Constants.VERTICES_PER_QUAD,lineCount=lineQuadCounts.length,floatsPerQuad=vpq*fpv;let quadCursor=0;for(let l=0;l<lineCount;l++){const count=lineQuadCounts[l];if(0===count)continue;const offset=lineOffsetX[l],base=quadCursor*floatsPerQuad;if(null!==perGlyphShiftX)for(let q=0;q<count;q++){const total=offset+perGlyphShiftX[quadCursor+q];if(0===total)continue;const quadStart=base+q*floatsPerQuad;for(let v=0;v<vpq;v++)verts[quadStart+v*fpv]+=total}else if(0!==offset){const end=base+count*floatsPerQuad;for(let off=base;off<end;off+=fpv)verts[off]+=offset}quadCursor+=count}}// ./src/shared/slug/text/layout/align.ts
+/**
+ * Compute the per-line X offset and (for `justify`) per-glyph X shift
+ * needed to apply block-level text-align to a multi-line buffer.
+ *
+ * Inputs use the natural per-line widths from `slugMeasureText` and
+ * the text strings (needed only when justify is active, to count word
+ * gaps and renderable glyphs per line). All counts are independent of
+ * the GPU buffer — the helper that applies them walks the buffer in
+ * the same line-major order the quad builder uses.
+ *
+ * Justify falls back to `start` (CSS default) on:
+ *  - the last line of the block,
+ *  - lines with zero gaps in the chosen strategy (e.g. inter-word
+ *    on a line with no spaces, or inter-character on a line with one
+ *    or zero renderable glyphs),
+ *  - lines whose natural width already meets/exceeds `boxWidth`.
+ *
+ * @param lines				Per-line text strings — only used for justify
+ *							(space-counting and glyph-counting). Pass the
+ *							same array used by the quad builder.
+ * @param lineWidths		Per-line natural widths in pixels.
+ * @param boxWidth			Block width in pixels. For `justify` and
+ *							`center` / `right`, this is the box edge
+ *							alignment is measured against.
+ * @param physicalAlign		Resolved physical alignment.
+ * @param justifyMode		Strategy used when `physicalAlign === 'justify'`.
+ *							Ignored otherwise.
+ * @param glyphsPresent		Predicate returning whether a char code at a
+ *							given line/index produces a quad. Mirrors
+ *							the `glyphs.has(...)` test in the quad
+ *							builder so per-glyph indices line up.
+ */
+function slugComputeLineLayout(lines,lineWidths,boxWidth,physicalAlign,justifyMode,glyphsPresent){const lineCount=lines.length,lineOffsetX=new Float32Array(lineCount),effectiveLineWidth=new Float32Array(lineCount);let perGlyphShiftX=null;if("justify"===physicalAlign){const totalRenderable=
+/** Total renderable glyphs across all lines. */
+function(lines,glyphsPresent){let n=0;for(let l=0;l<lines.length;l++)n+=countLineRenderable(lines[l],glyphsPresent);return n}(lines,glyphsPresent);perGlyphShiftX=new Float32Array(totalRenderable)}let glyphCursor=0;const isLastLine=l=>l===lineCount-1;for(let l=0;l<lineCount;l++){const line=lines[l],lineW=lineWidths[l];let effW=lineW;if("justify"===physicalAlign&&!isLastLine(l)&&lineW<boxWidth&&null!==perGlyphShiftX){const extra=boxWidth-lineW;let applied=!1;if("inter-character"===justifyMode){
+// Distribute extra width across every gap between
+// adjacent renderable glyphs on the line — both word
+// gaps and inter-letter gaps stretch by the same
+// amount. A line with 0 or 1 renderable glyphs has
+// nowhere to put the extra width and falls back to
+// `start`.
+const renderable=countLineRenderable(line,glyphsPresent);if(renderable>=2){distributeInterCharacterShifts(line,extra/(renderable-1),perGlyphShiftX,glyphCursor,glyphsPresent),applied=!0}}else{
+// inter-word: collapse runs of spaces to a single gap.
+// Trailing space is not a gap because no glyph follows
+// it. Lines with zero gaps fall back to `start`.
+const gaps=countInterWordGaps(line);if(gaps>0){distributeInterWordShifts(line,extra/gaps,perGlyphShiftX,glyphCursor,glyphsPresent),applied=!0}}applied&&(effW=boxWidth)}
+// Whole-line offset against the (possibly justified) effective
+// width. For justify lines that fall back to start, effW ===
+// lineW so the offset is 0.
+lineOffsetX[l]=xForBlockAlign(boxWidth,effW,physicalAlign),effectiveLineWidth[l]=effW,
+// Advance the per-line glyph cursor regardless of justify, so
+// the cursor stays in sync with the quad builder's emission.
+null!==perGlyphShiftX&&(glyphCursor+=countLineRenderable(line,glyphsPresent))}return{lineOffsetX,perGlyphShiftX,effectiveLineWidth}}
+/**
+ * Block-level x-offset for a non-justify alignment. `justify` returns
+ * 0 here — its width fill happens via `perGlyphShiftX`, not a whole-
+ * line offset.
+ */function xForBlockAlign(boxW,lineW,align){return"right"===align?boxW-lineW:"center"===align?(boxW-lineW)/2:0}
+/**
+ * Count inter-word gaps in a line. Consecutive spaces collapse to a
+ * single gap (matching the natural rendering — they all expand
+ * together in CSS inter-word justify). Trailing spaces don't count
+ * because no glyph follows them on this line.
+ */function countInterWordGaps(line){let gaps=0,inSpace=!1,sawNonSpace=!1,trailingSpace=!1;for(let i=0;i<line.length;i++){32===line.charCodeAt(i)?sawNonSpace&&!inSpace&&(gaps++,inSpace=!0,trailingSpace=!0):(sawNonSpace=!0,inSpace=!1,trailingSpace=!1)}return trailingSpace&&gaps--,gaps}
+/**
+ * Walk a line's characters, writing the cumulative inter-word shift
+ * for each renderable glyph into `out` starting at `outOffset`. Each
+ * inter-word gap (collapsed runs of spaces between glyphs) increments
+ * the running shift by `perGap`; trailing spaces are ignored.
+ */function distributeInterWordShifts(line,perGap,out,outOffset,glyphsPresent){let shift=0,inSpace=!1,sawNonSpace=!1,pendingGap=!1,writeIdx=outOffset;for(let i=0;i<line.length;i++){const c=line.charCodeAt(i);32!==c?(
+// Non-space glyph (or invisible char without quad — same logic).
+pendingGap&&(shift+=perGap,pendingGap=!1),sawNonSpace=!0,inSpace=!1,glyphsPresent(c)&&(out[writeIdx++]=shift)):sawNonSpace&&!inSpace&&(inSpace=!0,pendingGap=!0)}}
+/**
+ * Walk a line's renderable glyphs, writing the cumulative inter-
+ * character shift for each into `out` starting at `outOffset`. The
+ * first renderable glyph stays at shift 0; each subsequent renderable
+ * glyph is offset by an additional `perGap`. Whether or not a space
+ * (or any other unrenderable char) sits between two renderable
+ * glyphs, the gap counts once — every adjacent pair of renderables on
+ * the line gets the same stretch.
+ */function distributeInterCharacterShifts(line,perGap,out,outOffset,glyphsPresent){let shift=0,writeIdx=outOffset,seenAny=!1;for(let i=0;i<line.length;i++){glyphsPresent(line.charCodeAt(i))&&(seenAny&&(shift+=perGap),out[writeIdx++]=shift,seenAny=!0)}}
+/** Number of glyphs that produce quads for a single line. */function countLineRenderable(line,glyphsPresent){let n=0;for(let i=0;i<line.length;i++)glyphsPresent(line.charCodeAt(i))&&n++;return n}// ./src/shared/slug/text/style/align.ts
+/**
+ * Resolve a logical block-level alignment to its physical form by
+ * folding in the current text direction.
+ */
+function slugResolvePhysicalAlign(align,direction){return"start"===align?"rtl"===direction?"right":"left":"end"===align?"rtl"===direction?"left":"right":align}// ./src/shared/slug/text/measure.ts
 /**
  * Measure the pixel width of a text string using advance widths.
  *
@@ -10542,9 +10635,10 @@ const u=n>>>0;return{r:(u>>>24&255)/255,g:(u>>>16&255)/255,b:(u>>>8&255)/255,alp
  */
 function decorationsEqual(a,b){if(a.enabled!==b.enabled)return!1;if(a.thickness!==b.thickness)return!1;if(a.length!==b.length)return!1;if(a.align!==b.align)return!1;const ac=a.color,bc=b.color;return null===ac&&null===bc||null!==ac&&null!==bc&&(ac[0]===bc[0]&&ac[1]===bc[1]&&ac[2]===bc[2]&&ac[3]===bc[3])}
 /**
- * Resolve logical `start`/`center`/`end` alignment to a physical
- * `left`/`center`/`right` based on text direction.
- */function physicalAlign(align,direction){return"center"===align?"center":"rtl"===direction?"start"===align?"right":"left":"start"===align?"left":"right"}
+ * Resolve a decoration's logical alignment to physical. Delegates to
+ * the shared block-level resolver — `justify` is excluded at the type
+ * level, so the cast is safe.
+ */function physicalAlign(align,direction){return slugResolvePhysicalAlign(align,direction)}
 /**
  * Fold the user's resolved input plus the current fill color, font
  * metric, and text direction into a fully-concrete draw record.
@@ -10570,13 +10664,47 @@ function decorationsEqual(a,b){if(a.enabled!==b.enabled)return!1;if(a.thickness!
  * Unlike `slugTextColorToRgba`, an explicit `color: null` here does NOT
  * preserve any prior color — it means "inherit the fill".
  */
-function slugResolveDecoration(input){if(!0===input)return{enabled:!0,color:null,thickness:null,length:1,align:"start"};if(!1===input||null==input)return{enabled:!1,color:null,thickness:null,length:1,align:"start"};const color=null===input.color||void 0===input.color?null:slugTextColorToRgba(input.color,[0,0,0,1]),thickness=null===input.thickness||void 0===input.thickness?null:(0,dist/* numberValue */.Vg)(input.thickness,0),rawLength=null===input.length||void 0===input.length?1:(0,dist/* numberValue */.Vg)(input.length,1);return{enabled:!0,color,thickness,length:Math.min(Math.max(rawLength,0),1),align:"center"===input.align||"end"===input.align?input.align:"start"}}// ./src/v8/slug/text.ts
+function slugResolveDecoration(input){if(!0===input)return{enabled:!0,color:null,thickness:null,length:1,align:"start"};if(!1===input||null==input)return{enabled:!1,color:null,thickness:null,length:1,align:"start"};const color=null===input.color||void 0===input.color?null:slugTextColorToRgba(input.color,[0,0,0,1]),thickness=null===input.thickness||void 0===input.thickness?null:(0,dist/* numberValue */.Vg)(input.thickness,0),rawLength=null===input.length||void 0===input.length?1:(0,dist/* numberValue */.Vg)(input.length,1);return{enabled:!0,color,thickness,length:Math.min(Math.max(rawLength,0),1),align:"center"===input.align||"end"===input.align||"left"===input.align||"right"===input.align?input.align:"start"}}// ./src/shared/slug/text/base.ts
+/**
+ * Coerce a user-supplied `align` value into a known `SlugTextStyleAlign`.
+ * Anything outside the union (including `null`/`undefined`) falls back
+ * to the configured default — typically `'start'`.
+ */
+function resolveAlignInput(value){switch(value){case"start":case"end":case"left":case"center":case"right":case"justify":return value;default:return Defaults.SlugText.Align}}
+/**
+ * Coerce a user-supplied `textJustify` value into a known
+ * `SlugTextJustify`. Anything outside the union (including `null` /
+ * `undefined`) falls back to the configured default — typically
+ * `'inter-word'`.
+ */function resolveTextJustifyInput(value){switch(value){case"inter-word":case"inter-character":return value;default:return Defaults.SlugText.TextJustify}}
+/**
+ * Mixin that adds shared SlugText state and property accessors to a
+ * Container base class. Each PixiJS version passes its own Container:
+ *
+ * ```typescript
+ * // v8
+ * import {Container} from 'pixi.js';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ *
+ * // v6/v7
+ * import {Container} from '@pixi/display';
+ * class SlugText extends SlugTextMixin(Container) { ... }
+ * ```
+ *
+ * The returned class manages text, font, fontSize, color, wordWrap,
+ * supersampling, memory tracking, and rebuild lifecycle. Subclasses
+ * implement `rebuild()` with version-specific GPU APIs.
+ *
+ * Fields use public `_` prefix instead of `protected` to avoid TS4094
+ * ("Property of exported anonymous class type may not be private or
+ * protected"). The `_` convention signals internal use.
+ */ // ./src/v8/slug/text.ts
 /**
  * The Mixin pattern is necessary due to Container API difference
  * per PIXI version while supporting multiple PIXI versions. If we
  * only supported V8 this would be `extends Container` instead.
  */
-const SlugTextV8Base=(Base=external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWords;_direction;_underline;_strikethrough;_overline;
+const SlugTextV8Base=(Base=external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWords;_direction;_align;_textJustify;_underline;_strikethrough;_overline;
 // Concrete draw records — recomputed eagerly by `_resolveDecorations`
 // whenever any input that feeds them changes (decoration setters,
 // color, font, fontSize). Render code reads ONLY these.
@@ -10592,7 +10720,7 @@ _dropShadow;
          * Called by the subclass constructor after super().
          * Subclass must call rebuild() separately after version-specific init.
          */
-initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),this._color=slugTextColorToRgba(init.options?.fill,Defaults.SlugText.FillColor),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
+initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),this._color=slugTextColorToRgba(init.options?.fill,Defaults.SlugText.FillColor),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._align=resolveAlignInput(init.options?.align),this._textJustify=resolveTextJustifyInput(init.options?.textJustify),this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
 // Stroke
 const stroke=init.options?.stroke;this._strokeWidth=(0,dist/* numberValue */.Vg)(stroke?.width,Defaults.SlugText.StrokeWidth),this._strokeColor=slugTextColorToRgba(stroke?.color,Defaults.SlugText.StrokeColor),this._strokeAlphaMode=stroke?.alphaMode??Defaults.SlugText.StrokeAlphaMode,this._strokeAlphaStart=(0,dist/* numberValue */.Vg)(stroke?.alphaStart,Defaults.SlugText.StrokeAlphaStart),this._strokeAlphaRate=(0,dist/* numberValue */.Vg)(stroke?.alphaRate,Defaults.SlugText.StrokeAlphaRate);
 // Drop shadow — presence of the object enables it
@@ -10620,7 +10748,20 @@ get text(){return this._text}set text(value){this._text!==value&&(this._text=val
          * Version-specific subclasses must call this from their `destroy()`
          * override so the registry's ref counter can mark the font for
          * auto-destroy when no other text instances hold it.
-         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3]||(this._color=next,this._resolveDecorations(),this.rebuild())}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}get underline(){return this._underline}set underline(value){const next=slugResolveDecoration(value);decorationsEqual(this._underline,next)||(this._underline=next,this._resolveDecorations(),this.rebuild())}get strikethrough(){return this._strikethrough}set strikethrough(value){const next=slugResolveDecoration(value);decorationsEqual(this._strikethrough,next)||(this._strikethrough=next,this._resolveDecorations(),this.rebuild())}get overline(){return this._overline}set overline(value){const next=slugResolveDecoration(value);decorationsEqual(this._overline,next)||(this._overline=next,this._resolveDecorations(),this.rebuild())}
+         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3]||(this._color=next,this._resolveDecorations(),this.rebuild())}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}
+/**
+         * Block-level text alignment. Stored in logical form — the
+         * physical resolution (folding in `direction`) happens in the
+         * version-specific `rebuild()`.
+         */get align(){return this._align}set align(value){const next=resolveAlignInput(value);this._align!==next&&(this._align=next,this.rebuild())}
+/**
+         * Justify strategy used when `align === 'justify'`. Stored even
+         * when `align` is not `'justify'` so toggling `align` doesn't
+         * lose the user's preference.
+         */get textJustify(){return this._textJustify}set textJustify(value){const next=resolveTextJustifyInput(value);this._textJustify!==next&&(this._textJustify=next,
+// No effect when align !== 'justify'; rebuild() is cheap
+// enough to skip the conditional.
+"justify"===this._align&&this.rebuild())}get underline(){return this._underline}set underline(value){const next=slugResolveDecoration(value);decorationsEqual(this._underline,next)||(this._underline=next,this._resolveDecorations(),this.rebuild())}get strikethrough(){return this._strikethrough}set strikethrough(value){const next=slugResolveDecoration(value);decorationsEqual(this._strikethrough,next)||(this._strikethrough=next,this._resolveDecorations(),this.rebuild())}get overline(){return this._overline}set overline(value){const next=slugResolveDecoration(value);decorationsEqual(this._overline,next)||(this._overline=next,this._resolveDecorations(),this.rebuild())}
 // --- Stroke ---
 /** Stroke width in pixels. 0 = no stroke. */
 get strokeWidth(){return this._strokeWidth}set strokeWidth(value){this._strokeWidth!==value&&(this._strokeWidth=value,this.rebuild())}
@@ -10658,30 +10799,7 @@ get supersampling(){return this._supersampling}set supersampling(value){this._su
  *
  * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
  * and shared across all SlugText instances using the same font.
- */ // ./src/shared/slug/text/base.ts
-/**
- * Mixin that adds shared SlugText state and property accessors to a
- * Container base class. Each PixiJS version passes its own Container:
- *
- * ```typescript
- * // v8
- * import {Container} from 'pixi.js';
- * class SlugText extends SlugTextMixin(Container) { ... }
- *
- * // v6/v7
- * import {Container} from '@pixi/display';
- * class SlugText extends SlugTextMixin(Container) { ... }
- * ```
- *
- * The returned class manages text, font, fontSize, color, wordWrap,
- * supersampling, memory tracking, and rebuild lifecycle. Subclasses
- * implement `rebuild()` with version-specific GPU APIs.
- *
- * Fields use public `_` prefix instead of `protected` to avoid TS4094
- * ("Property of exported anonymous class type may not be private or
- * protected"). The `_` convention signals internal use.
- */
-var Base;class SlugText extends SlugTextV8Base{
+ */var Base;class SlugText extends SlugTextV8Base{
 /** All meshes for the current text (shadow + stroke + fill). */
 _meshes;
 /** Uniforms for the fill pass (controls supersampling). */
@@ -10692,9 +10810,10 @@ _decorations;constructor(init){super(),this.initBase(init),this._meshes=[],this.
      * Build a Mesh from quad data with optional stroke expansion.
      */_buildMesh(quads,gpu,strokeExpand=0){const vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX}),geometry=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:16},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:32},aBanding:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:48},aColor:{buffer:vertexBuffer,format:"float32x4",stride:80,offset:64}},indexBuffer:quads.indices}),{shader,uniforms}=slugShader(gpu.glProgram,gpu.curveTexture,gpu.bandTexture);return uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,{mesh:new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Mesh({geometry,shader}),uniforms}}
 /**
-     * Build glyph quads, handling word wrap when enabled.
-     * Returns single-line or multi-line quads depending on _wordWrap state.
-     */_makeQuads(font,text,color,extraExpand=0){const hasNewline=text.indexOf("\n")>=0,wrapping=this._wordWrap&&this._wordWrapWidth>0;if(wrapping||hasNewline){const scale=this._fontSize/font.unitsPerEm,width=wrapping?this._wordWrapWidth:0,{lines}=slugTextWrap(text,font.advances,scale,width,this._breakWords),lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
+     * Build glyph quads from a pre-wrapped line list. Single-line input
+     * still goes through `slugGlyphQuads` directly to avoid a multiline
+     * merge pass.
+     */_makeQuads(font,lines,color,extraExpand=0){if(lines.length>1){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
 // Build quads per line, then merge into a single buffer.
 const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalIdxs=totalQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(totalQuads*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
 // Copy vertices with Y offset applied to position (float index 1 per vertex)
@@ -10704,17 +10823,52 @@ for(let f=0;f<Constants.FLOATS_PER_VERTEX;f++)vertices[dstOff+f]=srcVerts[srcOff
 // Shift posY (index 1) by line offset
 vertices[dstOff+1]+=yShift}
 // Copy indices with base vertex offset
-for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=q.quadCount*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,idxOffset+=srcIdxs.length,baseVertex+=q.quadCount*Constants.VERTICES_PER_QUAD}return{vertices,indices,quadCount:totalQuads}}(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return slugGlyphQuads(text,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}rebuild(){this._rebuildCount++;
+for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vertOffset+=q.quadCount*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,idxOffset+=srcIdxs.length,baseVertex+=q.quadCount*Constants.VERTICES_PER_QUAD}return{vertices,indices,quadCount:totalQuads}}(lines,font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,lineHeight,color,extraExpand)}return slugGlyphQuads(lines[0]||"",font.glyphs,font.advances,font.unitsPerEm,this._fontSize,font.textureWidth,color,extraExpand)}rebuild(){this._rebuildCount++;
 // Remove all previous meshes from display list.
 // Don't call mesh.destroy() — it can interfere with shared GlProgram
 // resources when multiple meshes use the same shader program.
-for(const mesh of this._meshes)this.removeChild(mesh);this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),this._uniforms=null;const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV8(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0;
+for(const mesh of this._meshes)this.removeChild(mesh);this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),this._uniforms=null;const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV8(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0,scale=this._fontSize/font.unitsPerEm,wrapping=this._wordWrap&&this._wordWrapWidth>0,hasNewline=this._text.indexOf("\n")>=0;let lines;if(wrapping||hasNewline){const width=wrapping?this._wordWrapWidth:0;lines=// ./src/shared/slug/text/wrap.ts
+/**
+ * Break a text string into lines that fit within a maximum pixel width.
+ * Uses a greedy word-wrap algorithm: fills each line as much as possible
+ * before breaking to the next line.
+ *
+ * @param text			The full text string.
+ * @param advances		Advance width map (char code → em-space width).
+ * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
+ * @param maxWidth		Maximum line width in pixels. Pass 0 (or a negative value)
+ *						to disable width-based wrapping; newlines will still
+ *						force line breaks.
+ * @param breakWords	If true, break mid-word when a single word exceeds maxWidth.
+ */
+function(text,advances,scale,maxWidth,breakWords=!1){const lines=[];let lineStart=0,lastBreak=-1,lineWidth=0;for(let i=0;i<text.length;i++){const code=text.charCodeAt(i);
+// Newline forces a line break
+if(10!==code){if(
+// Track word boundaries (space is a valid break point)
+32===code&&(lastBreak=i),lineWidth+=(advances.get(code)??0)*scale,maxWidth>0&&lineWidth>maxWidth&&i>lineStart){if(lastBreak>=lineStart)
+// Break at last space
+lines.push(text.substring(lineStart,lastBreak)),lineStart=lastBreak+1;else{if(!breakWords)
+// No valid break point — let the word overflow until a space is found
+continue;
+// Break mid-word at current character
+lines.push(text.substring(lineStart,i)),lineStart=i}lastBreak=-1,
+// Recalculate width from lineStart to current position
+lineWidth=0;for(let j=lineStart;j<=i;j++)lineWidth+=(advances.get(text.charCodeAt(j))??0)*scale}}else lines.push(text.substring(lineStart,i)),lineStart=i+1,lastBreak=-1,lineWidth=0}
+// Push remaining text
+return lineStart<text.length?lines.push(text.substring(lineStart)):text.length>0&&lineStart===text.length&&
+// Text ended with a newline — add empty final line
+lines.push(""),{lines}}(this._text,font.advances,scale,width,this._breakWords).lines}else lines=[this._text];const lineWidths=new Float32Array(lines.length),lineQuadCounts=new Int32Array(lines.length);let widestLine=0;for(let l=0;l<lines.length;l++){const line=lines[l];lineWidths[l]=slugMeasureText(line,font.advances,scale),lineWidths[l]>widestLine&&(widestLine=lineWidths[l]);let count=0;for(let i=0;i<line.length;i++)font.glyphs.has(line.charCodeAt(i))&&count++;lineQuadCounts[l]=count}
+// Box width: wrap width when wrapping is on; otherwise the
+// widest natural line. Single-line, no-wrap cases collapse to
+// `widestLine === lineWidths[0]`, so any align resolves to a
+// zero offset (start/center/right all agree on a 1-line block).
+const layout=slugComputeLineLayout(lines,lineWidths,wrapping?this._wordWrapWidth:widestLine,slugResolvePhysicalAlign(this._align,this._direction),this._textJustify,c=>font.glyphs.has(c)),needsShift=null!==layout.perGlyphShiftX||layout.lineOffsetX.some(x=>0!==x);
 // --- Drop shadow pass ---
-if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,this._text,shadowColor,blur);if(shadowQuads.quadCount>0){const{mesh,uniforms:shadowUniforms}=this._buildMesh(shadowQuads,gpu,blur);blur>0&&(shadowUniforms.uniforms.uStrokeAlphaStart=shadowAlpha,shadowUniforms.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}
+if(hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,lines,shadowColor,blur);if(shadowQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(shadowQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const{mesh,uniforms:shadowUniforms}=this._buildMesh(shadowQuads,gpu,blur);blur>0&&(shadowUniforms.uniforms.uStrokeAlphaStart=shadowAlpha,shadowUniforms.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}
 // --- Stroke pass ---
-if(hasStroke){const strokeQuads=this._makeQuads(font,this._text,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){const{mesh,uniforms:strokeUniforms}=this._buildMesh(strokeQuads,gpu,this._strokeWidth);strokeUniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,strokeUniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}
+if(hasStroke){const strokeQuads=this._makeQuads(font,lines,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(strokeQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const{mesh,uniforms:strokeUniforms}=this._buildMesh(strokeQuads,gpu,this._strokeWidth);strokeUniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,strokeUniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}
 // --- Fill pass ---
-const fillQuads=this._makeQuads(font,this._text,this._color);if(fillQuads.quadCount>0){const{mesh,uniforms}=this._buildMesh(fillQuads,gpu);this._uniforms=uniforms,this.addChild(mesh),this._meshes.push(mesh),
+const fillQuads=this._makeQuads(font,lines,this._color);if(fillQuads.quadCount>0&&needsShift&&slugApplyLineLayoutX(fillQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX),fillQuads.quadCount>0){const{mesh,uniforms}=this._buildMesh(fillQuads,gpu);this._uniforms=uniforms,this.addChild(mesh),this._meshes.push(mesh),
 // Track memory for the fill pass (representative of total)
 this._vertexBytes=fillQuads.vertices.byteLength,this._indexBytes=fillQuads.indices.byteLength;
 // Bounds from fill pass vertices
@@ -10722,21 +10876,19 @@ const floatsPerVertex=20;let minX=1/0,minY=1/0,maxX=-1/0,maxY=-1/0;for(let i=0;i
 // --- Text decorations (underline / strikethrough / overline) ---
 // Reads only the concrete `_*Draw` records — base.ts has already
 // folded user input + fill color + font metrics into final RGBA
-// and pixel thickness. No fallback resolution happens here.
-const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if((ul.enabled||st.enabled||ol.enabled)&&font){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),hasNewline=this._text.indexOf("\n")>=0,wrapping=this._wordWrap&&this._wordWrapWidth>0;let lines;if(wrapping||hasNewline){const width=wrapping?this._wordWrapWidth:0;lines=slugTextWrap(this._text,font.advances,scale,width,this._breakWords).lines}else lines=[this._text];const gfx=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Graphics,xForAlign=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;
-// Compute the x-offset for a length-restricted line of width
-// `drawW` inside a text line of width `lineW`. `align` is the
-// physical alignment already resolved against text direction.
-for(let l=0;l<lines.length;l++){const line=lines[l],lineW=slugMeasureText(line,font.advances,scale),lineY=l*lineHeight;
+// and pixel thickness. Decorations sit above/below the glyphs on
+// each line, so they share the same per-line offset (`layout`)
+// and effective width (post-justify) the quad shifter applied.
+const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if((ul.enabled||st.enabled||ol.enabled)&&font){const lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),gfx=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Graphics,xForDecoration=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;
 // Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
 // so decorations align with the actual glyph positions on this line.
-let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=lineW*ul.length,x=xForAlign(lineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;gfx.rect(x,ulY,drawW,ul.thickness),gfx.fill({color:ulPacked,alpha:ul.color[3]})}if(st.enabled&&st.length>0){const drawW=lineW*st.length,x=xForAlign(lineW,drawW,st.align),stY=baselineY+lineY-font.strikethroughPosition*scale;gfx.rect(x,stY,drawW,st.thickness),gfx.fill({color:stPacked,alpha:st.color[3]})}
+let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=effLineW*ul.length,x=lineX+xForDecoration(effLineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;gfx.rect(x,ulY,drawW,ul.thickness),gfx.fill({color:ulPacked,alpha:ul.color[3]})}if(st.enabled&&st.length>0){const drawW=effLineW*st.length,x=lineX+xForDecoration(effLineW,drawW,st.align),stY=baselineY+lineY-font.strikethroughPosition*scale;gfx.rect(x,stY,drawW,st.thickness),gfx.fill({color:stPacked,alpha:st.color[3]})}
 // Overline: font tables don't define an overline metric, so by
 // CSS-engine convention reuse the underline thickness. Place the
 // line's bottom edge at the top of the rendered glyphs (y=0 in
 // local coords, which the quad builder pins to the tallest glyph
 // on the line — see slugGlyphQuads).
-if(ol.enabled&&ol.length>0){const drawW=lineW*ol.length,x=xForAlign(lineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.rect(x,olY,drawW,ol.thickness),gfx.fill({color:olPacked,alpha:ol.color[3]})}}this._decorations=gfx,this.addChild(gfx)}}destroy(){this._releaseFontOnDestroy();for(const mesh of this._meshes)mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),super.destroy()}}// ./src/v8/slug/pipe.ts
+if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoration(effLineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.rect(x,olY,drawW,ol.thickness),gfx.fill({color:olPacked,alpha:ol.color[3]})}}this._decorations=gfx,this.addChild(gfx)}}destroy(){this._releaseFontOnDestroy();for(const mesh of this._meshes)mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),super.destroy()}}// ./src/v8/slug/pipe.ts
 /**
  * PixiJS v8 render pipe for SlugText renderables.
  * Handles the rendering lifecycle for Slug-based text objects.

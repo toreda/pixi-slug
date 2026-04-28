@@ -170,11 +170,15 @@
 						slugText = null;
 					}
 					var directionEl = document.getElementById('ctrlDirection');
+					var alignEl = document.getElementById('ctrlAlign');
+					var textJustifyEl = document.getElementById('ctrlTextJustify');
 					var options = {
 						fontSize: parseInt(document.getElementById('ctrlFontSize').value, 10) || 48,
 						fill: hexToRGBA(document.getElementById('ctrlFillColor').value)
 					};
 					if (directionEl) options.direction = directionEl.value;
+					if (alignEl) options.align = alignEl.value;
+					if (textJustifyEl) options.textJustify = textJustifyEl.value;
 
 					slugText = construct({
 						text: document.getElementById('ctrlText').value,
@@ -303,6 +307,27 @@
 				directionEl.onchange = function () {
 					if (slugText && 'direction' in slugText) slugText.direction = this.value;
 				};
+			}
+
+			var alignEl = document.getElementById('ctrlAlign');
+			var textJustifyEl = document.getElementById('ctrlTextJustify');
+			function syncJustifyEnabled() {
+				if (!textJustifyEl || !alignEl) return;
+				var on = alignEl.value === 'justify';
+				textJustifyEl.disabled = !on;
+				textJustifyEl.style.opacity = on ? '' : '0.5';
+			}
+			if (alignEl) {
+				alignEl.onchange = function () {
+					if (slugText && 'align' in slugText) slugText.align = this.value;
+					syncJustifyEnabled();
+				};
+			}
+			if (textJustifyEl) {
+				textJustifyEl.onchange = function () {
+					if (slugText && 'textJustify' in slugText) slugText.textJustify = this.value;
+				};
+				syncJustifyEnabled();
 			}
 
 			['underline', 'strikethrough', 'overline'].forEach(function (name) {
