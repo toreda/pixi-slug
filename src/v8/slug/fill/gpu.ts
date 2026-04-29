@@ -26,16 +26,17 @@ export interface SlugFillGpuV8 {
 	 * Solid / texture: zeros.
 	 */
 	params0: [number, number, number, number];
-	/**
-	 * 3x3 column-major texture-coord transform (row-major in source,
-	 * GLSL/WGSL receive column-major). Identity for solid / gradient.
-	 */
-	textureXform: Float32Array;
+	/** Texture pixel size for `uFillTextureSizePx`. [1, 1] for non-texture fills. */
+	textureSizePx: [number, number];
+	/** `uFillTextureFit`: 0=stretch, 1=repeat, 2=clamp. 0 for non-texture fills. */
+	textureFit: 0 | 1 | 2;
+	/** Per-axis texture scale uniform value. [1, 1] for non-texture fills. */
+	textureScale: [number, number];
+	/** Pixel-space texture offset uniform value. [0, 0] for non-texture fills. */
+	textureOffset: [number, number];
 	/** Owns dispose responsibility for any per-text textures created here. */
 	dispose(): void;
 }
-
-const IDENTITY_3X3 = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
 function bakeGradientTexture(fill: SlugFillResolved & {kind: 'linear-gradient' | 'radial-gradient'}): Texture {
 	const data = slugBakeFillLut(fill.stops);
@@ -76,11 +77,18 @@ function resolveTextureSource(source: unknown): Texture | null {
 	return null;
 }
 
+const SOLID_DEFAULTS = {
+	textureSizePx: [1, 1] as [number, number],
+	textureFit: 0 as 0,
+	textureScale: [1, 1] as [number, number],
+	textureOffset: [0, 0] as [number, number]
+};
+
 /**
  * Translate a resolved fill into the GPU resources needed by the v8
  * Slug shader. Solid fills produce a no-op record (mode 0, no
  * textures). Gradient fills bake a LUT texture; texture fills wrap the
- * user source.
+ * user source and configure fit / scale / offset uniforms.
  *
  * The caller (v8 SlugText.rebuild) owns the returned record and MUST
  * call `dispose()` on the previous record before installing a new one.
@@ -92,7 +100,7 @@ export function slugBuildFillGpuV8(fill: SlugFillResolved): SlugFillGpuV8 {
 			texture: null,
 			mode: 0,
 			params0: [0, 0, 0, 0],
-			textureXform: new Float32Array(IDENTITY_3X3),
+			...SOLID_DEFAULTS,
 			dispose: () => {}
 		};
 	}
@@ -104,7 +112,7 @@ export function slugBuildFillGpuV8(fill: SlugFillResolved): SlugFillGpuV8 {
 			texture: null,
 			mode: 1,
 			params0: [fill.start[0], fill.start[1], fill.end[0], fill.end[1]],
-			textureXform: new Float32Array(IDENTITY_3X3),
+			...SOLID_DEFAULTS,
 			dispose: () => {
 				gradient.destroy(true);
 			}
@@ -118,7 +126,7 @@ export function slugBuildFillGpuV8(fill: SlugFillResolved): SlugFillGpuV8 {
 			texture: null,
 			mode: 2,
 			params0: [fill.center[0], fill.center[1], fill.innerRadius, fill.outerRadius],
-			textureXform: new Float32Array(IDENTITY_3X3),
+			...SOLID_DEFAULTS,
 			dispose: () => {
 				gradient.destroy(true);
 			}
@@ -129,40 +137,42 @@ export function slugBuildFillGpuV8(fill: SlugFillResolved): SlugFillGpuV8 {
 	const tex = resolveTextureSource(fill.source);
 	if (!tex) {
 		// Texture source could not be resolved — fall back to solid
-		// (caller binds fallbackWhite). A console error is logged once
-		// at resolve time, not here.
+		// (caller binds fallbackWhite).
 		return {
 			gradient: null,
 			texture: null,
 			mode: 0,
 			params0: [0, 0, 0, 0],
-			textureXform: new Float32Array(IDENTITY_3X3),
+			...SOLID_DEFAULTS,
 			dispose: () => {}
 		};
 	}
 
-	// Build a 3x3 affine transform from scale/rotation/translation,
-	// uploaded column-major (PixiJS uploads as written).
-	const sx = fill.scale[0];
-	const sy = fill.scale[1];
-	const rot = fill.rotation;
-	const tx = fill.translation[0];
-	const ty = fill.translation[1];
-	const cos = Math.cos(rot);
-	const sin = Math.sin(rot);
-	// Column-major: the matrix [c0 | c1 | c2] applied to vec3(uv, 1).
-	const xform = new Float32Array([
-		sx * cos, sx * sin, 0,    // column 0
-		-sy * sin, sy * cos, 0,   // column 1
-		tx, ty, 1                 // column 2 (translation)
-	]);
+	// Apply sampler wrap mode based on fit. Repeat needs the texture
+	// source style set to repeat addressing on both U and V; stretch
+	// and clamp use clamp-to-edge (the GLSL discard handles the
+	// "transparent outside" behavior for clamp). Mutating the source's
+	// style at draw time is safe — PIXI v8 picks up the change on next
+	// bind, same way `FillPattern` does it internally.
+	const src = (tex as unknown as {source?: {style?: {addressModeU?: string; addressModeV?: string}}}).source;
+	if (src && src.style) {
+		const mode = fill.fit === 'repeat' ? 'repeat' : 'clamp-to-edge';
+		src.style.addressModeU = mode;
+		src.style.addressModeV = mode;
+	}
+
+	const fitIndex: 0 | 1 | 2 =
+		fill.fit === 'repeat' ? 1 : fill.fit === 'clamp' ? 2 : 0;
 
 	return {
 		gradient: null,
 		texture: tex,
 		mode: 3,
 		params0: [0, 0, 0, 0],
-		textureXform: xform,
+		textureSizePx: [tex.width, tex.height],
+		textureFit: fitIndex,
+		textureScale: [fill.scale[0], fill.scale[1]],
+		textureOffset: [fill.offset[0], fill.offset[1]],
 		// We do not own the user-supplied texture — caller passed it in,
 		// caller disposes it. Only LUTs/wrapped sources we created get
 		// destroyed here.

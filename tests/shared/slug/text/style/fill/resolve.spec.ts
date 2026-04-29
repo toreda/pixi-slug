@@ -199,7 +199,7 @@ describe('slugResolveFill', () => {
 			expect(fill.kind).toBe('solid');
 		});
 
-		it('passes through valid source object', () => {
+		it('passes through valid source object with defaults', () => {
 			const fakeTexture = {source: {}, width: 100, height: 50};
 			const fill = slugResolveFill(
 				{
@@ -211,33 +211,80 @@ describe('slugResolveFill', () => {
 			expect(fill.kind).toBe('texture');
 			if (fill.kind !== 'texture') return;
 			expect(fill.source).toBe(fakeTexture);
-			expect(fill.wrap).toBe('clamp');
+			expect(fill.fit).toBe('stretch');
 			expect(fill.filter).toBe('linear');
 			expect(fill.scale).toEqual([1, 1]);
-			expect(fill.rotation).toBe(0);
-			expect(fill.translation).toEqual([0, 0]);
+			expect(fill.offset).toEqual([0, 0]);
 		});
 
-		it('honors explicit wrap, filter, scale, rotation, translation', () => {
+		it('honors explicit fit, filter, scaleX/Y, offsetX/Y', () => {
 			const fakeTexture = {source: {}, width: 100, height: 50};
 			const fill = slugResolveFill(
 				{
 					type: 'texture',
 					source: fakeTexture,
-					wrap: 'repeat',
+					fit: 'repeat',
 					filter: 'nearest',
-					scale: [2, 3],
-					rotation: Math.PI / 4,
-					translation: [0.1, 0.2]
+					scaleX: 2,
+					scaleY: 3,
+					offsetX: 10,
+					offsetY: 20
 				},
 				CURRENT
 			);
 			if (fill.kind !== 'texture') throw new Error();
-			expect(fill.wrap).toBe('repeat');
+			expect(fill.fit).toBe('repeat');
 			expect(fill.filter).toBe('nearest');
 			expect(fill.scale).toEqual([2, 3]);
-			expect(fill.rotation).toBeCloseTo(Math.PI / 4, 5);
-			expect(fill.translation).toEqual([0.1, 0.2]);
+			expect(fill.offset).toEqual([10, 20]);
+		});
+
+		it('replaces zero scale with 1 to avoid div-by-zero in shader', () => {
+			const fakeTexture = {source: {}, width: 100, height: 50};
+			const fill = slugResolveFill(
+				{type: 'texture', source: fakeTexture, scaleX: 0, scaleY: 0},
+				CURRENT
+			);
+			if (fill.kind !== 'texture') throw new Error();
+			expect(fill.scale).toEqual([1, 1]);
+		});
+
+		it('preserves negative scale (axis flip)', () => {
+			const fakeTexture = {source: {}, width: 100, height: 50};
+			const fill = slugResolveFill(
+				{type: 'texture', source: fakeTexture, scaleX: -1, scaleY: -2},
+				CURRENT
+			);
+			if (fill.kind !== 'texture') throw new Error();
+			expect(fill.scale).toEqual([-1, -2]);
+		});
+
+		it('falls back to defaults for non-finite values', () => {
+			const fakeTexture = {source: {}, width: 100, height: 50};
+			const fill = slugResolveFill(
+				{
+					type: 'texture',
+					source: fakeTexture,
+					scaleX: NaN,
+					scaleY: Infinity,
+					offsetX: -Infinity,
+					offsetY: NaN
+				},
+				CURRENT
+			);
+			if (fill.kind !== 'texture') throw new Error();
+			expect(fill.scale).toEqual([1, 1]);
+			expect(fill.offset).toEqual([0, 0]);
+		});
+
+		it('falls back to stretch for an unknown fit value', () => {
+			const fakeTexture = {source: {}, width: 100, height: 50};
+			const fill = slugResolveFill(
+				{type: 'texture', source: fakeTexture, fit: 'cover' as 'stretch'},
+				CURRENT
+			);
+			if (fill.kind !== 'texture') throw new Error();
+			expect(fill.fit).toBe('stretch');
 		});
 	});
 });
@@ -273,11 +320,10 @@ describe('slugFillRepresentativeColor', () => {
 		const color = slugFillRepresentativeColor({
 			kind: 'texture',
 			source: {},
-			wrap: 'clamp',
-			filter: 'linear',
+			fit: 'stretch',
 			scale: [1, 1],
-			rotation: 0,
-			translation: [0, 0],
+			offset: [0, 0],
+			filter: 'linear',
 			rgbProvided: true,
 			alphaProvided: true
 		});

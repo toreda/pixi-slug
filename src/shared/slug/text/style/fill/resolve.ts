@@ -117,16 +117,22 @@ function resolveTexture(input: SlugFillTexture): SlugFillResolved | null {
 		reportFillError(`Texture fill requires a source (PIXI.Texture, URL string, base64 data URI, or ImageBitmap).`);
 		return null;
 	}
+	const fit: 'stretch' | 'repeat' | 'clamp' =
+		input.fit === 'repeat' || input.fit === 'clamp' ? input.fit : 'stretch';
+	// Replace zero scale with 1 — the shader divides by scale, and a 0
+	// would silently produce NaN/Inf UVs across every fragment. Negative
+	// values are kept (they flip the texture along that axis).
+	const sx = Number.isFinite(input.scaleX as number) ? Number(input.scaleX) : 1;
+	const sy = Number.isFinite(input.scaleY as number) ? Number(input.scaleY) : 1;
+	const ox = Number.isFinite(input.offsetX as number) ? Number(input.offsetX) : 0;
+	const oy = Number.isFinite(input.offsetY as number) ? Number(input.offsetY) : 0;
 	return {
 		kind: 'texture',
 		source: input.source,
-		wrap: input.wrap === 'repeat' ? 'repeat' : 'clamp',
+		fit,
+		scale: [sx === 0 ? 1 : sx, sy === 0 ? 1 : sy],
+		offset: [ox, oy],
 		filter: input.filter === 'nearest' ? 'nearest' : 'linear',
-		scale: input.scale ? [Number(input.scale[0]) || 1, Number(input.scale[1]) || 1] : [1, 1],
-		rotation: Number.isFinite(input.rotation as number) ? Number(input.rotation) : 0,
-		translation: input.translation
-			? [Number(input.translation[0]) || 0, Number(input.translation[1]) || 0]
-			: [0, 0],
 		rgbProvided: true,
 		alphaProvided: true
 	};

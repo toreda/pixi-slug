@@ -38,14 +38,28 @@ uniform int uFillMode;
 // bbox-UV space). Radial: xy=center, z=innerRadius, w=outerRadius.
 // Unused for solid and texture modes.
 uniform vec4 uFillParams0;
+// Text bbox in object/model-local pixel space. xy = top-left, zw = size.
+// Same value the vertex shader uses to compute vFillUV. The texture
+// repeat/clamp paths need bbox size to convert vFillUV (0..1) into
+// pixel-space coordinates.
+uniform vec4 uFillBoundsPx;
 // 1D color LUT for gradients (256x1 RGBA8). Sampled with
 // texture(uFillGradient, vec2(t, 0.5)).
 uniform sampler2D uFillGradient;
 // User texture for fill mode 3.
 uniform sampler2D uFillTexture;
-// Texture coordinate transform applied to vFillUV before sampling
-// uFillTexture. Identity for the default.
-uniform mat3 uFillTextureXform;
+// Texture pixel dimensions. Used by repeat/clamp fit modes to compute
+// 1:1 native-pixel mapping. Stretch mode ignores this.
+uniform vec2 uFillTextureSizePx;
+// Fit mode for textures: 0 = stretch, 1 = repeat, 2 = clamp.
+uniform int uFillTextureFit;
+// Per-axis texture scale. 1 = native size; 2 = texture appears 2x larger
+// (covers more area / tiles half as densely). Negative values flip.
+uniform vec2 uFillTextureScale;
+// X / Y offset applied to texture coords in pixel space. Positive shifts
+// the texture toward +X / +Y, so what was at offset now sits at the bbox
+// origin.
+uniform vec2 uFillTextureOffset;
 
 // Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).
 // floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.
@@ -104,7 +118,36 @@ vec4 slugFillColor()
 	}
 	if (uFillMode == 3)
 	{
-		vec2 uv = (uFillTextureXform * vec3(vFillUV, 1.0)).xy;
+		// Texture mode. UV math depends on fit:
+		//
+		//  stretch: vFillUV (0..1 across bbox) maps to 0..1 across the
+		//   texture, modulated by scale and offset. Aspect ratio is *not*
+		//   preserved — one copy fills the bbox.
+		//
+		//  repeat / clamp: native-pixel mapping. Each pixel of the bbox
+		//   samples one texel (× scale) of the source, with `offset`
+		//   shifting the texture in pixel space. Repeat tiles via the
+		//   texture sampler's repeat addressing; clamp discards pixels
+		//   outside the texture rect to make them transparent.
+		vec2 bboxPx = uFillBoundsPx.zw;
+		vec2 texPx = max(uFillTextureSizePx, vec2(1.0));
+		vec2 uv;
+		if (uFillTextureFit == 0)
+		{
+			// stretch: bbox-relative UV, then map by scale/offset.
+			// offset is in pixel units, normalized by texture size so a
+			// scale-1 stretch behaves the same in stretch and repeat.
+			uv = (vFillUV - uFillTextureOffset / texPx) / uFillTextureScale;
+		}
+		else
+		{
+			// repeat / clamp: 1:1 native pixel mapping.
+			uv = (vFillUV * bboxPx - uFillTextureOffset) / (texPx * uFillTextureScale);
+			if (uFillTextureFit == 2 && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0))
+			{
+				discard;
+			}
+		}
 		return texture(uFillTexture, uv);
 	}
 	// Solid (mode 0): vertex color carries the resolved fill / stroke /

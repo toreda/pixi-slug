@@ -40,17 +40,20 @@ export function slugShader(
 		// Fill mode: 0=solid, 1=linear, 2=radial, 3=texture.
 		uFillMode: {value: 0, type: 'i32'},
 		// Fill bbox in object/model-local pixel space — used by the
-		// vertex shader to compute vFillUV. xy=min, zw=size.
+		// vertex shader to compute vFillUV and the texture branch of the
+		// fragment shader to convert that UV into pixel coordinates.
+		// xy=min, zw=size.
 		uFillBoundsPx: {value: new Float32Array([0, 0, 1, 1]), type: 'vec4<f32>'},
 		// Linear: xy=start, zw=end. Radial: xy=center, z=innerR, w=outerR.
 		uFillParams0: {value: new Float32Array([0, 0, 1, 0]), type: 'vec4<f32>'},
-		// Texture coord transform applied before sampling uFillTexture.
-		// Stored row-major; mat3 in WGSL/GLSL matches column-major upload,
-		// PixiJS handles the transpose.
-		uFillTextureXform: {
-			value: new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
-			type: 'mat3x3<f32>'
-		}
+		// Texture pixel dimensions (1 when no texture is bound).
+		uFillTextureSizePx: {value: new Float32Array([1, 1]), type: 'vec2<f32>'},
+		// Texture fit mode: 0=stretch, 1=repeat, 2=clamp.
+		uFillTextureFit: {value: 0, type: 'i32'},
+		// Per-axis texture scale. 1 = native size.
+		uFillTextureScale: {value: new Float32Array([1, 1]), type: 'vec2<f32>'},
+		// Pixel-space offset applied to texture coords.
+		uFillTextureOffset: {value: new Float32Array([0, 0]), type: 'vec2<f32>'}
 	});
 
 	const shader = new Shader({

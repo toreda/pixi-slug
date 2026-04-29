@@ -86,6 +86,26 @@
 	<div class="ctrl-row fill-mode-texture" data-requires="fill">
 		<span id="ctrlFillTextureStatus" style="font-size: 12px; color: #8b949e;"></span>
 	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTextureFit">Fit</label>
+		<select id="ctrlFillTextureFit">
+			<option value="stretch">Stretch</option>
+			<option value="repeat" selected>Repeat</option>
+			<option value="clamp">Clamp</option>
+		</select>
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTextureScaleX">Scale X</label>
+		<input type="number" id="ctrlFillTextureScaleX" value="1" step="0.1" style="flex: 1;">
+		<label for="ctrlFillTextureScaleY" style="min-width: auto;">Y</label>
+		<input type="number" id="ctrlFillTextureScaleY" value="1" step="0.1" style="flex: 1;">
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTextureOffsetX">Offset X</label>
+		<input type="number" id="ctrlFillTextureOffsetX" value="0" step="1" style="flex: 1;">
+		<label for="ctrlFillTextureOffsetY" style="min-width: auto;">Y</label>
+		<input type="number" id="ctrlFillTextureOffsetY" value="0" step="1" style="flex: 1;">
+	</div>
 	<div class="ctrl-row" data-requires="direction">
 		<label for="ctrlDirection">Dir</label>
 		<select id="ctrlDirection">

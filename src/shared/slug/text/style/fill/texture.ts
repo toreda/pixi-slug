@@ -10,38 +10,58 @@
  *    + `width`/`height`).
  *  - **URL string** (`'http://...'`, `'/path.png'`, `'./path.png'`) —
  *    fetched, decoded via `createImageBitmap`, wrapped in a PIXI Texture.
- *  - **base64 data URI** (`'data:image/png;base64,...'`) — decoded
- *    inline; no network fetch.
- *  - **`ImageBitmap`** — wrapped in a PIXI Texture directly.
+ *    *(Not yet supported by the synchronous v8 GPU helper — pre-load via
+ *    `PIXI.Assets.load` and pass the resulting Texture for now.)*
+ *  - **base64 data URI** (`'data:image/png;base64,...'`) — same caveat.
+ *  - **`ImageBitmap`** — wrapped in a PIXI Texture.
  */
 export type SlugFillTextureSource = unknown;
 
 /**
- * Texture-mapped fill applied across the full text bounding box. The
- * bounding box is the union of all glyph quads and decoration quads.
+ * Texture-mapped fill applied across the text bounding box.
  *
- * ## Wrap mode
+ * ## `fit` — how the texture maps onto the bbox
  *
- * - `'clamp'` (default): pixels outside 0..1 use the nearest edge.
- * - `'repeat'`: pixels tile.
+ * - `'stretch'` (default): one copy stretched to fill the bbox. The
+ *   texture's aspect ratio is *not* preserved; useful when you want the
+ *   texture to span exactly the visible glyphs regardless of shape.
+ * - `'repeat'`: the texture is rendered at its native pixel size
+ *   (multiplied by `scaleX` / `scaleY`) and tiled in both axes from the
+ *   bbox origin + offset. The natural choice for seamless materials.
+ * - `'clamp'`: drawn once at native size × scale, anchored at the bbox
+ *   origin + offset. Pixels outside the texture rect are transparent
+ *   (text outside the texture's footprint shows nothing).
  *
- * ## Filtering
+ * ## `scaleX` / `scaleY`
  *
- * - `'linear'` (default): bilinear sampling.
- * - `'nearest'`: point sampling for pixel-art textures.
+ * Independent X and Y scaling factors, in the texture's own pixel space.
+ * `1` = native size; `2` = the texture appears 2× larger before tiling
+ * (so 1 native copy now spans 2× the area); `0.5` = texture appears half
+ * size (covers half the area / tiles twice as densely in `repeat` mode).
+ * Default `1` for both.
  *
- * ## Transform
+ * Negative values flip the texture along that axis. Zero is replaced
+ * with 1 by the resolver to avoid division by zero in the shader.
  *
- * Optional 2D transform applied to the texture coordinates before
- * sampling: scale, then rotate (radians, around bbox center), then
- * translate (in normalized bbox space). Defaults are identity.
+ * ## `offsetX` / `offsetY`
+ *
+ * X / Y offset in pixels, applied in texture-space *before* the wrap.
+ * Positive `offsetX` shifts the texture right (so what was at x=10 now
+ * appears at the bbox origin). Default `0` for both.
+ *
+ * ## `filter`
+ *
+ * Texture sampling filter:
+ *  - `'linear'` (default) — bilinear interpolation, smooth.
+ *  - `'nearest'` — point sampling, useful for pixel-art textures.
  */
 export interface SlugFillTexture {
 	type: 'texture';
 	source: SlugFillTextureSource;
-	wrap?: 'clamp' | 'repeat' | null;
+	fit?: 'stretch' | 'repeat' | 'clamp' | null;
+	scaleX?: number | null;
+	scaleY?: number | null;
+	offsetX?: number | null;
+	offsetY?: number | null;
 	filter?: 'linear' | 'nearest' | null;
-	scale?: readonly [number, number] | null;
-	rotation?: number | null;
-	translation?: readonly [number, number] | null;
 }

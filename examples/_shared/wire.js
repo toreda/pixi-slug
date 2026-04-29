@@ -309,7 +309,20 @@
 				}
 				if (mode === 'texture') {
 					if (!loadedFillTexture) return hexToRGBA(color); // fall back until loaded
-					return {type: 'texture', source: loadedFillTexture};
+					var fitEl = document.getElementById('ctrlFillTextureFit');
+					var sxEl  = document.getElementById('ctrlFillTextureScaleX');
+					var syEl  = document.getElementById('ctrlFillTextureScaleY');
+					var oxEl  = document.getElementById('ctrlFillTextureOffsetX');
+					var oyEl  = document.getElementById('ctrlFillTextureOffsetY');
+					return {
+						type: 'texture',
+						source: loadedFillTexture,
+						fit: fitEl ? fitEl.value : 'repeat',
+						scaleX: sxEl ? (parseFloat(sxEl.value) || 1) : 1,
+						scaleY: syEl ? (parseFloat(syEl.value) || 1) : 1,
+						offsetX: oxEl ? (parseFloat(oxEl.value) || 0) : 0,
+						offsetY: oyEl ? (parseFloat(oyEl.value) || 0) : 0
+					};
 				}
 				return hexToRGBA(color);
 			}
@@ -480,6 +493,15 @@
 					loadFillTextureSource(url, url);
 				};
 			}
+
+			['ctrlFillTextureFit',
+			 'ctrlFillTextureScaleX', 'ctrlFillTextureScaleY',
+			 'ctrlFillTextureOffsetX', 'ctrlFillTextureOffsetY'].forEach(function (id) {
+				var el = document.getElementById(id);
+				if (!el) return;
+				if (el.tagName === 'SELECT') el.onchange = applyFill;
+				else el.oninput = applyFill;
+			});
 
 			// Pre-load the default preset so switching the fill mode to
 			// Texture immediately renders something.

@@ -55,11 +55,10 @@ export type SlugFillResolved =
 	| {
 			kind: 'texture';
 			source: unknown;
-			wrap: 'clamp' | 'repeat';
-			filter: 'linear' | 'nearest';
+			fit: 'stretch' | 'repeat' | 'clamp';
 			scale: [number, number];
-			rotation: number;
-			translation: [number, number];
+			offset: [number, number];
+			filter: 'linear' | 'nearest';
 			rgbProvided: true;
 			alphaProvided: true;
 	  };

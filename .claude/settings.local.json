@@ -46,7 +46,8 @@
       "Bash(node scripts/build-docs.js)",
       "Bash(npx webpack *)",
       "Bash(pnpm why *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm test *)"
     ]
   }
 }

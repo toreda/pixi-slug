@@ -124,7 +124,10 @@ export class SlugText extends SlugTextV8Base {
 		uniforms.uniforms.uFillMode = fillGpu.mode;
 		uniforms.uniforms.uFillBoundsPx = new Float32Array(fillBounds);
 		uniforms.uniforms.uFillParams0 = new Float32Array(fillGpu.params0);
-		uniforms.uniforms.uFillTextureXform = fillGpu.textureXform;
+		uniforms.uniforms.uFillTextureSizePx = new Float32Array(fillGpu.textureSizePx);
+		uniforms.uniforms.uFillTextureFit = fillGpu.textureFit;
+		uniforms.uniforms.uFillTextureScale = new Float32Array(fillGpu.textureScale);
+		uniforms.uniforms.uFillTextureOffset = new Float32Array(fillGpu.textureOffset);
 
 		// Bind the fill samplers. When the fill is solid both stay on
 		// fallbackWhite (already bound by slugShader); otherwise swap in
@@ -429,9 +432,18 @@ export class SlugText extends SlugTextV8Base {
 					const ulY = baselineY + lineY - font.underlinePosition * scale;
 					gfx.rect(x, ulY, drawW, ul.thickness);
 					if (ulInheritsFill) {
-						const pixiFill = slugBuildDecorationFill(this._fill, x, ulY, drawW, ul.thickness);
+						const pixiFill = slugBuildDecorationFill(
+							this._fill,
+							fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3]
+						);
 						if (pixiFill) {
-							gfx.fill({fill: pixiFill, alpha: ul.color[3]});
+							// textureSpace: 'global' opts out of PIXI's default
+							// "normalize UV to 0..1 across the shape's bounds"
+							// behavior — for a thin underline rect that would
+							// compress the texture vertically. We want world-
+							// pixel mapping anchored at the bbox so the
+							// decoration tile size matches the glyph fill.
+							gfx.fill({fill: pixiFill, alpha: ul.color[3], textureSpace: 'global'});
 						} else {
 							gfx.fill({color: ulPacked, alpha: ul.color[3]});
 						}
@@ -446,9 +458,12 @@ export class SlugText extends SlugTextV8Base {
 					const stY = baselineY + lineY - font.strikethroughPosition * scale;
 					gfx.rect(x, stY, drawW, st.thickness);
 					if (stInheritsFill) {
-						const pixiFill = slugBuildDecorationFill(this._fill, x, stY, drawW, st.thickness);
+						const pixiFill = slugBuildDecorationFill(
+							this._fill,
+							fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3]
+						);
 						if (pixiFill) {
-							gfx.fill({fill: pixiFill, alpha: st.color[3]});
+							gfx.fill({fill: pixiFill, alpha: st.color[3], textureSpace: 'global'});
 						} else {
 							gfx.fill({color: stPacked, alpha: st.color[3]});
 						}
@@ -468,9 +483,12 @@ export class SlugText extends SlugTextV8Base {
 					const olY = lineY - ol.thickness;
 					gfx.rect(x, olY, drawW, ol.thickness);
 					if (olInheritsFill) {
-						const pixiFill = slugBuildDecorationFill(this._fill, x, olY, drawW, ol.thickness);
+						const pixiFill = slugBuildDecorationFill(
+							this._fill,
+							fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3]
+						);
 						if (pixiFill) {
-							gfx.fill({fill: pixiFill, alpha: ol.color[3]});
+							gfx.fill({fill: pixiFill, alpha: ol.color[3], textureSpace: 'global'});
 						} else {
 							gfx.fill({color: olPacked, alpha: ol.color[3]});
 						}
