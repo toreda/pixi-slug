@@ -2,6 +2,13 @@ import {ExtensionType} from '@pixi/core';
 import {SlugFonts} from '../../shared/slug/fonts';
 
 /**
+ * Per-Application storage for the resize observer this plugin attaches.
+ * Symbol-keyed so we don't collide with anything PIXI or host code may
+ * add to the Application instance.
+ */
+const SLUG_RESIZE_OBSERVER = Symbol('slug.resizeObserver');
+
+/**
  * Minimal shape of PIXI v7 `Application` the plugin relies on.
  * Inlined to avoid adding `@pixi/app` as a dev dependency purely for
  * type-checking — host apps provide the real `Application` at runtime.
@@ -12,6 +19,9 @@ interface ApplicationV7Like {
 		add(fn: () => void): void;
 		remove(fn: () => void): void;
 	};
+	resizeTo?: Window | HTMLElement | null;
+	resize?: () => void;
+	[SLUG_RESIZE_OBSERVER]?: ResizeObserver;
 }
 
 /**
@@ -52,8 +62,40 @@ export const SlugApplicationPluginV7 = {
 			app.ticker.add(handler);
 			return () => app.ticker.remove(handler);
 		});
+
+		// PIXI's `ResizePlugin` only listens for `window` resize events.
+		// When `resizeTo` is a DOM element, any layout change that affects
+		// that element without triggering a window resize (sidebar inject,
+		// font-load reflow, flexbox re-measure, programmatic style changes)
+		// leaves `canvas.width/height` (the WebGL backbuffer) out of sync
+		// with the canvas's CSS display size. With `autoDensity: false`
+		// (PIXI's default) the browser then non-uniformly stretches the
+		// canvas's pixel buffer to fit its CSS box, which manifests as
+		// visible distortion of rendered glyphs.
+		//
+		// Observe the `resizeTo` element directly so backbuffer dimensions
+		// track the displayed element through every layout change. We only
+		// call `app.resize()`; we never set host properties — `resize()` is
+		// idempotent for unchanged dimensions, so the worst case is a
+		// redundant per-frame measurement, never a feedback loop.
+		const target = app.resizeTo;
+		if (
+			target &&
+			target !== globalThis.window &&
+			typeof globalThis.ResizeObserver !== 'undefined' &&
+			typeof app.resize === 'function'
+		) {
+			const observer = new ResizeObserver(() => app.resize!());
+			observer.observe(target as Element);
+			app[SLUG_RESIZE_OBSERVER] = observer;
+		}
 	},
 	destroy(this: ApplicationV7Like): void {
+		const observer = this[SLUG_RESIZE_OBSERVER];
+		if (observer) {
+			observer.disconnect();
+			delete this[SLUG_RESIZE_OBSERVER];
+		}
 		SlugFonts.detachTicker();
 		SlugFonts.sweepImmediate();
 	}

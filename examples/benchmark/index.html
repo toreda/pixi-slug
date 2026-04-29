@@ -1669,6 +1669,13 @@
 			}
 			var app = new PIXI.Application();
 			await app.init(initOpts);
+			// PIXI's `resizeTo` only listens for window resize events, so any
+			// post-init layout shift leaves the canvas backing buffer out of
+			// sync with its CSS display size and the browser stretches the
+			// rendered output. Observe the container directly when used.
+			if (initOpts.resizeTo && typeof ResizeObserver !== 'undefined') {
+				new ResizeObserver(function () { app.resize(); }).observe(initOpts.resizeTo);
+			}
 			if (PIXI.GraphicsContext && PIXI.GraphicsContext.defaultOptions && !isNaN(settings.pixiBezierSmoothness)) {
 				PIXI.GraphicsContext.defaultOptions.bezierSmoothness = settings.pixiBezierSmoothness;
 			}

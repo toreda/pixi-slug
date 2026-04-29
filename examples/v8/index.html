@@ -45,6 +45,16 @@
 
 			appContainer.appendChild(app.canvas);
 
+			// PIXI's `resizeTo` only listens for window resize events, so any
+			// post-init layout shift (sidebar markup injecting, font load,
+			// flex re-measure) leaves the canvas backing buffer out of sync
+			// with its CSS display size — the browser then non-uniformly
+			// stretches the rendered output. Observe the container directly
+			// so we re-measure on every layout change.
+			if (typeof ResizeObserver !== 'undefined') {
+				new ResizeObserver(function () { app.resize(); }).observe(appContainer);
+			}
+
 			var gl = app.renderer.gl;
 			if (!gl || !(gl instanceof WebGL2RenderingContext)) {
 				var err = new PIXI.Text({
