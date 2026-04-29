@@ -305,6 +305,26 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this.rebuild();
 		}
 
+		/**
+		 * Mutate the current text to uppercase and rebuild glyphs.
+		 * Named `transformToUpperCase` rather than `toUpperCase` to avoid
+		 * implying the JS string convention of returning a new value
+		 * without mutation.
+		 */
+		public transformToUpperCase(): void {
+			this.text = this._text.toUpperCase();
+		}
+
+		/**
+		 * Mutate the current text to lowercase and rebuild glyphs.
+		 * Named `transformToLowerCase` rather than `toLowerCase` to avoid
+		 * implying the JS string convention of returning a new value
+		 * without mutation.
+		 */
+		public transformToLowerCase(): void {
+			this.text = this._text.toLowerCase();
+		}
+
 		public get font(): SlugFont | null {
 			return this._fontRef?.deref() ?? null;
 		}

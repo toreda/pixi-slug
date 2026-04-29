@@ -28,32 +28,47 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 
 # Features
 
+## Core
+| Feature                              |  `v8`  |  `v7`  |  `v6`  |
+| ------------------------------------ | :--: | :--: | :--: |
+| PIXI Ticker auto-hook                |  ✅  |  ✅  |  ✅  |
+| Application plugin                   |  ✅  |  ✅  |  ✅  |
+| Font auto-cleanup via ref counting & autoDestroy   |  ✅  |  ✅  |  ✅  |
+| `superscript`                          |  ❌  |  ❌  |  ❌  |
+| `subscript`                            |  ❌  |  ❌  |  ❌  |
+| `WebGL1` support                      |  ❌  |  ❌  |  ❌  |
+| `WebGL2` support                      |  ✅  |  ✅  |  ✅  |
+
+
+&nbsp;
+## Fonts
 | Feature                              |  `v8`  |  `v7`  |  `v6`  |
 | ------------------------------------ | :--: | :--: | :--: |
 | TTF (`.ttf`) fonts                    |  ✅  |  ✅  |  ✅  |
 | OTF (`.otf`) (CFF) fonts              |  ✅  |  ✅  |  ✅  |
 | WOFF (`.woff`) fonts                  |  ✅  |  ✅  |  ✅  |
 | WOFF2 (`.woff2`) fonts                |  ✅  |  ✅  |  ✅  |
-| URL string font loading (cached)     |  ✅  |  ✅  |  ✅  |
-| Raw bytes (`ArrayBuffer`/`Uint8Array`) |  ✅  |  ✅  |  ✅  |
-| `FontFace` input (PIXI asset loader) |  ✅  |  ✅  |  ✅  |
-| Fallback font on load failure        |  ✅  |  ✅  |  ✅  |
-| Hex color input (`#rrggbb[aa]`)      |  ✅  |  ✅  |  ✅  |
+| URL string font loading (cached)      |  ✅  |  ✅  |  ✅  |
+| `RTL` fonts                           |  ❌  |  ❌  |  ❌  |
+| Load font: raw bytes (`ArrayBuffer`/`Uint8Array`) |  ✅  |  ✅  |  ✅  |
+| Load font: `FontFace` (PIXI asset loader) |  ✅  |  ✅  |  ✅  |
+| Load font: fallback (roboto) on load failure        |  ✅  |  ✅  |  ✅  |
+
+&nbsp;
+
+## Style, Decorations, Formatting
+| Feature                              |  `v8`  |  `v7`  |  `v6`  |
+| ------------------------------------ | :--: | :--: | :--: |
 | Word wrap + newlines                 |  ✅  |  ✅  |  ✅  |
-| Font ref counting + autoDestroy      |  ✅  |  ✅  |  ✅  |
-| PIXI Ticker auto-hook                |  ✅  |  ✅  |  ✅  |
-| Application plugin                   |  ✅  |  ✅  |  ✅  |
-| Text decoration: `underline`           |  ✅  |  ✅  |  ✅  |
-| Text decoration: `strikethrough`       |  ✅  |  ✅  |  ✅  |
-| Text decoration: `overline`            |  ✅  |  ✅  |  ✅  |
+| Hex color input (`#rrggbb[aa]`)      |  ✅  |  ✅  |  ✅  |
+| Text decoration: `underline`         |  ✅  |  ✅  |  ✅  |
+| Text decoration: `strikethrough`     |  ✅  |  ✅  |  ✅  |
+| Text decoration: `overline`          |  ✅  |  ✅  |  ✅  |
+| Fill: Directional Gradient      |  ✅  |  ✅  |  ✅  |
+| Fill: Radial Gradient           |  ✅  |  ✅  |  ✅  |
+| Fill: `Texture`                  |  ✅  |  ✅  |  ✅  |
 | `text-align`                           |  ✅  |  ✅  |  ✅  |
 | `text-justify`                         |  ✅  |  ✅  |  ✅  |
-| `superscript`                          |  ❌  |  ❌  |  ❌  |
-| `subscript`                            |  ❌  |  ❌  |  ❌  |
-| `RTL` glyph support                    |  ❌  |  ❌  |  ❌  |
-| `WebGL1` support                      |  ❌  |  ❌  |  ❌  |
-| `WebGL2` support                      |  ✅  |  ✅  |  ✅  |
-
 
 &nbsp;
 # FAQ
