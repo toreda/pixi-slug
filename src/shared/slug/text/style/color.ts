@@ -31,6 +31,23 @@ export type SlugTextColor =
 /** Internal RGBA tuple used everywhere downstream. Values are 0..1. */
 export type SlugTextColorRgba = [number, number, number, number];
 
+/**
+ * Color parse result with provenance flags. `rgbProvided` is true when
+ * the input carried RGB (every accepted color form does, except `null` /
+ * `undefined` / invalid input which fall back to `current` and report
+ * `false`). `alphaProvided` is true when the input carried alpha — the
+ * 8-digit hex / 4-element array / 8-digit-number forms.
+ *
+ * Decoration code uses these flags to maintain per-channel sticky
+ * overrides — a fill update only invalidates a decoration's sticky
+ * channel if the fill itself explicitly set that channel.
+ */
+export interface SlugTextColorParse {
+	rgba: SlugTextColorRgba;
+	rgbProvided: boolean;
+	alphaProvided: boolean;
+}
+
 const PREFIX = '[SlugText:color]';
 
 /** Log an invalid-color diagnostic without throwing. */
@@ -202,20 +219,26 @@ function parseArray(arr: readonly number[]): {r: number; g: number; b: number; a
 
 /**
  * Normalize any supported color form to an `[r, g, b, a]` tuple in
- * 0..1. Invalid input logs via `console.error` and returns `current`
- * unchanged — the helper never throws and never guesses at user intent.
+ * 0..1 alongside provenance flags. Invalid / null / undefined input
+ * logs via `console.error` (when invalid) and returns `current`
+ * unchanged with both provenance flags false — the helper never throws
+ * and never guesses at user intent.
  *
- * `current` is the tuple the caller wants preserved when input is null,
- * undefined, invalid, or specifies only RGB (no alpha). At `SlugText`
- * init time, callers pass the field default; in setters, they pass the
- * currently stored value.
+ * `rgbProvided` is true when the input form supplied RGB; `alphaProvided`
+ * is true only when the input form carried alpha (8-digit hex,
+ * 4-element array, or 8-digit-number). Both are false for `null` /
+ * `undefined` / invalid input.
  */
-export function slugTextColorToRgba(
+export function slugTextColorParse(
 	input: SlugTextColor | null | undefined,
 	current: readonly [number, number, number, number]
-): SlugTextColorRgba {
+): SlugTextColorParse {
 	if (input === null || input === undefined) {
-		return [current[0], current[1], current[2], current[3]];
+		return {
+			rgba: [current[0], current[1], current[2], current[3]],
+			rgbProvided: false,
+			alphaProvided: false
+		};
 	}
 
 	let parsed: {r: number; g: number; b: number; alphaFromInput?: number} | null;
@@ -223,29 +246,61 @@ export function slugTextColorToRgba(
 		parsed = parseHexString(input);
 		if (!parsed) {
 			reportColorError(`Invalid hex string "${input}" — expected 2, 3, 4, 6, or 8 hex digits, optionally prefixed with # or 0x.`);
-			return [current[0], current[1], current[2], current[3]];
+			return {
+				rgba: [current[0], current[1], current[2], current[3]],
+				rgbProvided: false,
+				alphaProvided: false
+			};
 		}
 	} else if (typeof input === 'number') {
 		parsed = parseNumber(input);
 		if (!parsed) {
 			reportColorError(`Invalid hex number ${input} — expected a finite integer in 0..0xFFFFFFFF.`);
-			return [current[0], current[1], current[2], current[3]];
+			return {
+				rgba: [current[0], current[1], current[2], current[3]],
+				rgbProvided: false,
+				alphaProvided: false
+			};
 		}
 	} else if (Array.isArray(input)) {
 		parsed = parseArray(input as readonly number[]);
 		if (!parsed) {
 			reportColorError(`Invalid color array [${(input as readonly number[]).join(', ')}] — each element must be a finite number in 0..255, and the array must have 3 or 4 elements.`);
-			return [current[0], current[1], current[2], current[3]];
+			return {
+				rgba: [current[0], current[1], current[2], current[3]],
+				rgbProvided: false,
+				alphaProvided: false
+			};
 		}
 	} else {
 		reportColorError(`Unsupported color input type (${typeof input}). Expected string, number, or [r, g, b] / [r, g, b, a] array.`);
-		return [current[0], current[1], current[2], current[3]];
+		return {
+			rgba: [current[0], current[1], current[2], current[3]],
+			rgbProvided: false,
+			alphaProvided: false
+		};
 	}
 
-	return [
-		parsed.r,
-		parsed.g,
-		parsed.b,
-		parsed.alphaFromInput !== undefined ? parsed.alphaFromInput : current[3]
-	];
+	const alphaProvided = parsed.alphaFromInput !== undefined;
+	return {
+		rgba: [
+			parsed.r,
+			parsed.g,
+			parsed.b,
+			alphaProvided ? (parsed.alphaFromInput as number) : current[3]
+		],
+		rgbProvided: true,
+		alphaProvided
+	};
+}
+
+/**
+ * Tuple-only convenience wrapper — preserved for the many callers that
+ * don't need provenance flags.
+ */
+export function slugTextColorToRgba(
+	input: SlugTextColor | null | undefined,
+	current: readonly [number, number, number, number]
+): SlugTextColorRgba {
+	return slugTextColorParse(input, current).rgba;
 }

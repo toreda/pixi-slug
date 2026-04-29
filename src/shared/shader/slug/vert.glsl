@@ -30,8 +30,16 @@ uniform vec2 uResolution;       // Viewport size in pixels (width, height).
 // PixiJS v8 local uniforms — per-object transform injected by MeshPipe (bind group 101).
 uniform mat3 uTransformMatrix;  // World transform of this mesh: local → world pixels.
 
+// Per-pass fill bbox in object/model-local pixel space — same coordinate
+// space as aPositionNormal.xy. Drives `vFillUV` for gradient/texture
+// sampling in the fragment shader. For solid fills the value is unused.
+//   xy = bbox min (top-left)
+//   zw = bbox size (width, height)
+uniform vec4 uFillBoundsPx;
+
 out vec4 vColor;
 out vec2 vTexcoord;
+out vec2 vFillUV;
 flat out vec4 vBanding;
 flat out ivec4 vGlyph;
 
@@ -119,6 +127,11 @@ void main()
 	vTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);
 
 	gl_Position = mvp * vec4(p, 0.0, 1.0);
+
+	// Bbox-relative UV in object/model-local pixel space. `p` is the
+	// post-dilation pixel position before MVP — same space as the bbox
+	// uniform. max() guards against zero-size bbox (e.g., empty text).
+	vFillUV = (p - uFillBoundsPx.xy) / max(uFillBoundsPx.zw, vec2(1.0));
 
 	SlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);
 	vColor = aColor;

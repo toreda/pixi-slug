@@ -45,7 +45,8 @@
       "Bash(node -e \"var fs=require\\('fs'\\); var html=fs.readFileSync\\('examples/v6/index.html','utf8'\\); var m=html.match\\(/<script>\\\\s*\\\\\\(async function[\\\\s\\\\S]*?<\\\\/script>/\\); if\\(!m\\){console.log\\('no inline script found'\\); process.exit\\(0\\)} var js=m[0].replace\\(/<\\\\/?script>/g,''\\); try { new Function\\(js\\); console.log\\('v6 inline JS syntax OK'\\); } catch\\(e\\){console.log\\('v6 inline JS error:',e.message\\)}\")",
       "Bash(node scripts/build-docs.js)",
       "Bash(npx webpack *)",
-      "Bash(pnpm why *)"
+      "Bash(pnpm why *)",
+      "Bash(npm run *)"
     ]
   }
 }

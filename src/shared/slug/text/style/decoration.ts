@@ -1,5 +1,5 @@
 import {slugResolvePhysicalAlign, type SlugTextStyleAlign, type SlugTextStylePhysicalAlign} from './align';
-import {slugTextColorToRgba, type SlugTextColor, type SlugTextColorRgba} from './color';
+import {slugTextColorParse, type SlugTextColor, type SlugTextColorRgba} from './color';
 import type {SlugTextDirection} from './direction';
 import {numberValue} from '@toreda/strong-types';
 
@@ -78,11 +78,26 @@ export interface SlugTextDecoration {
 export type SlugTextDecorationInput = boolean | SlugTextDecoration | null;
 
 /**
- * Resolved user input. `color` and `thickness` stay nullable here —
- * `null` means "inherit at draw resolution" (fill color or font
- * metric). `length` and `align` are concrete after resolve, since
- * their defaults don't depend on other fields. This shape mirrors
- * the user's intent and is cheap to compare for setter no-ops.
+ * Resolved user input with per-channel sticky-color tracking.
+ *
+ * `colorRgb` and `colorAlpha` are independent sticky channels:
+ *  - `null` means "inherit from the text fill at draw resolution".
+ *  - non-null means the user explicitly set that channel; it persists
+ *    until either the user clears it or the fill is updated with an
+ *    explicit value for that same channel (per-channel invalidation).
+ *
+ * The split is necessary because color inputs may carry RGB only
+ * (3-element / 6-digit hex) or RGB + alpha (4-element / 8-digit hex /
+ * 8-digit number). Decorations need to remember exactly which of those
+ * channels the user committed to.
+ *
+ * Provenance flag mapping (set by `slugResolveDecoration`):
+ *  - 6-digit hex / 3-element array → `colorRgb` set, `colorAlpha` null
+ *  - 8-digit hex / 4-element array → both set
+ *  - omitted color → both null
+ *
+ * `thickness` keeps the same null-means-inherit rule against the font
+ * metric. `length` and `align` are concrete after resolve.
  *
  * Render code should NOT read this directly; it should read the
  * fully-concrete `SlugTextDecorationDraw` produced by
@@ -91,7 +106,8 @@ export type SlugTextDecorationInput = boolean | SlugTextDecoration | null;
  */
 export interface SlugTextDecorationResolved {
 	enabled: boolean;
-	color: SlugTextColorRgba | null;
+	colorRgb: [number, number, number] | null;
+	colorAlpha: number | null;
 	thickness: number | null;
 	length: number;
 	align: SlugTextDecorationAlign;
@@ -122,7 +138,7 @@ export interface SlugTextDecorationDraw {
 
 /** Disabled decoration with all overrides cleared. */
 export function slugDecorationDisabled(): SlugTextDecorationResolved {
-	return {enabled: false, color: null, thickness: null, length: 1, align: 'start'};
+	return {enabled: false, colorRgb: null, colorAlpha: null, thickness: null, length: 1, align: 'start'};
 }
 
 /**
@@ -134,10 +150,11 @@ export function decorationsEqual(a: SlugTextDecorationResolved, b: SlugTextDecor
 	if (a.thickness !== b.thickness) return false;
 	if (a.length !== b.length) return false;
 	if (a.align !== b.align) return false;
-	const ac = a.color, bc = b.color;
-	if (ac === null && bc === null) return true;
-	if (ac === null || bc === null) return false;
-	return ac[0] === bc[0] && ac[1] === bc[1] && ac[2] === bc[2] && ac[3] === bc[3];
+	if (a.colorAlpha !== b.colorAlpha) return false;
+	const ar = a.colorRgb, br = b.colorRgb;
+	if (ar === null && br === null) return true;
+	if (ar === null || br === null) return false;
+	return ar[0] === br[0] && ar[1] === br[1] && ar[2] === br[2];
 }
 
 /**
@@ -158,8 +175,16 @@ function physicalAlign(
  * Called by SlugText whenever any of those inputs change — never
  * per-draw.
  *
- * @param input Resolved user input. `null` color/thickness inherits.
- * @param fillRgba Current text fill color, used when `input.color` is null.
+ * Per-channel inheritance: each channel of the final color is the
+ * decoration's sticky value if set, otherwise the matching channel of
+ * `fillRgba`. RGB and alpha are independent — a decoration can have a
+ * sticky alpha while inheriting RGB from the fill, or vice versa.
+ *
+ * @param input Resolved user input. Null `colorRgb` / `colorAlpha` /
+ *  `thickness` inherit.
+ * @param fillRgba Representative fill RGBA used when channels inherit.
+ *  For solid fills this is the fill color; for gradient/texture fills
+ *  it's `slugFillRepresentativeColor` (gradient first stop or white).
  * @param defaultThicknessPx Pixel-space thickness from the font metric
  *  (`font.underlineThickness * scale` for underline/overline,
  *  `font.strikethroughSize * scale` for strikethrough), used when
@@ -172,13 +197,14 @@ export function slugResolveDrawDecoration(
 	defaultThicknessPx: number,
 	direction: SlugTextDirection
 ): SlugTextDecorationDraw {
-	const color: SlugTextColorRgba = input.color
-		? [input.color[0], input.color[1], input.color[2], input.color[3]]
-		: [fillRgba[0], fillRgba[1], fillRgba[2], fillRgba[3]];
+	const r = input.colorRgb ? input.colorRgb[0] : fillRgba[0];
+	const g = input.colorRgb ? input.colorRgb[1] : fillRgba[1];
+	const b = input.colorRgb ? input.colorRgb[2] : fillRgba[2];
+	const a = input.colorAlpha !== null ? input.colorAlpha : fillRgba[3];
 	const thickness = Math.max(input.thickness ?? defaultThicknessPx, 1);
 	return {
 		enabled: input.enabled,
-		color,
+		color: [r, g, b, a],
 		thickness,
 		length: input.length,
 		align: physicalAlign(input.align, direction)
@@ -191,25 +217,42 @@ export function slugDrawDecorationDisabled(): SlugTextDecorationDraw {
 }
 
 /**
- * Resolve a user input value into the stored form.
+ * Resolve a user input value into the stored form, splitting any color
+ * input into per-channel sticky overrides.
  *
  * - `false` / `null` / `undefined` → disabled, no overrides.
- * - `true` → enabled, both overrides null (use fill + font metric).
+ * - `true` → enabled, all channels inherit (`colorRgb` / `colorAlpha` /
+ *   `thickness` all null).
  * - object → enabled; provided fields normalized, omitted fields null.
  *
- * Unlike `slugTextColorToRgba`, an explicit `color: null` here does NOT
- * preserve any prior color — it means "inherit the fill".
+ * Color provenance:
+ *  - 6-digit hex / 3-element array → `colorRgb` set, `colorAlpha` null.
+ *  - 8-digit hex / 4-element array / 8-digit number → both set.
+ *  - explicit `color: null` → both null (inherit the fill).
+ *
+ * Merging with prior state: a setter that wants to preserve sticky
+ * channels across edits (e.g., setting only RGB without losing a
+ * previously-set alpha) should call `slugMergeDecoration` rather than
+ * this resolver directly.
  */
 export function slugResolveDecoration(input: SlugTextDecorationInput | undefined): SlugTextDecorationResolved {
 	if (input === true) {
-		return {enabled: true, color: null, thickness: null, length: 1, align: 'start'};
+		return {enabled: true, colorRgb: null, colorAlpha: null, thickness: null, length: 1, align: 'start'};
 	}
 	if (input === false || input === null || input === undefined) {
 		return slugDecorationDisabled();
 	}
-	const color = input.color === null || input.color === undefined
-		? null
-		: slugTextColorToRgba(input.color, [0, 0, 0, 1]);
+	let colorRgb: [number, number, number] | null = null;
+	let colorAlpha: number | null = null;
+	if (input.color !== null && input.color !== undefined) {
+		const parse = slugTextColorParse(input.color, [0, 0, 0, 1]);
+		if (parse.rgbProvided) {
+			colorRgb = [parse.rgba[0], parse.rgba[1], parse.rgba[2]];
+		}
+		if (parse.alphaProvided) {
+			colorAlpha = parse.rgba[3];
+		}
+	}
 	const thickness = input.thickness === null || input.thickness === undefined
 		? null
 		: numberValue(input.thickness, 0);
@@ -224,5 +267,39 @@ export function slugResolveDecoration(input: SlugTextDecorationInput | undefined
 		input.align === 'right'
 			? input.align
 			: 'start';
-	return {enabled: true, color, thickness, length, align};
+	return {enabled: true, colorRgb, colorAlpha, thickness, length, align};
+}
+
+/**
+ * Apply a fill change to a decoration's sticky channels: clear sticky
+ * RGB if the new fill explicitly carried RGB, clear sticky alpha if it
+ * explicitly carried alpha. Channels not explicitly carried are
+ * preserved.
+ *
+ * Returns a new resolved decoration; never mutates the input.
+ *
+ * Called by `SlugText._resolveDecorations` whenever the fill changes,
+ * so per-channel stickiness behaves as documented:
+ *  - decoration alpha stays sticky across an RGB-only fill update
+ *  - an RGBA fill update overrides previously-sticky decoration alpha
+ */
+export function slugApplyFillToDecoration(
+	decoration: SlugTextDecorationResolved,
+	fillRgbProvided: boolean,
+	fillAlphaProvided: boolean
+): SlugTextDecorationResolved {
+	if (!decoration.enabled) return decoration;
+	const nextRgb = fillRgbProvided ? null : decoration.colorRgb;
+	const nextAlpha = fillAlphaProvided ? null : decoration.colorAlpha;
+	if (nextRgb === decoration.colorRgb && nextAlpha === decoration.colorAlpha) {
+		return decoration;
+	}
+	return {
+		enabled: decoration.enabled,
+		colorRgb: nextRgb,
+		colorAlpha: nextAlpha,
+		thickness: decoration.thickness,
+		length: decoration.length,
+		align: decoration.align
+	};
 }

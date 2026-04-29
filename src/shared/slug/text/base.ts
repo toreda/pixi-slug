@@ -7,9 +7,13 @@ import {slugResolveFontInput, slugTryResolveFontInputSync} from '../fonts/resolv
 import type {SlugDropShadow, SlugDropShadowResolved, SlugStroke, SlugTextInit} from './init';
 import type {SlugTextStyleAlign} from './style/align';
 import {slugTextColorToRgba, type SlugTextColor} from './style/color';
+import type {SlugTextFill} from './style/fill';
+import type {SlugFillResolved} from './style/fill/resolved';
+import {slugFillRepresentativeColor, slugResolveFill} from './style/fill/resolve';
 import type {SlugTextJustify} from './style/justify';
 import {
 	decorationsEqual,
+	slugApplyFillToDecoration,
 	slugDrawDecorationDisabled,
 	slugResolveDecoration,
 	slugResolveDrawDecoration,
@@ -96,6 +100,12 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_font!: SlugFont;
 		_fontRef!: WeakRef<SlugFont>;
 		_fontSize!: number;
+		// Resolved fill — discriminated union of solid / linear-gradient /
+		// radial-gradient / texture. `_color` mirrors the representative
+		// flat color for legacy callers (quad builder vertex color, stroke
+		// pass, decoration inheritance) and is recomputed whenever `_fill`
+		// changes.
+		_fill!: SlugFillResolved;
 		_color!: [number, number, number, number];
 		_supersampling!: boolean;
 		_supersampleCount!: number;
@@ -170,7 +180,15 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._fontRef = new WeakRef(this._font);
 			SlugFonts.retain(this._font);
 			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
-			this._color = slugTextColorToRgba(init.options?.fill, Defaults.SlugText.FillColor);
+			// `init.options.fill` is widened to `SlugTextFill` (color | gradient
+			// | texture). The resolver folds invalid input back to the default
+			// solid color and emits provenance flags consumed by decoration
+			// inheritance.
+			this._fill = slugResolveFill(
+				init.options?.fill as SlugTextFill | null | undefined,
+				Defaults.SlugText.FillColor
+			);
+			this._color = slugFillRepresentativeColor(this._fill);
 			this._supersampling = booleanValue(init.supersampling, Defaults.SlugText.Supersampling);
 			this._supersampleCount = numberValue(init.supersampleCount, Defaults.SlugText.SupersampleCount);
 			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
@@ -236,6 +254,28 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 				dir
 			);
 			this._overlineDraw = slugResolveDrawDecoration(this._overline, this._color, ulDefault, dir);
+		}
+
+		/**
+		 * Apply a fill change to the stored sticky state of every
+		 * decoration. RGB-only fill updates leave decoration sticky alpha
+		 * intact; RGBA fill updates clear decoration sticky alpha (and
+		 * vice versa for RGB). Channels not invalidated keep their prior
+		 * sticky values.
+		 *
+		 * Called from the `fill` and `color` setters AFTER `_fill` is
+		 * assigned but BEFORE `_resolveDecorations`, so the inheritance
+		 * fold sees the post-invalidation sticky state.
+		 */
+		_applyFillToDecorations(rgbProvided: boolean, alphaProvided: boolean): void {
+			if (!rgbProvided && !alphaProvided) return;
+			this._underline = slugApplyFillToDecoration(this._underline, rgbProvided, alphaProvided);
+			this._strikethrough = slugApplyFillToDecoration(
+				this._strikethrough,
+				rgbProvided,
+				alphaProvided
+			);
+			this._overline = slugApplyFillToDecoration(this._overline, rgbProvided, alphaProvided);
 		}
 
 		/** Version-specific rebuild. Subclasses implement with their PixiJS APIs. */
@@ -306,14 +346,37 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		public set color(value: SlugTextColor) {
 			const next = slugTextColorToRgba(value, this._color);
-			if (
+			const sameAsCurrent =
+				this._fill.kind === 'solid' &&
 				this._color[0] === next[0] &&
 				this._color[1] === next[1] &&
 				this._color[2] === next[2] &&
-				this._color[3] === next[3]
-			)
-				return;
-			this._color = next;
+				this._color[3] === next[3];
+			if (sameAsCurrent) return;
+			// `color` setter always installs a solid fill. If the previous
+			// fill was a gradient/texture, this replaces it.
+			const resolved = slugResolveFill(value, this._color);
+			this._fill = resolved;
+			this._color = slugFillRepresentativeColor(resolved);
+			this._applyFillToDecorations(resolved.rgbProvided, resolved.alphaProvided);
+			this._resolveDecorations();
+			this.rebuild();
+		}
+
+		/**
+		 * Full fill input: solid color, linear/radial gradient, or texture.
+		 * Setting via `color` is preserved for backward compatibility and
+		 * is equivalent to setting `fill` with a color form.
+		 */
+		public get fill(): SlugFillResolved {
+			return this._fill;
+		}
+
+		public set fill(value: SlugTextFill | null | undefined) {
+			const resolved = slugResolveFill(value, this._color);
+			this._fill = resolved;
+			this._color = slugFillRepresentativeColor(resolved);
+			this._applyFillToDecorations(resolved.rgbProvided, resolved.alphaProvided);
 			this._resolveDecorations();
 			this.rebuild();
 		}

@@ -16,6 +16,8 @@ import {slugComputeLineLayout} from '../../shared/slug/text/layout/align';
 import {slugResolvePhysicalAlign} from '../../shared/slug/text/style/align';
 import {slugTextWrap} from '../../shared/slug/text/wrap';
 import {slugMeasureText} from '../../shared/slug/text/measure';
+import {slugBuildDecorationFill} from './decoration/fill';
+import {slugBuildFillGpuV8, type SlugFillGpuV8} from './fill/gpu';
 import {slugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
@@ -48,6 +50,13 @@ export class SlugText extends SlugTextV8Base {
 	private _uniforms: UniformGroup | null;
 	/** Graphics child for underline/strikethrough/overline decorations. */
 	private _decorations: Graphics | null;
+	/**
+	 * Per-instance GPU resources derived from `_fill` (gradient LUT
+	 * texture, wrapped fill texture, mode index, transform). Disposed
+	 * on every rebuild before being replaced — the new fill state owns
+	 * a fresh LUT.
+	 */
+	private _fillGpu: SlugFillGpuV8 | null;
 
 	constructor(init: SlugTextInit) {
 		super();
@@ -55,6 +64,7 @@ export class SlugText extends SlugTextV8Base {
 		this._meshes = [];
 		this._uniforms = null;
 		this._decorations = null;
+		this._fillGpu = null;
 
 		this.rebuild();
 	}
@@ -72,13 +82,19 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	/**
-	 * Build a Mesh from quad data with optional stroke expansion.
+	 * Build a Mesh from quad data with optional stroke expansion. The
+	 * `fillGpu` argument selects the fill mode and supplies the fill
+	 * sampler bindings (gradient LUT or user texture). Pass-specific
+	 * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
+	 * the caller doesn't repeat the pattern across shadow / stroke / fill.
 	 */
 	private _buildMesh(
 		quads: SlugGlyphQuads,
 		gpu: ReturnType<typeof slugFontGpuV8>,
+		fillGpu: SlugFillGpuV8,
+		fillBounds: [number, number, number, number],
 		strokeExpand: number = 0
-	): {mesh: Mesh<Geometry, Shader>; uniforms: UniformGroup} {
+	): {mesh: Mesh<Geometry, Shader>; uniforms: UniformGroup; shader: Shader} {
 		const stride = 20 * 4;
 		const vertexBuffer = new Buffer({
 			data: quads.vertices,
@@ -97,11 +113,30 @@ export class SlugText extends SlugTextV8Base {
 			indexBuffer: quads.indices
 		});
 
-		const {shader, uniforms} = slugShader(gpu.glProgram, gpu.curveTexture, gpu.bandTexture);
+		const {shader, uniforms} = slugShader(
+			gpu.glProgram,
+			gpu.curveTexture,
+			gpu.bandTexture,
+			gpu.fallbackWhite
+		);
 		uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		uniforms.uniforms.uStrokeExpand = strokeExpand;
+		uniforms.uniforms.uFillMode = fillGpu.mode;
+		uniforms.uniforms.uFillBoundsPx = new Float32Array(fillBounds);
+		uniforms.uniforms.uFillParams0 = new Float32Array(fillGpu.params0);
+		uniforms.uniforms.uFillTextureXform = fillGpu.textureXform;
 
-		return {mesh: new Mesh({geometry, shader}), uniforms};
+		// Bind the fill samplers. When the fill is solid both stay on
+		// fallbackWhite (already bound by slugShader); otherwise swap in
+		// the gradient LUT or user texture.
+		if (fillGpu.gradient) {
+			(shader.resources as Record<string, unknown>).uFillGradient = fillGpu.gradient.source;
+		}
+		if (fillGpu.texture) {
+			(shader.resources as Record<string, unknown>).uFillTexture = fillGpu.texture.source;
+		}
+
+		return {mesh: new Mesh({geometry, shader}), uniforms, shader};
 	}
 
 	/**
@@ -145,6 +180,12 @@ export class SlugText extends SlugTextV8Base {
 			this._decorations = null;
 		}
 		this._uniforms = null;
+		// Dispose previous gradient LUT before creating a new one. User-
+		// supplied fill textures are not owned and not destroyed.
+		if (this._fillGpu) {
+			this._fillGpu.dispose();
+			this._fillGpu = null;
+		}
 
 		const font = this._fontRef?.deref();
 		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
@@ -202,7 +243,46 @@ export class SlugText extends SlugTextV8Base {
 			layout.perGlyphShiftX !== null ||
 			layout.lineOffsetX.some((x) => x !== 0);
 
-		// --- Drop shadow pass ---
+		// --- Build fill quads first so we can derive the bbox before the
+		//     shadow / stroke passes need it for the fill UV uniform.
+		const fillQuads = this._makeQuads(font, lines, this._color);
+		if (fillQuads.quadCount > 0 && needsShift) {
+			slugApplyLineLayoutX(fillQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+		}
+
+		// Compute fill bbox from the fill-pass vertex positions. Shadow
+		// and stroke vertices are dilated outward and would inflate the
+		// gradient/texture sample area, so we use the fill pass — that
+		// matches the user's intent of the gradient covering the visible
+		// glyphs.
+		const FLOATS_PER_VERTEX = 20;
+		let bboxMinX = 0, bboxMinY = 0, bboxMaxX = 0, bboxMaxY = 0;
+		if (fillQuads.quadCount > 0) {
+			bboxMinX = Infinity;
+			bboxMinY = Infinity;
+			bboxMaxX = -Infinity;
+			bboxMaxY = -Infinity;
+			for (let i = 0; i < fillQuads.vertices.length; i += FLOATS_PER_VERTEX) {
+				const vx = fillQuads.vertices[i];
+				const vy = fillQuads.vertices[i + 1];
+				if (vx < bboxMinX) bboxMinX = vx;
+				if (vx > bboxMaxX) bboxMaxX = vx;
+				if (vy < bboxMinY) bboxMinY = vy;
+				if (vy > bboxMaxY) bboxMaxY = vy;
+			}
+		}
+		const fillBounds: [number, number, number, number] = [
+			bboxMinX,
+			bboxMinY,
+			Math.max(bboxMaxX - bboxMinX, 1),
+			Math.max(bboxMaxY - bboxMinY, 1)
+		];
+
+		// Build per-instance fill GPU resources (gradient LUT or wrapped
+		// fill texture). Solid fills produce a no-op record.
+		this._fillGpu = slugBuildFillGpuV8(this._fill);
+
+		// --- Drop shadow pass (always solid color, mode 0) ---
 		if (hasShadow) {
 			const ds = this._dropShadow!;
 			const shadowAlpha = ds.alpha ?? 1;
@@ -217,7 +297,19 @@ export class SlugText extends SlugTextV8Base {
 				if (needsShift) {
 					slugApplyLineLayoutX(shadowQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
 				}
-				const {mesh, uniforms: shadowUniforms} = this._buildMesh(shadowQuads, gpu, blur);
+				const solidGpu = slugBuildFillGpuV8({
+					kind: 'solid',
+					color: [0, 0, 0, 1],
+					rgbProvided: true,
+					alphaProvided: true
+				});
+				const {mesh, uniforms: shadowUniforms} = this._buildMesh(
+					shadowQuads,
+					gpu,
+					solidGpu,
+					fillBounds,
+					blur
+				);
 				if (blur > 0) {
 					shadowUniforms.uniforms.uStrokeAlphaStart = shadowAlpha;
 					shadowUniforms.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
@@ -231,7 +323,7 @@ export class SlugText extends SlugTextV8Base {
 			}
 		}
 
-		// --- Stroke pass ---
+		// --- Stroke pass (always solid color, mode 0) ---
 		if (hasStroke) {
 			const strokeQuads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
 
@@ -239,7 +331,19 @@ export class SlugText extends SlugTextV8Base {
 				if (needsShift) {
 					slugApplyLineLayoutX(strokeQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
 				}
-				const {mesh, uniforms: strokeUniforms} = this._buildMesh(strokeQuads, gpu, this._strokeWidth);
+				const solidGpu = slugBuildFillGpuV8({
+					kind: 'solid',
+					color: [0, 0, 0, 1],
+					rgbProvided: true,
+					alphaProvided: true
+				});
+				const {mesh, uniforms: strokeUniforms} = this._buildMesh(
+					strokeQuads,
+					gpu,
+					solidGpu,
+					fillBounds,
+					this._strokeWidth
+				);
 				strokeUniforms.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
 				strokeUniforms.uniforms.uStrokeAlphaRate =
 					this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
@@ -248,14 +352,9 @@ export class SlugText extends SlugTextV8Base {
 			}
 		}
 
-		// --- Fill pass ---
-		const fillQuads = this._makeQuads(font, lines, this._color);
-		if (fillQuads.quadCount > 0 && needsShift) {
-			slugApplyLineLayoutX(fillQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
-		}
-
+		// --- Fill pass (uses the resolved fill mode) ---
 		if (fillQuads.quadCount > 0) {
-			const {mesh, uniforms} = this._buildMesh(fillQuads, gpu);
+			const {mesh, uniforms} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
 			this._uniforms = uniforms;
 			this.addChild(mesh);
 			this._meshes.push(mesh);
@@ -264,18 +363,7 @@ export class SlugText extends SlugTextV8Base {
 			this._vertexBytes = fillQuads.vertices.byteLength;
 			this._indexBytes = fillQuads.indices.byteLength;
 
-			// Bounds from fill pass vertices
-			const floatsPerVertex = 20;
-			let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-			for (let i = 0; i < fillQuads.vertices.length; i += floatsPerVertex) {
-				const vx = fillQuads.vertices[i];
-				const vy = fillQuads.vertices[i + 1];
-				if (vx < minX) minX = vx;
-				if (vx > maxX) maxX = vx;
-				if (vy < minY) minY = vy;
-				if (vy > maxY) maxY = vy;
-			}
-			this.boundsArea = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+			this.boundsArea = new Rectangle(bboxMinX, bboxMinY, bboxMaxX - bboxMinX, bboxMaxY - bboxMinY);
 		}
 
 		// --- Text decorations (underline / strikethrough / overline) ---
@@ -284,6 +372,14 @@ export class SlugText extends SlugTextV8Base {
 		// and pixel thickness. Decorations sit above/below the glyphs on
 		// each line, so they share the same per-line offset (`layout`)
 		// and effective width (post-justify) the quad shifter applied.
+		//
+		// Fill inheritance: when the resolved fill is a gradient/texture
+		// AND the decoration did not explicitly set RGB (sticky null),
+		// build a parallel PIXI FillGradient/FillPattern sized to the
+		// decoration rect so the decoration shows the same fill as the
+		// glyphs. The decoration's resolved alpha (which honors per-
+		// channel sticky overrides) multiplies onto the PIXI fill via
+		// `Graphics.fill({fill, alpha})`.
 		const ul = this._underlineDraw, st = this._strikethroughDraw, ol = this._overlineDraw;
 		if ((ul.enabled || st.enabled || ol.enabled) && font) {
 			const lineHeight = (font.ascender - font.descender) * scale;
@@ -291,6 +387,11 @@ export class SlugText extends SlugTextV8Base {
 			const packColor = (rgba: [number, number, number, number]): number =>
 				((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
 			const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
+
+			const fillIsNonSolid = this._fill.kind !== 'solid';
+			const ulInheritsFill = fillIsNonSolid && this._underline.colorRgb === null;
+			const stInheritsFill = fillIsNonSolid && this._strikethrough.colorRgb === null;
+			const olInheritsFill = fillIsNonSolid && this._overline.colorRgb === null;
 
 			const gfx = new Graphics();
 
@@ -327,7 +428,16 @@ export class SlugText extends SlugTextV8Base {
 					const x = lineX + xForDecoration(effLineW, drawW, ul.align);
 					const ulY = baselineY + lineY - font.underlinePosition * scale;
 					gfx.rect(x, ulY, drawW, ul.thickness);
-					gfx.fill({color: ulPacked, alpha: ul.color[3]});
+					if (ulInheritsFill) {
+						const pixiFill = slugBuildDecorationFill(this._fill, x, ulY, drawW, ul.thickness);
+						if (pixiFill) {
+							gfx.fill({fill: pixiFill, alpha: ul.color[3]});
+						} else {
+							gfx.fill({color: ulPacked, alpha: ul.color[3]});
+						}
+					} else {
+						gfx.fill({color: ulPacked, alpha: ul.color[3]});
+					}
 				}
 
 				if (st.enabled && st.length > 0) {
@@ -335,7 +445,16 @@ export class SlugText extends SlugTextV8Base {
 					const x = lineX + xForDecoration(effLineW, drawW, st.align);
 					const stY = baselineY + lineY - font.strikethroughPosition * scale;
 					gfx.rect(x, stY, drawW, st.thickness);
-					gfx.fill({color: stPacked, alpha: st.color[3]});
+					if (stInheritsFill) {
+						const pixiFill = slugBuildDecorationFill(this._fill, x, stY, drawW, st.thickness);
+						if (pixiFill) {
+							gfx.fill({fill: pixiFill, alpha: st.color[3]});
+						} else {
+							gfx.fill({color: stPacked, alpha: st.color[3]});
+						}
+					} else {
+						gfx.fill({color: stPacked, alpha: st.color[3]});
+					}
 				}
 
 				// Overline: font tables don't define an overline metric, so by
@@ -348,7 +467,16 @@ export class SlugText extends SlugTextV8Base {
 					const x = lineX + xForDecoration(effLineW, drawW, ol.align);
 					const olY = lineY - ol.thickness;
 					gfx.rect(x, olY, drawW, ol.thickness);
-					gfx.fill({color: olPacked, alpha: ol.color[3]});
+					if (olInheritsFill) {
+						const pixiFill = slugBuildDecorationFill(this._fill, x, olY, drawW, ol.thickness);
+						if (pixiFill) {
+							gfx.fill({fill: pixiFill, alpha: ol.color[3]});
+						} else {
+							gfx.fill({color: olPacked, alpha: ol.color[3]});
+						}
+					} else {
+						gfx.fill({color: olPacked, alpha: ol.color[3]});
+					}
 				}
 			}
 
@@ -366,6 +494,10 @@ export class SlugText extends SlugTextV8Base {
 		if (this._decorations) {
 			this._decorations.destroy();
 			this._decorations = null;
+		}
+		if (this._fillGpu) {
+			this._fillGpu.dispose();
+			this._fillGpu = null;
 		}
 		super.destroy();
 	}

@@ -13,6 +13,7 @@ precision highp sampler2D;
 
 in vec4 vColor;
 in vec2 vTexcoord;
+in vec2 vFillUV;
 flat in vec4 vBanding;
 flat in ivec4 vGlyph;
 
@@ -22,6 +23,29 @@ uniform int uSupersampleCount;
 uniform float uStrokeExpand;     // Stroke expansion in pixels. 0 = normal fill.
 uniform float uStrokeAlphaStart; // Starting alpha at inner stroke edge. @default 1.0
 uniform float uStrokeAlphaRate;  // Alpha change per pixel outward. 0 = uniform. @default 0.0
+
+// --- Fill mode uniforms ---
+// uFillMode selects how the base color is computed before multiplying
+// by coverage:
+//   0 = solid (use vColor — vertex color baked at quad-build time)
+//   1 = linear gradient (sample uFillGradient at projected t)
+//   2 = radial gradient (sample uFillGradient at radial t)
+//   3 = texture (sample uFillTexture at transformed UV)
+// For stroke and shadow passes, uFillMode is always 0; only the fill
+// pass branches into the gradient/texture paths.
+uniform int uFillMode;
+// Mode-specific parameters. Linear: xy=start, zw=end (in normalized
+// bbox-UV space). Radial: xy=center, z=innerRadius, w=outerRadius.
+// Unused for solid and texture modes.
+uniform vec4 uFillParams0;
+// 1D color LUT for gradients (256x1 RGBA8). Sampled with
+// texture(uFillGradient, vec2(t, 0.5)).
+uniform sampler2D uFillGradient;
+// User texture for fill mode 3.
+uniform sampler2D uFillTexture;
+// Texture coordinate transform applied to vFillUV before sampling
+// uFillTexture. Identity for the default.
+uniform mat3 uFillTextureXform;
 
 // Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).
 // floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.
@@ -55,6 +79,38 @@ float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 }
 
 out vec4 fragColor;
+
+// Resolve the per-pixel fill color before coverage modulation. Branches
+// on uFillMode at runtime — GPUs handle the divergence cheaply when the
+// mode is uniform across a draw (which is always the case here, since
+// uFillMode is set once per pass).
+vec4 slugFillColor()
+{
+	if (uFillMode == 1)
+	{
+		// Linear gradient: project vFillUV onto axis (params0.zw - params0.xy).
+		vec2 axis = uFillParams0.zw - uFillParams0.xy;
+		float lenSq = max(dot(axis, axis), 1e-12);
+		float t = clamp(dot(vFillUV - uFillParams0.xy, axis) / lenSq, 0.0, 1.0);
+		return texture(uFillGradient, vec2(t, 0.5));
+	}
+	if (uFillMode == 2)
+	{
+		// Radial gradient: t maps innerRadius..outerRadius to 0..1.
+		float r = length(vFillUV - uFillParams0.xy);
+		float span = max(uFillParams0.w - uFillParams0.z, 1e-6);
+		float t = clamp((r - uFillParams0.z) / span, 0.0, 1.0);
+		return texture(uFillGradient, vec2(t, 0.5));
+	}
+	if (uFillMode == 3)
+	{
+		vec2 uv = (uFillTextureXform * vec3(vFillUV, 1.0)).xy;
+		return texture(uFillTexture, uv);
+	}
+	// Solid (mode 0): vertex color carries the resolved fill / stroke /
+	// shadow color. Stroke and shadow passes always take this path.
+	return vColor;
+}
 
 // Returns vec2(coverage, minBoundaryDist).
 // minBoundaryDist is the minimum absolute distance (in pixels) from this
@@ -243,7 +299,7 @@ void main()
 		// The per-pixel alpha is: alphaStart + alphaRate * minDist
 		float dist = clamp(result.y, 0.0, strokePx);
 		float alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);
-		fragColor = vColor * coverage * alpha;
+		fragColor = slugFillColor() * coverage * alpha;
 		return;
 	}
 
@@ -314,5 +370,5 @@ void main()
 
 	// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)
 	// uStrokeAlphaStart defaults to 1.0, so this is a no-op.
-	fragColor = vColor * coverage * uStrokeAlphaStart;
+	fragColor = slugFillColor() * coverage * uStrokeAlphaStart;
 }

@@ -5,6 +5,7 @@ import {SlugTextStyleAlign} from './style/align';
 import type {SlugTextColor} from './style/color';
 import type {SlugTextDecorationInput} from './style/decoration';
 import type {SlugTextDirection} from './style/direction';
+import type {SlugTextFill} from './style/fill';
 import type {SlugTextJustify} from './style/justify';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
 
@@ -105,14 +106,24 @@ export interface SlugStroke {
 export interface SlugTextStyleOptions {
 	fontSize?: number | null;
 	/**
-	 * Fill color. Accepts a hex string (`'#FF0000'`, `'0xFF0000AA'`,
-	 * `'FF0'`, etc.), a hex number (`0xFF0000` or `0xFF0000AA`), or a
-	 * 3/4-element numeric array (0..1 normalized, or 0..255).
-	 * 6-digit / 3-element forms preserve the existing alpha; 8-digit /
-	 * 4-element forms set alpha from input.
-	 * @default [1,1,1,1] (white)
+	 * Fill — solid color, gradient, or texture. Mutually exclusive: each
+	 * SlugText is filled with exactly one of the three forms.
+	 *
+	 *  - **Solid color** — hex string (`'#FF0000'`, `'0xFF0000AA'`, `'FF0'`,
+	 *    etc.), hex number (`0xFF0000` or `0xFF0000AA`), or 3/4-element
+	 *    numeric array (0..1 normalized, or 0..255). 6-digit / 3-element
+	 *    forms preserve the existing alpha; 8-digit / 4-element forms set
+	 *    alpha from input.
+	 *  - **Gradient** — `{type: 'linear-gradient', stops: [...]}` or
+	 *    `{type: 'radial-gradient', stops: [...]}`. See `SlugFillGradient`.
+	 *  - **Texture** — `{type: 'texture', source: ...}`. See `SlugFillTexture`.
+	 *
+	 * Invalid input logs a console error and falls back to the previous
+	 * resolved fill.
+	 *
+	 * @default [1,1,1,1] (white solid)
 	 */
-	fill?: SlugTextColor | null;
+	fill?: SlugTextFill | null;
 	wordWrap?: boolean | null;
 	wordWrapWidth?: number | null;
 	align?: SlugTextStyleAlign;

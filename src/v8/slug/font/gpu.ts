@@ -12,6 +12,13 @@ export interface SlugFontGpuV8 {
 	curveTexture: Texture;
 	bandTexture: Texture;
 	glProgram: GlProgram;
+	/**
+	 * 1x1 white RGBA8 placeholder. Bound to `uFillGradient` and
+	 * `uFillTexture` when the text has no gradient / no texture so the
+	 * sampler always has a valid texture (WebGL requires this even when
+	 * `uFillMode == 0` and the sampler is never read).
+	 */
+	fallbackWhite: Texture;
 }
 
 /**
@@ -70,12 +77,31 @@ export function slugFontGpuV8(font: SlugFont): SlugFontGpuV8 {
 		fragment: fragSource
 	});
 
-	const cache: SlugFontGpuV8 = {curveTexture, bandTexture, glProgram};
+	// 1x1 white RGBA8. Used as a placeholder for fill samplers when the
+	// text uses solid color (no gradient / no texture). WebGL requires
+	// every sampler binding to be valid even when never sampled, and
+	// changing the bound texture mid-frame is more expensive than always
+	// binding something cheap.
+	const fallbackWhiteData = new Uint8Array([255, 255, 255, 255]);
+	const fallbackWhite = new Texture({
+		source: new BufferImageSource({
+			resource: fallbackWhiteData,
+			width: 1,
+			height: 1,
+			format: 'rgba8unorm',
+			autoGenerateMipmaps: false,
+			scaleMode: 'nearest',
+			alphaMode: 'no-premultiply-alpha'
+		})
+	});
+
+	const cache: SlugFontGpuV8 = {curveTexture, bandTexture, glProgram, fallbackWhite};
 
 	font.gpuCache = cache;
 	font.setGpuDestroy(() => {
 		curveTexture.destroy();
 		bandTexture.destroy();
+		fallbackWhite.destroy();
 	});
 
 	return cache;

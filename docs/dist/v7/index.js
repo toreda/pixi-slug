@@ -10597,15 +10597,17 @@ function reportColorError(message){console.error(`[SlugText:color] ${message}`)}
  */
 /**
  * Normalize any supported color form to an `[r, g, b, a]` tuple in
- * 0..1. Invalid input logs via `console.error` and returns `current`
- * unchanged — the helper never throws and never guesses at user intent.
+ * 0..1 alongside provenance flags. Invalid / null / undefined input
+ * logs via `console.error` (when invalid) and returns `current`
+ * unchanged with both provenance flags false — the helper never throws
+ * and never guesses at user intent.
  *
- * `current` is the tuple the caller wants preserved when input is null,
- * undefined, invalid, or specifies only RGB (no alpha). At `SlugText`
- * init time, callers pass the field default; in setters, they pass the
- * currently stored value.
+ * `rgbProvided` is true when the input form supplied RGB; `alphaProvided`
+ * is true only when the input form carried alpha (8-digit hex,
+ * 4-element array, or 8-digit-number). Both are false for `null` /
+ * `undefined` / invalid input.
  */
-function slugTextColorToRgba(input,current){if(null==input)return[current[0],current[1],current[2],current[3]];let parsed;if("string"==typeof input){if(parsed=
+function slugTextColorParse(input,current){if(null==input)return{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1};let parsed;if("string"==typeof input){if(parsed=
 /**
  * Convert a supported string form to an `{r, g, b, alphaFromInput?}`
  * intermediate representation. `alphaFromInput` is `undefined` when the
@@ -10620,7 +10622,7 @@ return 3===body.length?{r:expandNibble(body[0])/255,g:expandNibble(body[1])/255,
 // 4 digits → RGBA shorthand, alpha from input.
 4===body.length?{r:expandNibble(body[0])/255,g:expandNibble(body[1])/255,b:expandNibble(body[2])/255,alphaFromInput:expandNibble(body[3])/255}:
 // 6 digits → RRGGBB, preserve alpha.
-6===body.length?{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255}:{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255,alphaFromInput:parseByte(body,6)/255}}(input),!parsed)return reportColorError(`Invalid hex string "${input}" — expected 2, 3, 4, 6, or 8 hex digits, optionally prefixed with # or 0x.`),[current[0],current[1],current[2],current[3]]}else if("number"==typeof input){if(parsed=function(n){if(!(0,pos/* isIntPos */.A)(n)||n>4294967295)return null;if(n<=16777215)return{r:(n>>16&255)/255,g:(n>>8&255)/255,b:(255&n)/255};
+6===body.length?{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255}:{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255,alphaFromInput:parseByte(body,6)/255}}(input),!parsed)return reportColorError(`Invalid hex string "${input}" — expected 2, 3, 4, 6, or 8 hex digits, optionally prefixed with # or 0x.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}else if("number"==typeof input){if(parsed=function(n){if(!(0,pos/* isIntPos */.A)(n)||n>4294967295)return null;if(n<=16777215)return{r:(n>>16&255)/255,g:(n>>8&255)/255,b:(255&n)/255};
 // 8-digit RRGGBBAA — mask against 0xffffffff then extract each byte.
 // `>>> 0` forces unsigned 32-bit interpretation for the high byte.
 const u=n>>>0;return{r:(u>>>24&255)/255,g:(u>>>16&255)/255,b:(u>>>8&255)/255,alphaFromInput:(255&u)/255}}
@@ -10630,7 +10632,40 @@ const u=n>>>0;return{r:(u>>>24&255)/255,g:(u>>>16&255)/255,b:(u>>>8&255)/255,alp
  * coarse: if every element is `≤ 1` we normalize; if any element is
  * `> 1` we treat the entire array as 8-bit. Returns null if any element
  * is out-of-range (negative, > 255, or non-finite).
- */(input),!parsed)return reportColorError(`Invalid hex number ${input} — expected a finite integer in 0..0xFFFFFFFF.`),[current[0],current[1],current[2],current[3]]}else{if(!Array.isArray(input))return reportColorError(`Unsupported color input type (${typeof input}). Expected string, number, or [r, g, b] / [r, g, b, a] array.`),[current[0],current[1],current[2],current[3]];if(parsed=function(arr){if(3!==arr.length&&4!==arr.length)return null;for(let i=0;i<arr.length;i++){const v=arr[i];if(!(0,finite.isNumberFinite)(v)||v<0||v>255)return null}let anyAbove1=!1;for(let i=0;i<arr.length;i++)if(arr[i]>1){anyAbove1=!0;break}const scale=anyAbove1?1/255:1,result={r:arr[0]*scale,g:arr[1]*scale,b:arr[2]*scale};return 4===arr.length&&(result.alphaFromInput=arr[3]*scale),result}(input),!parsed)return reportColorError(`Invalid color array [${input.join(", ")}] — each element must be a finite number in 0..255, and the array must have 3 or 4 elements.`),[current[0],current[1],current[2],current[3]]}return[parsed.r,parsed.g,parsed.b,void 0!==parsed.alphaFromInput?parsed.alphaFromInput:current[3]]}
+ */(input),!parsed)return reportColorError(`Invalid hex number ${input} — expected a finite integer in 0..0xFFFFFFFF.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}else{if(!Array.isArray(input))return reportColorError(`Unsupported color input type (${typeof input}). Expected string, number, or [r, g, b] / [r, g, b, a] array.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1};if(parsed=function(arr){if(3!==arr.length&&4!==arr.length)return null;for(let i=0;i<arr.length;i++){const v=arr[i];if(!(0,finite.isNumberFinite)(v)||v<0||v>255)return null}let anyAbove1=!1;for(let i=0;i<arr.length;i++)if(arr[i]>1){anyAbove1=!0;break}const scale=anyAbove1?1/255:1,result={r:arr[0]*scale,g:arr[1]*scale,b:arr[2]*scale};return 4===arr.length&&(result.alphaFromInput=arr[3]*scale),result}(input),!parsed)return reportColorError(`Invalid color array [${input.join(", ")}] — each element must be a finite number in 0..255, and the array must have 3 or 4 elements.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}const alphaProvided=void 0!==parsed.alphaFromInput;return{rgba:[parsed.r,parsed.g,parsed.b,alphaProvided?parsed.alphaFromInput:current[3]],rgbProvided:!0,alphaProvided}}
+/**
+ * Tuple-only convenience wrapper — preserved for the many callers that
+ * don't need provenance flags.
+ */function slugTextColorToRgba(input,current){return slugTextColorParse(input,current).rgba}function reportFillError(message){console.error(`[SlugText:fill] ${message}`)}
+/**
+ * Detect whether an input is a discriminated fill object (gradient or
+ * texture) versus a solid-color form. Solid colors are strings, numbers,
+ * or numeric arrays; gradient/texture inputs are objects with a `type`
+ * field.
+ */function clamp01(n){return Number.isFinite(n)?n<0?0:n>1?1:n:0}function resolveStops(raw){if(!Array.isArray(raw)||raw.length<2)return null;const out=[];for(let i=0;i<raw.length;i++){const stop=raw[i];if(!stop||"object"!=typeof stop)return null;const offset=clamp01(stop.offset),color=slugTextColorToRgba(stop.color,[1,1,1,1]);out.push({offset,color})}return out.sort((a,b)=>a.offset-b.offset),out}
+/**
+ * Resolve a `fill` input into the internal `SlugFillResolved` state.
+ *
+ * Solid-color inputs (string / number / array) parse via the existing
+ * color pipeline and produce `kind: 'solid'` with provenance flags.
+ * Discriminated objects (`{type: 'linear-gradient' | 'radial-gradient'
+ * | 'texture'}`) parse via the gradient/texture branches.
+ *
+ * On invalid input, logs an error and returns a `'solid'` fallback
+ * built from `currentColor` — preserving prior behavior of
+ * `slugTextColorToRgba` which never throws.
+ */
+function slugResolveFill(input,currentColor){if(function(input){if(null===input||"object"!=typeof input)return!1;if(Array.isArray(input))return!1;const t=input.type;return"linear-gradient"===t||"radial-gradient"===t||"texture"===t}(input)){const fill=input;let resolved=null;if("linear-gradient"===fill.type?resolved=function(input){const stops=resolveStops(input.stops);if(!stops)return reportFillError("Linear gradient requires at least 2 stops, each with {offset: number, color: SlugTextColor}."),null;const start=input.start?[Number(input.start[0])||0,Number(input.start[1])||0]:[0,0],end=input.end?[Number(input.end[0])||0,Number(input.end[1])||0]:[1,0];return start[0]===end[0]&&start[1]===end[1]?(reportFillError("Linear gradient start and end points are identical — gradient direction is undefined."),null):{kind:"linear-gradient",stops,start,end,coordinateSpace:"local"===input.coordinateSpace?"local":"normalized",rgbProvided:!0,alphaProvided:!0}}(fill):"radial-gradient"===fill.type?resolved=function(input){const stops=resolveStops(input.stops);if(!stops)return reportFillError("Radial gradient requires at least 2 stops, each with {offset: number, color: SlugTextColor}."),null;const center=input.center?[Number(input.center[0])||0,Number(input.center[1])||0]:[.5,.5],innerRadius=Number.isFinite(input.innerRadius)?Number(input.innerRadius):0,outerRadius=Number.isFinite(input.outerRadius)?Number(input.outerRadius):.5;return outerRadius<=innerRadius?(reportFillError(`Radial gradient outerRadius (${outerRadius}) must be greater than innerRadius (${innerRadius}).`),null):{kind:"radial-gradient",stops,center,innerRadius,outerRadius,coordinateSpace:"local"===input.coordinateSpace?"local":"normalized",rgbProvided:!0,alphaProvided:!0}}(fill):"texture"===fill.type&&(resolved=function(input){return null===input.source||void 0===input.source?(reportFillError("Texture fill requires a source (PIXI.Texture, URL string, base64 data URI, or ImageBitmap)."),null):{kind:"texture",source:input.source,wrap:"repeat"===input.wrap?"repeat":"clamp",filter:"nearest"===input.filter?"nearest":"linear",scale:input.scale?[Number(input.scale[0])||1,Number(input.scale[1])||1]:[1,1],rotation:Number.isFinite(input.rotation)?Number(input.rotation):0,translation:input.translation?[Number(input.translation[0])||0,Number(input.translation[1])||0]:[0,0],rgbProvided:!0,alphaProvided:!0}}(fill)),resolved)return resolved;
+// Invalid gradient/texture — fall through to solid fallback below.
+}const parse=slugTextColorParse(input,currentColor);return{kind:"solid",color:[parse.rgba[0],parse.rgba[1],parse.rgba[2],parse.rgba[3]],rgbProvided:parse.rgbProvided,alphaProvided:parse.alphaProvided}}
+/**
+ * Extract a representative RGBA color from any resolved fill — used by
+ * decoration inheritance when the decoration needs a flat color (e.g.,
+ * a fill change updates a decoration whose own color is unset). For
+ * gradient fills the first stop is used; for texture fills we fall
+ * back to opaque white (the texture itself is what the decoration will
+ * actually render against). Solid fills return their color directly.
+ */function slugFillRepresentativeColor(fill){switch(fill.kind){case"solid":return[fill.color[0],fill.color[1],fill.color[2],fill.color[3]];case"linear-gradient":case"radial-gradient":{const stop=fill.stops[0];return[stop.color[0],stop.color[1],stop.color[2],stop.color[3]]}case"texture":return[1,1,1,1]}}
 /**
  * Structural equality for two resolved decorations. Used by setters
  * to skip a rebuild when an assignment is a no-op.
@@ -10701,7 +10736,13 @@ function resolveAlignInput(value){switch(value){case"start":case"end":case"left"
  * ("Property of exported anonymous class type may not be private or
  * protected"). The `_` convention signals internal use.
  */ // ./src/v7/slug/text.ts
-const SlugTextV7Base=(Base=display_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWords;_direction;_align;_textJustify;_underline;_strikethrough;_overline;
+const SlugTextV7Base=(Base=display_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;
+// Resolved fill — discriminated union of solid / linear-gradient /
+// radial-gradient / texture. `_color` mirrors the representative
+// flat color for legacy callers (quad builder vertex color, stroke
+// pass, decoration inheritance) and is recomputed whenever `_fill`
+// changes.
+_fill;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWords;_direction;_align;_textJustify;_underline;_strikethrough;_overline;
 // Concrete draw records — recomputed eagerly by `_resolveDecorations`
 // whenever any input that feeds them changes (decoration setters,
 // color, font, fontSize). Render code reads ONLY these.
@@ -10717,7 +10758,12 @@ _dropShadow;
          * Called by the subclass constructor after super().
          * Subclass must call rebuild() separately after version-specific init.
          */
-initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),this._color=slugTextColorToRgba(init.options?.fill,Defaults.SlugText.FillColor),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._align=resolveAlignInput(init.options?.align),this._textJustify=resolveTextJustifyInput(init.options?.textJustify),this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
+initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),
+// `init.options.fill` is widened to `SlugTextFill` (color | gradient
+// | texture). The resolver folds invalid input back to the default
+// solid color and emits provenance flags consumed by decoration
+// inheritance.
+this._fill=slugResolveFill(init.options?.fill,Defaults.SlugText.FillColor),this._color=slugFillRepresentativeColor(this._fill),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._align=resolveAlignInput(init.options?.align),this._textJustify=resolveTextJustifyInput(init.options?.textJustify),this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
 // Stroke
 const stroke=init.options?.stroke;this._strokeWidth=(0,dist/* numberValue */.Vg)(stroke?.width,Defaults.SlugText.StrokeWidth),this._strokeColor=slugTextColorToRgba(stroke?.color,Defaults.SlugText.StrokeColor),this._strokeAlphaMode=stroke?.alphaMode??Defaults.SlugText.StrokeAlphaMode,this._strokeAlphaStart=(0,dist/* numberValue */.Vg)(stroke?.alphaStart,Defaults.SlugText.StrokeAlphaStart),this._strokeAlphaRate=(0,dist/* numberValue */.Vg)(stroke?.alphaRate,Defaults.SlugText.StrokeAlphaRate);
 // Drop shadow — presence of the object enables it
@@ -10745,7 +10791,15 @@ get text(){return this._text}set text(value){this._text!==value&&(this._text=val
          * Version-specific subclasses must call this from their `destroy()`
          * override so the registry's ref counter can mark the font for
          * auto-destroy when no other text instances hold it.
-         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3]||(this._color=next,this._resolveDecorations(),this.rebuild())}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}
+         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);"solid"===this._fill.kind&&this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3]||(
+// `color` setter always installs a solid fill. If the previous
+// fill was a gradient/texture, this replaces it.
+this._fill=slugResolveFill(value,this._color),this._color=slugFillRepresentativeColor(this._fill),this._resolveDecorations(),this.rebuild())}
+/**
+         * Full fill input: solid color, linear/radial gradient, or texture.
+         * Setting via `color` is preserved for backward compatibility and
+         * is equivalent to setting `fill` with a color form.
+         */get fill(){return this._fill}set fill(value){const next=slugResolveFill(value,this._color);this._fill=next,this._color=slugFillRepresentativeColor(next),this._resolveDecorations(),this.rebuild()}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}
 /**
          * Block-level text alignment. Stored in logical form — the
          * physical resolution (folding in `direction`) happens in the
