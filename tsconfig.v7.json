@@ -10,6 +10,7 @@
 			"@pixi/core": ["./node_modules/pixi-v7-core"],
 			"@pixi/display": ["./node_modules/pixi-v7-display"],
 			"@pixi/graphics": ["./node_modules/pixi-v7-graphics"],
+			"@pixi/math": ["./node_modules/pixi-v7-math"],
 			"@pixi/mesh": ["./node_modules/pixi-v7-mesh"],
 			"@pixi/ticker": ["./node_modules/pixi-v7-ticker"]
 		}

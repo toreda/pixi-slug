@@ -165,6 +165,32 @@ canvas { border: none; }
 	font-size: 13px;
 	cursor: pointer;
 }
+#sidebar button {
+	padding: 4px 8px;
+	border: 1px solid #444;
+	background: #2a2a4e;
+	color: #eee;
+	border-radius: 4px;
+	font-size: 13px;
+	cursor: pointer;
+}
+#sidebar button:hover { background: #3a3a5e; }
+
+/* Fill-mode-conditional rows: hidden unless the sidebar's
+ * `data-fill-mode` attribute matches a class on the row. wire.js
+ * sets `data-fill-mode` on #sidebar whenever the mode select changes. */
+#sidebar[data-fill-mode="solid"] .fill-mode-linear,
+#sidebar[data-fill-mode="solid"] .fill-mode-radial,
+#sidebar[data-fill-mode="solid"] .fill-mode-texture { display: none; }
+#sidebar[data-fill-mode="linear-gradient"] .fill-mode-radial,
+#sidebar[data-fill-mode="linear-gradient"] .fill-mode-texture { display: none; }
+#sidebar[data-fill-mode="radial-gradient"] .fill-mode-linear,
+#sidebar[data-fill-mode="radial-gradient"] .fill-mode-texture { display: none; }
+#sidebar[data-fill-mode="texture"] .fill-mode-linear,
+#sidebar[data-fill-mode="texture"] .fill-mode-radial { display: none; }
+
+/* The URL input + load button only show when texture preset is "custom". */
+#sidebar:not([data-fill-texture="custom"]) .fill-texture-custom { display: none; }
 #app {
 	flex: 1;
 	overflow: hidden;

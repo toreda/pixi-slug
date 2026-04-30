@@ -29,11 +29,33 @@
 		'Roboto WOFF2':          '../assets/fonts/roboto-fallback.woff2'
 	};
 
-	function hexToRGBA(hex) {
+	function hexToRGBA(hex, alpha) {
 		var r = parseInt(hex.slice(1, 3), 16) / 255;
 		var g = parseInt(hex.slice(3, 5), 16) / 255;
 		var b = parseInt(hex.slice(5, 7), 16) / 255;
-		return [r, g, b, 1];
+		var a = (typeof alpha === 'number') ? alpha : 1;
+		return [r, g, b, a];
+	}
+
+	// Convert a CSS-style gradient angle (degrees, 0 = bottom→top) into
+	// start/end points on the unit square (0..1 normalized bbox UV).
+	// Both points get clamped to the bbox edge; the gradient sweep stays
+	// inside the visible rect.
+	function angleToStartEnd(deg) {
+		// CSS convention: 0deg points up (start at bottom, end at top).
+		// We want the gradient to traverse the full bbox along the chosen
+		// direction. Start at bbox center minus half the direction vector,
+		// end at center plus half the direction. Normalized to a 1x1 box.
+		var rad = (deg - 90) * Math.PI / 180; // -90 so 0deg → up
+		var dx = Math.cos(rad);
+		var dy = Math.sin(rad);
+		// Scale direction so the longer extent reaches the bbox edge.
+		var s = 1 / (Math.abs(dx) + Math.abs(dy) || 1);
+		dx *= s; dy *= s;
+		return {
+			start: [0.5 - dx * 0.5, 0.5 - dy * 0.5],
+			end:   [0.5 + dx * 0.5, 0.5 + dy * 0.5]
+		};
 	}
 
 	// Walk the just-injected sidebar and remove anything tagged with
@@ -121,6 +143,10 @@
 		var addToStage = opts.addToStage;
 		var removeFromStage = opts.removeFromStage;
 		var fonts = opts.fonts || DEFAULT_FONTS;
+		// Optional: per-version texture loader. Returns a Promise<Texture>
+		// (PIXI version-specific shape — wire.js does not type-check). When
+		// absent, the texture URL field renders an error.
+		var loadTexture = opts.loadTexture || null;
 
 		// Resolve sidebar.html relative to this script's URL so each
 		// per-version page can host wire.js from any depth without
@@ -159,6 +185,9 @@
 			var fontStatus = document.getElementById('ctrlFontStatus');
 			var slugText = null;
 			var prunedForFeatures = false;
+			// Cached PIXI Texture from the most recent successful texture
+			// URL load. Reused across re-renders until the URL changes.
+			var loadedFillTexture = null;
 
 			async function loadFont(url) {
 				fontStatus.style.color = '#8b949e';
@@ -174,7 +203,7 @@
 					var textJustifyEl = document.getElementById('ctrlTextJustify');
 					var options = {
 						fontSize: parseInt(document.getElementById('ctrlFontSize').value, 10) || 48,
-						fill: hexToRGBA(document.getElementById('ctrlFillColor').value)
+						fill: buildFillInput()
 					};
 					if (directionEl) options.direction = directionEl.value;
 					if (alignEl) options.align = alignEl.value;
@@ -199,6 +228,7 @@
 					applyStroke();
 					applyShadow();
 					applyWordWrap();
+					applyFill();
 					applyDecoration('underline');
 					applyDecoration('strikethrough');
 					applyDecoration('overline');
@@ -239,6 +269,73 @@
 					alpha: parseFloat(document.getElementById('ctrlShadowAlpha').value),
 					blur: parseFloat(document.getElementById('ctrlShadowBlur').value) || 0
 				};
+			}
+
+			// Build the fill input value from the current sidebar state.
+			// Falls back to a flat color when fill controls are absent
+			// (v6/v7 prune them via data-requires="fill").
+			function buildFillInput() {
+				var modeEl = document.getElementById('ctrlFillMode');
+				var color = document.getElementById('ctrlFillColor').value;
+				if (!modeEl) return hexToRGBA(color);
+				var mode = modeEl.value;
+				if (mode === 'solid') return hexToRGBA(color);
+				if (mode === 'linear-gradient' || mode === 'radial-gradient') {
+					var stop0Color = document.getElementById('ctrlFillStop0Color').value;
+					var stop1Color = document.getElementById('ctrlFillStop1Color').value;
+					var stop0Alpha = parseFloat(document.getElementById('ctrlFillStop0Alpha').value);
+					var stop1Alpha = parseFloat(document.getElementById('ctrlFillStop1Alpha').value);
+					var stops = [
+						{offset: 0, color: hexToRGBA(stop0Color, stop0Alpha)},
+						{offset: 1, color: hexToRGBA(stop1Color, stop1Alpha)}
+					];
+					if (mode === 'linear-gradient') {
+						var deg = parseFloat(document.getElementById('ctrlFillLinearAngle').value) || 0;
+						var pts = angleToStartEnd(deg);
+						return {
+							type: 'linear-gradient',
+							stops: stops,
+							start: pts.start,
+							end: pts.end
+						};
+					}
+					return {
+						type: 'radial-gradient',
+						stops: stops,
+						center: [0.5, 0.5],
+						innerRadius: parseFloat(document.getElementById('ctrlFillRadialInner').value) || 0,
+						outerRadius: parseFloat(document.getElementById('ctrlFillRadialOuter').value) || 0.5
+					};
+				}
+				if (mode === 'texture') {
+					if (!loadedFillTexture) return hexToRGBA(color); // fall back until loaded
+					var fitEl = document.getElementById('ctrlFillTextureFit');
+					var sxEl  = document.getElementById('ctrlFillTextureScaleX');
+					var syEl  = document.getElementById('ctrlFillTextureScaleY');
+					var oxEl  = document.getElementById('ctrlFillTextureOffsetX');
+					var oyEl  = document.getElementById('ctrlFillTextureOffsetY');
+					return {
+						type: 'texture',
+						source: loadedFillTexture,
+						fit: fitEl ? fitEl.value : 'repeat',
+						scaleX: sxEl ? (parseFloat(sxEl.value) || 1) : 1,
+						scaleY: syEl ? (parseFloat(syEl.value) || 1) : 1,
+						offsetX: oxEl ? (parseFloat(oxEl.value) || 0) : 0,
+						offsetY: oyEl ? (parseFloat(oyEl.value) || 0) : 0
+					};
+				}
+				return hexToRGBA(color);
+			}
+
+			function applyFill() {
+				if (!slugText) return;
+				var input = buildFillInput();
+				if ('fill' in slugText) {
+					slugText.fill = input;
+				} else {
+					// v6/v7 don't expose `fill` (yet) — fall back to color.
+					if (Array.isArray(input)) slugText.color = input;
+				}
 			}
 
 			function applyWordWrap() {
@@ -294,9 +391,124 @@
 				};
 			}
 
-			document.getElementById('ctrlFillColor').oninput = function () {
-				if (slugText) slugText.color = hexToRGBA(this.value);
+			document.getElementById('ctrlFillColor').oninput = applyFill;
+
+			// Fill mode + gradient/texture controls. Each may be absent
+			// when the sidebar pruned data-requires="fill" rows.
+			var fillModeEl = document.getElementById('ctrlFillMode');
+			var sidebarHost = document.getElementById('sidebar');
+			function syncFillMode() {
+				if (!fillModeEl || !sidebarHost) return;
+				sidebarHost.setAttribute('data-fill-mode', fillModeEl.value);
+			}
+			if (fillModeEl) {
+				syncFillMode();
+				fillModeEl.onchange = function () {
+					syncFillMode();
+					applyFill();
+				};
+			}
+
+			['ctrlFillStop0Color', 'ctrlFillStop1Color'].forEach(function (id) {
+				var el = document.getElementById(id);
+				if (el) el.oninput = debounce(applyFill);
+			});
+			['ctrlFillStop0Alpha', 'ctrlFillStop1Alpha'].forEach(function (id) {
+				var el = document.getElementById(id);
+				if (el) el.oninput = applyFill;
+			});
+			linkSlider('ctrlFillLinearAngle', 'ctrlFillLinearAngleVal', applyFill);
+			linkSlider('ctrlFillRadialInner', 'ctrlFillRadialInnerVal', applyFill);
+			linkSlider('ctrlFillRadialOuter', 'ctrlFillRadialOuterVal', applyFill);
+
+			var fillTextureLoad = document.getElementById('ctrlFillTextureLoad');
+			var fillTextureStatus = document.getElementById('ctrlFillTextureStatus');
+			var fillTexturePreset = document.getElementById('ctrlFillTexturePreset');
+
+			// Shared loader used by both preset and URL paths. `source` is
+			// either a URL string or an HTMLCanvasElement; loadTexture is
+			// expected to handle both (the v8 example does).
+			function loadFillTextureSource(source, label) {
+				if (!loadTexture) {
+					if (fillTextureStatus) {
+						fillTextureStatus.style.color = '#ff6b6b';
+						fillTextureStatus.textContent = 'No texture loader for this version';
+					}
+					return;
+				}
+				if (fillTextureStatus) {
+					fillTextureStatus.style.color = '#8b949e';
+					fillTextureStatus.textContent = 'Loading ' + (label || '...');
+				}
+				Promise.resolve(loadTexture(source)).then(function (tex) {
+					loadedFillTexture = tex;
+					if (fillTextureStatus) {
+						fillTextureStatus.style.color = '#4ab07a';
+						fillTextureStatus.textContent = 'Loaded';
+					}
+					applyFill();
+				}).catch(function (err) {
+					if (fillTextureStatus) {
+						fillTextureStatus.style.color = '#ff6b6b';
+						fillTextureStatus.textContent = 'Failed: ' + (err && err.message || err);
+					}
+				});
+			}
+
+			function syncFillTexturePreset() {
+				if (!fillTexturePreset || !sidebarHost) return;
+				sidebarHost.setAttribute('data-fill-texture', fillTexturePreset.value);
+			}
+			// Map preset names that load a URL asset (relative to wire.js)
+			// rather than a generated canvas. The URL is resolved against
+			// scriptUrl so the asset still loads when wire.js is hosted
+			// from another path.
+			var fillTextureAssets = {
+				metal:        scriptUrl.replace(/wire\.js(\?.*)?$/, 'textures/metal_pse.jpg'),
+				'fabric-dots':  scriptUrl.replace(/wire\.js(\?.*)?$/, 'textures/fabric_dots.jpg'),
+				'fabric-knit':  scriptUrl.replace(/wire\.js(\?.*)?$/, 'textures/fabric_knit.jpg'),
+				wood:         scriptUrl.replace(/wire\.js(\?.*)?$/, 'textures/wood_grain.jpg')
 			};
+
+			if (fillTexturePreset) {
+				syncFillTexturePreset();
+				fillTexturePreset.onchange = function () {
+					syncFillTexturePreset();
+					if (this.value === 'custom') return; // wait for user to load a URL
+					var assetUrl = fillTextureAssets[this.value];
+					if (assetUrl) loadFillTextureSource(assetUrl, this.value);
+				};
+			}
+
+			if (fillTextureLoad) {
+				fillTextureLoad.onclick = function () {
+					var url = (document.getElementById('ctrlFillTextureUrl').value || '').trim();
+					if (!url) {
+						if (fillTextureStatus) {
+							fillTextureStatus.style.color = '#ff6b6b';
+							fillTextureStatus.textContent = 'Enter a URL';
+						}
+						return;
+					}
+					loadFillTextureSource(url, url);
+				};
+			}
+
+			['ctrlFillTextureFit',
+			 'ctrlFillTextureScaleX', 'ctrlFillTextureScaleY',
+			 'ctrlFillTextureOffsetX', 'ctrlFillTextureOffsetY'].forEach(function (id) {
+				var el = document.getElementById(id);
+				if (!el) return;
+				if (el.tagName === 'SELECT') el.onchange = applyFill;
+				else el.oninput = applyFill;
+			});
+
+			// Pre-load the default preset so switching the fill mode to
+			// Texture immediately renders something.
+			if (fillTexturePreset && fillTexturePreset.value !== 'custom' && loadTexture) {
+				var initialAsset = fillTextureAssets[fillTexturePreset.value];
+				if (initialAsset) loadFillTextureSource(initialAsset, fillTexturePreset.value);
+			}
 
 			document.getElementById('ctrlWordWrap').onchange = applyWordWrap;
 			document.getElementById('ctrlBreakWords').onchange = applyWordWrap;

@@ -87,6 +87,9 @@ importers:
       pixi-v6-graphics:
         specifier: npm:@pixi/graphics@^6.5.10
         version: '@pixi/graphics@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/utils@7.4.3)'
+      pixi-v6-math:
+        specifier: npm:@pixi/math@^6.5.10
+        version: '@pixi/math@6.5.10'
       pixi-v6-mesh:
         specifier: npm:@pixi/mesh@^6.5.10
         version: '@pixi/mesh@6.5.10(@pixi/constants@7.4.3)(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))(@pixi/math@7.4.3)(@pixi/settings@7.4.3)(@pixi/utils@7.4.3)'
@@ -105,6 +108,9 @@ importers:
       pixi-v7-graphics:
         specifier: npm:@pixi/graphics@^7.4.3
         version: '@pixi/graphics@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))'
+      pixi-v7-math:
+        specifier: npm:@pixi/math@^7.4.3
+        version: '@pixi/math@7.4.3'
       pixi-v7-mesh:
         specifier: npm:@pixi/mesh@^7.4.3
         version: '@pixi/mesh@7.4.3(@pixi/core@7.4.3)(@pixi/display@7.4.3(@pixi/core@7.4.3))'
@@ -556,6 +562,9 @@ packages:
       '@pixi/core': 7.4.3
       '@pixi/display': 7.4.3
       '@pixi/sprite': 7.4.3
+
+  '@pixi/math@6.5.10':
+    resolution: {integrity: sha512-fxeu7ykVbMGxGV2S3qRTupHToeo1hdWBm8ihyURn3BMqJZe2SkZEECPd5RyvIuuNUtjRnmhkZRnF3Jsz2S+L0g==}
 
   '@pixi/math@7.4.3':
     resolution: {integrity: sha512-/uJOVhR2DOZ+zgdI6Bs/CwcXT4bNRKsS+TqX3ekRIxPCwaLra+Qdm7aDxT5cTToDzdxbKL5+rwiLu3Y1egILDw==}
@@ -3387,6 +3396,8 @@ snapshots:
     dependencies:
       '@pixi/core': 7.4.3
       '@pixi/display': 7.4.3(@pixi/core@7.4.3)
+
+  '@pixi/math@6.5.10': {}
 
   '@pixi/math@7.4.3': {}
 

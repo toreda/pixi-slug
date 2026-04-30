@@ -32,6 +32,80 @@
 		<label for="ctrlFillColor">Fill</label>
 		<input type="color" id="ctrlFillColor" value="#ffffff">
 	</div>
+	<div class="ctrl-row" data-requires="fill">
+		<label for="ctrlFillMode">Mode</label>
+		<select id="ctrlFillMode">
+			<option value="solid" selected>Solid</option>
+			<option value="linear-gradient">Linear gradient</option>
+			<option value="radial-gradient">Radial gradient</option>
+			<option value="texture">Texture</option>
+		</select>
+	</div>
+	<div class="ctrl-row fill-mode-linear fill-mode-radial" data-requires="fill">
+		<label for="ctrlFillStop0Color">Stop 0</label>
+		<input type="color" id="ctrlFillStop0Color" value="#ff0000">
+		<input type="range" id="ctrlFillStop0Alpha" value="1" min="0" max="1" step="0.05">
+	</div>
+	<div class="ctrl-row fill-mode-linear fill-mode-radial" data-requires="fill">
+		<label for="ctrlFillStop1Color">Stop 1</label>
+		<input type="color" id="ctrlFillStop1Color" value="#0000ff">
+		<input type="range" id="ctrlFillStop1Alpha" value="1" min="0" max="1" step="0.05">
+	</div>
+	<div class="ctrl-row fill-mode-linear" data-requires="fill">
+		<label for="ctrlFillLinearAngle">Angle</label>
+		<input type="range" id="ctrlFillLinearAngle" value="0" min="0" max="360" step="1">
+		<input type="number" id="ctrlFillLinearAngleVal" class="slider-val" value="0">
+	</div>
+	<div class="ctrl-row fill-mode-radial" data-requires="fill">
+		<label for="ctrlFillRadialInner">Inner R</label>
+		<input type="range" id="ctrlFillRadialInner" value="0" min="0" max="1" step="0.02">
+		<input type="number" id="ctrlFillRadialInnerVal" class="slider-val" value="0" step="0.02">
+	</div>
+	<div class="ctrl-row fill-mode-radial" data-requires="fill">
+		<label for="ctrlFillRadialOuter">Outer R</label>
+		<input type="range" id="ctrlFillRadialOuter" value="0.5" min="0.05" max="1.5" step="0.02">
+		<input type="number" id="ctrlFillRadialOuterVal" class="slider-val" value="0.5" step="0.02">
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTexturePreset">Preset</label>
+		<select id="ctrlFillTexturePreset" style="flex: 1;">
+			<option value="metal" selected>Metal (seamless)</option>
+			<option value="fabric-dots">Fabric — dots (seamless)</option>
+			<option value="fabric-knit">Fabric — knit (seamless)</option>
+			<option value="wood">Wood grain (seamless)</option>
+			<option value="custom">Custom URL...</option>
+		</select>
+	</div>
+	<div class="ctrl-row fill-mode-texture fill-texture-custom" data-requires="fill">
+		<label for="ctrlFillTextureUrl">URL</label>
+		<input type="text" id="ctrlFillTextureUrl" placeholder="texture.png" style="flex: 1;">
+	</div>
+	<div class="ctrl-row fill-mode-texture fill-texture-custom" data-requires="fill">
+		<button type="button" id="ctrlFillTextureLoad" style="width: 100%;">Load URL</button>
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<span id="ctrlFillTextureStatus" style="font-size: 12px; color: #8b949e;"></span>
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTextureFit">Fit</label>
+		<select id="ctrlFillTextureFit">
+			<option value="stretch">Stretch</option>
+			<option value="repeat" selected>Repeat</option>
+			<option value="clamp">Clamp</option>
+		</select>
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTextureScaleX">Scale X</label>
+		<input type="number" id="ctrlFillTextureScaleX" value="1" step="0.1" style="flex: 1;">
+		<label for="ctrlFillTextureScaleY" style="min-width: auto;">Y</label>
+		<input type="number" id="ctrlFillTextureScaleY" value="1" step="0.1" style="flex: 1;">
+	</div>
+	<div class="ctrl-row fill-mode-texture" data-requires="fill">
+		<label for="ctrlFillTextureOffsetX">Offset X</label>
+		<input type="number" id="ctrlFillTextureOffsetX" value="0" step="1" style="flex: 1;">
+		<label for="ctrlFillTextureOffsetY" style="min-width: auto;">Y</label>
+		<input type="number" id="ctrlFillTextureOffsetY" value="0" step="1" style="flex: 1;">
+	</div>
 	<div class="ctrl-row" data-requires="direction">
 		<label for="ctrlDirection">Dir</label>
 		<select id="ctrlDirection">
