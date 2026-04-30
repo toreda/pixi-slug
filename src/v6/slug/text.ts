@@ -39,7 +39,6 @@ const SlugTextV6Base = SlugTextMixin(Container);
  */
 export class SlugText extends SlugTextV6Base {
 	private _meshes: Mesh<Shader>[];
-	private _shader: Shader | null;
 	/** Graphics child for underline/strikethrough/overline decorations. */
 	private _decorations: Graphics | null;
 	/**
@@ -52,7 +51,6 @@ export class SlugText extends SlugTextV6Base {
 		super();
 		this.initBase(init);
 		this._meshes = [];
-		this._shader = null;
 		this._decorations = null;
 		this._fillGpu = null;
 
@@ -60,14 +58,16 @@ export class SlugText extends SlugTextV6Base {
 	}
 
 	public onSupersamplingChanged(): void {
-		if (this._shader) {
-			this._shader.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
+		const value = this._supersampling ? this._supersampleCount : 0;
+		for (const mesh of this._meshes) {
+			mesh.shader.uniforms.uSupersampleCount = value;
 		}
 	}
 
 	public onSupersampleCountChanged(): void {
-		if (this._shader && this._supersampling) {
-			this._shader.uniforms.uSupersampleCount = this._supersampleCount;
+		if (!this._supersampling) return;
+		for (const mesh of this._meshes) {
+			mesh.shader.uniforms.uSupersampleCount = this._supersampleCount;
 		}
 	}
 
@@ -143,7 +143,6 @@ export class SlugText extends SlugTextV6Base {
 			mesh.destroy();
 		}
 		this._meshes = [];
-		this._shader = null;
 		if (this._decorations) {
 			this.removeChild(this._decorations);
 			this._decorations.destroy();
@@ -297,8 +296,7 @@ export class SlugText extends SlugTextV6Base {
 		}
 
 		if (fillQuads.quadCount > 0) {
-			const {mesh, shader} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
-			this._shader = shader;
+			const {mesh} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
 			this.addChild(mesh);
 			this._meshes.push(mesh);
 

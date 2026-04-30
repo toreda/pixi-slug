@@ -12,7 +12,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 
 * No atlases or SDFs. Just Béziers on the GPU.
 * Supports TrueType (`.ttf`), OpenType (`.otf`), and WOFF/WOFF2 fonts — including cubic-outline (CFF) fonts.
-* Word wrap, newlines, underline, strikethrough, and overline.
+* Word wrap, newlines, underline, strikethrough, overline, gradient fill, texture fill.
 * Works with PixiJS `v8`, `v7`, and `v6`.
 
 &nbsp;

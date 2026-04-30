@@ -46,8 +46,6 @@ const SlugTextV8Base = SlugTextMixin(Container);
 export class SlugText extends SlugTextV8Base {
 	/** All meshes for the current text (shadow + stroke + fill). */
 	private _meshes: Mesh<Geometry, Shader>[];
-	/** Uniforms for the fill pass (controls supersampling). */
-	private _uniforms: UniformGroup | null;
 	/** Graphics child for underline/strikethrough/overline decorations. */
 	private _decorations: Graphics | null;
 	/**
@@ -62,7 +60,6 @@ export class SlugText extends SlugTextV8Base {
 		super();
 		this.initBase(init);
 		this._meshes = [];
-		this._uniforms = null;
 		this._decorations = null;
 		this._fillGpu = null;
 
@@ -70,14 +67,20 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	public onSupersamplingChanged(): void {
-		if (this._uniforms) {
-			this._uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
+		const value = this._supersampling ? this._supersampleCount : 0;
+		for (const mesh of this._meshes) {
+			if (!mesh.shader) continue;
+			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
+			group.uniforms.uSupersampleCount = value;
 		}
 	}
 
 	public onSupersampleCountChanged(): void {
-		if (this._uniforms && this._supersampling) {
-			this._uniforms.uniforms.uSupersampleCount = this._supersampleCount;
+		if (!this._supersampling) return;
+		for (const mesh of this._meshes) {
+			if (!mesh.shader) continue;
+			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
+			group.uniforms.uSupersampleCount = this._supersampleCount;
 		}
 	}
 
@@ -182,7 +185,6 @@ export class SlugText extends SlugTextV8Base {
 			this._decorations.destroy();
 			this._decorations = null;
 		}
-		this._uniforms = null;
 		// Dispose previous gradient LUT before creating a new one. User-
 		// supplied fill textures are not owned and not destroyed.
 		if (this._fillGpu) {
@@ -357,8 +359,7 @@ export class SlugText extends SlugTextV8Base {
 
 		// --- Fill pass (uses the resolved fill mode) ---
 		if (fillQuads.quadCount > 0) {
-			const {mesh, uniforms} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
-			this._uniforms = uniforms;
+			const {mesh} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
 			this.addChild(mesh);
 			this._meshes.push(mesh);
 

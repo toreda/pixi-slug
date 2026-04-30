@@ -58,6 +58,20 @@ export class SlugText extends SlugTextV7Base {
 		this.rebuild();
 	}
 
+	public onSupersamplingChanged(): void {
+		const value = this._supersampling ? this._supersampleCount : 0;
+		for (const mesh of this._meshes) {
+			mesh.shader.uniforms.uSupersampleCount = value;
+		}
+	}
+
+	public onSupersampleCountChanged(): void {
+		if (!this._supersampling) return;
+		for (const mesh of this._meshes) {
+			mesh.shader.uniforms.uSupersampleCount = this._supersampleCount;
+		}
+	}
+
 	private _makeQuads(
 		font: SlugFont,
 		lines: string[],
