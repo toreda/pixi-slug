@@ -20,4 +20,20 @@ export class Constants {
 
 	/** Number of indices per glyph quad (two triangles × 3 indices). */
 	public static readonly INDICES_PER_QUAD = 6 as const;
+
+	/**
+	 * Bytes per float in the vertex buffer. The Slug vertex layout is
+	 * exclusively `float32`, so this is also the byte size of one
+	 * vertex-attribute scalar. Used to convert between float-indexed
+	 * and byte-indexed offsets when describing the geometry layout.
+	 */
+	public static readonly BYTES_PER_FLOAT = 4 as const;
+
+	/**
+	 * Floats per vec4 vertex attribute. Every Slug vertex attribute
+	 * (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+	 * `aColor`) is a `float32x4`, so each one steps the buffer cursor
+	 * forward by this many floats.
+	 */
+	public static readonly FLOATS_PER_VEC4 = 4 as const;
 }

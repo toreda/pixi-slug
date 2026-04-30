@@ -18,6 +18,7 @@ import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
 import type {SlugFont} from '../../shared/slug/font';
+import {Constants} from '../../constants';
 
 const SlugTextV7Base = SlugTextMixin(Container);
 
@@ -106,15 +107,16 @@ export class SlugText extends SlugTextV7Base {
 		fillBounds: [number, number, number, number],
 		strokeExpand: number = 0
 	): {mesh: Mesh<Shader>; shader: Shader} {
-		const stride = 20 * 4;
+		const stride = Constants.FLOATS_PER_VERTEX * Constants.BYTES_PER_FLOAT;
+		const vec4Bytes = Constants.FLOATS_PER_VEC4 * Constants.BYTES_PER_FLOAT;
 		const vertexBuffer = new Buffer(quads.vertices.buffer as ArrayBuffer, true);
 		const geometry = new Geometry();
 
 		geometry.addAttribute('aPositionNormal', vertexBuffer, 4, false, TYPES.FLOAT, stride, 0);
-		geometry.addAttribute('aTexcoord', vertexBuffer, 4, false, TYPES.FLOAT, stride, 4 * 4);
-		geometry.addAttribute('aJacobian', vertexBuffer, 4, false, TYPES.FLOAT, stride, 8 * 4);
-		geometry.addAttribute('aBanding', vertexBuffer, 4, false, TYPES.FLOAT, stride, 12 * 4);
-		geometry.addAttribute('aColor', vertexBuffer, 4, false, TYPES.FLOAT, stride, 16 * 4);
+		geometry.addAttribute('aTexcoord', vertexBuffer, 4, false, TYPES.FLOAT, stride, vec4Bytes);
+		geometry.addAttribute('aJacobian', vertexBuffer, 4, false, TYPES.FLOAT, stride, vec4Bytes * 2);
+		geometry.addAttribute('aBanding', vertexBuffer, 4, false, TYPES.FLOAT, stride, vec4Bytes * 3);
+		geometry.addAttribute('aColor', vertexBuffer, 4, false, TYPES.FLOAT, stride, vec4Bytes * 4);
 
 		const indices16 = new Uint16Array(quads.indices.length);
 		for (let i = 0; i < quads.indices.length; i++) {
@@ -227,14 +229,13 @@ export class SlugText extends SlugTextV7Base {
 		// gradient/texture sample area, so we use the fill pass — that
 		// matches the user's intent of the gradient covering the visible
 		// glyphs.
-		const FLOATS_PER_VERTEX = 20;
 		let bboxMinX = 0, bboxMinY = 0, bboxMaxX = 0, bboxMaxY = 0;
 		if (fillQuads.quadCount > 0) {
 			bboxMinX = Infinity;
 			bboxMinY = Infinity;
 			bboxMaxX = -Infinity;
 			bboxMaxY = -Infinity;
-			for (let i = 0; i < fillQuads.vertices.length; i += FLOATS_PER_VERTEX) {
+			for (let i = 0; i < fillQuads.vertices.length; i += Constants.FLOATS_PER_VERTEX) {
 				const vx = fillQuads.vertices[i];
 				const vy = fillQuads.vertices[i + 1];
 				if (vx < bboxMinX) bboxMinX = vx;
@@ -257,11 +258,10 @@ export class SlugText extends SlugTextV7Base {
 		// --- Drop shadow pass (always solid color, mode 0) ---
 		if (hasShadow) {
 			const ds = this._dropShadow!;
-			const shadowAlpha = ds.alpha ?? 1;
-			const shadowColor: [number, number, number, number] = ds.color
-				? [ds.color[0], ds.color[1], ds.color[2], shadowAlpha]
-				: [0, 0, 0, shadowAlpha];
-			const blur = ds.blur ?? 0;
+			const shadowAlpha = ds.alpha;
+			const shadowColor: [number, number, number, number] =
+				[ds.color[0], ds.color[1], ds.color[2], shadowAlpha];
+			const blur = ds.blur;
 
 			const shadowQuads = this._makeQuads(font, lines, shadowColor, blur);
 
@@ -280,10 +280,8 @@ export class SlugText extends SlugTextV7Base {
 					shader.uniforms.uStrokeAlphaStart = shadowAlpha;
 					shader.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
 				}
-				const angle = ds.angle ?? Math.PI / 6;
-				const dist = ds.distance ?? 5;
-				mesh.x = Math.cos(angle) * dist;
-				mesh.y = Math.sin(angle) * dist;
+				mesh.x = Math.cos(ds.angle) * ds.distance;
+				mesh.y = Math.sin(ds.angle) * ds.distance;
 				this.addChild(mesh);
 				this._meshes.push(mesh);
 			}
