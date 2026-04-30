@@ -273,6 +273,22 @@ text.color = [255, 0, 0, 128];    // 4-elem 0..255
 
 **Invalid input:** malformed hex strings, numbers out of range, or arrays with bad shapes log `console.error` and leave the existing color unchanged — `SlugText` never throws on a color parse failure.
 
+**Type aliases:** color *getters* (`text.color`, `text.strokeColor`, `text.dropShadow.color`) return a normalized `[r, g, b, a]` tuple with each component in `0..1`. Two type aliases describe this shape and are exported from each version entry point so your own helpers can reference them directly:
+
+```typescript
+import type {Rgba, RgbaReadonly} from 'pixi-slug';      // or '/v7' / '/v6'
+
+// Mutable: the form returned by getters and stored on SlugText.
+const c: Rgba = text.color;
+
+// Read-only: use for parameters and fields that must not mutate the tuple.
+function tint(color: RgbaReadonly): Rgba {
+    return [color[0] * 0.5, color[1] * 0.5, color[2] * 0.5, color[3]];
+}
+```
+
+Both are aliases for `[number, number, number, number]` — they exist purely so IDE hints and `.d.ts` output read as "RGBA" instead of an unnamed 4-tuple.
+
 Full specification: [_features/color_input.md](_features/color_input.md).
 
 ## Aliases

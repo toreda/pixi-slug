@@ -10298,7 +10298,21 @@ static FLOATS_PER_VERTEX=20;
 /** Number of vertices per glyph quad (one quad = 4 corners). */
 static VERTICES_PER_QUAD=4;
 /** Number of indices per glyph quad (two triangles × 3 indices). */
-static INDICES_PER_QUAD=6}// ./src/shared/slug/glyph/quad.ts
+static INDICES_PER_QUAD=6;
+/**
+     * Bytes per float in the vertex buffer. The Slug vertex layout is
+     * exclusively `float32`, so this is also the byte size of one
+     * vertex-attribute scalar. Used to convert between float-indexed
+     * and byte-indexed offsets when describing the geometry layout.
+     */
+static BYTES_PER_FLOAT=4;
+/**
+     * Floats per vec4 vertex attribute. Every Slug vertex attribute
+     * (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+     * `aColor`) is a `float32x4`, so each one steps the buffer cursor
+     * forward by this many floats.
+     */
+static FLOATS_PER_VEC4=4}// ./src/shared/slug/glyph/quad.ts
 /** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
 const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
 /**
@@ -11054,11 +11068,15 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
      * sampler bindings (gradient LUT or user texture). Pass-specific
      * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
      * the caller doesn't repeat the pattern across shadow / stroke / fill.
-     */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,16),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,32),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,48),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,80,64);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,shader.uniforms.uStrokeExpand=strokeExpand,shader.uniforms.uFillMode=fillGpu.mode,shader.uniforms.uFillBoundsPx=new Float32Array(fillBounds),shader.uniforms.uFillParams0=new Float32Array(fillGpu.params0),shader.uniforms.uFillTextureSizePx=new Float32Array(fillGpu.textureSizePx),shader.uniforms.uFillTextureFit=fillGpu.textureFit,shader.uniforms.uFillTextureScale=new Float32Array(fillGpu.textureScale),shader.uniforms.uFillTextureOffset=new Float32Array(fillGpu.textureOffset),
+     */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,vec4Bytes),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,2*vec4Bytes),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,3*vec4Bytes),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,4*vec4Bytes);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,shader.uniforms.uStrokeExpand=strokeExpand,shader.uniforms.uFillMode=fillGpu.mode,shader.uniforms.uFillBoundsPx=new Float32Array(fillBounds),shader.uniforms.uFillParams0=new Float32Array(fillGpu.params0),shader.uniforms.uFillTextureSizePx=new Float32Array(fillGpu.textureSizePx),shader.uniforms.uFillTextureFit=fillGpu.textureFit,shader.uniforms.uFillTextureScale=new Float32Array(fillGpu.textureScale),shader.uniforms.uFillTextureOffset=new Float32Array(fillGpu.textureOffset),
 // Bind the fill samplers. When the fill is solid both stay on
 // fallbackWhite (already bound by slugShader); otherwise swap in
 // the gradient LUT or user texture.
-fillGpu.gradient&&(shader.uniforms.uFillGradient=fillGpu.gradient),fillGpu.texture&&(shader.uniforms.uFillTexture=fillGpu.texture),{mesh:new mesh_root_PIXI_.Mesh(geometry,shader),shader}}rebuild(){this._rebuildCount++;for(const mesh of this._meshes)this.removeChild(mesh),mesh.destroy();this._meshes=[],this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),
+fillGpu.gradient&&(shader.uniforms.uFillGradient=fillGpu.gradient),fillGpu.texture&&(shader.uniforms.uFillTexture=fillGpu.texture),{mesh:new mesh_root_PIXI_.Mesh(geometry,shader),shader}}rebuild(){this._rebuildCount++;
+// Tear down previous meshes and drop them from `_meshes` in the
+// same reverse pass — reusing the array avoids per-rebuild GC
+// pressure.
+for(let i=this._meshes.length-1;i>=0;i--){const mesh=this._meshes[i];this.removeChild(mesh),mesh.destroy(),this._meshes.pop()}this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),
 // Dispose previous gradient LUT before creating a new one. User-
 // supplied fill textures are not owned and not destroyed.
 this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null);const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.glyphs.size)return;const gpu=slugFontGpuV7(font),hasShadow=null!==this._dropShadow,hasStroke=this._strokeWidth>0,scale=this._fontSize/font.unitsPerEm,wrapping=this._wordWrap&&this._wordWrapWidth>0,hasNewline=this._text.indexOf("\n")>=0;let lines;if(wrapping||hasNewline){const width=wrapping?this._wordWrapWidth:0;lines=// ./src/shared/slug/text/wrap.ts
@@ -11097,11 +11115,11 @@ lines.push(""),{lines}}(this._text,font.advances,scale,width,this._breakWords).l
 // gradient/texture sample area, so we use the fill pass — that
 // matches the user's intent of the gradient covering the visible
 // glyphs.
-let bboxMinX=0,bboxMinY=0,bboxMaxX=0,bboxMaxY=0;if(fillQuads.quadCount>0){bboxMinX=1/0,bboxMinY=1/0,bboxMaxX=-1/0,bboxMaxY=-1/0;for(let i=0;i<fillQuads.vertices.length;i+=20){const vx=fillQuads.vertices[i],vy=fillQuads.vertices[i+1];vx<bboxMinX&&(bboxMinX=vx),vx>bboxMaxX&&(bboxMaxX=vx),vy<bboxMinY&&(bboxMinY=vy),vy>bboxMaxY&&(bboxMaxY=vy)}}const fillBounds=[bboxMinX,bboxMinY,Math.max(bboxMaxX-bboxMinX,1),Math.max(bboxMaxY-bboxMinY,1)];
+let bboxMinX=0,bboxMinY=0,bboxMaxX=0,bboxMaxY=0;if(fillQuads.quadCount>0){bboxMinX=1/0,bboxMinY=1/0,bboxMaxX=-1/0,bboxMaxY=-1/0;for(let i=0;i<fillQuads.vertices.length;i+=Constants.FLOATS_PER_VERTEX){const vx=fillQuads.vertices[i],vy=fillQuads.vertices[i+1];vx<bboxMinX&&(bboxMinX=vx),vx>bboxMaxX&&(bboxMaxX=vx),vy<bboxMinY&&(bboxMinY=vy),vy>bboxMaxY&&(bboxMaxY=vy)}}const fillBounds=[bboxMinX,bboxMinY,Math.max(bboxMaxX-bboxMinX,1),Math.max(bboxMaxY-bboxMinY,1)];
 // Build per-instance fill GPU resources (gradient LUT or wrapped
 // fill texture). Solid fills produce a no-op record.
 // --- Drop shadow pass (always solid color, mode 0) ---
-if(this._fillGpu=slugBuildFillGpuV7(this._fill),hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha??1,shadowColor=ds.color?[ds.color[0],ds.color[1],ds.color[2],shadowAlpha]:[0,0,0,shadowAlpha],blur=ds.blur??0,shadowQuads=this._makeQuads(font,lines,shadowColor,blur);if(shadowQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(shadowQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const solidGpu=slugBuildFillGpuV7({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,shader}=this._buildMesh(shadowQuads,gpu,solidGpu,fillBounds,blur);blur>0&&(shader.uniforms.uStrokeAlphaStart=shadowAlpha,shader.uniforms.uStrokeAlphaRate=-shadowAlpha/blur);const angle=ds.angle??Math.PI/6,dist=ds.distance??5;mesh.x=Math.cos(angle)*dist,mesh.y=Math.sin(angle)*dist,this.addChild(mesh),this._meshes.push(mesh)}}
+if(this._fillGpu=slugBuildFillGpuV7(this._fill),hasShadow){const ds=this._dropShadow,shadowAlpha=ds.alpha,shadowColor=[ds.color[0],ds.color[1],ds.color[2],shadowAlpha],blur=ds.blur,shadowQuads=this._makeQuads(font,lines,shadowColor,blur);if(shadowQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(shadowQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const solidGpu=slugBuildFillGpuV7({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,shader}=this._buildMesh(shadowQuads,gpu,solidGpu,fillBounds,blur);blur>0&&(shader.uniforms.uStrokeAlphaStart=shadowAlpha,shader.uniforms.uStrokeAlphaRate=-shadowAlpha/blur),mesh.x=Math.cos(ds.angle)*ds.distance,mesh.y=Math.sin(ds.angle)*ds.distance,this.addChild(mesh),this._meshes.push(mesh)}}
 // --- Stroke pass (always solid color, mode 0) ---
 if(hasStroke){const strokeQuads=this._makeQuads(font,lines,this._strokeColor,this._strokeWidth);if(strokeQuads.quadCount>0){needsShift&&slugApplyLineLayoutX(strokeQuads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX);const solidGpu=slugBuildFillGpuV7({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,shader}=this._buildMesh(strokeQuads,gpu,solidGpu,fillBounds,this._strokeWidth);shader.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,shader.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}}
 // --- Fill pass (uses the resolved fill mode) ---

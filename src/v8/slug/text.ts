@@ -78,9 +78,14 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	public onSupersampleCountChanged(): void {
-		if (!this._supersampling) return;
+		if (!this._supersampling) {
+			return;
+		}
+
 		for (const mesh of this._meshes) {
-			if (!mesh.shader) continue;
+			if (!mesh.shader) {
+				continue;
+			}
 			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
 			group.uniforms.uSupersampleCount = this._supersampleCount;
 		}

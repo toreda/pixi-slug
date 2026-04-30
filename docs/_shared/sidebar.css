@@ -37,8 +37,8 @@ canvas { border: none; }
 	flex: 1;
 }
 #sidebar {
-	width: 220px;
-	min-width: 220px;
+	width: 264px;
+	min-width: 264px;
 	padding: 14px 12px;
 	background: #1a1a2e;
 	font-size: 13px;
