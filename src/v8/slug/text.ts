@@ -162,13 +162,26 @@ export class SlugText extends SlugTextV8Base {
 			const scale = this._fontSize / font.unitsPerEm;
 			const lineHeight = (font.ascender - font.descender) * scale;
 			return slugGlyphQuadsMultiline(
-				lines, font.glyphs, font.advances, font.unitsPerEm,
-				this._fontSize, font.textureWidth, lineHeight, color, extraExpand
+				lines,
+				font.glyphs,
+				font.advances,
+				font.unitsPerEm,
+				this._fontSize,
+				font.textureWidth,
+				lineHeight,
+				color,
+				extraExpand
 			);
 		}
 		return slugGlyphQuads(
-			lines[0] || '', font.glyphs, font.advances, font.unitsPerEm,
-			this._fontSize, font.textureWidth, color, extraExpand
+			lines[0] || '',
+			font.glyphs,
+			font.advances,
+			font.unitsPerEm,
+			this._fontSize,
+			font.textureWidth,
+			color,
+			extraExpand
 		);
 	}
 
@@ -181,7 +194,15 @@ export class SlugText extends SlugTextV8Base {
 		for (const mesh of this._meshes) {
 			this.removeChild(mesh);
 		}
-		this._meshes = [];
+
+		// Minor optimization to reduce GC pressure. Create `this._meshes` if it
+		// doesn't exist, then clear the array on every call after.
+		if (Array.isArray(this._meshes)) {
+			this._meshes.length = 0;
+		} else {
+			this._meshes = [];
+		}
+
 		if (this._decorations) {
 			this.removeChild(this._decorations);
 			this._decorations.destroy();
@@ -246,9 +267,7 @@ export class SlugText extends SlugTextV8Base {
 			this._textJustify,
 			(c) => font.glyphs.has(c)
 		);
-		const needsShift =
-			layout.perGlyphShiftX !== null ||
-			layout.lineOffsetX.some((x) => x !== 0);
+		const needsShift = layout.perGlyphShiftX !== null || layout.lineOffsetX.some((x) => x !== 0);
 
 		// --- Build fill quads first so we can derive the bbox before the
 		//     shadow / stroke passes need it for the fill UV uniform.
@@ -262,7 +281,10 @@ export class SlugText extends SlugTextV8Base {
 		// gradient/texture sample area, so we use the fill pass — that
 		// matches the user's intent of the gradient covering the visible
 		// glyphs.
-		let bboxMinX = 0, bboxMinY = 0, bboxMaxX = 0, bboxMaxY = 0;
+		let bboxMinX = 0,
+			bboxMinY = 0,
+			bboxMaxX = 0,
+			bboxMaxY = 0;
 		if (fillQuads.quadCount > 0) {
 			bboxMinX = Infinity;
 			bboxMinY = Infinity;
@@ -292,15 +314,24 @@ export class SlugText extends SlugTextV8Base {
 		if (hasShadow) {
 			const ds = this._dropShadow!;
 			const shadowAlpha = ds.alpha;
-			const shadowColor: [number, number, number, number] =
-				[ds.color[0], ds.color[1], ds.color[2], shadowAlpha];
+			const shadowColor: [number, number, number, number] = [
+				ds.color[0],
+				ds.color[1],
+				ds.color[2],
+				shadowAlpha
+			];
 			const blur = ds.blur;
 
 			const shadowQuads = this._makeQuads(font, lines, shadowColor, blur);
 
 			if (shadowQuads.quadCount > 0) {
 				if (needsShift) {
-					slugApplyLineLayoutX(shadowQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+					slugApplyLineLayoutX(
+						shadowQuads,
+						lineQuadCounts,
+						layout.lineOffsetX,
+						layout.perGlyphShiftX
+					);
 				}
 				const solidGpu = slugBuildFillGpuV8({
 					kind: 'solid',
@@ -332,7 +363,12 @@ export class SlugText extends SlugTextV8Base {
 
 			if (strokeQuads.quadCount > 0) {
 				if (needsShift) {
-					slugApplyLineLayoutX(strokeQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+					slugApplyLineLayoutX(
+						strokeQuads,
+						lineQuadCounts,
+						layout.lineOffsetX,
+						layout.perGlyphShiftX
+					);
 				}
 				const solidGpu = slugBuildFillGpuV8({
 					kind: 'solid',
@@ -382,13 +418,17 @@ export class SlugText extends SlugTextV8Base {
 		// glyphs. The decoration's resolved alpha (which honors per-
 		// channel sticky overrides) multiplies onto the PIXI fill via
 		// `Graphics.fill({fill, alpha})`.
-		const ul = this._underlineDraw, st = this._strikethroughDraw, ol = this._overlineDraw;
+		const ul = this._underlineDraw,
+			st = this._strikethroughDraw,
+			ol = this._overlineDraw;
 		if ((ul.enabled || st.enabled || ol.enabled) && font) {
 			const lineHeight = (font.ascender - font.descender) * scale;
 
 			const packColor = (rgba: [number, number, number, number]): number =>
-				((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
-			const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
+				(((rgba[0] * 255) & 0xff) << 16) | (((rgba[1] * 255) & 0xff) << 8) | ((rgba[2] * 255) & 0xff);
+			const ulPacked = packColor(ul.color),
+				stPacked = packColor(st.color),
+				olPacked = packColor(ol.color);
 
 			const fillIsNonSolid = this._fill.kind !== 'solid';
 			const ulInheritsFill = fillIsNonSolid && this._underline.colorRgb === null;
@@ -433,7 +473,10 @@ export class SlugText extends SlugTextV8Base {
 					if (ulInheritsFill) {
 						const pixiFill = slugBuildDecorationFill(
 							this._fill,
-							fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3]
+							fillBounds[0],
+							fillBounds[1],
+							fillBounds[2],
+							fillBounds[3]
 						);
 						if (pixiFill) {
 							// textureSpace: 'global' opts out of PIXI's default
@@ -459,7 +502,10 @@ export class SlugText extends SlugTextV8Base {
 					if (stInheritsFill) {
 						const pixiFill = slugBuildDecorationFill(
 							this._fill,
-							fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3]
+							fillBounds[0],
+							fillBounds[1],
+							fillBounds[2],
+							fillBounds[3]
 						);
 						if (pixiFill) {
 							gfx.fill({fill: pixiFill, alpha: st.color[3], textureSpace: 'global'});
@@ -484,7 +530,10 @@ export class SlugText extends SlugTextV8Base {
 					if (olInheritsFill) {
 						const pixiFill = slugBuildDecorationFill(
 							this._fill,
-							fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3]
+							fillBounds[0],
+							fillBounds[1],
+							fillBounds[2],
+							fillBounds[3]
 						);
 						if (pixiFill) {
 							gfx.fill({fill: pixiFill, alpha: ol.color[3], textureSpace: 'global'});
