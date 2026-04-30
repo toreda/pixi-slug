@@ -9,10 +9,18 @@ import fragSource from '../../../shared/shader/slug/frag.glsl';
 /**
  * Cached GPU resources for a SlugFont in PixiJS v6.
  * Created once per font and shared across all SlugText instances.
+ *
+ * `fallbackWhite` is the placeholder bound to the fill samplers
+ * (`uFillGradient`, `uFillTexture`) when a text instance has no gradient
+ * or fill texture. WebGL requires a valid texture binding for every
+ * sampler in the program even when the sampler isn't read at runtime;
+ * `Texture.WHITE` is a PIXI built-in shared white texture, so the cache
+ * doesn't own its lifetime.
  */
 export interface SlugFontGpuV6 {
 	curveTexture: Texture;
 	bandTexture: Texture;
+	fallbackWhite: Texture;
 	program: Program;
 }
 
@@ -48,7 +56,7 @@ export function slugFontGpuV6(font: SlugFont): SlugFontGpuV6 {
 
 	const program = Program.from(vertSource, fragSource);
 
-	const cache: SlugFontGpuV6 = {curveTexture, bandTexture, program};
+	const cache: SlugFontGpuV6 = {curveTexture, bandTexture, fallbackWhite: Texture.WHITE, program};
 
 	font.gpuCache = cache;
 	font.setGpuDestroy(() => {

@@ -30,8 +30,16 @@ uniform mat3 translationMatrix;
 // Viewport size must be provided manually in v7 (no built-in uResolution).
 uniform vec2 uResolution;
 
+// Per-pass fill bbox in object/model-local pixel space — same coordinate
+// space as aPositionNormal.xy. Drives `vFillUV` for gradient/texture
+// sampling in the fragment shader. For solid fills the value is unused.
+//   xy = bbox min (top-left)
+//   zw = bbox size (width, height)
+uniform vec4 uFillBoundsPx;
+
 out vec4 vColor;
 out vec2 vTexcoord;
+out vec2 vFillUV;
 flat out vec4 vBanding;
 flat out ivec4 vGlyph;
 
@@ -97,6 +105,12 @@ void main()
 	vTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);
 
 	gl_Position = mvp * vec4(p, 0.0, 1.0);
+
+	// Object-local UV inside the fill bbox. The fragment shader uses this
+	// to sample gradients (mode 1/2) and to derive world-pixel coords for
+	// texture fills (mode 3). Guard against zero-size bbox so single-pixel
+	// glyphs don't divide by zero — matches shared/vert.glsl.
+	vFillUV = (p - uFillBoundsPx.xy) / max(uFillBoundsPx.zw, vec2(1.0));
 
 	SlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);
 	vColor = aColor;

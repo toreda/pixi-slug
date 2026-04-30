@@ -67,7 +67,15 @@
 					return slugText;
 				},
 				addToStage: function (slugText) { app.stage.addChild(slugText); },
-				removeFromStage: function (slugText) { app.stage.removeChild(slugText); }
+				removeFromStage: function (slugText) { app.stage.removeChild(slugText); },
+				loadTexture: function (url) {
+					var tex = PIXI.Texture.from(url);
+					if (tex.baseTexture.valid) return tex;
+					return new Promise(function (resolve, reject) {
+						tex.baseTexture.once('loaded', function () { resolve(tex); });
+						tex.baseTexture.once('error', function (_b, err) { reject(err || new Error('Texture load failed: ' + url)); });
+					});
+				}
 			});
 		})();
 	</script>

@@ -67,7 +67,8 @@
 					return slugText;
 				},
 				addToStage: function (slugText) { app.stage.addChild(slugText); },
-				removeFromStage: function (slugText) { app.stage.removeChild(slugText); }
+				removeFromStage: function (slugText) { app.stage.removeChild(slugText); },
+				loadTexture: function (url) { return PIXI.Assets.load(url); }
 			});
 		})();
 	</script>
