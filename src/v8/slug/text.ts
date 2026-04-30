@@ -24,6 +24,7 @@ import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
 import type {SlugFont} from '../../shared/slug/font';
 import {Constants} from '../../constants';
+import type {Rgba} from '../../rgba';
 
 /**
  * The Mixin pattern is necessary due to Container API difference
@@ -155,7 +156,7 @@ export class SlugText extends SlugTextV8Base {
 	private _makeQuads(
 		font: SlugFont,
 		lines: string[],
-		color: [number, number, number, number],
+		color: Rgba,
 		extraExpand: number = 0
 	): SlugGlyphQuads {
 		if (lines.length > 1) {
@@ -188,19 +189,14 @@ export class SlugText extends SlugTextV8Base {
 	public rebuild(): void {
 		this._rebuildCount++;
 
-		// Remove all previous meshes from display list.
-		// Don't call mesh.destroy() — it can interfere with shared GlProgram
-		// resources when multiple meshes use the same shader program.
-		for (const mesh of this._meshes) {
-			this.removeChild(mesh);
-		}
-
-		// Minor optimization to reduce GC pressure. Create `this._meshes` if it
-		// doesn't exist, then clear the array on every call after.
-		if (Array.isArray(this._meshes)) {
-			this._meshes.length = 0;
-		} else {
-			this._meshes = [];
+		// Remove all previous meshes from display list and drop them from
+		// `_meshes` in the same pass — reusing the array avoids per-rebuild
+		// GC pressure. Don't call mesh.destroy() — it can interfere with
+		// shared GlProgram resources when multiple meshes use the same
+		// shader program.
+		for (let i = this._meshes.length - 1; i >= 0; i--) {
+			this.removeChild(this._meshes[i]);
+			this._meshes.pop();
 		}
 
 		if (this._decorations) {
@@ -314,7 +310,7 @@ export class SlugText extends SlugTextV8Base {
 		if (hasShadow) {
 			const ds = this._dropShadow!;
 			const shadowAlpha = ds.alpha;
-			const shadowColor: [number, number, number, number] = [
+			const shadowColor: Rgba = [
 				ds.color[0],
 				ds.color[1],
 				ds.color[2],
@@ -424,7 +420,7 @@ export class SlugText extends SlugTextV8Base {
 		if ((ul.enabled || st.enabled || ol.enabled) && font) {
 			const lineHeight = (font.ascender - font.descender) * scale;
 
-			const packColor = (rgba: [number, number, number, number]): number =>
+			const packColor = (rgba: Rgba): number =>
 				(((rgba[0] * 255) & 0xff) << 16) | (((rgba[1] * 255) & 0xff) << 8) | ((rgba[2] * 255) & 0xff);
 			const ulPacked = packColor(ul.color),
 				stPacked = packColor(st.color),

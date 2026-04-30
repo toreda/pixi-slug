@@ -1,10 +1,12 @@
+import type {Rgba} from '../../../../../rgba';
+
 /**
  * Resolved gradient stop after parsing. `color` is a concrete RGBA tuple
  * (0..1), `offset` is sorted-and-clamped to 0..1.
  */
 export interface SlugFillResolvedGradientStop {
 	offset: number;
-	color: [number, number, number, number];
+	color: Rgba;
 }
 
 /**
@@ -29,7 +31,7 @@ export interface SlugFillResolvedGradientStop {
 export type SlugFillResolved =
 	| {
 			kind: 'solid';
-			color: [number, number, number, number];
+			color: Rgba;
 			rgbProvided: boolean;
 			alphaProvided: boolean;
 	  }

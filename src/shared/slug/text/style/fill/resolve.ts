@@ -1,3 +1,4 @@
+import type {RgbaReadonly} from '../../../../../rgba';
 import type {SlugTextFill} from '../fill';
 import type {SlugFillGradient} from './gradient';
 import type {SlugFillTexture} from './texture';
@@ -152,7 +153,7 @@ function resolveTexture(input: SlugFillTexture): SlugFillResolved | null {
  */
 export function slugResolveFill(
 	input: SlugTextFill | null | undefined,
-	currentColor: readonly [number, number, number, number]
+	currentColor: RgbaReadonly
 ): SlugFillResolved {
 	if (isFillObject(input)) {
 		const fill = input as SlugFillGradient | SlugFillTexture;

@@ -1,3 +1,4 @@
+import type {Rgba} from '../../../rgba';
 import {SlugFont} from '../font';
 import {TextStyleOptions} from 'pixi.js';
 import type {SlugFontErrorPolicy} from '../font/error/policy';
@@ -19,7 +20,7 @@ export interface SlugDropShadowResolved {
 	alpha: number;
 	angle: number;
 	blur: number;
-	color: [number, number, number, number];
+	color: Rgba;
 	distance: number;
 }
 

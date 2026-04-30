@@ -1,4 +1,5 @@
 import {Defaults} from '../../../defaults';
+import type {Rgba, RgbaReadonly} from '../../../rgba';
 import {SlugFont} from '../font';
 import {SlugFontErrorPolicy} from '../font/error/policy';
 import {SlugFonts} from '../fonts';
@@ -106,7 +107,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		// pass, decoration inheritance) and is recomputed whenever `_fill`
 		// changes.
 		_fill!: SlugFillResolved;
-		_color!: [number, number, number, number];
+		_color!: Rgba;
 		_supersampling!: boolean;
 		_supersampleCount!: number;
 		_wordWrap!: boolean;
@@ -130,7 +131,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		// Stroke state (enabled when _strokeWidth > 0)
 		_strokeWidth!: number;
-		_strokeColor!: [number, number, number, number];
+		_strokeColor!: Rgba;
 		_strokeAlphaMode!: SlugStrokeAlphaMode;
 		_strokeAlphaStart!: number;
 		_strokeAlphaRate!: number;
@@ -360,7 +361,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this.rebuild();
 		}
 
-		public get color(): [number, number, number, number] {
+		public get color(): Rgba {
 			return this._color;
 		}
 
@@ -527,7 +528,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		}
 
 		/** Stroke color as [r, g, b, a] in 0-1 range. */
-		public get strokeColor(): [number, number, number, number] {
+		public get strokeColor(): Rgba {
 			return this._strokeColor;
 		}
 
@@ -588,7 +589,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			// so 3-element / 6-digit hex inputs keep the existing alpha.
 			const colorBase = value
 				? this._strokeColor
-				: (Defaults.SlugText.StrokeColor as readonly [number, number, number, number]);
+				: (Defaults.SlugText.StrokeColor as RgbaReadonly);
 			const newColor = slugTextColorToRgba(value?.color, colorBase);
 			const newAlphaMode = value?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
 			const newAlphaStart = numberValue(value?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
@@ -632,7 +633,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 				// or uses a 6-digit / 3-element form.
 				const colorBase = this._dropShadow
 					? this._dropShadow.color
-					: (Defaults.SlugText.DropShadowColor as readonly [number, number, number, number]);
+					: (Defaults.SlugText.DropShadowColor as RgbaReadonly);
 				this._dropShadow = {
 					alpha: numberValue(value.alpha, Defaults.SlugText.DropShadowAlpha),
 					angle: numberValue(value.angle, Defaults.SlugText.DropShadowAngle),

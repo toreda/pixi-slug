@@ -1,5 +1,6 @@
 import type {SlugGlyphData} from './data';
 import {Constants} from '../../../constants';
+import type {Rgba} from '../../../rgba';
 
 /** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
 const _packBuf = new ArrayBuffer(4);
@@ -67,7 +68,7 @@ export function slugGlyphQuads(
 	unitsPerEm: number,
 	fontSize: number,
 	textureWidth: number,
-	color: [number, number, number, number] = [1, 1, 1, 1],
+	color: Rgba = [1, 1, 1, 1],
 	extraExpand: number = 0
 ): SlugGlyphQuads {
 	const scale = fontSize / unitsPerEm;
@@ -302,7 +303,7 @@ export function slugGlyphQuadsMultiline(
 	fontSize: number,
 	textureWidth: number,
 	lineHeight: number,
-	color: [number, number, number, number] = [1, 1, 1, 1],
+	color: Rgba = [1, 1, 1, 1],
 	extraExpand: number = 0
 ): SlugGlyphQuads {
 	if (lines.length <= 1) {

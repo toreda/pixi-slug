@@ -19,6 +19,7 @@ import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
 import type {SlugFont} from '../../shared/slug/font';
 import {Constants} from '../../constants';
+import type {Rgba} from '../../rgba';
 
 const SlugTextV7Base = SlugTextMixin(Container);
 
@@ -76,7 +77,7 @@ export class SlugText extends SlugTextV7Base {
 	private _makeQuads(
 		font: SlugFont,
 		lines: string[],
-		color: [number, number, number, number],
+		color: Rgba,
 		extraExpand: number = 0
 	): SlugGlyphQuads {
 		if (lines.length > 1) {
@@ -151,11 +152,15 @@ export class SlugText extends SlugTextV7Base {
 	public rebuild(): void {
 		this._rebuildCount++;
 
-		for (const mesh of this._meshes) {
+		// Tear down previous meshes and drop them from `_meshes` in the
+		// same reverse pass — reusing the array avoids per-rebuild GC
+		// pressure.
+		for (let i = this._meshes.length - 1; i >= 0; i--) {
+			const mesh = this._meshes[i];
 			this.removeChild(mesh);
 			mesh.destroy();
+			this._meshes.pop();
 		}
-		this._meshes = [];
 		if (this._decorations) {
 			this.removeChild(this._decorations);
 			this._decorations.destroy();
@@ -259,7 +264,7 @@ export class SlugText extends SlugTextV7Base {
 		if (hasShadow) {
 			const ds = this._dropShadow!;
 			const shadowAlpha = ds.alpha;
-			const shadowColor: [number, number, number, number] =
+			const shadowColor: Rgba =
 				[ds.color[0], ds.color[1], ds.color[2], shadowAlpha];
 			const blur = ds.blur;
 
@@ -341,7 +346,7 @@ export class SlugText extends SlugTextV7Base {
 		if ((ul.enabled || st.enabled || ol.enabled) && font) {
 			const lineHeight = (font.ascender - font.descender) * scale;
 
-			const packColor = (rgba: [number, number, number, number]): number =>
+			const packColor = (rgba: Rgba): number =>
 				((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
 			const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
 
@@ -368,7 +373,7 @@ export class SlugText extends SlugTextV7Base {
 				w: number,
 				h: number,
 				inherits: boolean,
-				color: [number, number, number, number],
+				color: Rgba,
 				packed: number
 			): void => {
 				if (inherits) {

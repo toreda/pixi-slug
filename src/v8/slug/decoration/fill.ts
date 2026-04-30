@@ -1,5 +1,6 @@
 import {FillGradient, FillPattern, Texture, Matrix} from 'pixi.js';
 import type {SlugFillResolved} from '../../../shared/slug/text/style/fill/resolved';
+import type {RgbaReadonly} from '../../../rgba';
 
 /**
  * Build a PIXI v8 fill argument from a resolved Slug fill, sized to a
@@ -140,7 +141,7 @@ export function slugBuildDecorationFill(
 	return pattern;
 }
 
-function rgbaToHex(rgba: readonly [number, number, number, number]): string {
+function rgbaToHex(rgba: RgbaReadonly): string {
 	const r = Math.max(0, Math.min(255, Math.round(rgba[0] * 255)))
 		.toString(16)
 		.padStart(2, '0');

@@ -1,3 +1,5 @@
+import type {RgbaReadonly} from './rgba';
+
 /**
  * Any default value or fallback value used in the package code must live here
  * for consistency. By keeping all default values in one place, changing a
@@ -80,11 +82,11 @@ export class Defaults {
 		SupersampleCount: 4 as const,
 
 		/** Fill color default (white, fully opaque). */
-		FillColor: [1, 1, 1, 1] as readonly [number, number, number, number],
+		FillColor: [1, 1, 1, 1] as RgbaReadonly,
 
 		/** Stroke defaults. Width 0 = disabled. */
 		StrokeWidth: 0 as const,
-		StrokeColor: [0, 0, 0, 1] as readonly [number, number, number, number],
+		StrokeColor: [0, 0, 0, 1] as RgbaReadonly,
 		StrokeAlphaMode: 'uniform' as const,
 		StrokeAlphaStart: 1 as const,
 		StrokeAlphaRate: 0 as const,
@@ -93,7 +95,7 @@ export class Defaults {
 		DropShadowAlpha: 1 as const,
 		DropShadowAngle: Math.PI / 6,
 		DropShadowBlur: 0 as const,
-		DropShadowColor: [0, 0, 0, 1] as readonly [number, number, number, number],
+		DropShadowColor: [0, 0, 0, 1] as RgbaReadonly,
 		DropShadowDistance: 5 as const,
 
 		/**

@@ -2,6 +2,7 @@
 // which pulls in `@toreda/fate` as a runtime dependency.
 import {isIntPos} from '@toreda/verify/dist/is/int/pos';
 import {isNumberFinite} from '@toreda/verify/dist/is/number/finite';
+import type {Rgba, RgbaReadonly} from '../../../../rgba';
 
 /**
  * User-facing color input accepted by `SlugText` color fields (fill,
@@ -29,7 +30,7 @@ export type SlugTextColor =
 	| readonly [number, number, number, number];
 
 /** Internal RGBA tuple used everywhere downstream. Values are 0..1. */
-export type SlugTextColorRgba = [number, number, number, number];
+export type SlugTextColorRgba = Rgba;
 
 /**
  * Color parse result with provenance flags. `rgbProvided` is true when
@@ -231,7 +232,7 @@ function parseArray(arr: readonly number[]): {r: number; g: number; b: number; a
  */
 export function slugTextColorParse(
 	input: SlugTextColor | null | undefined,
-	current: readonly [number, number, number, number]
+	current: RgbaReadonly
 ): SlugTextColorParse {
 	if (input === null || input === undefined) {
 		return {
@@ -300,7 +301,7 @@ export function slugTextColorParse(
  */
 export function slugTextColorToRgba(
 	input: SlugTextColor | null | undefined,
-	current: readonly [number, number, number, number]
+	current: RgbaReadonly
 ): SlugTextColorRgba {
 	return slugTextColorParse(input, current).rgba;
 }
