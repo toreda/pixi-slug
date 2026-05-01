@@ -5703,7 +5703,52 @@ DropShadowAlpha:1,DropShadowAngle:Math.PI/6,DropShadowBlur:0,DropShadowColor:[0,
          */
 ErrorPolicy:{unknownInput:"throw",fontFaceNoUrl:"throw",emptyFontFaceArray:"throw",emptyInput:"throw",loadFailed:"throw",unsupportedFormat:"throw",aliasNotFound:"error",aliasCollision:"error"}}}
 // EXTERNAL MODULE: ./node_modules/@toreda/strong-types/dist/index.js
-var defineProperty,codePointAt,dist=__webpack_require__(6859);// ./node_modules/opentype.js/dist/opentype.module.js
+var defineProperty,codePointAt,dist=__webpack_require__(6859);// ./src/constants.ts
+/**
+ * Structural invariants of the package — values that are NOT configurable
+ * because they are dictated by the shader contract or fixed geometry.
+ *
+ * Unlike `Defaults`, these are not meant to be edited. Each constant exists
+ * here only so that magic numbers don't appear inline at call sites and so
+ * that any code that needs the value reads from a single source of truth.
+ */
+class Constants{
+/**
+     * Number of floats per vertex in the Slug glyph vertex layout.
+     * Five vec4 attributes (aPositionNormal, aTexcoord, aJacobian,
+     * aBanding, aColor) × 4 floats each = 20. Tied 1:1 to the shader's
+     * input declarations.
+     */
+static FLOATS_PER_VERTEX=20;
+/** Number of vertices per glyph quad (one quad = 4 corners). */
+static VERTICES_PER_QUAD=4;
+/** Number of indices per glyph quad (two triangles × 3 indices). */
+static INDICES_PER_QUAD=6;
+/**
+     * Bytes per float in the vertex buffer. The Slug vertex layout is
+     * exclusively `float32`, so this is also the byte size of one
+     * vertex-attribute scalar. Used to convert between float-indexed
+     * and byte-indexed offsets when describing the geometry layout.
+     */
+static BYTES_PER_FLOAT=4;
+/**
+     * Floats per vec4 vertex attribute. Every Slug vertex attribute
+     * (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+     * `aColor`) is a `float32x4`, so each one steps the buffer cursor
+     * forward by this many floats.
+     */
+static FLOATS_PER_VEC4=4;
+/**
+     * URL test for the font formats `pixi-slug` accepts: `.ttf`, `.otf`,
+     * `.woff`, `.woff2`. The trailing group requires the extension to be
+     * followed by a query string (`?`), fragment (`#`), or end of input
+     * — preventing false positives like `.ttfx` or `something-otf-foo`.
+     *
+     * Used by every version's loader (`slugFontsInstallLoaderV7/V8`,
+     * `slugFontsFetchV6`) to decide whether a URL is a font file PIXI
+     * should hand off as raw bytes rather than wrapping in a `FontFace`.
+     */
+static FONT_URL_REGEX=/\.(ttf|otf|woff2?)(\?|#|$)/i}// ./node_modules/opentype.js/dist/opentype.module.js
 /**
  * https://opentype.js.org v1.3.4 | (c) Frederik De Bleser and other contributors | MIT License | Uses tiny-inflate by Devon Govett and string.prototype.codepointat polyfill by Mathias Bynens
  */
@@ -10074,7 +10119,18 @@ class SlugFontsRegistry{byUrl;byName;inflight;
      */
 all;
 /** Unordered subset of `all` containing only entries with `markedForDestroy`. */
-marked;fallback;
+marked;
+/**
+     * Strong-reference anchors for caller-supplied fonts that the
+     * registry is NOT managing (no refcount, no auto-destroy). Holds the
+     * font alive so `SlugText`'s `WeakRef` can deref reliably until the
+     * caller explicitly removes it via {@link SlugFonts.removeManual}.
+     *
+     * Manual fonts are deliberately not in `byUrl`/`byName`/`all` and
+     * cannot be looked up by URL or name from elsewhere — they exist
+     * solely as anchors for the `SlugText` instances that received them.
+     */
+manualFonts;fallback;
 /** True once the caller has explicitly set a fallback, so the
      *  lazy bundled fallback won't overwrite it. */
 fallbackOverridden;autoDestroyUnused;autoDestroyDelayMs;autoAttachTicker;
@@ -10095,7 +10151,7 @@ tickerDetach;
      * `attachTicker`. Used to short-circuit idempotent re-attaches (same
      * source passed twice returns silently).
      */
-tickerSubscribe;constructor(options){this.byUrl=new Map,this.byName=new Map,this.inflight=new Map,this.all=[],this.marked=[],this.fallback=null,this.fallbackOverridden=!1,this.autoDestroyUnused=(0,dist/* booleanValue */.eC)(options?.autoDestroyUnused,Defaults.Registry.AutoDestroyUnused);const delaySec=(0,dist/* numberValue */.Vg)(options?.autoDestroyDelay,Defaults.Registry.AutoDestroyDelay);// ./src/shared/slug/fonts/registry.ts
+tickerSubscribe;constructor(options){this.byUrl=new Map,this.byName=new Map,this.inflight=new Map,this.all=[],this.marked=[],this.manualFonts=new Set,this.fallback=null,this.fallbackOverridden=!1,this.autoDestroyUnused=(0,dist/* booleanValue */.eC)(options?.autoDestroyUnused,Defaults.Registry.AutoDestroyUnused);const delaySec=(0,dist/* numberValue */.Vg)(options?.autoDestroyDelay,Defaults.Registry.AutoDestroyDelay);// ./src/shared/slug/fonts/registry.ts
 var raw,fallback;this.autoDestroyDelayMs=1e3*Math.max(0,delaySec),this.autoAttachTicker=(0,dist/* booleanValue */.eC)(options?.autoAttachTicker,Defaults.Registry.AutoAttachTicker),this.updateRate=Math.max(0,(0,dist/* numberValue */.Vg)(options?.updateRate,Defaults.Registry.UpdateRate)),this.lastUpdate=0,this.reattachPolicy=(raw=options?.reattachPolicy,fallback=Defaults.Registry.ReattachPolicy,isSlugFontErrorMode(raw)?raw:fallback),this.tickerDetach=null,this.tickerSubscribe=null}
 /**
      * Add an entry to `all` if it isn't already present. Callers use this
@@ -10122,7 +10178,10 @@ for(let i=this.marked.length-1;i>=0;i--){const e=this.marked[i];e.markedForDestr
      * `SlugApplicationPlugin.destroy` hook) where waiting out the
      * `autoDestroyDelay` is pointless because the app is going away.
      * Convention matches game-engine `destroyImmediate`-style APIs.
-     */sweepImmediate(){if(0!==this.marked.length)for(let i=this.marked.length-1;i>=0;i--){const e=this.marked[i];e.markedForDestroy&&0===e.refs&&this._destroyEntry(e)}}_destroyEntry(entry){entry.font.destroyGpu();for(const[k,v]of this.byUrl)v===entry&&this.byUrl.delete(k);for(const[k,v]of this.byName)v===entry&&this.byName.delete(k);this.removeFromMarked(entry),this.removeFromAll(entry)}stats(){const out=[];for(const[k,e]of this.byUrl)out.push({key:k,source:"url",refs:e.refs,markedForDestroy:e.markedForDestroy,fileSize:e.fileSize,createdAt:e.createdAt});for(const[k,e]of this.byName)out.push({key:k,source:"name",refs:e.refs,markedForDestroy:e.markedForDestroy,fileSize:e.fileSize,createdAt:e.createdAt});return out}}// ./src/shared/slug/fonts/registry/entry.ts
+     */sweepImmediate(){if(0!==this.marked.length)for(let i=this.marked.length-1;i>=0;i--){const e=this.marked[i];e.markedForDestroy&&0===e.refs&&this._destroyEntry(e)}}_destroyEntry(entry){entry.font.destroyGpu();for(const[k,v]of this.byUrl)v===entry&&this.byUrl.delete(k);for(const[k,v]of this.byName)v===entry&&this.byName.delete(k);this.removeFromMarked(entry),this.removeFromAll(entry)}stats(){const out=[];for(const[k,e]of this.byUrl)out.push({key:k,source:"url",refs:e.refs,markedForDestroy:e.markedForDestroy,fileSize:e.fileSize,createdAt:e.createdAt});for(const[k,e]of this.byName)out.push({key:k,source:"name",refs:e.refs,markedForDestroy:e.markedForDestroy,fileSize:e.fileSize,createdAt:e.createdAt});
+// Manual fonts: no key, no refcount, no auto-destroy. The synthetic
+// `key` is only useful for visual disambiguation in stats output.
+let manualIdx=0;for(const font of this.manualFonts)out.push({key:"manual:"+manualIdx++,source:"manual",refs:0,markedForDestroy:!1,fileSize:0,createdAt:0,font});return out}}// ./src/shared/slug/fonts/registry/entry.ts
 /**
  * Reference-counted wrapper around a registry-managed `SlugFont`. The
  * registry stores entries (not raw fonts) in its maps so each cached
@@ -10266,9 +10325,127 @@ if(reg.tickerSubscribe===subscribe)return;if(!forceFlag)return void SlugFonts._r
 /** Per-entry diagnostics for inspection and tests. */static stats(){return SlugFonts._reg().stats()}
 /** True when this font is tracked by the registry (URL- or name-keyed). */static owns(font){return!!font&&null!==SlugFonts._reg().entryForFont(font)}
 /**
+     * Anchor a caller-supplied `SlugFont` so the registry holds a strong
+     * reference to it without managing its lifecycle. Manual fonts:
+     *
+     *  - skip the URL/name cache (no other `SlugText` can find them by
+     *    name and the registry will never return them from `from()`),
+     *  - skip refcount and auto-destroy (`retain` / `release` / sweep
+     *    all no-op for manual fonts),
+     *  - live until the caller explicitly calls {@link removeManual}.
+     *
+     * Calling `addManual` is intended for fonts loaded outside the
+     * registry (e.g. via the platform `FontFace` API or a custom loader)
+     * and then handed to `SlugText`. `SlugText.font = ...` calls this
+     * automatically when it receives a font the registry doesn't own,
+     * so most callers never invoke it directly.
+     *
+     * Manually loading a font that duplicates one already in the
+     * registry is allowed — the duplicate is anchored independently and
+     * does not affect the registered copy. The duplicate uses extra
+     * memory; that is the caller's tradeoff to make.
+     *
+     * No-op when `font` is null, when it equals the registry fallback,
+     * or when it is already tracked (manual or registered).
+     */static addManual(font){if(!font)return null;const reg=SlugFonts._reg();return font===reg.fallback||null!==reg.entryForFont(font)||reg.manualFonts.add(font),font;
+// Already registry-managed — caller should rely on retain/release
+// for that font, not anchor it as manual.
+}
+/**
+     * Counterpart to {@link addManual}. Drops the registry's strong
+     * reference to a caller-supplied font and destroys its GPU
+     * resources. After this call any `SlugText` instance still pointing
+     * at the font will render nothing on its next rebuild (its `WeakRef`
+     * may deref to undefined as soon as the GC collects).
+     *
+     * Returns true when the font was anchored and has been removed,
+     * false otherwise (unknown font, null, or registry fallback).
+     */static removeManual(font){if(!font)return!1;const reg=SlugFonts._reg();return!!reg.manualFonts.has(font)&&(font.destroyGpu(),reg.manualFonts.delete(font),!0)}
+/** True when {@link addManual} has anchored this font and {@link removeManual} has not yet been called. */static isManual(font){return!!font&&SlugFonts._reg().manualFonts.has(font)}
+/**
+     * Remove a registry-owned font and destroy its GPU resources.
+     * Accepts either a `SlugFont` instance or a string lookup key
+     * (alias or URL); the input type selects between
+     * {@link removeRegisteredFont} and {@link removeRegisteredKey} so
+     * callers can pass whichever handle they have.
+     *
+     * @remarks
+     * When the font's refcount is greater than 0, removal is refused
+     * unless `force` is true. The refcount reflects live `SlugText`
+     * instances retaining the font; forcing a remove leaves those
+     * instances with a `WeakRef` whose next `rebuild()` may render
+     * nothing. That mirrors the manual-font lifecycle and is the
+     * caller's tradeoff to make.
+     *
+     * Removal drops every `byUrl` / `byName` binding pointing at the
+     * font, removes it from `all` / `marked`, and calls
+     * `font.destroyGpu()`.
+     *
+     * Returns a {@link SlugFontsRemoveResult}. On failure, `reason`
+     * tells the caller why: `invalid-input` for null / wrong-shape
+     * input, `not-found` for an unknown key or font, `refs-active`
+     * when refcount > 0 and force was not set, `forbidden-fallback`
+     * for the registry fallback (use {@link setFallback} with `null`),
+     * and `forbidden-manual` for a manually anchored font (use
+     * {@link removeManual} instead).
+     */static removeRegistered(fontOrKey,force=!1){return fontOrKey?"string"==typeof fontOrKey?SlugFonts.removeRegisteredKey(fontOrKey,force):SlugFonts.removeRegisteredFont(fontOrKey,force):{ok:!1,reason:"invalid-input"}}
+/**
+     * Remove a registered font by lookup key. Detects whether `key` is
+     * a URL or an alias using {@link Constants.FONT_URL_REGEX} and
+     * dispatches to {@link removeRegisteredUrl} or
+     * {@link removeRegisteredAlias}.
+     *
+     * @remarks
+     * The two stores are checked strictly: a URL-shaped string never
+     * matches an alias entry, even if the same string was registered
+     * under {@link register}. Callers who want loose either-store
+     * lookup should pick the specific helper themselves.
+     *
+     * See {@link removeRegistered} for the full force semantics,
+     * refcount rules, and side effects.
+     */static removeRegisteredKey(key,force=!1){return"string"!=typeof key||0===key.length?{ok:!1,reason:"invalid-input"}:Constants.FONT_URL_REGEX.test(key)?SlugFonts.removeRegisteredUrl(key,force):SlugFonts.removeRegisteredAlias(key,force)}
+/**
+     * Remove a registered font by alias. Looks up only the `byName`
+     * map; URL-keyed entries are ignored even when their URL string
+     * happens to match `key`.
+     *
+     * @remarks
+     * Strict input: `key` must be a non-empty string. No
+     * normalization is applied — whitespace, case, and trailing
+     * punctuation are part of the alias and must match exactly. URL
+     * shape is not rejected here (an alias is allowed to look like a
+     * URL if a caller insists), but a URL-shaped alias is unreachable
+     * via {@link removeRegisteredKey} since that dispatcher routes
+     * URL-shaped strings to {@link removeRegisteredUrl}.
+     *
+     * See {@link removeRegistered} for the full force semantics,
+     * refcount rules, and side effects.
+     */static removeRegisteredAlias(key,force=!1){if("string"!=typeof key||0===key.length)return{ok:!1,reason:"invalid-input"};const reg=SlugFonts._reg(),entry=reg.byName.get(key);return entry?entry.refs>0&&!force?{ok:!1,reason:"refs-active"}:(reg._destroyEntry(entry),{ok:!0}):{ok:!1,reason:"not-found"}}
+/**
+     * Remove a registered font by URL. Looks up only the `byUrl` map;
+     * alias-keyed entries are ignored even when an alias happens to
+     * match `url`.
+     *
+     * @remarks
+     * Strict input: `url` must be a non-empty string that matches
+     * {@link Constants.FONT_URL_REGEX}. Strings that do not look like
+     * a font URL are rejected with `invalid-input` rather than
+     * silently producing a `not-found` miss — the distinction matters
+     * to callers that want to surface a "you handed me garbage" error
+     * separately from a legitimate cache miss.
+     *
+     * See {@link removeRegistered} for the full force semantics,
+     * refcount rules, and side effects.
+     */static removeRegisteredUrl(url,force=!1){if("string"!=typeof url||0===url.length)return{ok:!1,reason:"invalid-input"};if(!Constants.FONT_URL_REGEX.test(url))return{ok:!1,reason:"invalid-input"};const reg=SlugFonts._reg(),entry=reg.byUrl.get(url);return entry?entry.refs>0&&!force?{ok:!1,reason:"refs-active"}:(reg._destroyEntry(entry),{ok:!0}):{ok:!1,reason:"not-found"}}
+/**
+     * Remove a registered font by `SlugFont` instance. See
+     * {@link removeRegistered} for the full force semantics, refcount
+     * rules, and side effects.
+     */static removeRegisteredFont(font,force=!1){if(!font)return{ok:!1,reason:"invalid-input"};const reg=SlugFonts._reg();if(font===reg.fallback)return{ok:!1,reason:"forbidden-fallback"};if(reg.manualFonts.has(font))return{ok:!1,reason:"forbidden-manual"};const entry=reg.entryForFont(font);return entry?entry.refs>0&&!force?{ok:!1,reason:"refs-active"}:(reg._destroyEntry(entry),{ok:!0}):{ok:!1,reason:"not-found"}}
+/**
      * Remove all cached fonts and the fallback. GPU resources owned by
      * the cached fonts are destroyed. Intended for tests and teardown.
-     */static clear(){const reg=SlugFonts._reg();for(let i=0;i<reg.all.length;i++)reg.all[i].font.destroyGpu();reg.fallback&&reg.fallback.destroyGpu(),reg.byUrl.clear(),reg.byName.clear(),reg.inflight.clear(),reg.all.length=0,reg.marked.length=0,reg.fallback=null,reg.fallbackOverridden=!1,reg.tickerDetach&&(reg.tickerDetach(),reg.tickerDetach=null),reg.tickerSubscribe=null}}// ./src/v7/slug/fonts/ticker.ts
+     */static clear(){const reg=SlugFonts._reg();for(let i=0;i<reg.all.length;i++)reg.all[i].font.destroyGpu();for(const font of reg.manualFonts)font.destroyGpu();reg.fallback&&reg.fallback.destroyGpu(),reg.byUrl.clear(),reg.byName.clear(),reg.inflight.clear(),reg.all.length=0,reg.marked.length=0,reg.manualFonts.clear(),reg.fallback=null,reg.fallbackOverridden=!1,reg.tickerDetach&&(reg.tickerDetach(),reg.tickerDetach=null),reg.tickerSubscribe=null}}// ./src/v7/slug/fonts/ticker.ts
 /**
  * Auto-attach the shared PixiJS v7 Ticker to the `SlugFonts` registry
  * so its auto-destroy grace-period sweep runs without host-app setup.
@@ -10278,41 +10455,7 @@ function slugFontsAttachTickerV7(){Defaults.Registry.AutoAttachTicker&&SlugFonts
 // EXTERNAL MODULE: external {"commonjs":"@pixi/constants","commonjs2":"@pixi/constants","root":"PIXI"}
 var constants_root_PIXI_=__webpack_require__(5772),core_root_PIXI_=__webpack_require__(3780),display_root_PIXI_=__webpack_require__(6492),graphics_root_PIXI_=__webpack_require__(2972),mesh_root_PIXI_=__webpack_require__(9564);
 // EXTERNAL MODULE: external {"commonjs":"@pixi/core","commonjs2":"@pixi/core","root":"PIXI"}
-// ./src/constants.ts
-/**
- * Structural invariants of the package — values that are NOT configurable
- * because they are dictated by the shader contract or fixed geometry.
- *
- * Unlike `Defaults`, these are not meant to be edited. Each constant exists
- * here only so that magic numbers don't appear inline at call sites and so
- * that any code that needs the value reads from a single source of truth.
- */
-class Constants{
-/**
-     * Number of floats per vertex in the Slug glyph vertex layout.
-     * Five vec4 attributes (aPositionNormal, aTexcoord, aJacobian,
-     * aBanding, aColor) × 4 floats each = 20. Tied 1:1 to the shader's
-     * input declarations.
-     */
-static FLOATS_PER_VERTEX=20;
-/** Number of vertices per glyph quad (one quad = 4 corners). */
-static VERTICES_PER_QUAD=4;
-/** Number of indices per glyph quad (two triangles × 3 indices). */
-static INDICES_PER_QUAD=6;
-/**
-     * Bytes per float in the vertex buffer. The Slug vertex layout is
-     * exclusively `float32`, so this is also the byte size of one
-     * vertex-attribute scalar. Used to convert between float-indexed
-     * and byte-indexed offsets when describing the geometry layout.
-     */
-static BYTES_PER_FLOAT=4;
-/**
-     * Floats per vec4 vertex attribute. Every Slug vertex attribute
-     * (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
-     * `aColor`) is a `float32x4`, so each one steps the buffer cursor
-     * forward by this many floats.
-     */
-static FLOATS_PER_VEC4=4}// ./src/shared/slug/glyph/quad.ts
+// ./src/shared/slug/glyph/quad.ts
 /** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
 const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
 /**
@@ -10902,7 +11045,7 @@ function resolveAlignInput(value){switch(value){case"start":case"end":case"left"
  * ("Property of exported anonymous class type may not be private or
  * protected"). The `_` convention signals internal use.
  */ // ./src/v7/slug/text.ts
-const SlugTextV7Base=(Base=display_root_PIXI_.Container,class extends Base{_text;_font;_fontRef;_fontSize;
+const SlugTextV7Base=(Base=display_root_PIXI_.Container,class extends Base{_text;_fontRef;_fontSize;
 // Resolved fill — discriminated union of solid / linear-gradient /
 // radial-gradient / texture. `_color` mirrors the representative
 // flat color for legacy callers (quad builder vertex color, stroke
@@ -10924,7 +11067,7 @@ _dropShadow;
          * Called by the subclass constructor after super().
          * Subclass must call rebuild() separately after version-specific init.
          */
-initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._font=syncFont;else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._font=fallback??new SlugFont,slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._font!==resolved&&(SlugFonts.release(this._font),this._font=resolved,this._fontRef=new WeakRef(resolved),SlugFonts.retain(resolved),this._resolveDecorations(),this.rebuild())})}this._fontRef=new WeakRef(this._font),SlugFonts.retain(this._font),this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),
+initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._setFontRef(syncFont);else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._setFontRef(fallback??new SlugFont),slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._fontRef?.deref()!==resolved&&(this._setFontRef(resolved),this._resolveDecorations(),this.rebuild())})}this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),
 // `init.options.fill` is widened to `SlugTextFill` (color | gradient
 // | texture). The resolver folds invalid input back to the default
 // solid color and emits provenance flags consumed by decoration
@@ -10965,22 +11108,51 @@ const ds=init.options?.dropShadow;this._dropShadow=ds?{alpha:(0,dist/* numberVal
 get text(){return this._text}set text(value){this._text!==value&&(this._text=value,this.rebuild())}
 /**
          * Mutate the current text to uppercase and rebuild glyphs.
+         * Does NOT return a new string.
+         * @remarks
          * Named `transformToUpperCase` rather than `toUpperCase` to avoid
          * implying the JS string convention of returning a new value
          * without mutation.
          */transformToUpperCase(){this.text=this._text.toUpperCase()}
 /**
          * Mutate the current text to lowercase and rebuild glyphs.
+         * Does NOT return a new string.
+         * @remarks
          * Named `transformToLowerCase` rather than `toLowerCase` to avoid
          * implying the JS string convention of returning a new value
          * without mutation.
-         */transformToLowerCase(){this.text=this._text.toLowerCase()}get font(){return this._fontRef?.deref()??null}set font(value){this._font!==value&&(SlugFonts.release(this._font),this._font=value,this._fontRef=new WeakRef(value),SlugFonts.retain(value),this._resolveDecorations(),this.rebuild())}
+         */transformToLowerCase(){this.text=this._text.toLowerCase()}
+/**
+         * Deference and return the font used or return `null` when the
+         * ref has been cleared or target font no longer exists.
+         */get font(){return this._fontRef?.deref()??null}set font(value){this._fontRef?.deref()!==value&&(this._setFontRef(value),this._resolveDecorations(),this.rebuild())}
 /**
          * Release the live font reference held by this text instance.
          * Version-specific subclasses must call this from their `destroy()`
          * override so the registry's ref counter can mark the font for
          * auto-destroy when no other text instances hold it.
-         */_releaseFontOnDestroy(){SlugFonts.release(this._font)}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);if("solid"===this._fill.kind&&this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3])return;
+         *
+         * Caller-supplied (manual) fonts are NOT auto-removed here — the
+         * caller owns the manual lifecycle and must call
+         * {@link SlugFonts.removeManual} explicitly when they want the
+         * GPU memory back.
+         */_releaseFontOnDestroy(){SlugFonts.release(this._fontRef?.deref()??null)}
+/**
+         * Centralized font-handle assignment. Releases the current font
+         * (refcount drops; no-op for manual fonts and the fallback),
+         * anchors `next` as a manual font when it isn't already
+         * registry-owned (so the `WeakRef` has a strong-ref backstop),
+         * stores the new `WeakRef`, and retains the new font.
+         *
+         * Every code path that swaps the active font must go through
+         * this method — the registry's strong-ref invariants depend on
+         * it.
+         */_setFontRef(next){const prev=this._fontRef?.deref()??null;prev!==next&&(SlugFonts.release(prev),
+// Anchor caller-supplied fonts so the WeakRef cannot drop
+// while this SlugText is alive. `addManual` no-ops when the
+// font is registry-owned or is the fallback, so the cost
+// here is one Set membership check on the common path.
+SlugFonts.addManual(next),this._fontRef=new WeakRef(next),SlugFonts.retain(next))}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);if("solid"===this._fill.kind&&this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3])return;
 // `color` setter always installs a solid fill. If the previous
 // fill was a gradient/texture, this replaces it.
 const resolved=slugResolveFill(value,this._color);this._fill=resolved,this._color=slugFillRepresentativeColor(resolved),this._applyFillToDecorations(resolved.rgbProvided,resolved.alphaProvided),this._resolveDecorations(),this.rebuild()}
@@ -11053,7 +11225,7 @@ _decorations;
      */
 _fillGpu;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,this.rebuild()}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;for(const mesh of this._meshes)mesh.shader.uniforms.uSupersampleCount=value}onSupersampleCountChanged(){if(this._supersampling)for(const mesh of this._meshes)mesh.shader.uniforms.uSupersampleCount=this._supersampleCount}_makeQuads(font,lines,color,extraExpand=0){if(lines.length>1){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
 // Build quads per line, then merge into a single buffer.
-const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalIdxs=totalQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(totalQuads*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
+const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalVerts=totalQuads*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,totalIdxs=totalQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(totalVerts),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
 // Copy vertices with Y offset applied to position (float index 1 per vertex)
 for(let v=0;v<q.quadCount*Constants.VERTICES_PER_QUAD;v++){const srcOff=v*Constants.FLOATS_PER_VERTEX,dstOff=vertOffset+srcOff;
 // Copy all 20 floats
@@ -11142,11 +11314,11 @@ return null;const tex=function(source){if(source&&"object"==typeof source){const
 // uv = (vx-bboxX)/(bboxW·sx) - ox/(fw·sx) after divide by fw.
 // Pick M_user: a = fw/(bboxW·sx), tx = -fw·bboxX/(bboxW·sx) - ox/sx.
 return matrix="stretch"===fill.fit?makeMatrix(fw/(bboxWidth*sx),fh/(bboxHeight*sy),-fw*bboxX/(bboxWidth*sx)-ox/sx,-fh*bboxY/(bboxHeight*sy)-oy/sy):makeMatrix(1/sx,1/sy,-(bboxX+ox)/sx,-(bboxY+oy)/sy),{texture:tex,matrix,alpha:decorationAlpha}}(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3],color[3]);if(texFill)return gfx.beginTextureFill({texture:texFill.texture,alpha:texFill.alpha,matrix:texFill.matrix}),gfx.drawRect(x,y,w,h),void gfx.endFill()}gfx.beginFill(packed,color[3]),gfx.drawRect(x,y,w,h),gfx.endFill()};for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=effLineW*ul.length;drawDecoration(lineX+xForDecoration(effLineW,drawW,ul.align),baselineY+lineY-font.underlinePosition*scale,drawW,ul.thickness,ulInheritsFill,ul.color,ulPacked)}if(st.enabled&&st.length>0){const drawW=effLineW*st.length;drawDecoration(lineX+xForDecoration(effLineW,drawW,st.align),baselineY+lineY-font.strikethroughPosition*scale,drawW,st.thickness,stInheritsFill,st.color,stPacked)}if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length;drawDecoration(lineX+xForDecoration(effLineW,drawW,ol.align),lineY-ol.thickness,drawW,ol.thickness,olInheritsFill,ol.color,olPacked)}}this._decorations=gfx,this.addChild(gfx)}}destroy(){this._releaseFontOnDestroy();for(const mesh of this._meshes)mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null),super.destroy()}}// ./src/v7/slug/fonts/loader.ts
-const FONT_URL_RE=/\.(ttf|otf|woff2?)(\?|#|$)/i;
 /**
  * Registered once `slugFontsInstallLoaderV7` is called. Kept at module
  * scope so double-install is a no-op.
- */let installed=!1;
+ */
+let installed=!1;
 /**
  * Register a PIXI v7 loader parser that fetches font files as raw
  * `ArrayBuffer` instead of wrapping them in a `FontFace`. After calling
@@ -11156,7 +11328,22 @@ const FONT_URL_RE=/\.(ttf|otf|woff2?)(\?|#|$)/i;
  * Priority `High` (`2`) overrides the default `loadWebFont` parser from
  * `@pixi/assets` (priority `Low`). Matches extensions `.ttf`, `.otf`,
  * `.woff`, `.woff2`.
- */function slugFontsInstallLoaderV7(){installed||(installed=!0,core_root_PIXI_.extensions.add({extension:{type:core_root_PIXI_.ExtensionType.LoadParser,priority:2},name:"slug-font-binary",test:url=>FONT_URL_RE.test(url),async load(url){const res=await fetch(url);if(!res.ok)throw new Error(`slugFontsInstallLoaderV7: fetch ${url} failed with ${res.status}`);return res.arrayBuffer()}}))}// ./src/v7/slug/plugin.ts
+ *
+ * @remarks
+ * Returns `true` when this call performed the registration, `false`
+ * when it was a no-op (already installed) or when the underlying
+ * `extensions.add` threw. The thrown error is logged via
+ * `console.error` rather than re-thrown so a misbehaving extension
+ * registration cannot bring down app startup.
+ *
+ * Failure is not sticky. If `extensions.add` throws the install flag
+ * stays `false` and a later call will retry. Deciding whether to retry
+ * — and how aggressively — is up to the caller. Realistic failures
+ * (extension manager misconfiguration, duplicate registration) tend
+ * not to recover on their own, so callers that retry should rate-limit
+ * or bound the attempts to avoid filling the console with the same
+ * error.
+ */function slugFontsInstallLoaderV7(){if(installed)return!1;try{core_root_PIXI_.extensions.add({extension:{type:core_root_PIXI_.ExtensionType.LoadParser,priority:2},name:"slug-font-binary",test:url=>Constants.FONT_URL_REGEX.test(url),async load(url){const res=await fetch(url);if(!res.ok)throw new Error(`slugFontsInstallLoaderV7: fetch ${url} failed with ${res.status}`);return res.arrayBuffer()}}),installed=!0}catch(err){console.error("slugFontsInstallLoaderV7: failed to register loader extension",err)}return installed}// ./src/v7/slug/plugin.ts
 /**
  * Per-Application storage for the resize observer this plugin attaches.
  * Symbol-keyed so we don't collide with anything PIXI or host code may

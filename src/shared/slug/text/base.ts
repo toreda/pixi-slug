@@ -98,7 +98,6 @@ function resolveTextJustifyInput(value: SlugTextJustify | null | undefined): Slu
 export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 	abstract class SlugTextBase extends Base {
 		_text!: string;
-		_font!: SlugFont;
 		_fontRef!: WeakRef<SlugFont>;
 		_fontSize!: number;
 		// Resolved fill — discriminated union of solid / linear-gradient /
@@ -162,24 +161,18 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			const fontInput = init.font;
 			const syncFont = slugTryResolveFontInputSync(fontInput);
 			if (syncFont) {
-				this._font = syncFont;
+				this._setFontRef(syncFont);
 			} else {
 				const fallback = fallbackWhileLoading ? SlugFonts.fallback() : null;
-				this._font = fallback ?? new SlugFont();
+				this._setFontRef(fallback ?? new SlugFont());
 				slugResolveFontInput(fontInput, policy).then((resolved) => {
-					if (resolved && this._font !== resolved) {
-						SlugFonts.release(this._font);
-						this._font = resolved;
-						this._fontRef = new WeakRef(resolved);
-						SlugFonts.retain(resolved);
+					if (resolved && this._fontRef?.deref() !== resolved) {
+						this._setFontRef(resolved);
 						this._resolveDecorations();
 						this.rebuild();
 					}
 				});
 			}
-
-			this._fontRef = new WeakRef(this._font);
-			SlugFonts.retain(this._font);
 			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
 			// `init.options.fill` is widened to `SlugTextFill` (color | gradient
 			// | texture). The resolver folds invalid input back to the default
@@ -308,6 +301,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		/**
 		 * Mutate the current text to uppercase and rebuild glyphs.
+		 * Does NOT return a new string.
+		 * @remarks
 		 * Named `transformToUpperCase` rather than `toUpperCase` to avoid
 		 * implying the JS string convention of returning a new value
 		 * without mutation.
@@ -318,6 +313,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		/**
 		 * Mutate the current text to lowercase and rebuild glyphs.
+		 * Does NOT return a new string.
+		 * @remarks
 		 * Named `transformToLowerCase` rather than `toLowerCase` to avoid
 		 * implying the JS string convention of returning a new value
 		 * without mutation.
@@ -326,16 +323,20 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this.text = this._text.toLowerCase();
 		}
 
+		/**
+		 * Deference and return the font used or return `null` when the
+		 * ref has been cleared or target font no longer exists.
+		 */
 		public get font(): SlugFont | null {
 			return this._fontRef?.deref() ?? null;
 		}
 
 		public set font(value: SlugFont) {
-			if (this._font === value) return;
-			SlugFonts.release(this._font);
-			this._font = value;
-			this._fontRef = new WeakRef(value);
-			SlugFonts.retain(value);
+			if (this._fontRef?.deref() === value) {
+				return;
+			}
+
+			this._setFontRef(value);
 			this._resolveDecorations();
 			this.rebuild();
 		}
@@ -345,9 +346,43 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		 * Version-specific subclasses must call this from their `destroy()`
 		 * override so the registry's ref counter can mark the font for
 		 * auto-destroy when no other text instances hold it.
+		 *
+		 * Caller-supplied (manual) fonts are NOT auto-removed here — the
+		 * caller owns the manual lifecycle and must call
+		 * {@link SlugFonts.removeManual} explicitly when they want the
+		 * GPU memory back.
 		 */
 		public _releaseFontOnDestroy(): void {
-			SlugFonts.release(this._font);
+			SlugFonts.release(this._fontRef?.deref() ?? null);
+		}
+
+		/**
+		 * Centralized font-handle assignment. Releases the current font
+		 * (refcount drops; no-op for manual fonts and the fallback),
+		 * anchors `next` as a manual font when it isn't already
+		 * registry-owned (so the `WeakRef` has a strong-ref backstop),
+		 * stores the new `WeakRef`, and retains the new font.
+		 *
+		 * Every code path that swaps the active font must go through
+		 * this method — the registry's strong-ref invariants depend on
+		 * it.
+		 */
+		public _setFontRef(next: SlugFont): void {
+			const prev = this._fontRef?.deref() ?? null;
+			if (prev === next) {
+				return;
+			}
+
+			SlugFonts.release(prev);
+
+			// Anchor caller-supplied fonts so the WeakRef cannot drop
+			// while this SlugText is alive. `addManual` no-ops when the
+			// font is registry-owned or is the fallback, so the cost
+			// here is one Set membership check on the common path.
+			SlugFonts.addManual(next);
+
+			this._fontRef = new WeakRef(next);
+			SlugFonts.retain(next);
 		}
 
 		public get fontSize(): number {

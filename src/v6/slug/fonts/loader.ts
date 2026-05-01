@@ -1,4 +1,4 @@
-const FONT_URL_RE = /\.(ttf|otf|woff2?)(\?|#|$)/i;
+import {Constants} from '../../../constants';
 
 /**
  * Fetch a font file as a raw `ArrayBuffer` suitable for `SlugText`'s
@@ -17,7 +17,7 @@ const FONT_URL_RE = /\.(ttf|otf|woff2?)(\?|#|$)/i;
  * Throws on non-2xx responses and on unsupported file extensions.
  */
 export async function slugFontsFetchV6(url: string): Promise<ArrayBuffer> {
-	if (!FONT_URL_RE.test(url)) {
+	if (!Constants.FONT_URL_REGEX.test(url)) {
 		throw new Error(`slugFontsFetchV6: "${url}" does not look like a font file (expected .ttf, .otf, .woff, .woff2).`);
 	}
 

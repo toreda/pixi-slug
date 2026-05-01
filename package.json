@@ -1,6 +1,6 @@
 {
 	"name": "pixi-slug",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "GPU-accelerated vector text for PixiJS v6, v7, and v8. Crisp at any size, rotation, or 3D transform.",
 	"main": "./dist/v8/index.js",
 	"types": "./dist/v8/index.d.ts",

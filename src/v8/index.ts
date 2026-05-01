@@ -10,3 +10,4 @@ export {slugFontsAttachTickerV8} from './slug/fonts/ticker';
 export {slugFontsInstallLoaderV8} from './slug/fonts/loader';
 export {SlugApplicationPluginV8} from './slug/plugin';
 export type {Rgba, RgbaReadonly} from '../rgba';
+export type {SlugFontsRemoveResult} from '../shared/slug/fonts/remove';

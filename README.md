@@ -358,6 +358,7 @@ If an alias is referenced before it's registered, the `SlugText` falls back to t
 
 `PIXI.Assets.load()` (v7/v8) returns a browser `FontFace`, which `SlugText` accepts directly. For more efficient loading — skip the intermediate `FontFace` and receive raw bytes — call the version-specific installer once at app startup:
 
+### PIXI `v8` - Loading font assets
 ```typescript
 // v8
 const {Assets} = require('pixi.js');
@@ -368,6 +369,7 @@ const bytes = await Assets.load('roboto.ttf'); // now returns ArrayBuffer
 const text = new SlugText({text: 'Hi', font: bytes});
 ```
 
+### PIXI `v7` - Loading font assets
 ```typescript
 // v7
 const {Assets} = require('pixi.js');
@@ -378,6 +380,7 @@ const bytes = await Assets.load('roboto.ttf');
 const text = new SlugText({text: 'Hi', font: bytes});
 ```
 
+### PIXI `v6` - Loading font assets
 ```typescript
 // v6 — PIXI.Loader can't be extended to return raw bytes; use the
 // helper instead of `loader.add(url)` when the font is destined for SlugText.
@@ -387,10 +390,12 @@ const bytes = await slugFontsFetchV6('roboto.ttf');
 const text = new SlugText({text: 'Hi', font: bytes});
 ```
 
+&nbsp;
 ## Integrating with `PIXI.Application`
 
 The `SlugFonts` registry needs a ticker to run its auto-destroy sweep. Two ways to wire it up — pick whichever fits your app.
 
+&nbsp;
 ### Quick path — shared ticker
 
 One call. Uses `Ticker.shared` in the background. Works even if you don't use `PIXI.Application` at all.
@@ -426,7 +431,7 @@ const {SlugApplicationPluginV7} = require('pixi-slug/v7');
 extensions.add(SlugApplicationPluginV7);
 ```
 
-v6 uses the older registration surface:
+v6 uses the older registration method:
 
 ```typescript
 const {Application} = require('@pixi/app');
@@ -436,33 +441,36 @@ Application.registerPlugin(SlugApplicationPluginV6);
 
 **Conflict behavior:** both paths call `SlugFonts.attachTicker` under the hood. If one is already active and another tries to attach, `SlugFonts.reattachPolicy` decides what happens — `'throw'` by default, or `'error'` / `'warn'` / `'silent'`. Change it with `SlugFonts.setReattachPolicy('warn')` (validated — invalid modes are rejected and logged). Pass `{force: true}` as the second arg to `attachTicker` to replace silently. Full details in [_features/application_plugin.md](_features/application_plugin.md).
 
+&nbsp;
 ## Changelog
 
 Release history and unreleased changes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
+&nbsp;
 ## Slug Reference Code
 
 [Eric Lengyel](https://github.com/EricLengyel) created and patented the Slug algorithm. He published [reference code on Github](https://github.com/EricLengyel/Slug/tree/main).
 
-
+&nbsp;
 ## Legal
 
 Eric Lengyel created the patented slug algorithm in 2016. He graciously released it into the public domain for free in 2026. [`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is a TypeScript port of his work to add gpu-based font rendering to [pixi.js](https://pixijs.com/).
 
 [`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is not affiliated with, or endorsed by Eric Lengyel.
 
+&nbsp;
 ## License
 
-[MIT](LICENSE) &copy; Toreda, Inc.
+[MIT](LICENSE) &copy; 2026 Toreda, Inc.
 
 Bundled third-party components (currently the Roboto fallback font, Apache-2.0) are attributed in [NOTICES](NOTICES).
 
+&nbsp;
 ## Website
 
 Toreda's website can be found at [toreda.com](https://www.toreda.com)
 
-
-
+&nbsp;
 ## Toreda Open Source Packages
 Explore other open source packages by [toreda.com](https://www.toreda.com) designed to support generics and no runtime dependencies:
 

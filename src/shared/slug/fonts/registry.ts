@@ -28,6 +28,17 @@ export class SlugFontsRegistry {
 	public readonly all: SlugFontsRegistryEntry[];
 	/** Unordered subset of `all` containing only entries with `markedForDestroy`. */
 	public readonly marked: SlugFontsRegistryEntry[];
+	/**
+	 * Strong-reference anchors for caller-supplied fonts that the
+	 * registry is NOT managing (no refcount, no auto-destroy). Holds the
+	 * font alive so `SlugText`'s `WeakRef` can deref reliably until the
+	 * caller explicitly removes it via {@link SlugFonts.removeManual}.
+	 *
+	 * Manual fonts are deliberately not in `byUrl`/`byName`/`all` and
+	 * cannot be looked up by URL or name from elsewhere — they exist
+	 * solely as anchors for the `SlugText` instances that received them.
+	 */
+	public readonly manualFonts: Set<SlugFont>;
 	public fallback: SlugFont | null;
 	/** True once the caller has explicitly set a fallback, so the
 	 *  lazy bundled fallback won't overwrite it. */
@@ -63,6 +74,7 @@ export class SlugFontsRegistry {
 		this.inflight = new Map();
 		this.all = [];
 		this.marked = [];
+		this.manualFonts = new Set();
 		this.fallback = null;
 		this.fallbackOverridden = false;
 
@@ -254,6 +266,20 @@ export class SlugFontsRegistry {
 				markedForDestroy: e.markedForDestroy,
 				fileSize: e.fileSize,
 				createdAt: e.createdAt
+			});
+		}
+		// Manual fonts: no key, no refcount, no auto-destroy. The synthetic
+		// `key` is only useful for visual disambiguation in stats output.
+		let manualIdx = 0;
+		for (const font of this.manualFonts) {
+			out.push({
+				key: `manual:${manualIdx++}`,
+				source: 'manual',
+				refs: 0,
+				markedForDestroy: false,
+				fileSize: 0,
+				createdAt: 0,
+				font
 			});
 		}
 		return out;

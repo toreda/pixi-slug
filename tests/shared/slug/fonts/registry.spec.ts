@@ -795,6 +795,98 @@ describe('SlugFontsRegistry', () => {
 				expect(r.byName.size).toBe(1);
 				expect(r.all.length).toBe(1);
 			});
+
+			it('should emit one entry with source "manual" per anchored manual font', () => {
+				const r = new SlugFontsRegistry();
+				r.manualFonts.add(new SlugFont());
+				r.manualFonts.add(new SlugFont());
+				const stats = r.stats();
+				expect(stats).toHaveLength(2);
+				expect(stats.every((s) => s.source === 'manual')).toBe(true);
+			});
+
+			it('should report manual entries with refs 0 and markedForDestroy false', () => {
+				const r = new SlugFontsRegistry();
+				r.manualFonts.add(new SlugFont());
+				const stat = r.stats()[0];
+				expect(stat.refs).toBe(0);
+				expect(stat.markedForDestroy).toBe(false);
+				expect(stat.fileSize).toBe(0);
+				expect(stat.createdAt).toBe(0);
+			});
+
+			it('should populate the `font` field on manual entries so callers can correlate', () => {
+				const r = new SlugFontsRegistry();
+				const font = new SlugFont();
+				r.manualFonts.add(font);
+				expect(r.stats()[0].font).toBe(font);
+			});
+
+			it('should give each manual entry a distinct `manual:N` synthetic key', () => {
+				const r = new SlugFontsRegistry();
+				r.manualFonts.add(new SlugFont());
+				r.manualFonts.add(new SlugFont());
+				const keys = r.stats().map((s) => s.key).sort();
+				expect(keys).toEqual(['manual:0', 'manual:1']);
+			});
+
+			it('should emit registered and manual entries together when both are present', () => {
+				const r = new SlugFontsRegistry();
+				const reg = makeEntry();
+				seed(r, reg, {name: 'reg'});
+				r.manualFonts.add(new SlugFont());
+				const stats = r.stats();
+				const sources = stats.map((s) => s.source).sort();
+				expect(sources).toEqual(['manual', 'name']);
+			});
+		});
+
+		// =========================================================
+		// Manual font store tests
+		// =========================================================
+		describe('manualFonts store', () => {
+			it('should be initialized as an empty Set', () => {
+				const r = new SlugFontsRegistry();
+				expect(r.manualFonts).toBeInstanceOf(Set);
+				expect(r.manualFonts.size).toBe(0);
+			});
+
+			it('should not interact with `byUrl`, `byName`, or `all`', () => {
+				const r = new SlugFontsRegistry();
+				const font = new SlugFont();
+				r.manualFonts.add(font);
+				expect(r.byUrl.size).toBe(0);
+				expect(r.byName.size).toBe(0);
+				expect(r.all.length).toBe(0);
+			});
+
+			it('should not be touched by `entryForFont` lookups', () => {
+				const r = new SlugFontsRegistry();
+				const font = new SlugFont();
+				r.manualFonts.add(font);
+				expect(r.entryForFont(font)).toBeNull();
+			});
+
+			it('should not be visited by sweep regardless of marked state', () => {
+				const r = new SlugFontsRegistry();
+				const font = new SlugFont();
+				const spy = jest.spyOn(font, 'destroyGpu');
+				r.manualFonts.add(font);
+				// Force sweep timing — manual fonts have no entry, so even if
+				// the sweep ran every frame it could not destroy them.
+				r.sweep(Number.MAX_SAFE_INTEGER);
+				r.sweepImmediate();
+				expect(spy).not.toHaveBeenCalled();
+				expect(r.manualFonts.has(font)).toBe(true);
+			});
+
+			it('should treat manual storage as Set-deduplicated (same font added twice → one entry)', () => {
+				const r = new SlugFontsRegistry();
+				const font = new SlugFont();
+				r.manualFonts.add(font);
+				r.manualFonts.add(font);
+				expect(r.manualFonts.size).toBe(1);
+			});
 		});
 	});
 });

@@ -15,3 +15,4 @@ export type {SlugFontErrorPolicy} from '../shared/slug/font/error/policy';
 export type {SlugFontErrorCase} from '../shared/slug/font/error/case';
 export type {SlugFontErrorMode} from '../shared/slug/font/error/mode';
 export type {Rgba, RgbaReadonly} from '../rgba';
+export type {SlugFontsRemoveResult} from '../shared/slug/fonts/remove';

@@ -36,4 +36,16 @@ export class Constants {
 	 * forward by this many floats.
 	 */
 	public static readonly FLOATS_PER_VEC4 = 4 as const;
+
+	/**
+	 * URL test for the font formats `pixi-slug` accepts: `.ttf`, `.otf`,
+	 * `.woff`, `.woff2`. The trailing group requires the extension to be
+	 * followed by a query string (`?`), fragment (`#`), or end of input
+	 * — preventing false positives like `.ttfx` or `something-otf-foo`.
+	 *
+	 * Used by every version's loader (`slugFontsInstallLoaderV7/V8`,
+	 * `slugFontsFetchV6`) to decide whether a URL is a font file PIXI
+	 * should hand off as raw bytes rather than wrapping in a `FontFace`.
+	 */
+	public static readonly FONT_URL_REGEX = /\.(ttf|otf|woff2?)(\?|#|$)/i;
 }
