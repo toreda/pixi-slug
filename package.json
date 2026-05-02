@@ -47,7 +47,10 @@
 		"test:ci": "cross-env COVERAGE=full jest --ci --coverage --maxWorkers=50% --reporters=default --reporters=jest-junit",
 		"test:fast": "cross-env COVERAGE=summary jest --bail --coverage",
 		"examples": "serve . -l 3000 --cors --no-clipboard",
-		"examples:watch": "webpack --watch --env version=all --env target=dev & serve . -l 3000 --cors --no-clipboard"
+		"examples:watch": "webpack --watch --env version=all --env target=dev & serve . -l 3000 --cors --no-clipboard",
+		"release:prepare": "node scripts/prepare-changelog-release.mjs",
+		"release:notes": "node scripts/extract-changelog-section.mjs",
+		"release:package": "node scripts/package-release-zips.mjs"
 	},
 	"keywords": [
 		"slug",

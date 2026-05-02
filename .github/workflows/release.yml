@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches package.json
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "${PKG_VERSION}" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::tag ${{ steps.version.outputs.tag }} does not match package.json version ${PKG_VERSION}"
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all versions (prod)
+        run: pnpm run build:all:prod
+
+      - name: Extract release notes from CHANGELOG.md
+        id: notes
+        # `pnpm --silent` drops the script banner from stdout so only the
+        # extractor's own output lands in release-notes.md. Same script
+        # as `pnpm release:notes <version>` locally.
+        run: |
+          pnpm --silent release:notes "${{ steps.version.outputs.version }}" > release-notes.md
+          echo "Release notes preview:"
+          echo "----------------------"
+          cat release-notes.md
+          echo "----------------------"
+
+      - name: Package release zips
+        # Produces artifacts/pixi-slug-{v6,v7,v8,all}-<version>.zip via the
+        # same Node script you can run locally with `pnpm release:package`.
+        run: pnpm release:package "${{ steps.version.outputs.version }}"
+
+      - name: Show artifact list
+        run: ls -lh artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body_path: release-notes.md
+          files: |
+            artifacts/pixi-slug-v6-${{ steps.version.outputs.version }}.zip
+            artifacts/pixi-slug-v7-${{ steps.version.outputs.version }}.zip
+            artifacts/pixi-slug-v8-${{ steps.version.outputs.version }}.zip
+            artifacts/pixi-slug-all-${{ steps.version.outputs.version }}.zip
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
