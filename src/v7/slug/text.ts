@@ -57,6 +57,16 @@ export class SlugText extends SlugTextV7Base {
 		this._decorations = null;
 		this._fillGpu = null;
 
+		// Opt the whole subtree out of hit-testing by default. The
+		// internal meshes use a custom geometry so PIXI's
+		// Mesh.containsPoint crashes when the event system tries to test
+		// them. Users who want a clickable SlugText can flip
+		// `interactive`/`interactiveChildren` after construction. Cast
+		// through `any` because the mixin's ContainerLike interface
+		// hides PIXI v7 DisplayObject's interactivity fields.
+		(this as any).interactive = false;
+		(this as any).interactiveChildren = false;
+
 		this.rebuild();
 	}
 
@@ -100,6 +110,16 @@ export class SlugText extends SlugTextV7Base {
 	 * sampler bindings (gradient LUT or user texture). Pass-specific
 	 * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
 	 * the caller doesn't repeat the pattern across shadow / stroke / fill.
+	 *
+	 * Hit-testing note: the geometry below uses a Slug-specific attribute
+	 * layout (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+	 * `aColor`) rather than PIXI's stock `aVertexPosition`. PIXI's
+	 * `Mesh.containsPoint` looks up `aVertexPosition` directly and
+	 * crashes on this geometry, which is why the parent SlugText
+	 * disables hit-testing in its constructor (`interactive = false`,
+	 * `interactiveChildren = false`). Anything that flips those back on
+	 * needs a custom `containsPoint` or a separate hit-test rectangle
+	 * — do not assume PIXI's default works on these meshes.
 	 */
 	private _buildMesh(
 		quads: SlugGlyphQuads,

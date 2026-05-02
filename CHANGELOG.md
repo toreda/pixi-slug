@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Internal: `aliased` v6 and v7 PIXI submodules now include `@pixi/math` (`pixi-v6-math` / `pixi-v7-math`) in `package.json` `devDependencies` and the `tsconfig.v{6,7}.json` `paths` mapping. Required by the v6/v7 decoration fill helper.
 
 ### Fixed
+- v8/v7/v6: SlugText `interactive` and `interactiveChildren` are now `false`. The `true` default was not intended which caused exceptions in certain specific hittest scenarios.
 - v7: prod build failed with `TS2307: Cannot find module '@pixi/math'` because the alias was missing from `package.json` and `tsconfig.v7.json`. Added alongside the other v7 PIXI submodule aliases.
 - v7: supersampling callback was missing in `text.ts`, so toggling `supersampling` / `supersampleCount` after construction did not propagate to the shader uniform group.
 - v6/v7: matrix clone error in decoration texture fill builder.

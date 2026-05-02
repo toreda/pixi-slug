@@ -162,6 +162,27 @@ In the future, it would be nice to fall back to standard `PIXI.Text` when `WebGL
 
 <p align="center">· · ·</p>
 
+## Can I make a `SlugText` clickable / hover-able?
+
+**By default, no — and that's intentional.** `SlugText` instances opt out of PIXI's event system in their constructor (`eventMode = 'none'` on v8, `interactive = false` on v6/v7, plus `interactiveChildren = false`). The internal meshes use a Slug-specific vertex layout (`aPositionNormal`, etc.) instead of PIXI's stock `aVertexPosition`, so PIXI's built-in `Mesh.containsPoint` crashes when the event boundary tries to hit-test them (`Cannot read properties of undefined (reading 'buffer')`).
+
+If you need a clickable / hoverable `SlugText`, the recommended approach is to wrap it (or place a sibling) with a transparent hit-test region:
+
+```typescript
+const text = new SlugText({text: 'Click me', font: 'roboto'});
+
+// v8
+const hit = new Graphics().rect(0, 0, text.width, text.height).fill({color: 0, alpha: 0});
+hit.eventMode = 'static';
+hit.on('pointerdown', () => { /* ... */ });
+
+container.addChild(text, hit);
+```
+
+Re-enabling events directly on the `SlugText` (`text.eventMode = 'static'`) will reintroduce the crash unless you also override `containsPoint` on each child mesh. Use the wrapper pattern instead.
+
+<p align="center">· · ·</p>
+
 
 
 # Examples
