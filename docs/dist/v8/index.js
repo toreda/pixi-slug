@@ -11259,13 +11259,29 @@ _decorations;
      * on every rebuild before being replaced — the new fill state owns
      * a fresh LUT.
      */
-_fillGpu;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,this.rebuild()}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;for(const mesh of this._meshes){if(!mesh.shader)continue;mesh.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=value}}onSupersampleCountChanged(){if(this._supersampling)for(const mesh of this._meshes){if(!mesh.shader)continue;mesh.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=this._supersampleCount}}
+_fillGpu;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,
+// Opt the whole subtree out of hit-testing by default. The
+// internal meshes use a custom geometry (aPositionNormal, not
+// aVertexPosition) so PIXI's Mesh.containsPoint crashes when the
+// event system tries to test them. Users who want a clickable
+// SlugText can override eventMode after construction.
+this.eventMode="none",this.interactiveChildren=!1,this.rebuild()}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;for(const mesh of this._meshes){if(!mesh.shader)continue;mesh.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=value}}onSupersampleCountChanged(){if(this._supersampling)for(const mesh of this._meshes){if(!mesh.shader)continue;mesh.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=this._supersampleCount}}
 /**
      * Build a Mesh from quad data with optional stroke expansion. The
      * `fillGpu` argument selects the fill mode and supplies the fill
      * sampler bindings (gradient LUT or user texture). Pass-specific
      * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
      * the caller doesn't repeat the pattern across shadow / stroke / fill.
+     *
+     * Hit-testing note: the geometry below uses a Slug-specific attribute
+     * layout (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+     * `aColor`) rather than PIXI's stock `aVertexPosition`. PIXI's
+     * `Mesh.containsPoint` looks up `aVertexPosition` directly and
+     * crashes on this geometry, which is why the parent SlugText
+     * disables hit-testing in its constructor (`eventMode = 'none'`,
+     * `interactiveChildren = false`). Anything that flips those back on
+     * needs a custom `containsPoint` or a separate hit-test rectangle
+     * — do not assume PIXI's default works on these meshes.
      */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX}),geometry=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride,offset:vec4Bytes},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride,offset:2*vec4Bytes},aBanding:{buffer:vertexBuffer,format:"float32x4",stride,offset:3*vec4Bytes},aColor:{buffer:vertexBuffer,format:"float32x4",stride,offset:4*vec4Bytes}},indexBuffer:quads.indices}),{shader,uniforms}=slugShader(gpu.glProgram,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite);return uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,uniforms.uniforms.uFillMode=fillGpu.mode,uniforms.uniforms.uFillBoundsPx=new Float32Array(fillBounds),uniforms.uniforms.uFillParams0=new Float32Array(fillGpu.params0),uniforms.uniforms.uFillTextureSizePx=new Float32Array(fillGpu.textureSizePx),uniforms.uniforms.uFillTextureFit=fillGpu.textureFit,uniforms.uniforms.uFillTextureScale=new Float32Array(fillGpu.textureScale),uniforms.uniforms.uFillTextureOffset=new Float32Array(fillGpu.textureOffset),
 // Bind the fill samplers. When the fill is solid both stay on
 // fallbackWhite (already bound by slugShader); otherwise swap in

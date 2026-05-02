@@ -11223,7 +11223,15 @@ _decorations;
      * rebuild before being replaced — the new fill state owns a fresh
      * LUT.
      */
-_fillGpu;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,this.rebuild()}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;for(const mesh of this._meshes)mesh.shader.uniforms.uSupersampleCount=value}onSupersampleCountChanged(){if(this._supersampling)for(const mesh of this._meshes)mesh.shader.uniforms.uSupersampleCount=this._supersampleCount}_makeQuads(font,lines,color,extraExpand=0){if(lines.length>1){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
+_fillGpu;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,
+// Opt the whole subtree out of hit-testing by default. The
+// internal meshes use a custom geometry so PIXI's
+// Mesh.containsPoint crashes when the event system tries to test
+// them. Users who want a clickable SlugText can flip
+// `interactive`/`interactiveChildren` after construction. Cast
+// through `any` because the mixin's ContainerLike interface
+// hides PIXI v7 DisplayObject's interactivity fields.
+this.interactive=!1,this.interactiveChildren=!1,this.rebuild()}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;for(const mesh of this._meshes)mesh.shader.uniforms.uSupersampleCount=value}onSupersampleCountChanged(){if(this._supersampling)for(const mesh of this._meshes)mesh.shader.uniforms.uSupersampleCount=this._supersampleCount}_makeQuads(font,lines,color,extraExpand=0){if(lines.length>1){const scale=this._fontSize/font.unitsPerEm,lineHeight=(font.ascender-font.descender)*scale;return function(lines,glyphs,advances,unitsPerEm,fontSize,textureWidth,lineHeight,color=[1,1,1,1],extraExpand=0){if(lines.length<=1)return slugGlyphQuads(lines[0]||"",glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);
 // Build quads per line, then merge into a single buffer.
 const perLine=[];let totalQuads=0;for(let l=0;l<lines.length;l++){const q=slugGlyphQuads(lines[l],glyphs,advances,unitsPerEm,fontSize,textureWidth,color,extraExpand);perLine.push(q),totalQuads+=q.quadCount}if(0===totalQuads)return{vertices:new Float32Array(0),indices:new Uint32Array(0),quadCount:0};const totalVerts=totalQuads*Constants.VERTICES_PER_QUAD*Constants.FLOATS_PER_VERTEX,totalIdxs=totalQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(totalVerts),indices=new Uint32Array(totalIdxs);let vertOffset=0,idxOffset=0,baseVertex=0;for(let l=0;l<perLine.length;l++){const q=perLine[l];if(0===q.quadCount)continue;const yShift=l*lineHeight,srcVerts=q.vertices,srcIdxs=q.indices;
 // Copy vertices with Y offset applied to position (float index 1 per vertex)
@@ -11240,6 +11248,16 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
      * sampler bindings (gradient LUT or user texture). Pass-specific
      * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
      * the caller doesn't repeat the pattern across shadow / stroke / fill.
+     *
+     * Hit-testing note: the geometry below uses a Slug-specific attribute
+     * layout (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+     * `aColor`) rather than PIXI's stock `aVertexPosition`. PIXI's
+     * `Mesh.containsPoint` looks up `aVertexPosition` directly and
+     * crashes on this geometry, which is why the parent SlugText
+     * disables hit-testing in its constructor (`interactive = false`,
+     * `interactiveChildren = false`). Anything that flips those back on
+     * needs a custom `containsPoint` or a separate hit-test rectangle
+     * — do not assume PIXI's default works on these meshes.
      */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexBuffer=new core_root_PIXI_.Buffer(quads.vertices.buffer,!0),geometry=new core_root_PIXI_.Geometry;geometry.addAttribute("aPositionNormal",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,0),geometry.addAttribute("aTexcoord",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,vec4Bytes),geometry.addAttribute("aJacobian",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,2*vec4Bytes),geometry.addAttribute("aBanding",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,3*vec4Bytes),geometry.addAttribute("aColor",vertexBuffer,4,!1,constants_root_PIXI_.TYPES.FLOAT,stride,4*vec4Bytes);const indices16=new Uint16Array(quads.indices.length);for(let i=0;i<quads.indices.length;i++)indices16[i]=quads.indices[i];geometry.addIndex(indices16);const shader=slugShader(gpu.program,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite,[800,400]);return shader.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,shader.uniforms.uStrokeExpand=strokeExpand,shader.uniforms.uFillMode=fillGpu.mode,shader.uniforms.uFillBoundsPx=new Float32Array(fillBounds),shader.uniforms.uFillParams0=new Float32Array(fillGpu.params0),shader.uniforms.uFillTextureSizePx=new Float32Array(fillGpu.textureSizePx),shader.uniforms.uFillTextureFit=fillGpu.textureFit,shader.uniforms.uFillTextureScale=new Float32Array(fillGpu.textureScale),shader.uniforms.uFillTextureOffset=new Float32Array(fillGpu.textureOffset),
 // Bind the fill samplers. When the fill is solid both stay on
 // fallbackWhite (already bound by slugShader); otherwise swap in
