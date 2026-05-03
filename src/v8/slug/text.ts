@@ -235,11 +235,21 @@ export class SlugText extends SlugTextV8Base {
 		}
 
 		const font = this._fontRef?.deref();
-		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
+		if (!font || this._text.length === 0 || font.unitsPerEm === 0) {
 			return;
 		}
 
-		const gpu = slugFontGpuV8(font);
+		// Lazy glyph processing: ensure every codepoint in the current
+		// text has been processed and packed into the font's curve/band
+		// textures before we read offsets from them. Cached glyphs
+		// short-circuit at the cost of one Map.has() per codepoint;
+		// only NEW codepoints trigger outline processing. The result
+		// drives the GPU sync below — a buffer grow forces a texture
+		// recreate, an in-place append triggers a reupload, and a
+		// no-op return path leaves both textures untouched.
+		const ensureResult = font.ensureGlyphs(this._text);
+
+		const gpu = slugFontGpuV8(font, ensureResult);
 		const hasShadow = this._dropShadow !== null;
 		const hasStroke = this._strokeWidth > 0;
 

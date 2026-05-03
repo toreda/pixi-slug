@@ -194,11 +194,15 @@ export class SlugText extends SlugTextV7Base {
 		}
 
 		const font = this._fontRef?.deref();
-		if (!font || this._text.length === 0 || font.glyphs.size === 0) {
+		if (!font || this._text.length === 0 || font.unitsPerEm === 0) {
 			return;
 		}
 
-		const gpu = slugFontGpuV7(font);
+		// See v8 SlugText.rebuild for the lazy-glyph-processing rationale —
+		// behavior is identical here.
+		const ensureResult = font.ensureGlyphs(this._text);
+
+		const gpu = slugFontGpuV7(font, ensureResult);
 		const hasShadow = this._dropShadow !== null;
 		const hasStroke = this._strokeWidth > 0;
 

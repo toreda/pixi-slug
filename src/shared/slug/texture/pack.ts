@@ -2,6 +2,11 @@ import type {SlugGlyphData} from '../glyph/data';
 
 /**
  * Result of packing all glyph data into GPU-ready textures.
+ *
+ * @deprecated For new code, use {@link SlugTexturePackState} +
+ * {@link slugTextureAppendGlyphs}, which support incremental glyph
+ * additions. {@link slugTexturePack} remains as a one-shot wrapper for
+ * eager preload paths and backward compatibility.
  */
 export interface SlugTexturePack {
 	/** Float32 RGBA curve texture data (4 components per texel). */
@@ -11,11 +16,73 @@ export interface SlugTexturePack {
 }
 
 /**
+ * Persistent packing state that tracks the curve and band texture
+ * buffers across multiple {@link slugTextureAppendGlyphs} calls. Callers
+ * (typically `SlugFont`) hold one of these per font and append glyphs as
+ * the text class encounters new codepoints.
+ *
+ * The `*TexelIdx` fields are the next free texel slot. The `*Data`
+ * buffers may be larger than `*TexelIdx * 4` — the trailing area is
+ * pre-allocated headroom that future appends consume in place. When an
+ * append would overflow the headroom, the buffer is reallocated to a
+ * larger size and the `*Data` reference is replaced.
+ */
+export interface SlugTexturePackState {
+	/**
+	 * Texture width in texels. Fixed for the lifetime of the state — must
+	 * always equal {@link BAND_TEXTURE_WIDTH} so the shader's
+	 * `kLogBandTextureWidth` arithmetic stays valid.
+	 */
+	textureWidth: number;
+	/** Float32 RGBA curve texture data. May be larger than `curveTexelIdx` worth of texels. */
+	curveData: Float32Array;
+	/** Uint32 RGBA band texture data. May be larger than `bandTexelIdx` worth of texels. */
+	bandData: Uint32Array;
+	/** Next free texel index in `curveData`. */
+	curveTexelIdx: number;
+	/** Next free texel index in `bandData`. */
+	bandTexelIdx: number;
+}
+
+/**
+ * Result of an {@link slugTextureAppendGlyphs} call. Tells the GPU layer
+ * what changed so it can decide between a reallocate-and-reupload (when
+ * a buffer grew) and an incremental `texSubImage2D` for the new tail.
+ */
+export interface SlugTextureAppendResult {
+	/**
+	 * True when the curve buffer was reallocated to a larger size during
+	 * this append. Callers must reupload the entire curve texture.
+	 */
+	curveBufferGrew: boolean;
+	/**
+	 * True when the band buffer was reallocated to a larger size during
+	 * this append. Callers must reupload the entire band texture.
+	 */
+	bandBufferGrew: boolean;
+	/** First texel index written by this append in the curve buffer. */
+	curveTexelStart: number;
+	/** One past the last texel index written by this append in the curve buffer. */
+	curveTexelEnd: number;
+	/** First texel index written by this append in the band buffer. */
+	bandTexelStart: number;
+	/** One past the last texel index written by this append in the band buffer. */
+	bandTexelEnd: number;
+}
+
+/**
  * Band texture width required by the fragment shader.
  * Must match kLogBandTextureWidth = 12 in frag.glsl, which hardcodes
  * the wrap-and-shift arithmetic in CalcBandLoc to a 4096-wide texture.
  */
 const BAND_TEXTURE_WIDTH = 1 << 12; // 4096
+
+/**
+ * Initial number of texel rows allocated in each buffer when a state is
+ * created with no preloaded glyphs. Sized to cover ~one row of headroom
+ * so the very first glyph append does not trigger a grow.
+ */
+const INITIAL_ROWS = 1;
 
 /**
  * Compute the number of curve texels needed per contour using the
@@ -42,99 +109,177 @@ function countContourTexels(contourSize: number, startIdx: number, textureWidth:
 }
 
 /**
- * Pack preprocessed glyph data into curve and band textures.
- *
- * **Curve texture layout** (float RGBA, `textureWidth` wide):
- * Uses the shared-endpoint optimization: within each contour of N curves,
- * consecutive curves share endpoints (curve K's p3 == curve K+1's p1).
- * Each curve occupies 1 texel [p1.x, p1.y, p2.x, p2.y], and a sentinel
- * texel [p3.x, p3.y, 0, 0] follows the last curve in each contour.
- * The shader reads p3 as texelFetch(curveLoc.x + 1, curveLoc.y).xy,
- * which naturally reads the next curve's p1 or the sentinel — no shader
- * change required.
- *
- * For a contour of N curves this uses N+1 texels instead of 2N (~45% savings).
- *
- * **Band texture layout** (uint RGBA, `textureWidth` wide):
- * Per glyph, a contiguous block containing:
- *   1. Band headers (one per horizontal band, then one per vertical band):
- *      [curveCount, curveListOffset, 0, 0]
- *      curveListOffset is relative to glyph.bandOffset (used by CalcBandLoc in frag.glsl).
- *   2. Curve reference lists (one entry per curve in the band):
- *      [curveTexelX, curveTexelY, 0, 0]
- *      curveTexelX/Y are the 2D coordinates of the curve's p12 texel in uCurveTexture.
- *      Each list is row-aligned so it never straddles a row boundary.
+ * Compute the number of band texels a single glyph will consume. Mirrors
+ * the row-alignment logic in {@link slugTextureAppendGlyphs} so callers
+ * can pre-size buffers when they know the full glyph set up-front.
  */
-export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): SlugTexturePack {
+function countGlyphBandTexels(glyph: SlugGlyphData, startIdx: number, textureWidth: number): number {
+	const widthMask = textureWidth - 1;
+	let idx = startIdx;
+
+	const headerCount = glyph.hBandCount + glyph.vBandCount;
+	const headerCol = idx & widthMask;
+	if (headerCol + headerCount > textureWidth) {
+		idx += textureWidth - headerCol;
+	}
+	idx += headerCount;
+
+	for (const band of glyph.hBands) {
+		if (band.length > 0) {
+			const col = idx & widthMask;
+			if (col + band.length > textureWidth) {
+				idx += textureWidth - col;
+			}
+		}
+		idx += band.length;
+	}
+
+	for (const band of glyph.vBands) {
+		if (band.length > 0) {
+			const col = idx & widthMask;
+			if (col + band.length > textureWidth) {
+				idx += textureWidth - col;
+			}
+		}
+		idx += band.length;
+	}
+
+	return idx - startIdx;
+}
+
+/**
+ * Compute the number of curve texels a single glyph will consume.
+ */
+function countGlyphCurveTexels(glyph: SlugGlyphData, startIdx: number, textureWidth: number): number {
+	const starts = glyph.contourStarts;
+	let total = 0;
+	let idx = startIdx;
+
+	for (let c = 0; c < starts.length; c++) {
+		const contourBegin = starts[c];
+		const contourEnd = c + 1 < starts.length ? starts[c + 1] : glyph.curves.length;
+		const contourSize = contourEnd - contourBegin;
+		if (contourSize === 0) continue;
+		const used = countContourTexels(contourSize, idx, textureWidth);
+		total += used;
+		idx += used;
+	}
+
+	return total;
+}
+
+/**
+ * Reallocate `data` to hold at least `requiredTexels * 4` floats (or
+ * uint32s), rounded up to a whole row. Doubles the current capacity at
+ * minimum so the amortized cost of repeated grows stays O(N).
+ */
+function growFloat32(data: Float32Array, requiredTexels: number, textureWidth: number): Float32Array {
+	const requiredFloats = requiredTexels * 4;
+	if (data.length >= requiredFloats) {
+		return data;
+	}
+
+	const currentFloats = data.length;
+	const doubledFloats = currentFloats * 2;
+	const targetFloats = Math.max(doubledFloats, requiredFloats);
+	const targetTexels = Math.ceil(targetFloats / 4);
+	const targetRows = Math.ceil(targetTexels / textureWidth);
+	const next = new Float32Array(targetRows * textureWidth * 4);
+	next.set(data);
+	return next;
+}
+
+function growUint32(data: Uint32Array, requiredTexels: number, textureWidth: number): Uint32Array {
+	const requiredU32s = requiredTexels * 4;
+	if (data.length >= requiredU32s) {
+		return data;
+	}
+
+	const currentU32s = data.length;
+	const doubledU32s = currentU32s * 2;
+	const targetU32s = Math.max(doubledU32s, requiredU32s);
+	const targetTexels = Math.ceil(targetU32s / 4);
+	const targetRows = Math.ceil(targetTexels / textureWidth);
+	const next = new Uint32Array(targetRows * textureWidth * 4);
+	next.set(data);
+	return next;
+}
+
+/**
+ * Create a fresh packing state with empty curve and band buffers sized
+ * to a single row of headroom. The first append will only trigger a
+ * grow when the incoming glyphs exceed that initial allocation.
+ */
+export function slugTexturePackStateCreate(textureWidth: number): SlugTexturePackState {
 	if (textureWidth !== BAND_TEXTURE_WIDTH) {
 		throw new Error(
 			`textureWidth must be ${BAND_TEXTURE_WIDTH} to match kLogBandTextureWidth=12 in frag.glsl, got ${textureWidth}`
 		);
 	}
 
-	const widthMask = textureWidth - 1; // 0xFFF for bitwise mod
+	return {
+		textureWidth,
+		curveData: new Float32Array(INITIAL_ROWS * textureWidth * 4),
+		bandData: new Uint32Array(INITIAL_ROWS * textureWidth * 4),
+		curveTexelIdx: 0,
+		bandTexelIdx: 0
+	};
+}
 
-	// First pass: compute total sizes, simulating row alignment.
-	let totalCurveTexels = 0;
-	let totalBandTexels = 0;
+/**
+ * Append a batch of glyphs to the packing state, writing curve and band
+ * data into the existing buffers (growing them if needed) and assigning
+ * `curveOffset` / `bandOffset` on each glyph. After this call returns,
+ * `state.curveData` / `state.bandData` may be replaced (when a grow was
+ * required); callers that hold prior references must read the fields
+ * back from the state.
+ *
+ * Glyphs already packed (those with `curveOffset` and `bandOffset`
+ * already written by a prior append) MUST NOT be passed in again — they
+ * would be re-packed at a new offset and the prior offset would become
+ * stale, corrupting the texture for any vertex buffer that captured the
+ * old values.
+ */
+export function slugTextureAppendGlyphs(
+	state: SlugTexturePackState,
+	glyphs: SlugGlyphData[]
+): SlugTextureAppendResult {
+	const textureWidth = state.textureWidth;
+	const widthMask = textureWidth - 1;
+
+	const curveTexelStart = state.curveTexelIdx;
+	const bandTexelStart = state.bandTexelIdx;
+
+	// Pre-pass: compute the final texel cursors so we can grow the
+	// buffers exactly once per append. Mirrors the row-alignment logic
+	// in the write pass — must stay in lock-step.
+	let curveCursor = state.curveTexelIdx;
+	let bandCursor = state.bandTexelIdx;
 
 	for (const glyph of glyphs) {
-		// Shared-endpoint curve texels per contour
-		const starts = glyph.contourStarts;
-		for (let c = 0; c < starts.length; c++) {
-			const contourBegin = starts[c];
-			const contourEnd = c + 1 < starts.length ? starts[c + 1] : glyph.curves.length;
-			const contourSize = contourEnd - contourBegin;
-			if (contourSize === 0) continue;
-			totalCurveTexels += countContourTexels(contourSize, totalCurveTexels, textureWidth);
-		}
-
-		// Band headers must all fit on one row.
-		const hcount = glyph.hBandCount + glyph.vBandCount;
-		const hcol = totalBandTexels & widthMask;
-		if (hcol + hcount > textureWidth) {
-			totalBandTexels += textureWidth - hcol;
-		}
-		totalBandTexels += hcount;
-
-		// Curve reference lists — simulate row alignment.
-		for (const band of glyph.hBands) {
-			if (band.length > 0) {
-				const col = totalBandTexels & widthMask;
-				if (col + band.length > textureWidth) {
-					totalBandTexels += textureWidth - col;
-				}
-			}
-			totalBandTexels += band.length;
-		}
-		for (const band of glyph.vBands) {
-			if (band.length > 0) {
-				const col = totalBandTexels & widthMask;
-				if (col + band.length > textureWidth) {
-					totalBandTexels += textureWidth - col;
-				}
-			}
-			totalBandTexels += band.length;
-		}
+		curveCursor += countGlyphCurveTexels(glyph, curveCursor, textureWidth);
+		bandCursor += countGlyphBandTexels(glyph, bandCursor, textureWidth);
 	}
 
-	// Compute texture height from texel count (round up to full rows)
-	const curveRows = Math.ceil(totalCurveTexels / textureWidth) || 1;
-	const bandRows = Math.ceil(totalBandTexels / textureWidth) || 1;
+	const prevCurveLength = state.curveData.length;
+	const prevBandLength = state.bandData.length;
+	state.curveData = growFloat32(state.curveData, curveCursor, textureWidth);
+	state.bandData = growUint32(state.bandData, bandCursor, textureWidth);
+	const curveBufferGrew = state.curveData.length !== prevCurveLength;
+	const bandBufferGrew = state.bandData.length !== prevBandLength;
 
-	// Allocate RGBA textures (4 components per texel)
-	const curveData = new Float32Array(curveRows * textureWidth * 4);
-	const bandData = new Uint32Array(bandRows * textureWidth * 4);
+	const curveData = state.curveData;
+	const bandData = state.bandData;
 
-	// Second pass: pack data
-	let curveTexelIdx = 0;
-	let bandTexelIdx = 0;
+	// Write pass: identical layout to the eager `slugTexturePack`. Run
+	// glyph-by-glyph so prior glyphs already packed in the buffer are
+	// untouched and their assigned offsets remain valid.
+	let curveTexelIdx = state.curveTexelIdx;
+	let bandTexelIdx = state.bandTexelIdx;
 
 	for (const glyph of glyphs) {
 		glyph.curveOffset = curveTexelIdx;
 
-		// Pack curves using shared-endpoint layout.
-		// Track each curve's p12 texel index for band references below.
 		const curveTexels = new Uint32Array(glyph.curves.length);
 		const starts = glyph.contourStarts;
 
@@ -144,10 +289,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			const contourSize = contourEnd - contourBegin;
 			if (contourSize === 0) continue;
 
-			// Pack each curve's p12 texel. The shader reads p3 from curveLoc.x+1,
-			// which is the next curve's p12 texel (whose .xy == current curve's p3).
 			for (let i = contourBegin; i < contourEnd; i++) {
-				// Ensure this texel and the +1 texel are on the same row.
 				if ((curveTexelIdx & widthMask) === widthMask) {
 					curveTexelIdx++; // skip last column
 				}
@@ -163,13 +305,6 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 				curveTexelIdx++;
 			}
 
-			// Sentinel texel: holds the last curve's p3 so the shader's
-			// curveLoc.x+1 read works for the final curve in the contour.
-			// Row-alignment: the last curve's texel was placed such that +1
-			// is on the same row (handled by the skip above). The sentinel
-			// itself also needs its +1 neighbor check skipped since nothing
-			// reads sentinel+1, but we still must not leave curveTexelIdx
-			// on the last column for the next contour's first curve.
 			const lastCurve = glyph.curves[contourEnd - 1];
 			const sentBase = curveTexelIdx * 4;
 			curveData[sentBase] = lastCurve.p3x;
@@ -177,9 +312,7 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			curveTexelIdx++;
 		}
 
-		// --- Band texture packing (unchanged logic) ---
-
-		// Pad to next row if band headers would straddle a row boundary.
+		// --- Band texture packing ---
 		const headerCount = glyph.hBandCount + glyph.vBandCount;
 		const headerCol = bandTexelIdx & widthMask;
 		if (headerCol + headerCount > textureWidth) {
@@ -188,15 +321,9 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 
 		glyph.bandOffset = bandTexelIdx;
 
-		// NOTE: Band headers, curve references, and curve sentinels only write
-		// channels 0-1 (xy). Channels 2-3 (zw) are left at zero from the typed
-		// array allocation. The shader only reads .xy (fetchBand, texelFetch .xy).
-		// If the shader or band format ever reads .zw, add explicit writes back.
-
 		const headerStart = bandTexelIdx;
 		bandTexelIdx += headerCount;
 
-		// Pack horizontal band headers + curve lists
 		for (let b = 0; b < glyph.hBandCount; b++) {
 			const band = glyph.hBands[b];
 			const headerBase = (headerStart + b) * 4;
@@ -220,7 +347,6 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			}
 		}
 
-		// Pack vertical band headers + curve lists
 		for (let b = 0; b < glyph.vBandCount; b++) {
 			const band = glyph.vBands[b];
 			const headerBase = (headerStart + glyph.hBandCount + b) * 4;
@@ -244,6 +370,51 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 			}
 		}
 	}
+
+	state.curveTexelIdx = curveTexelIdx;
+	state.bandTexelIdx = bandTexelIdx;
+
+	return {
+		curveBufferGrew,
+		bandBufferGrew,
+		curveTexelStart,
+		curveTexelEnd: curveTexelIdx,
+		bandTexelStart,
+		bandTexelEnd: bandTexelIdx
+	};
+}
+
+/**
+ * One-shot pack: takes a complete glyph set, allocates buffers sized
+ * exactly to the packed data, and writes everything in a single pass.
+ * Equivalent to `slugTexturePackStateCreate` + a single
+ * `slugTextureAppendGlyphs`, with the trailing buffer slack trimmed off.
+ *
+ * Retained as a convenience for fully-eager preload paths and tests
+ * that compare against the legacy packing output. New code that
+ * processes glyphs incrementally should use the state-based API
+ * directly.
+ */
+export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): SlugTexturePack {
+	const state = slugTexturePackStateCreate(textureWidth);
+	slugTextureAppendGlyphs(state, glyphs);
+
+	// Trim trailing slack so the returned buffers match the legacy
+	// "exactly N rows" layout. Round up to a whole row — partial rows
+	// would break the GPU upload's row-pitch assumptions.
+	const curveRows = Math.ceil(state.curveTexelIdx / textureWidth) || 1;
+	const bandRows = Math.ceil(state.bandTexelIdx / textureWidth) || 1;
+	const curveLength = curveRows * textureWidth * 4;
+	const bandLength = bandRows * textureWidth * 4;
+
+	const curveData =
+		state.curveData.length === curveLength
+			? state.curveData
+			: state.curveData.subarray(0, curveLength).slice();
+	const bandData =
+		state.bandData.length === bandLength
+			? state.bandData
+			: state.bandData.subarray(0, bandLength).slice();
 
 	return {curveData, bandData};
 }

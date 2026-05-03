@@ -4,11 +4,46 @@ import {Defaults} from '../../defaults';
 import {SlugFont} from './font';
 import {isSlugFontErrorMode} from './fonts/error';
 import {robotoFallbackBytes} from './fonts/fallback/roboto';
+import {slugFontRunPreload, type SlugFontPreloadOptions} from './fonts/preload';
 import {SlugFontsRegistry} from './fonts/registry';
 import {type SlugFontsRegistryStat} from './fonts/registry/stat';
 import {SlugFontsRegistryEntry} from './fonts/registry/entry';
 import {type SlugFontsRemoveResult} from './fonts/remove';
 import {type SlugFontErrorMode} from './font/error/mode';
+
+export type {SlugFontPreload, SlugFontPreloadOptions} from './fonts/preload';
+
+/**
+ * Options accepted by {@link SlugFonts.fromUrl}, {@link SlugFonts.from},
+ * and {@link SlugFonts.fromArrayBuffer}. Combines the legacy
+ * `textureWidth` setting with the preload selectors and lifecycle
+ * callbacks defined in {@link SlugFontPreloadOptions}.
+ *
+ * Existing callers that passed `textureWidth` positionally still work
+ * — each helper accepts either a `number` (legacy) or this options
+ * object for the second argument.
+ */
+export interface SlugFontLoadOptions extends SlugFontPreloadOptions {
+	textureWidth?: number;
+}
+
+/**
+ * Resolve a positional-or-options second argument into a fully-typed
+ * options object. Accepts `undefined`, a number (legacy
+ * `textureWidth`), or a partial options object. Returned shape always
+ * has `textureWidth` set so callers can read it directly.
+ */
+function normalizeLoadOptions(opts: number | SlugFontLoadOptions | undefined): SlugFontLoadOptions {
+	if (opts === undefined) {
+		return {textureWidth: Defaults.TEXTURE_SIZE};
+	}
+
+	if (typeof opts === 'number') {
+		return {textureWidth: opts};
+	}
+
+	return {textureWidth: opts.textureWidth ?? Defaults.TEXTURE_SIZE, ...opts};
+}
 /**
  * Options accepted by `SlugFonts.attachTicker`. `force` bypasses the
  * re-attach policy entirely when truthy — useful for apps that
@@ -50,26 +85,42 @@ export class SlugFonts {
 	 *  - a registered name (looked up in the name map)
 	 *  - an `ArrayBuffer` or `Uint8Array` (parsed, not cached)
 	 *
-	 * Returns `null` if the input cannot be resolved.
+	 * `options` accepts either a number (legacy `textureWidth`) or a
+	 * {@link SlugFontLoadOptions} object that includes preload settings
+	 * + lifecycle callbacks. Preload runs after the font finishes
+	 * loading; the returned promise resolves only after preload
+	 * completes (or rejects on preload error).
+	 *
+	 * Returns `null` if the input cannot be resolved. Preload is
+	 * skipped when the input cannot resolve.
 	 */
-	public static async from(input: SlugFont | string | ArrayBuffer | Uint8Array): Promise<SlugFont | null> {
+	public static async from(
+		input: SlugFont | string | ArrayBuffer | Uint8Array,
+		options?: number | SlugFontLoadOptions
+	): Promise<SlugFont | null> {
 		if (input instanceof SlugFont) {
+			// Caller-supplied font is already loaded — preload is the
+			// only work we still owe them.
+			await SlugFonts._maybeRunPreload(input, options);
 			return input;
 		}
 		if (typeof input === 'string') {
 			const named = SlugFonts._reg().byName.get(input);
-			if (named) return named.font;
-			return SlugFonts.fromUrl(input);
+			if (named) {
+				await SlugFonts._maybeRunPreload(named.font, options);
+				return named.font;
+			}
+			return SlugFonts.fromUrl(input, options);
 		}
 		if (input instanceof ArrayBuffer) {
-			return SlugFonts.fromArrayBuffer(input);
+			return SlugFonts.fromArrayBuffer(input, options);
 		}
 		if (input instanceof Uint8Array) {
 			const buf = input.buffer.slice(
 				input.byteOffset,
 				input.byteOffset + input.byteLength
 			) as ArrayBuffer;
-			return SlugFonts.fromArrayBuffer(buf);
+			return SlugFonts.fromArrayBuffer(buf, options);
 		}
 		return null;
 	}
@@ -78,14 +129,20 @@ export class SlugFonts {
 	 * Parse raw font bytes into a `SlugFont`. The result is not cached
 	 * because there is no natural key for raw bytes — pass a `name`
 	 * via {@link register} afterwards if caching is desired.
+	 *
+	 * `options` accepts either a number (legacy `textureWidth`) or a
+	 * {@link SlugFontLoadOptions} object. See {@link from} for preload
+	 * semantics — same flow, same callback timing.
 	 */
 	public static async fromArrayBuffer(
 		data: ArrayBuffer,
-		textureWidth: number = Defaults.TEXTURE_SIZE
+		options?: number | SlugFontLoadOptions
 	): Promise<SlugFont | null> {
+		const opts = normalizeLoadOptions(options);
 		try {
-			const font = new SlugFont(textureWidth);
+			const font = new SlugFont(opts.textureWidth);
 			await font.load(data);
+			await SlugFonts._maybeRunPreload(font, opts);
 			return font;
 		} catch {
 			return null;
@@ -95,39 +152,80 @@ export class SlugFonts {
 	/**
 	 * Fetch a font from a URL, parse it, and cache the result keyed by
 	 * the URL. Concurrent calls for the same URL share a single fetch.
+	 *
+	 * `options` accepts either a number (legacy `textureWidth`) or a
+	 * {@link SlugFontLoadOptions} object including preload settings
+	 * and lifecycle callbacks. Preload runs after the font is parsed,
+	 * before the returned promise resolves — callers awaiting this
+	 * call get a fully-warmed font.
+	 *
+	 * Concurrent callers for the same URL share the fetch + parse but
+	 * receive their own preload runs (a later caller passing a
+	 * different `preload` set still gets that set processed when the
+	 * promise resolves). Callbacks on later concurrent calls fire only
+	 * for that caller's preload, not for any earlier caller's set.
 	 */
 	public static async fromUrl(
 		url: string,
-		textureWidth: number = Defaults.TEXTURE_SIZE
+		options?: number | SlugFontLoadOptions
 	): Promise<SlugFont | null> {
+		const opts = normalizeLoadOptions(options);
 		const reg = SlugFonts._reg();
 		const cached = reg.byUrl.get(url);
-		if (cached) return cached.font;
+		if (cached) {
+			await SlugFonts._maybeRunPreload(cached.font, opts);
+			return cached.font;
+		}
 
-		const pending = reg.inflight.get(url);
-		if (pending) return pending;
+		// Inflight de-dupe: share the fetch + parse with an in-progress
+		// caller. The `pending` task delivers a font (or null); each
+		// caller then runs its own preload against the resulting font
+		// so per-call `preload` selectors and callbacks are honored.
+		let task = reg.inflight.get(url);
+		if (!task) {
+			task = (async () => {
+				try {
+					const response = await fetch(url);
+					if (!response.ok) return null;
+					const data = await response.arrayBuffer();
+					const font = new SlugFont(opts.textureWidth);
+					await font.load(data);
+					const entry = new SlugFontsRegistryEntry(font, data.byteLength);
+					reg.byUrl.set(url, entry);
+					reg.addToAll(entry);
+					return font;
+				} catch (e) {
+					console.error(`[SlugFonts.fromUrl] Failed to load "${url}":`, e);
+					return null;
+				} finally {
+					reg.inflight.delete(url);
+				}
+			})();
 
-		const task = (async () => {
-			try {
-				const response = await fetch(url);
-				if (!response.ok) return null;
-				const data = await response.arrayBuffer();
-				const font = new SlugFont(textureWidth);
-				await font.load(data);
-				const entry = new SlugFontsRegistryEntry(font, data.byteLength);
-				reg.byUrl.set(url, entry);
-				reg.addToAll(entry);
-				return font;
-			} catch (e) {
-				console.error(`[SlugFonts.fromUrl] Failed to load "${url}":`, e);
-				return null;
-			} finally {
-				reg.inflight.delete(url);
-			}
-		})();
+			reg.inflight.set(url, task);
+		}
 
-		reg.inflight.set(url, task);
-		return task;
+		const font = await task;
+		if (font) {
+			await SlugFonts._maybeRunPreload(font, opts);
+		}
+		return font;
+	}
+
+	/**
+	 * Run the preload selector against `font` if one was provided.
+	 * Centralizes the "options may be a number, undefined, or a real
+	 * options object" normalization so call sites stay tidy.
+	 */
+	private static async _maybeRunPreload(
+		font: SlugFont,
+		options: number | SlugFontLoadOptions | undefined
+	): Promise<void> {
+		if (options === undefined || typeof options === 'number') {
+			return;
+		}
+
+		await slugFontRunPreload(font, options);
 	}
 
 	/**

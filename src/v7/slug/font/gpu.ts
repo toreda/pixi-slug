@@ -1,6 +1,6 @@
 import {FORMATS, TYPES} from '@pixi/constants';
 import {BaseTexture, Program, Texture} from '@pixi/core';
-import type {SlugFont} from '../../../shared/slug/font';
+import type {SlugFont, SlugFontEnsureResult} from '../../../shared/slug/font';
 
 import vertSource from '../../shader/slug/vert.glsl';
 import fragSource from '../../../shared/shader/slug/frag.glsl';
@@ -21,46 +21,99 @@ export interface SlugFontGpuV7 {
 	bandTexture: Texture;
 	fallbackWhite: Texture;
 	program: Program;
+	/**
+	 * Reference to the `Float32Array` currently owned by the curve
+	 * texture. When `font.curveData` no longer matches this reference,
+	 * the buffer was reallocated by an `ensureGlyphs` grow and the
+	 * curve texture must be recreated.
+	 */
+	_curveBuffer: Float32Array;
+	/** Reference to the band buffer view. Compared by `.buffer` identity. */
+	_bandBuffer: Float32Array;
+}
+
+function bandViewAsFloat(bandData: Uint32Array): Float32Array {
+	return new Float32Array(bandData.buffer, bandData.byteOffset, bandData.length);
+}
+
+function makeCurveTexture(font: SlugFont): Texture {
+	const textureWidth = font.textureWidth;
+	const curveRows = Math.ceil(font.curveData.length / 4 / textureWidth) || 1;
+	const base = BaseTexture.fromBuffer(font.curveData, textureWidth, curveRows, {
+		format: FORMATS.RGBA,
+		type: TYPES.FLOAT
+	});
+	return new Texture(base);
+}
+
+function makeBandTexture(font: SlugFont, bandView: Float32Array): Texture {
+	const textureWidth = font.textureWidth;
+	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
+	const base = BaseTexture.fromBuffer(bandView, textureWidth, bandRows, {
+		format: FORMATS.RGBA,
+		type: TYPES.FLOAT
+	});
+	return new Texture(base);
 }
 
 /**
- * Create or retrieve cached V7 GPU resources for a SlugFont.
- * On first call, creates curve/band textures and a compiled Program.
- * On subsequent calls, returns the same cached object.
+ * Create or retrieve cached V7 GPU resources for a SlugFont, syncing
+ * the curve and band textures with whatever glyph data the font now
+ * holds. See {@link slugFontGpuV8} for the full sync semantics —
+ * behavior is identical aside from the v7-specific `BaseTexture` API.
  */
-export function slugFontGpuV7(font: SlugFont): SlugFontGpuV7 {
-	if (font.gpuCache) {
-		return font.gpuCache as SlugFontGpuV7;
+export function slugFontGpuV7(font: SlugFont, ensureResult: SlugFontEnsureResult | null = null): SlugFontGpuV7 {
+	const cached = font.gpuCache as SlugFontGpuV7 | null;
+
+	if (cached) {
+		const bandView = bandViewAsFloat(font.bandData);
+		let curveChanged = false;
+		let bandChanged = false;
+
+		if (cached._curveBuffer !== font.curveData) {
+			cached.curveTexture.destroy(true);
+			cached.curveTexture = makeCurveTexture(font);
+			cached._curveBuffer = font.curveData;
+			curveChanged = true;
+		}
+		if (cached._bandBuffer.buffer !== bandView.buffer) {
+			cached.bandTexture.destroy(true);
+			cached.bandTexture = makeBandTexture(font, bandView);
+			cached._bandBuffer = bandView;
+			bandChanged = true;
+		}
+
+		// Same buffer reference + new data appended → reupload via update().
+		// PIXI v7's BaseTexture.update() bumps the dirty counter and the
+		// texture system re-uploads the resource on next bind.
+		if (!curveChanged && ensureResult?.addedAny) {
+			cached.curveTexture.baseTexture.update();
+		}
+		if (!bandChanged && ensureResult?.addedAny) {
+			cached.bandTexture.baseTexture.update();
+		}
+
+		return cached;
 	}
 
-	const textureWidth = font.textureWidth;
-
-	// Curve texture: RGBA float32
-	const curveRows = Math.ceil(font.curveData.length / 4 / textureWidth) || 1;
-	const curveBase = BaseTexture.fromBuffer(font.curveData, textureWidth, curveRows, {
-		format: FORMATS.RGBA,
-		type: TYPES.FLOAT
-	});
-	const curveTexture = new Texture(curveBase);
-
-	// Band texture: uint32 data uploaded as float32 via bit-pattern reinterpretation.
-	// The shader uses floatBitsToUint() to recover exact uint32 values losslessly.
-	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
-	const bandDataAsFloat = new Float32Array(font.bandData.buffer, font.bandData.byteOffset, font.bandData.length);
-	const bandBase = BaseTexture.fromBuffer(bandDataAsFloat, textureWidth, bandRows, {
-		format: FORMATS.RGBA,
-		type: TYPES.FLOAT
-	});
-	const bandTexture = new Texture(bandBase);
-
+	const bandView = bandViewAsFloat(font.bandData);
+	const curveTexture = makeCurveTexture(font);
+	const bandTexture = makeBandTexture(font, bandView);
 	const program = Program.from(vertSource, fragSource);
 
-	const cache: SlugFontGpuV7 = {curveTexture, bandTexture, fallbackWhite: Texture.WHITE, program};
+	const cache: SlugFontGpuV7 = {
+		curveTexture,
+		bandTexture,
+		fallbackWhite: Texture.WHITE,
+		program,
+		_curveBuffer: font.curveData,
+		_bandBuffer: bandView
+	};
 
 	font.gpuCache = cache;
 	font.setGpuDestroy(() => {
-		curveTexture.destroy(true);
-		bandTexture.destroy(true);
+		cache.curveTexture.destroy(true);
+		cache.bandTexture.destroy(true);
 	});
 
 	return cache;

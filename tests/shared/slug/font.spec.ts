@@ -336,28 +336,66 @@ describe('SlugFont', () => {
 				expect(font.strikethroughSize).toBeGreaterThan(0);
 			});
 
-			it('should populate the glyphs map with at least one entry', () => {
+			it('should NOT eagerly populate the glyphs map (lazy outline processing)', () => {
+				// Lazy load: outlines are not processed until ensureGlyphs()
+				// is called for a specific codepoint. The glyphs map is
+				// empty immediately after loadSync.
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
-				expect(font.glyphs.size).toBeGreaterThan(0);
+				expect(font.glyphs.size).toBe(0);
 			});
 
 			it('should populate the advances map with at least one entry', () => {
+				// Advance widths are eagerly captured because they are tiny
+				// (one number per codepoint) and the text class needs them
+				// for layout regardless of which glyphs are processed.
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
 				expect(font.advances.size).toBeGreaterThan(0);
 			});
 
-			it('should populate non-empty curveData after a successful load', () => {
+			it('should populate curveData only after ensureGlyphs is called', () => {
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
+				expect(font.curveData.length).toBe(0);
+
+				font.ensureGlyphs('A');
 				expect(font.curveData.length).toBeGreaterThan(0);
+				expect(font.glyphs.has(65)).toBe(true);
 			});
 
-			it('should populate non-empty bandData after a successful load', () => {
+			it('should populate bandData only after ensureGlyphs is called', () => {
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
+				expect(font.bandData.length).toBe(0);
+
+				font.ensureGlyphs('A');
 				expect(font.bandData.length).toBeGreaterThan(0);
+			});
+
+			it('should NOT insert .notdef for codepoints missing from the cmap', () => {
+				// opentype.js's `charToGlyph` falls back to glyph 0
+				// (.notdef) for any codepoint missing from the font's
+				// cmap. The eager pipeline never inserted .notdef into
+				// the glyphs map; ensureGlyphs must match that behavior
+				// or text containing unsupported characters (e.g. emoji
+				// in a Latin font) would render tofu boxes instead of
+				// being skipped.
+				const font = new SlugFont();
+				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
+
+				// U+1F600 (😀) is not in Roboto's cmap. UTF-16 encoded as
+				// a surrogate pair — pass each surrogate code unit and
+				// verify neither lands in the glyphs map.
+				const emoji = '\u{1F600}';
+				font.ensureGlyphs(emoji);
+				expect(font.glyphs.has(emoji.charCodeAt(0))).toBe(false);
+				expect(font.glyphs.has(emoji.charCodeAt(1))).toBe(false);
+
+				// Sanity: A still works in the same call.
+				font.ensureGlyphs('A' + emoji);
+				expect(font.glyphs.has(65)).toBe(true);
+				expect(font.glyphs.has(emoji.charCodeAt(0))).toBe(false);
 			});
 
 			it('should accept OTF font data', () => {
@@ -422,6 +460,7 @@ describe('SlugFont', () => {
 			it('should produce curveData sized to a multiple of 4 RGBA channels', () => {
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
+				font.ensureGlyphs('A');
 				// Texture-packed data must align to full RGBA texels.
 				expect(font.curveData.length % 4).toBe(0);
 			});
@@ -429,17 +468,25 @@ describe('SlugFont', () => {
 			it('should produce bandData sized to a multiple of 4 RGBA channels', () => {
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
+				font.ensureGlyphs('A');
 				expect(font.bandData.length % 4).toBe(0);
 			});
 
 			it('should throw when textureWidth does not match the shader-required size', () => {
-				// Texture packer is locked to TEXTURE_SIZE (4096) to align with
-				// the fragment shader's kLogBandTextureWidth. Other widths pass
-				// the constructor's power-of-2 check but fail at load time.
+				// Texture packer is locked to TEXTURE_SIZE (4096) to align
+				// with the fragment shader's kLogBandTextureWidth. Other
+				// widths pass the constructor's power-of-2 check; with
+				// lazy loading, loadSync only captures metrics + advances
+				// (works at any width), but ensureGlyphs cannot create the
+				// pack state and silently no-ops. Verify the no-op behavior
+				// here so callers know glyphs won't render at a non-4096
+				// textureWidth.
 				const font = new SlugFont(1024);
-				expect(() => font.loadSync(loadFontFixture('roboto-fallback.ttf'))).toThrow(
-					/textureWidth must be 4096/
-				);
+				expect(() => font.loadSync(loadFontFixture('roboto-fallback.ttf'))).not.toThrow();
+				const result = font.ensureGlyphs('A');
+				expect(result.addedAny).toBe(false);
+				expect(font.glyphs.size).toBe(0);
+				expect(font.curveData.length).toBe(0);
 			});
 		});
 
@@ -457,10 +504,13 @@ describe('SlugFont', () => {
 				expect(font.unitsPerEm).toBeGreaterThan(0);
 			});
 
-			it('should populate glyphs from a valid TTF', async () => {
+			it('should populate advances from a valid TTF (eager) and leave glyphs empty (lazy)', async () => {
 				const font = new SlugFont();
 				await font.load(loadFontFixture('roboto-fallback.ttf'));
-				expect(font.glyphs.size).toBeGreaterThan(0);
+				expect(font.advances.size).toBeGreaterThan(0);
+				expect(font.glyphs.size).toBe(0);
+				font.ensureGlyphs('A');
+				expect(font.glyphs.has(65)).toBe(true);
 			});
 
 			it('should accept OTF font data', async () => {
@@ -479,6 +529,11 @@ describe('SlugFont', () => {
 				const font = new SlugFont();
 				await font.load(loadFontFixture('roboto-fallback.woff2'));
 				expect(font.unitsPerEm).toBeGreaterThan(0);
+				// Lazy: outlines aren't processed until ensureGlyphs runs.
+				// Verify advances are populated (eager) and outlines load
+				// on demand for at least one codepoint.
+				expect(font.advances.size).toBeGreaterThan(0);
+				font.ensureGlyphs('A');
 				expect(font.glyphs.size).toBeGreaterThan(0);
 			});
 
