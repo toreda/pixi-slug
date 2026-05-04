@@ -139,9 +139,35 @@ This computes `t` as a stable linear-equation solution `t = -p12.y / (2 * by)` (
 
 ### Caveats and follow-ups
 
-1. **The threshold is still hardcoded.** A more principled fix would scale `kQuadraticEpsilon` with `pixelsPerEm` so the precision boundary matches the AA window width at any font size. The current value should be safe for the rendering range we support, but very large `pixelsPerEm` (e.g., 4K-DPI displays at huge sizes) could re-introduce the issue.
+1. **The threshold is still hardcoded.** Shipped as-is on 2026-05-04 because it resolves the artifact across all tested font sizes (verified visually at 800pt, no regressions on V/X/R/W/B). Two follow-up options when this needs revisiting:
 
-2. **Verify the fix on the prior V/X/R/W test cases.** The 2026-03 fix for those glyphs touched the vertical solver and CalcCoverage. The new `kQuadraticEpsilon` value should not regress them — but worth a visual check on a string like "VXRWAZ#" to confirm.
+   **Preferred (textbook) fix — Citardauq formula.** Replace the unstable `t = (by - d) / ay` with the numerically stable alternate form `t = p12.y / (by + d)`, which avoids subtraction-cancellation as `ay → 0`. The current linear fallback is a special case of Citardauq when `d → |by|`; switching to Citardauq handles all in-between cases too and removes the magic-threshold problem entirely. Sketch:
+
+   ```glsl
+   // For ay*t² - 2*by*t + p12.y = 0:
+   //   classical: t1 = (by - d)/ay, t2 = (by + d)/ay   ← unstable as ay → 0
+   //   Citardauq: t1 = p12.y/(by + d), t2 = p12.y/(by - d)  ← stable as ay → 0
+   if (abs(ay) < kQuadraticEpsilon) {
+       t1 = p12.y / (by + d);
+       t2 = p12.y / (by - d);
+   } else {
+       t1 = (by - d) / ay;
+       t2 = (by + d) / ay;
+   }
+   ```
+
+   Touches the solver math, so V/X/R/W/A/Z/# all need a regression check after.
+
+   **Fallback fix — scale `kQuadraticEpsilon` with `pixelsPerEm`.** If the Citardauq switch turns out to break some other path or interact badly with the elsewhere-in-the-shader assumptions, just scale the existing threshold:
+
+   ```glsl
+   float kQuadraticEpsilon = max(0.0001 * pixelsPerEm.x, 0.0001);  // H-ray
+   // and pixelsPerEm.y in the V-ray
+   ```
+
+   Pins the precision boundary to screen-space scale, robust at any font size, no math change. Roughly 5-line patch.
+
+2. **Verify the fix on the prior V/X/R/W test cases.** The 2026-03 fix for those glyphs touched the vertical solver and CalcCoverage. The new `kQuadraticEpsilon = 0.01` was visually verified to not regress them on 2026-05-04 (no artifacts on V, X, R, W, B at 800pt). Re-verify if `kQuadraticEpsilon` is changed again.
 
 3. **The `SLUG_DEBUG_HRAY_LIMIT` flag is now staged at [frag.glsl line ~36](../src/shared/shader/slug/frag.glsl)** alongside `SLUG_DEBUG_HRAY_SKIP_POS`. Set to a non-negative integer to limit the H-ray loop to the first N curves. Useful for future curve-position binary searches. Default `-1` (disabled).
 
