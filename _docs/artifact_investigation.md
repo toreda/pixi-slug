@@ -10,7 +10,7 @@
 
 **Status**: All artifacts eliminated. Rendering is correct with antialiasing at all font sizes (tested 24px, 32px, 130px, 280px). No bright lines, dark bands, notches, or stray pixels on any character including V, X, x, v, R, r, W, w, and all other diagonal-stroke glyphs.
 
-> **Note (2026-05-02):** A separate, pre-existing artifact specific to **uppercase A and Z at large sizes** was discovered later. It is unrelated to the V/X/R/W family resolved here and is documented separately in [_docs/artifact_investigation_a_z.md](artifact_investigation_a_z.md).
+> **Note (2026-05-02):** A separate, pre-existing artifact specific to **uppercase A and Z at large sizes** was discovered later. It is unrelated to the V/X/R/W family resolved here and is documented separately in [_docs/artifact_investigation_a_z.md](artifact_investigation_a_z.md). **Resolved 2026-05-03** — the `max` interior fallback added during this investigation was the correct fix for V/X/R/W but exposed an antialiasing imbalance for A/Z. The follow-up fix changes `CalcCoverage` to blend (rather than `max`) the weighted-average and interior-fallback signals by edge confidence.
 
 ---
 
@@ -115,7 +115,7 @@ The integer winding (`step(0.5, max(abs(xwind), abs(ywind)))`) produced **zero a
 | 2 | ±1 band extension | bands.ts | Band boundary safety margin |
 | 3 | CalcRootCode: `y > 0.0` convention with `& 3u` | frag.glsl | Fixed wrong equivalence classes |
 | 4 | Vertical solver: `- p12.w * 2.0` not `+` | frag.glsl | **Primary artifact fix** |
-| 5 | CalcCoverage: `max` not `min` for interior fallback | frag.glsl | **Secondary artifact fix** |
+| 5 | CalcCoverage: edge-weight blend (V/X/R/W secondary fix; superseded 2026-05-03 with `mix(interior, weighted, edgeBlend)` to also fix A/Z) | frag.glsl | **Secondary artifact fix** |
 | 6 | Square band grid (single shared scale) | bands.ts, quad.ts | Match reference convention |
 | 7 | Degenerate curve skip (`continue` when both ay and by near zero) | frag.glsl | Skip ray-parallel curves |
 | 8 | Cubic-to-quadratic: correct control point formula | curves.ts | Accurate OTF curve conversion |
@@ -138,15 +138,22 @@ The integer winding (`step(0.5, max(abs(xwind), abs(ywind)))`) produced **zero a
 
 ### The working formula
 
+Initial form (2026-03-19, fixed V/X/R/W; left A/Z artifact in place):
+
 ```glsl
-float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
-{
-    float coverage = max(
-        abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),
-        max(abs(xcov), abs(ycov))
-    );
-    return clamp(coverage, 0.0, 1.0);
-}
+float coverage = max(
+    abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),
+    max(abs(xcov), abs(ycov))
+);
+```
+
+Final form (2026-05-03, also fixes A/Z — see [artifact_investigation_a_z.md](artifact_investigation_a_z.md)):
+
+```glsl
+float weighted = abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0);
+float interior = max(abs(xcov), abs(ycov));
+float edgeBlend = max(xwgt, ywgt);
+float coverage = mix(interior, weighted, edgeBlend);
 ```
 
 ---

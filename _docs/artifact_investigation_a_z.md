@@ -2,7 +2,30 @@
 
 ## Status
 
-**OPEN** as of 2026-05-02. Pre-existing artifact, narrowly scoped to two glyphs and a size threshold. Does NOT block the lazy-load refactor — the texture data emitted by the new and old load pipelines is bit-identical (verified by [tests/shared/slug/font-eager-vs-lazy.spec.ts](../tests/shared/slug/font-eager-vs-lazy.spec.ts)).
+**RESOLVED** on 2026-05-03. Fix in [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) `CalcCoverage`. Investigation history below preserved for reference.
+
+## Resolution
+
+**Root cause**: a horizontal-ray antialiasing imbalance. At pixels just outside the V-cavity edges of A/Z, the +X horizontal ray's antialiasing window catches a near-pixel curve crossing on one side of the cavity (e.g. curve 6 = right leg inner edge, ~0.3 px away → partial AA contribution ~0.79) while the matching crossing on the other side (curve 9 = right leg outer edge, ~30 px away → full +1) sits outside the AA window. The two contributions don't cancel, leaving `xcov ≈ 0.21` for pixels that should be cleanly outside.
+
+The previous fix from [_docs/artifact_investigation.md](artifact_investigation.md) used `coverage = max(weighted_avg, max(abs(xcov), abs(ycov)))` — the `max(abs)` interior fallback was needed to handle V/X/W's oppositely-wound contour cancellation, but it propagated the spurious 0.21 directly into the output.
+
+**Fix**: change `CalcCoverage` to blend the two signals by edge confidence instead of taking the max:
+
+```glsl
+float weighted = abs(xcov*xwgt + ycov*ywgt) / max(xwgt + ywgt, 1.0/65536.0);
+float interior = max(abs(xcov), abs(ycov));
+float edgeBlend = max(xwgt, ywgt);
+float coverage = mix(interior, weighted, edgeBlend);
+```
+
+When either axis has high AA weight (= a curve crossing is within ±0.5 px of the pixel), the weighted average dominates — that's the trustworthy signal at edges, and it correctly damps the spurious 0.21 via the `xwgt` denominator. When both axes have low AA weight (= no near-edge crossings, truly interior), the integer-winding fallback dominates — this preserves the V/X/W fix.
+
+**Verified**: A, Z, # render cleanly at every size (tested 24, 100, 270, 400 pt). V, X, W, x, v, w, a all retain solid antialiased rendering. Full jest suite (834 tests) passes.
+
+## Investigation history
+
+The history below documents the investigation that found the root cause. Preserved for reference.
 
 ## Relationship to the prior artifact investigation
 

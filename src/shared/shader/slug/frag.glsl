@@ -78,16 +78,32 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 }
 
 // Combine horizontal and vertical fractional winding into coverage.
-// Near edges (high weight): weighted average provides smooth antialiasing.
-// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.
-// max() is used instead of min() to handle glyphs with oppositely-wound
-// contours where one axis cancels to ~0 while the other reads ~1.
+//
+// Two signals are available:
+//   weighted = abs(xcov*xwgt + ycov*ywgt) / (xwgt + ywgt)
+//     Antialiasing-aware. Trusts each axis in proportion to how close that
+//     axis sees a curve crossing. Correct for edge pixels.
+//   interior = max(abs(xcov), abs(ycov))
+//     Integer-winding fallback. Trusts the axis with the strongest signal
+//     regardless of AA weight. Needed for glyphs with oppositely-wound
+//     contours where one axis cancels to ~0 while the other reads ~1.
+//
+// Blend the two by edge-confidence: when either axis has high AA weight
+// (= a curve crossing is within ±0.5 px of this pixel), the weighted average
+// is the trustworthy signal. The interior fallback dominates only when
+// neither axis is near an edge (= we're truly inside the glyph).
+//
+// History: previous code used `max(weighted, interior)`. That worked for
+// V/X (oppositely-wound contours) but caused horizontal stripes at the
+// bottom-left of A/Z, where xcov accumulated a small spurious value
+// (~0.2) from asymmetric AA windows — with `max`, this leaked into the
+// output even though the weighted average correctly damped it via xwgt.
 float CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)
 {
-	float coverage = max(
-		abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),
-		max(abs(xcov), abs(ycov))
-	);
+	float weighted = abs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0);
+	float interior = max(abs(xcov), abs(ycov));
+	float edgeBlend = max(xwgt, ywgt);
+	float coverage = mix(interior, weighted, edgeBlend);
 
 	return clamp(sqrt(abs(coverage)), 0.0, 1.0);
 }
