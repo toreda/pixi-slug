@@ -48,7 +48,9 @@
       "Bash(pnpm why *)",
       "Bash(npm run *)",
       "Bash(npm test *)",
-      "Bash(pnpm exec *)"
+      "Bash(pnpm exec *)",
+      "Bash(curl -sI http://localhost:3000/examples/_shared/wire.js)",
+      "Bash(curl -sI http://localhost:3000/examples/v8/)"
     ]
   }
 }

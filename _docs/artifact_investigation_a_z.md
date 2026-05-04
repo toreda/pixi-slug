@@ -2,30 +2,231 @@
 
 ## Status
 
-**RESOLVED** on 2026-05-03. Fix in [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) `CalcCoverage`. Investigation history below preserved for reference.
+**RESOLVED** as of 2026-05-04. Root cause: **`kQuadraticEpsilon = 0.0001` was too tight**, leaving a precision gap where near-horizontal curves with small-but-not-tiny `ay` (Y-quadratic coefficient) bypassed the linear-fallback branch and produced wildly out-of-range `t1`/`t2` values in the H-ray solver. The runaway `t1`²/`t2`² terms made `x1`/`x2` saturate the `clamp(x + 0.5, 0, 1)` AA window, contributing a spurious `+1` to `xcov` for every pixel along the curve's em-Y row.
 
-## Resolution
+**Fix**: bumped `kQuadraticEpsilon` from `0.0001` to `0.01` in [src/shared/shader/slug/frag.glsl:12](../src/shared/shader/slug/frag.glsl#L12). This extends the linear-fallback regime to absorb the precision-unstable near-horizontal curves. Verified at fontSize=800 with text "AZ" — no more stripes.
 
-**Root cause**: a horizontal-ray antialiasing imbalance. At pixels just outside the V-cavity edges of A/Z, the +X horizontal ray's antialiasing window catches a near-pixel curve crossing on one side of the cavity (e.g. curve 6 = right leg inner edge, ~0.3 px away → partial AA contribution ~0.79) while the matching crossing on the other side (curve 9 = right leg outer edge, ~30 px away → full +1) sits outside the AA window. The two contributions don't cancel, leaving `xcov ≈ 0.21` for pixels that should be cleanly outside.
+See **Latest findings (2026-05-04)** below for the full investigation trail.
 
-The previous fix from [_docs/artifact_investigation.md](artifact_investigation.md) used `coverage = max(weighted_avg, max(abs(xcov), abs(ycov)))` — the `max(abs)` interior fallback was needed to handle V/X/W's oppositely-wound contour cancellation, but it propagated the spurious 0.21 directly into the output.
+## Symptom recap
 
-**Fix**: change `CalcCoverage` to blend the two signals by edge confidence instead of taking the max:
+Bottom-left of uppercase **A** and **Z** legs shows horizontal stripe artifacts at sizes ≥ ~91pt for Roboto. The artifact is subtle (white rendered text, dark background → "slightly brighter" stripes that the user described as "subtle"). The original symptom description in the prior version of this doc remains accurate; preserved at the bottom of this file.
+
+The artifact also appears on **uppercase X**, **#**, **!**, and other glyphs at large sizes — see the prior investigation [_docs/artifact_investigation.md](artifact_investigation.md) for the V/X/R/W family of cases that was resolved in 2026-03 by two shader bugs. The current open A/Z artifact is a separate, narrower issue that survived those fixes.
+
+## What was confirmed
+
+1. **CPU↔GPU agreement on band transform**: `bands.ts` and `quad.ts` produce bit-identical float32 `bandScale` and `bandOffset` for every glyph tested (A, Z, V, X, O, I). Permanent regression test at [tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts](../tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts).
+
+2. **Band assignment is correct**: float32 vs float64 disagreements in `floor(cMin*scale + offset)` exist, but they're absorbed by the `±1` margin and `Math.max(0, ...)` clamps. No curves are missing from the band the GPU's float32 calc actually queries.
+
+3. **Sort order is correct**: zero inversions across A/Z/V/X/O/I when comparing the production sort key (float64) against float32 max-coord. The early-out `break` cannot fire on the wrong curve.
+
+4. **Bug is in the horizontal ray only**: `SLUG_DEBUG_AXIS_MODE = 1` (paint `abs(xcov)` only) shows the artifact stripes; `SLUG_DEBUG_AXIS_MODE = 2` (paint `abs(ycov)` only) renders cleanly. The vertical ray loop is innocent.
+
+5. **Artifact pixels have full integer xcov, not partial**: `SLUG_DEBUG_RAW = 12` (fine-grained xcov bands) shows the artifact zone as **white**, meaning `|xcov| > 0.95`. **NOT** the small ~0.21 imbalance I initially hypothesized.
+
+6. **Artifact pixels have V-ray correctly at zero**: `SLUG_DEBUG_RAW = 9` (axis-disagreement detector) shows the artifact zone as YELLOW (xcov ≈ 1, ycov ≈ 0, both wgts < 0.1). The H-ray says "fully inside" while the V-ray correctly says "fully outside".
+
+7. **Artifact pixels have 4+ H-ray crossings**: `SLUG_DEBUG_RAW = 11` (artifact-only h-count) shows the artifact zone as **white** (4+ curves with code != 0). The H-ray IS processing many curves; it's not a missing-crossing issue.
+
+## What was tried and ruled out
+
+| Hypothesis | Outcome |
+|------|---------|
+| `bandScale`/`bandOffset` differ between CPU & GPU | Ruled out by bit-equivalence test |
+| Float64 vs float32 floor disagreement at band boundary | Ruled out — `±1` margin absorbs it |
+| Float64 sort key disagrees with float32 max-coord, mis-orders curves | Ruled out — zero inversions |
+| Curve missing from band → early-out break drops it | Ruled out — every needed curve is in every needed band |
+| Bug in dilation halo (em-y < 0) | Ruled out by `SLUG_DEBUG_DISABLE_DILATION = 1` test (2026-05-04) — artifact persists with dilation off, so dilation halo is innocent |
+| Tiny AA imbalance (xcov ~ 0.21) leaking through `max(weighted, interior)` | Ruled out — fine-grained probe shows xcov ≈ 1, not 0.21 |
+| Fix: `mix(interior, weighted, max(xwgt, ywgt))` instead of `max` | Tried, did NOT eliminate the artifact. Reverted. |
+| Float32 round-trip in `bands.ts` `curveBounds` interior-extremum branch | Tried 2026-05-04, did NOT eliminate the artifact. Reverted. The ±1 margin already absorbs CPU/GPU bound disagreement. |
+| `pack.ts` curve-texel wrap-skip strands previous curve's p3 slot | Tried 2026-05-04, did NOT eliminate the artifact. Reverted. The wrap logic is correct — the previous curve's column is by construction never `widthMask`, so its `+1` neighbor stays on the same row. |
+| Band lookup index is wrong (bands "drawn at wrong place") | Ruled out by `SLUG_DEBUG_RAW = 13` (band-index color ramp). Bands are uniform horizontal stripes at exactly the expected screen-Y positions. Indexing is correct; band CONTENT is what produces wrong xcov. |
+
+The previously-claimed CalcCoverage fix was **incorrect**. The artifact pixels have `weighted = interior = 1` (both equal), so `mix` and `max` produce the same value. Reverted on 2026-05-03.
+
+## Crucial unresolved discrepancy
+
+The bit-exact float32 CPU simulator at [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) computes xcov values for every (em-x, em-y) pair in the artifact region. **The simulator never produces the white xcov ≈ 1 the GPU shows at the artifact pixels.** Either:
+
+1. The simulator is missing something the GPU does (a code path divergence we haven't identified)
+2. The artifact pixels are at em-x or em-y values different from what we've been sampling
+3. The GPU has additional state (`fwidth(renderCoord)` derivatives, supersampling, vTexcoord interpolation precision) that affects the calculation
+
+Most likely: **#3 — the `pixelsPerEm` computed from `fwidth()` may differ from `fontSize/unitsPerEm` at the dilation halo**, or `vTexcoord` is interpolated to values we don't expect.
+
+## Latest findings (2026-05-04) — root cause isolated to sort-position ≥ 3
+
+### Critical user observation: artifact stripes are MIRRORED
+
+The user observed that the bright-stripe pixels OUTSIDE the glyph (left of A's left leg) are **mirrored** with dark-gap pixels INSIDE the glyph (inside A's right leg). Same em-Y rows on both sides; the stripe count and shape match. This rules out a content-only bug and points at a curve-X-position mathematical issue.
+
+Mathematical implication: the artifact must be a **`+1` xcov contribution at a wrong em-X position**. For pixels left of the glyph (correct xcov = 0), `+1` produces brightness ≈ 1 → bright stripes. For pixels inside the right leg (correct xcov = -1 from leg's matching entry/exit), the spurious `+1` cancels to xcov = 0 → dark gap.
+
+### H-ray-only artifact confirmed
+
+The user previously confirmed:
+- V-only rendering (H-bands disabled): no artifacts.
+- H-only rendering (V-bands disabled): artifacts present.
+
+Therefore the bug is in the H-ray pipeline.
+
+### Number of artifact stripes varies with screen Y position (3-5 stripes)
+
+This rules out pure glyph-data bugs. The **screen-Y-dependent count** strongly implicates a precision/position-dependent issue in the H-ray solver: which pixels fall into the affected condition depends on how screen pixels align to em-Y values.
+
+### Binary-search by HRAY_LIMIT — root cause isolated
+
+Added a new compile-time flag `SLUG_DEBUG_HRAY_LIMIT` to [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) that limits the H-ray loop to processing only the first N curves in each H-band's sorted list. Curves are sorted descending by max-X, so position 0 is the rightmost-extent curve in the band, position 1 is second-rightmost, etc.
+
+Test sequence at fontSize=800, text="AZ", Roboto TTF default:
+
+| HRAY_LIMIT | A artifacts | Z artifacts |
+|---|---|---|
+| 1 | None | None |
+| 2 | None | None |
+| 3 | None | None |
+| 4 | Bottom-left block starting | Stripes appear (small, on lower-right) |
+| 6 | Full stripes | Full stripes |
+
+**Result**: the artifact-causing curve is at **sort-position 3** (4th curve from the right in the band). Adding it triggers the bug; processing only positions 0..2 produces no artifacts.
+
+### Geometric interpretation of position 3
+
+In the H-band sorted list (descending max-X), the rightmost extents are:
+- Position 0: outermost curve on the right side of the glyph (e.g., A's right leg outer edge)
+- Position 1: inner curve of right side
+- Position 2: another right-side curve
+- **Position 3: middle-of-glyph curve** — likely the bottom horizontal stroke of A's foot/serif, or Z's bottom horizontal stroke. Short curves with **small Y extent (near-horizontal)**.
+
+### Suspected mechanism: small-but-not-tiny `ay` denominator
+
+Near-horizontal curves have small `ay = p1.y - 2*p2.y + p3.y` (the Y-quadratic coefficient). The H-ray solver:
 
 ```glsl
-float weighted = abs(xcov*xwgt + ycov*ywgt) / max(xwgt + ywgt, 1.0/65536.0);
-float interior = max(abs(xcov), abs(ycov));
-float edgeBlend = max(xwgt, ywgt);
-float coverage = mix(interior, weighted, edgeBlend);
+float ay = p12.y - p12.w * 2.0 + p3.y;
+float ra = 1.0 / ay;
+float d = sqrt(max(by * by - ay * p12.y, 0.0));
+float t1 = (by - d) * ra;
+float t2 = (by + d) * ra;
+
+if (abs(ay) < kQuadraticEpsilon) {
+    if (abs(by) < kQuadraticEpsilon) continue;
+    t1 = p12.y * 0.5 / by;
+    t2 = t1;
+}
 ```
 
-When either axis has high AA weight (= a curve crossing is within ±0.5 px of the pixel), the weighted average dominates — that's the trustworthy signal at edges, and it correctly damps the spurious 0.21 via the `xwgt` denominator. When both axes have low AA weight (= no near-edge crossings, truly interior), the integer-winding fallback dominates — this preserves the V/X/W fix.
+The fallback uses linear-equation math when `|ay| < kQuadraticEpsilon = 0.0001`. For curves with `ay` in the range `(0.0001, ~larger_threshold)` — small enough to cause numerical instability but NOT small enough to trigger the fallback — `ra` is large (e.g., `1/0.0002 = 5000`), producing wildly out-of-range `t1`/`t2`. The subsequent `x1 = (ax * t1 - bx * 2.0) * t1 + p12.x` has a `t1²` term that explodes, giving `x1` magnitudes far beyond the AA window. `clamp(x1 + 0.5, 0, 1)` saturates to 1 → spurious +1 xcov contribution.
 
-**Verified**: A, Z, # render cleanly at every size (tested 24, 100, 270, 400 pt). V, X, W, x, v, w, a all retain solid antialiased rendering. Full jest suite (834 tests) passes.
+### Fix applied
 
-## Investigation history
+Bumped `kQuadraticEpsilon` from `0.0001` to `0.01` in [src/shared/shader/slug/frag.glsl:12](../src/shared/shader/slug/frag.glsl#L12). Verified visually at fontSize=800 with text "AZ" on Roboto TTF default — stripes gone.
 
-The history below documents the investigation that found the root cause. Preserved for reference.
+Mechanism: with the larger threshold, curves whose `|ay|` falls in the precision-unstable range `(0.0001, 0.01)` now route through the linear-fallback branch:
+
+```glsl
+if (abs(ay) < kQuadraticEpsilon) {
+    if (abs(by) < kQuadraticEpsilon) continue;
+    t1 = p12.y * 0.5 / by;
+    t2 = t1;
+}
+```
+
+This computes `t` as a stable linear-equation solution `t = -p12.y / (2 * by)` (rearranged), avoiding the runaway `1/ay`. The fallback's accuracy when `|ay|` is small-but-nonzero is acceptable because the linear approximation is dominant in this regime.
+
+### Caveats and follow-ups
+
+1. **The threshold is still hardcoded.** A more principled fix would scale `kQuadraticEpsilon` with `pixelsPerEm` so the precision boundary matches the AA window width at any font size. The current value should be safe for the rendering range we support, but very large `pixelsPerEm` (e.g., 4K-DPI displays at huge sizes) could re-introduce the issue.
+
+2. **Verify the fix on the prior V/X/R/W test cases.** The 2026-03 fix for those glyphs touched the vertical solver and CalcCoverage. The new `kQuadraticEpsilon` value should not regress them — but worth a visual check on a string like "VXRWAZ#" to confirm.
+
+3. **The `SLUG_DEBUG_HRAY_LIMIT` flag is now staged at [frag.glsl line ~36](../src/shared/shader/slug/frag.glsl)** alongside `SLUG_DEBUG_HRAY_SKIP_POS`. Set to a non-negative integer to limit the H-ray loop to the first N curves. Useful for future curve-position binary searches. Default `-1` (disabled).
+
+### Investigation summary — what cracked it
+
+After the doc's prior section ruled out band assignment, sort, dilation, and CalcCoverage hypotheses, two new tools cracked the case:
+
+1. **The user's observation** that artifact stripes are MIRRORED between outside-glyph (bright stripes) and inside-glyph (dark gaps) — this fixed the mathematical interpretation as a `+1` xcov contribution at a wrong em-X.
+
+2. **The `SLUG_DEBUG_HRAY_LIMIT` binary search** — by limiting the H-ray to N curves and incrementing N until artifacts appeared, isolated the offending curve to sort-position 3 in each affected band. This narrowed the suspect set from "any curve in any band" to "near-horizontal short curves on glyph diagonals/feet" — which directly suggested the `ay` precision hypothesis.
+
+Both tools should be the first ones reached for in any future similar investigation.
+
+### Reproduction recipe
+
+1. `git diff` should show: `kQuadraticEpsilon` bumped to `0.01`, `SLUG_DEBUG_HRAY_LIMIT` added (currently `-1` = disabled).
+2. `npx pnpm run build:v8:dev`
+3. Open `http://localhost:3000/examples/v8/`, hard-reload.
+4. Set fontSize = 800, text = "AZ".
+5. Verify no stripes at bottom-left of A or bottom-right of Z.
+
+## Debug machinery (staged in shaders)
+
+All compile-time flags. Reset to 0 before shipping. Build with `npx pnpm run build:v8:dev`.
+
+### `SLUG_DEBUG_RAW` ([src/shared/shader/slug/frag.glsl:14-29](../src/shared/shader/slug/frag.glsl#L14-L29))
+
+| Mode | Purpose |
+|------|---------|
+| 0 | off (production) |
+| 1 | xcov as red/green |
+| 2 | xwgt as greyscale |
+| 3 | ycov as red/green |
+| 4 | ywgt as greyscale |
+| 5 | xcov bucketed (red=high noise, blue=mid AA, green=integer) |
+| 6 | (R=\|xcov\|, G=\|ycov\|, B=weighted) packed |
+| 7 | bug-pixel detector v1 (\|xcov\|>0.1 AND xwgt<0.1) — too generous, hits all interior |
+| 8 | bug-pixel detector v2 (\|xcov\| > xwgt + 0.1) — same problem |
+| 9 | **axis-disagreement** — yellow=xcov full, ycov zero, no wgt (most useful) |
+| 10 | H-ray crossing count (red=1, yellow=2, green=3+) |
+| 11 | crossing count ONLY at bug pixels |
+| 12 | **fine-grained xcov bands** (10% increments — black→red→yellow→white) |
+| 13 | bandIndex.y as color ramp (per-band hue) — confirms band-index correctness |
+
+### Other staged debug capability
+
+- One-time quad-attributes log in [src/shared/slug/glyph/quad.ts](../src/shared/slug/glyph/quad.ts) (currently NOT present — was added then removed). Prints to browser console for A/Z. Re-add by inserting after the `x0/y0/x1/y1` computation.
+- `SLUG_DEBUG_DISABLE_DILATION` flag in [src/shared/shader/slug/vert.glsl](../src/shared/shader/slug/vert.glsl) (currently NOT present — was added then removed). Bypasses dilation entirely.
+
+Both can be re-staged from git history if needed.
+
+## Diagnostic tests (preserved as permanent regression checks)
+
+- [tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts](../tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts) — asserts CPU↔GPU bandScale/offset match
+- [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) — bit-exact float32 simulator of the H-ray. Currently sweeps em-x and em-y in the artifact zone. **Useful starting point** for the next investigator — extend it to model `fwidth()`, `vTexcoord` interpolation, or whatever the next hypothesis requires.
+
+## Where to resume
+
+Three best paths to try next:
+
+### Path 1 — Get the GPU's actual xcov value for a known artifact pixel
+
+Add a debug mode that **encodes xcov as a precise color** (e.g., R = (xcov + 1) * 0.5 with high precision, or use `SLUG_DEBUG_RAW = 12` which already does coarse bands). Use the browser's color picker / pixel inspector to read the exact xcov value at one or two artifact pixels. Then plug those exact (em-x, em-y) values into the CPU simulator and see if it reproduces. If the simulator gives xcov = 0 but the GPU gives xcov = 1 at the SAME (em-x, em-y), then there's a code-path divergence we haven't identified.
+
+To compute the (em-x, em-y) at a screen pixel: re-add the quad-attributes console log in `quad.ts`, hover over the artifact pixel in the browser to read its screen coords, then linearly interpolate using the quad's screen→em transform.
+
+### Path 2 — Disable dilation and check if the artifact persists
+
+Re-add `SLUG_DEBUG_DISABLE_DILATION` in [vert.glsl](../src/shared/shader/slug/vert.glsl) (was previously staged at line ~10 and used at line ~127). Build with it set to 1. If the artifact disappears, the bug lives in the dilation halo (em-y outside `[bounds.minY, bounds.maxY]`). If it persists, dilation is innocent and the bug is purely in the ray solver / band arithmetic for in-bbox pixels.
+
+### Path 3 — Look at supersampling
+
+The investigation assumed supersampling is off (`Defaults.Supersampling = false`). Confirm in DevTools that `uSupersampleCount = 0` for the example, and verify by setting it to a non-zero value to see if the artifact gets averaged-out (which would suggest a sub-pixel sampling effect).
+
+## Context for an LLM resuming this work
+
+- The current code at [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) is the **production state** with all debug flags off (`SLUG_DEBUG_RAW = 0`). All `#elif` branches for the debug modes remain in place — flip the flag, rebuild, screenshot.
+- The `CalcCoverage` formula is back to `max(weighted, max(abs(xcov), abs(ycov)))` — the original V/X/R/W fix from 2026-03. **Do not change this without first solving the open A/Z problem**, as the fix interacts with both glyph families.
+- The user's reproduction setup: v8 example, Roboto TTF (default), test string `AAZZ##!`, size 270pt+ for clear visibility. Mode 12 (fine-grained xcov) is the most informative single visualization.
+- The user has the example running at `http://localhost:3000/examples/v8/`. Build with `npx pnpm run build:v8:dev`, hard-reload the page.
+- Extensive screenshots from this investigation are preserved in the user's chat history but not in the repo. The most useful: mode-9 (axis-disagreement) and mode-12 (fine-grained xcov).
+
+---
+
+# Investigation history (preserved from prior versions)
 
 ## Relationship to the prior artifact investigation
 
@@ -35,7 +236,7 @@ The V/X/R/W diagonal-stroke artifacts resolved on 2026-03-19 are documented in [
 - Has a **different signature** (horizontal stripes at the bottom-left of legs, scaling with size; not the diagonal-stroke streaks of the prior issue).
 - Was **already present** before any of the fixes in the prior doc were applied — it just wasn't surfaced by the test cases of the day, because the example default text didn't prominently include uppercase A or Z at large sizes.
 
-The two issues likely share the same root family (band-boundary float32 precision) but require independent fix work because the failure mode and reproduction conditions differ.
+The two issues likely share the same root family (boundary float32 precision) but require independent fix work because the failure mode and reproduction conditions differ.
 
 ## Confirmed pre-existing — not introduced by lazy loading
 
@@ -87,57 +288,16 @@ Both glyphs have **acute interior angles near the baseline on the bottom-left**:
 
 This is the same family of geometry as the V apex / X crossing / R leg artifacts called out in [_docs/artifact_investigation.md](artifact_investigation.md): "Remaining artifacts at V apex, X crossing, R leg — all at shared curve endpoints with acute angles." The previous fix work resolved the V/X/R/W cases but the A/Z cases have a different size threshold and presentation, suggesting a related but distinct interaction with the band assignment math.
 
-## Likely cause
-
-Band-boundary float32 precision. Specifically:
-
-1. **CPU-side band assignment** in [src/shared/slug/glyph/bands.ts](../src/shared/slug/glyph/bands.ts) computes each curve's float32 AABB and assigns the curve to every band the AABB intersects, with a **±1 band safety margin** at lines [142-149](../src/shared/slug/glyph/bands.ts#L142-L149).
-
-2. **Sharp-angle curves** at A's leg-base and Z's diagonal-meets-baseline have AABBs that sit very close to a band boundary. The `±1` margin handles the common case but appears insufficient for these specific glyph geometries.
-
-3. **At small sizes**, one band covers very few screen pixels, so even when a curve is missing from a band the visual error is sub-pixel and invisible. **At large sizes**, one band covers many pixels and the missing-curve hole becomes a visible stripe.
-
-4. **Stripe count varies with screen position** because the **fragment shader's per-pixel band index calculation** uses vertex-interpolated `bandScale` and `bandOffset` ([src/shared/slug/glyph/quad.ts](../src/shared/slug/glyph/quad.ts) writes them, [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) reads them). Both are float32 and drift with the glyph's screen position, causing the per-pixel band lookup to land on a band the curve was excluded from for some pixels but not others.
-
-This signature — size-threshold + position-dependent stripe count — matches a band-precision failure precisely.
-
-## Why this is independent of the lazy-load work
-
-The artifact lives in the **band-assignment math**, not the load pipeline. The lazy and eager load paths emit identical `bandData` and `curveData` (verified by the byte-equivalence test). Fixing this artifact will require changes in:
-
-- [src/shared/slug/glyph/bands.ts](../src/shared/slug/glyph/bands.ts) (CPU-side band assignment), and/or
-- [src/shared/slug/glyph/quad.ts](../src/shared/slug/glyph/quad.ts) (vertex-side band scale/offset), and/or
-- [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) (fragment-side band lookup).
-
-None of those touch when or how glyphs are loaded.
-
-## Candidate fixes (not yet tried)
-
-From the unattempted-fixes list documented in the prior investigation, applicable here:
-
-- **Wider safety margin**: extend the `±1` margin in [bands.ts:142-149](../src/shared/slug/glyph/bands.ts#L142-L149) to `±2`, or compute a dynamic margin proportional to the curve's float32-bounds uncertainty width. Cheapest experiment to run first.
-- **Band-split optimization**: split bands at known sharp-angle vertices so each sub-band's curve set is unambiguous. Architecturally larger change.
-- **Per-vertex band-coordinate quantization**: snap `bandScale` and `bandOffset` written by [quad.ts](../src/shared/slug/glyph/quad.ts) to float32 values whose representation places band boundaries at the same float positions the CPU-side band assignment used. Removes the CPU/GPU drift directly.
-- **Supersampling sanity check**: confirm the affected pixels invoke supersampling and that the supersample positions actually cross the band boundary. If supersampling is silently disabled or the sample positions don't cross the boundary, that's a simpler bug to fix than re-architecting band assignment.
-
-## Recommended workflow when this is picked up
-
-1. Add a focused reproduction test case: render `"A"` and `"Z"` in Roboto TTF at 97, 122, 208, and 270 px; capture screenshots; commit them as the before/after baseline.
-2. Try the wider-margin experiment first (cheapest). If it eliminates the stripes at all four sizes, ship that and re-run the regression test. If it only reduces the stripe count, fall back to the per-vertex quantization approach.
-3. Re-test on Roboto OTF (CFF) at the same sizes — the OTF and TTF reproductions converge or diverge as the fix takes effect, which is useful diagnostic signal.
-4. Once green on both encodings, sweep the same A/Z reproduction across all bundled fixture fonts to confirm no regression on glyphs that were already clean.
-
-## Reference data
-
-Screenshots from the 2026-05-02 reproduction (v8 example, Roboto TTF, default viewport) are referenced in this doc by size. The exact pixel measurements ("97 / 122 / 208 / 270 px") should be considered the ground-truth reproduction parameters for any future fix attempt. The threshold may shift with viewport / DPR / browser changes, but the **size ordering and font selection** are reliable.
-
 ## File references
 
 | File | Role |
 |------|------|
-| [src/shared/slug/glyph/bands.ts](../src/shared/slug/glyph/bands.ts) | CPU band assignment, ±1 safety margin (likely site of fix) |
+| [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) | Fragment shader — `CalcCoverage`, ray loops. **All debug modes live here.** |
+| [src/shared/shader/slug/vert.glsl](../src/shared/shader/slug/vert.glsl) | Vertex shader — dilation, MVP, unpack |
+| [src/shared/slug/glyph/bands.ts](../src/shared/slug/glyph/bands.ts) | CPU band assignment, ±1 safety margin |
 | [src/shared/slug/glyph/quad.ts](../src/shared/slug/glyph/quad.ts) | Vertex-side `bandScale` / `bandOffset` write |
-| [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) | Fragment-side per-pixel band index calculation |
-| [src/shared/slug/glyph/curves.ts](../src/shared/slug/glyph/curves.ts) | Cubic→quadratic conversion (relevant to the OTF reversal) |
+| [src/shared/slug/glyph/curves.ts](../src/shared/slug/glyph/curves.ts) | Cubic→quadratic conversion (relevant to OTF reversal) |
+| [tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts](../tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts) | Permanent regression — CPU↔GPU bandScale agreement |
+| [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) | Bit-exact CPU simulator. Extend for next investigation phase. |
 | [tests/shared/slug/font-eager-vs-lazy.spec.ts](../tests/shared/slug/font-eager-vs-lazy.spec.ts) | Byte-equivalence test that ruled out the load pipeline as cause |
 | [_docs/artifact_investigation.md](artifact_investigation.md) | Prior investigation (V/X/R/W family) — context, candidate fixes |

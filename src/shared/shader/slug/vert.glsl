@@ -17,6 +17,14 @@
 precision highp float;
 precision highp int;
 
+// Debug — bypass SlugDilate entirely. Vertex stays at its undilated position
+// and vTexcoord is the raw em-space coord with no dilation offset. Use to
+// confirm whether the A/Z bottom-left stripe artifact lives in the dilation
+// halo (em-y outside [bounds.minY, bounds.maxY]) or in the in-bbox ray solver.
+//   0 = off (production)
+//   1 = on (no dilation)
+#define SLUG_DEBUG_DISABLE_DILATION 0
+
 layout(location = 0) in vec4 aPositionNormal; // pos xy + normal zw
 layout(location = 1) in vec4 aTexcoord;       // em-space uv + packed glyph loc + packed bands
 layout(location = 2) in vec4 aJacobian;       // inverse Jacobian (00, 01, 10, 11)
@@ -124,7 +132,14 @@ void main()
 	vec2 dim = uResolution * 0.5;
 
 	vec2 p;
+#if SLUG_DEBUG_DISABLE_DILATION
+	// Skip dilation. Vertex sits at its undilated quad-corner position and
+	// vTexcoord is the raw em-space coord with no halo offset.
+	p = aPositionNormal.xy;
+	vTexcoord = aTexcoord.xy;
+#else
 	vTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);
+#endif
 
 	gl_Position = mvp * vec4(p, 0.0, 1.0);
 
