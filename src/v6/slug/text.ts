@@ -1,5 +1,5 @@
 import {TYPES} from '@pixi/constants';
-import {Buffer, Geometry} from '@pixi/core';
+import {Buffer, Geometry, type Renderer} from '@pixi/core';
 import {Container} from '@pixi/display';
 import {Graphics} from '@pixi/graphics';
 import {Mesh} from '@pixi/mesh';
@@ -7,6 +7,7 @@ import type {Shader} from '@pixi/core';
 import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
 import {slugApplyLineLayoutX} from '../../shared/slug/glyph/shift';
+import type {SlugLineLayout} from '../../shared/slug/text/layout/align';
 import {slugComputeLineLayout} from '../../shared/slug/text/layout/align';
 import {slugResolvePhysicalAlign} from '../../shared/slug/text/style/align';
 import {slugMeasureText} from '../../shared/slug/text/measure';
@@ -16,13 +17,41 @@ import {slugTextWrap} from '../../shared/slug/text/wrap';
 // (BaseTexture.fromBuffer, WRAP_MODES, Graphics.beginTextureFill).
 import {slugBuildDecorationFillV7} from '../../v7/slug/decoration/fill';
 import {slugBuildFillGpuV7, type SlugFillGpuV7} from '../../v7/slug/fill/gpu';
-import {slugFontGpuV6} from './font/gpu';
+import {slugFontGpuV6, type SlugFontGpuV6} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
-import type {SlugFont} from '../../shared/slug/font';
+import type {SlugFont, SlugFontEnsureResult} from '../../shared/slug/font';
 import {Constants} from '../../constants';
 import type {Rgba} from '../../rgba';
+
+/**
+ * CPU-side render plan computed by the geometry phase
+ * ({@link SlugText.rebuild}) and consumed by the GPU-attach phase
+ * ({@link SlugText._attachGpu}). Splitting this out lets us defer the
+ * Mesh/Shader/Geometry construction (which binds the Slug `Program`
+ * and triggers PIXI's blocking `generateProgram` on first draw) to a
+ * point where we have a renderer in hand and can route it through the
+ * parallel-compile path. See `_specs/features/parallel_shader_compile.md`
+ * §5.5 (v8 refactor — v6 mirrors the design).
+ */
+interface SlugTextRenderPlan {
+	font: SlugFont;
+	ensureResult: SlugFontEnsureResult;
+	lines: string[];
+	scale: number;
+	lineQuadCounts: Int32Array;
+	layout: SlugLineLayout;
+	needsShift: boolean;
+	fillBounds: [number, number, number, number];
+	fillQuads: SlugGlyphQuads | null;
+	shadowQuads: SlugGlyphQuads | null;
+	shadowAlpha: number;
+	shadowBlur: number;
+	shadowOffsetX: number;
+	shadowOffsetY: number;
+	strokeQuads: SlugGlyphQuads | null;
+}
 
 const SlugTextV6Base = SlugTextMixin(Container);
 
@@ -48,6 +77,29 @@ export class SlugText extends SlugTextV6Base {
 	 * rebuild before being replaced.
 	 */
 	private _fillGpu: SlugFillGpuV7 | null;
+	/**
+	 * Computed by {@link rebuild} (geometry phase) and consumed by
+	 * {@link _attachGpu} (GPU phase) on the next `_render` tick.
+	 * `null` when there is nothing to draw OR when the previous plan
+	 * has already been attached to the display list.
+	 */
+	private _pendingPlan: SlugTextRenderPlan | null;
+	/**
+	 * Token tracking the in-flight `programReady` chain. Bumped by
+	 * every {@link rebuild} so a late-arriving program-ready callback
+	 * from a stale plan can detect that the SlugText has moved on and
+	 * skip redundant work.
+	 */
+	private _attachToken: number;
+	/**
+	 * Most recent `SlugFontGpuV6` cache record this SlugText has
+	 * confirmed as program-ready. `programReady` lives on the cache
+	 * record forever once set (a one-shot signal, not cleared on
+	 * resolve), so we use this reference-equality flag to skip the
+	 * await on subsequent attaches against the same cache. Reset to
+	 * `null` only when the SlugText has never seen a ready signal yet.
+	 */
+	private _programReadyCache: SlugFontGpuV6 | null;
 
 	constructor(init: SlugTextInit) {
 		super();
@@ -55,6 +107,9 @@ export class SlugText extends SlugTextV6Base {
 		this._meshes = [];
 		this._decorations = null;
 		this._fillGpu = null;
+		this._pendingPlan = null;
+		this._attachToken = 0;
+		this._programReadyCache = null;
 
 		// Opt the whole subtree out of hit-testing by default. The
 		// internal meshes use a custom geometry so PIXI's
@@ -159,12 +214,34 @@ export class SlugText extends SlugTextV6Base {
 		return {mesh: new Mesh(geometry, shader), shader};
 	}
 
+	/**
+	 * Geometry phase: wraps + measures + lays out the text, builds the
+	 * per-pass `SlugGlyphQuads` arrays, computes the fill bbox, and
+	 * stores the result in {@link _pendingPlan}. **Does not** create
+	 * Mesh/Geometry/Shader objects or touch the display list — those
+	 * happen in {@link _attachGpu} on the next `_render` tick. This
+	 * defers the binding that triggers PIXI v6's blocking
+	 * `generateProgram` so the parallel-compile path (when active) can
+	 * complete the link first.
+	 */
 	public rebuild(): void {
 		this._rebuildCount++;
+		this._attachToken++;
 
-		// Tear down previous meshes and drop them from `_meshes` in the
-		// same reverse pass — reusing the array avoids per-rebuild GC
-		// pressure.
+		this._teardownAttached();
+
+		this._pendingPlan = this._buildPlan();
+	}
+
+	/**
+	 * Remove and destroy meshes, decorations, and the per-instance fill
+	 * GPU record from the previous attach. Reuses `_meshes` so we don't
+	 * churn an array per rebuild. v6 calls `mesh.destroy()` to release
+	 * per-mesh GPU buffers — v6's `Program.glPrograms` cache is keyed on
+	 * the program (not on the mesh), so destroying meshes does not
+	 * affect the shared compiled program.
+	 */
+	private _teardownAttached(): void {
 		for (let i = this._meshes.length - 1; i >= 0; i--) {
 			const mesh = this._meshes[i];
 			this.removeChild(mesh);
@@ -180,19 +257,25 @@ export class SlugText extends SlugTextV6Base {
 			this._fillGpu.dispose();
 			this._fillGpu = null;
 		}
+	}
 
+	/**
+	 * Pure-CPU geometry computation. Returns `null` for the empty-text
+	 * / no-font early-exit case so the caller can skip scheduling an
+	 * attach. All references the result holds (`font.glyphs`,
+	 * `font.advances`, layout arrays) are stable for the lifetime of
+	 * the plan — `ensureGlyphs` only appends, never mutates existing
+	 * glyph entries.
+	 */
+	private _buildPlan(): SlugTextRenderPlan | null {
 		const font = this._fontRef?.deref();
 		if (!font || this._text.length === 0 || font.unitsPerEm === 0) {
-			return;
+			return null;
 		}
 
 		// See v8 SlugText.rebuild for the lazy-glyph-processing rationale —
 		// behavior is identical here.
 		const ensureResult = font.ensureGlyphs(this._text);
-
-		const gpu = slugFontGpuV6(font, ensureResult);
-		const hasShadow = this._dropShadow !== null;
-		const hasStroke = this._strokeWidth > 0;
 
 		// --- Line layout (text-align / text-justify) ---
 		const scale = this._fontSize / font.unitsPerEm;
@@ -262,179 +345,266 @@ export class SlugText extends SlugTextV6Base {
 			Math.max(bboxMaxY - bboxMinY, 1)
 		];
 
+		let shadowQuads: SlugGlyphQuads | null = null;
+		let shadowAlpha = 0;
+		let shadowBlur = 0;
+		let shadowOffsetX = 0;
+		let shadowOffsetY = 0;
+		if (this._dropShadow !== null) {
+			const ds = this._dropShadow;
+			shadowAlpha = ds.alpha;
+			shadowBlur = ds.blur;
+			shadowOffsetX = Math.cos(ds.angle) * ds.distance;
+			shadowOffsetY = Math.sin(ds.angle) * ds.distance;
+			const shadowColor: Rgba = [ds.color[0], ds.color[1], ds.color[2], shadowAlpha];
+			const quads = this._makeQuads(font, lines, shadowColor, shadowBlur);
+			if (quads.quadCount > 0) {
+				if (needsShift) {
+					slugApplyLineLayoutX(quads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+				}
+				shadowQuads = quads;
+			}
+		}
+
+		let strokeQuads: SlugGlyphQuads | null = null;
+		if (this._strokeWidth > 0) {
+			const quads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
+			if (quads.quadCount > 0) {
+				if (needsShift) {
+					slugApplyLineLayoutX(quads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+				}
+				strokeQuads = quads;
+			}
+		}
+
+		return {
+			font,
+			ensureResult,
+			lines,
+			scale,
+			lineQuadCounts,
+			layout,
+			needsShift,
+			fillBounds,
+			fillQuads: fillQuads.quadCount > 0 ? fillQuads : null,
+			shadowQuads,
+			shadowAlpha,
+			shadowBlur,
+			shadowOffsetX,
+			shadowOffsetY,
+			strokeQuads
+		};
+	}
+
+	/**
+	 * v6 `Container` calls `_render(renderer)` every frame the
+	 * container is visible (before iterating children). We use it as
+	 * the GPU-attach point: the first frame after a {@link rebuild}
+	 * runs `slugFontGpuV6(font, ensureResult, renderer)` (which routes
+	 * through the parallel-compile path when conditions allow), then
+	 * builds Mesh/Geometry/Shader objects from the stored plan and
+	 * adds them to the display list. v6's render loop adds the new
+	 * children in time for the same frame's child iteration (Container
+	 * re-reads `this.children.length` per render call), so the user
+	 * sees no extra-frame delay on the sync path.
+	 */
+	protected _render(renderer: Renderer): void {
+		const plan = this._pendingPlan;
+		if (!plan) return;
+
+		const gpu = slugFontGpuV6(plan.font, plan.ensureResult, renderer);
+
+		// `programReady` is a one-shot signal: present while the parallel
+		// link is in flight, still present (resolved) after it completes.
+		// Gate on a per-SlugText flag that flips once we've confirmed
+		// readiness, so subsequent attaches skip the await without
+		// looping. The flag tracks the *cache record* so a re-rebuild
+		// that lands on the same cache entry doesn't re-wait either.
+		if (gpu.programReady && this._programReadyCache !== gpu) {
+			const token = this._attachToken;
+			gpu.programReady.then(() => {
+				if (this._attachToken !== token) return;
+				this._programReadyCache = gpu;
+				// Next visible frame's `_render` call will re-run and
+				// take the attach path. v6 has no `onRender` setter to
+				// clear/re-arm — `_render` fires every frame regardless.
+			});
+			return;
+		}
+
+		this._buildAndAttachMeshes(plan, gpu);
+		this._pendingPlan = null;
+	}
+
+	private _buildAndAttachMeshes(plan: SlugTextRenderPlan, gpu: SlugFontGpuV6): void {
 		this._fillGpu = slugBuildFillGpuV7(this._fill);
 
-		if (hasShadow) {
-			const ds = this._dropShadow!;
-			const shadowAlpha = ds.alpha;
-			const shadowColor: Rgba =
-				[ds.color[0], ds.color[1], ds.color[2], shadowAlpha];
-			const blur = ds.blur;
-
-			const shadowQuads = this._makeQuads(font, lines, shadowColor, blur);
-
-			if (shadowQuads.quadCount > 0) {
-				if (needsShift) {
-					slugApplyLineLayoutX(shadowQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
-				}
-				const solidGpu = slugBuildFillGpuV7({
-					kind: 'solid',
-					color: [0, 0, 0, 1],
-					rgbProvided: true,
-					alphaProvided: true
-				});
-				const {mesh, shader} = this._buildMesh(shadowQuads, gpu, solidGpu, fillBounds, blur);
-				if (blur > 0) {
-					shader.uniforms.uStrokeAlphaStart = shadowAlpha;
-					shader.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
-				}
-				mesh.x = Math.cos(ds.angle) * ds.distance;
-				mesh.y = Math.sin(ds.angle) * ds.distance;
-				this.addChild(mesh);
-				this._meshes.push(mesh);
+		// --- Drop shadow pass (always solid color, mode 0) ---
+		if (plan.shadowQuads !== null) {
+			const solidGpu = slugBuildFillGpuV7({
+				kind: 'solid',
+				color: [0, 0, 0, 1],
+				rgbProvided: true,
+				alphaProvided: true
+			});
+			const {mesh, shader} = this._buildMesh(plan.shadowQuads, gpu, solidGpu, plan.fillBounds, plan.shadowBlur);
+			if (plan.shadowBlur > 0) {
+				shader.uniforms.uStrokeAlphaStart = plan.shadowAlpha;
+				shader.uniforms.uStrokeAlphaRate = -plan.shadowAlpha / plan.shadowBlur;
 			}
+			mesh.x = plan.shadowOffsetX;
+			mesh.y = plan.shadowOffsetY;
+			this.addChild(mesh);
+			this._meshes.push(mesh);
 		}
 
-		if (hasStroke) {
-			const strokeQuads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
-
-			if (strokeQuads.quadCount > 0) {
-				if (needsShift) {
-					slugApplyLineLayoutX(strokeQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
-				}
-				const solidGpu = slugBuildFillGpuV7({
-					kind: 'solid',
-					color: [0, 0, 0, 1],
-					rgbProvided: true,
-					alphaProvided: true
-				});
-				const {mesh, shader} = this._buildMesh(
-					strokeQuads,
-					gpu,
-					solidGpu,
-					fillBounds,
-					this._strokeWidth
-				);
-				shader.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
-				shader.uniforms.uStrokeAlphaRate =
-					this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
-				this.addChild(mesh);
-				this._meshes.push(mesh);
-			}
+		// --- Stroke pass (always solid color, mode 0) ---
+		if (plan.strokeQuads !== null) {
+			const solidGpu = slugBuildFillGpuV7({
+				kind: 'solid',
+				color: [0, 0, 0, 1],
+				rgbProvided: true,
+				alphaProvided: true
+			});
+			const {mesh, shader} = this._buildMesh(
+				plan.strokeQuads,
+				gpu,
+				solidGpu,
+				plan.fillBounds,
+				this._strokeWidth
+			);
+			shader.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
+			shader.uniforms.uStrokeAlphaRate =
+				this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
+			this.addChild(mesh);
+			this._meshes.push(mesh);
 		}
 
-		if (fillQuads.quadCount > 0) {
-			const {mesh} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
+		// --- Fill pass (uses the resolved fill mode) ---
+		if (plan.fillQuads !== null) {
+			const {mesh} = this._buildMesh(plan.fillQuads, gpu, this._fillGpu, plan.fillBounds);
 			this.addChild(mesh);
 			this._meshes.push(mesh);
 
-			this._vertexBytes = fillQuads.vertices.byteLength;
-			this._indexBytes = fillQuads.indices.byteLength;
+			this._vertexBytes = plan.fillQuads.vertices.byteLength;
+			this._indexBytes = plan.fillQuads.indices.byteLength;
 		}
 
-		// --- Text decorations (underline / strikethrough / overline) ---
-		// Texture fills inherit through `slugBuildDecorationFillV7`;
-		// gradients on v6 decorations fall back to the representative
-		// solid color (no `FillGradient` in v6 Graphics — see
-		// decoration/fill.ts for the rationale).
+		this._buildDecorations(plan);
+	}
+
+	/**
+	 * Build the underline/strikethrough/overline Graphics from the
+	 * plan. Texture fills inherit through `slugBuildDecorationFillV7`;
+	 * gradients on v6 decorations fall back to the representative
+	 * solid color (no `FillGradient` in v6 Graphics — see
+	 * decoration/fill.ts for the rationale).
+	 */
+	private _buildDecorations(plan: SlugTextRenderPlan): void {
 		const ul = this._underlineDraw, st = this._strikethroughDraw, ol = this._overlineDraw;
-		if ((ul.enabled || st.enabled || ol.enabled) && font) {
-			const lineHeight = (font.ascender - font.descender) * scale;
+		if (!(ul.enabled || st.enabled || ol.enabled)) return;
 
-			const packColor = (rgba: Rgba): number =>
-				((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
-			const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
+		const {font, lines, scale, layout, fillBounds} = plan;
+		const lineHeight = (font.ascender - font.descender) * scale;
 
-			const fillIsTexture = this._fill.kind === 'texture';
-			const ulInheritsFill = fillIsTexture && this._underline.colorRgb === null;
-			const stInheritsFill = fillIsTexture && this._strikethrough.colorRgb === null;
-			const olInheritsFill = fillIsTexture && this._overline.colorRgb === null;
+		const packColor = (rgba: Rgba): number =>
+			((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
+		const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
 
-			const gfx = new Graphics();
+		const fillIsTexture = this._fill.kind === 'texture';
+		const ulInheritsFill = fillIsTexture && this._underline.colorRgb === null;
+		const stInheritsFill = fillIsTexture && this._strikethrough.colorRgb === null;
+		const olInheritsFill = fillIsTexture && this._overline.colorRgb === null;
 
-			const xForDecoration = (
-				lineW: number,
-				drawW: number,
-				align: 'left' | 'center' | 'right'
-			): number => {
-				if (align === 'right') return lineW - drawW;
-				if (align === 'center') return (lineW - drawW) / 2;
-				return 0;
-			};
+		const gfx = new Graphics();
 
-			const drawDecoration = (
-				x: number,
-				y: number,
-				w: number,
-				h: number,
-				inherits: boolean,
-				color: Rgba,
-				packed: number
-			): void => {
-				if (inherits) {
-					const texFill = slugBuildDecorationFillV7(
-						this._fill,
-						fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3],
-						color[3]
-					);
-					if (texFill) {
-						gfx.beginTextureFill({
-							texture: texFill.texture,
-							alpha: texFill.alpha,
-							matrix: texFill.matrix
-						});
-						gfx.drawRect(x, y, w, h);
-						gfx.endFill();
-						return;
-					}
-				}
-				gfx.beginFill(packed, color[3]);
-				gfx.drawRect(x, y, w, h);
-				gfx.endFill();
-			};
+		const xForDecoration = (
+			lineW: number,
+			drawW: number,
+			align: 'left' | 'center' | 'right'
+		): number => {
+			if (align === 'right') return lineW - drawW;
+			if (align === 'center') return (lineW - drawW) / 2;
+			return 0;
+		};
 
-			for (let l = 0; l < lines.length; l++) {
-				const line = lines[l];
-				const effLineW = layout.effectiveLineWidth[l];
-				const lineX = layout.lineOffsetX[l];
-				const lineY = l * lineHeight;
-
-				let maxGlyphTop = 0;
-				for (let i = 0; i < line.length; i++) {
-					const g = font.glyphs.get(line.charCodeAt(i));
-					if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
-				}
-				const baselineY = maxGlyphTop * scale;
-
-				if (ul.enabled && ul.length > 0) {
-					const drawW = effLineW * ul.length;
-					const x = lineX + xForDecoration(effLineW, drawW, ul.align);
-					const ulY = baselineY + lineY - font.underlinePosition * scale;
-					drawDecoration(x, ulY, drawW, ul.thickness, ulInheritsFill, ul.color, ulPacked);
-				}
-
-				if (st.enabled && st.length > 0) {
-					const drawW = effLineW * st.length;
-					const x = lineX + xForDecoration(effLineW, drawW, st.align);
-					const stY = baselineY + lineY - font.strikethroughPosition * scale;
-					drawDecoration(x, stY, drawW, st.thickness, stInheritsFill, st.color, stPacked);
-				}
-
-				if (ol.enabled && ol.length > 0) {
-					const drawW = effLineW * ol.length;
-					const x = lineX + xForDecoration(effLineW, drawW, ol.align);
-					const olY = lineY - ol.thickness;
-					drawDecoration(x, olY, drawW, ol.thickness, olInheritsFill, ol.color, olPacked);
+		const drawDecoration = (
+			x: number,
+			y: number,
+			w: number,
+			h: number,
+			inherits: boolean,
+			color: Rgba,
+			packed: number
+		): void => {
+			if (inherits) {
+				const texFill = slugBuildDecorationFillV7(
+					this._fill,
+					fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3],
+					color[3]
+				);
+				if (texFill) {
+					gfx.beginTextureFill({
+						texture: texFill.texture,
+						alpha: texFill.alpha,
+						matrix: texFill.matrix
+					});
+					gfx.drawRect(x, y, w, h);
+					gfx.endFill();
+					return;
 				}
 			}
+			gfx.beginFill(packed, color[3]);
+			gfx.drawRect(x, y, w, h);
+			gfx.endFill();
+		};
 
-			this._decorations = gfx;
-			this.addChild(gfx);
+		for (let l = 0; l < lines.length; l++) {
+			const line = lines[l];
+			const effLineW = layout.effectiveLineWidth[l];
+			const lineX = layout.lineOffsetX[l];
+			const lineY = l * lineHeight;
+
+			let maxGlyphTop = 0;
+			for (let i = 0; i < line.length; i++) {
+				const g = font.glyphs.get(line.charCodeAt(i));
+				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
+			}
+			const baselineY = maxGlyphTop * scale;
+
+			if (ul.enabled && ul.length > 0) {
+				const drawW = effLineW * ul.length;
+				const x = lineX + xForDecoration(effLineW, drawW, ul.align);
+				const ulY = baselineY + lineY - font.underlinePosition * scale;
+				drawDecoration(x, ulY, drawW, ul.thickness, ulInheritsFill, ul.color, ulPacked);
+			}
+
+			if (st.enabled && st.length > 0) {
+				const drawW = effLineW * st.length;
+				const x = lineX + xForDecoration(effLineW, drawW, st.align);
+				const stY = baselineY + lineY - font.strikethroughPosition * scale;
+				drawDecoration(x, stY, drawW, st.thickness, stInheritsFill, st.color, stPacked);
+			}
+
+			if (ol.enabled && ol.length > 0) {
+				const drawW = effLineW * ol.length;
+				const x = lineX + xForDecoration(effLineW, drawW, ol.align);
+				const olY = lineY - ol.thickness;
+				drawDecoration(x, olY, drawW, ol.thickness, olInheritsFill, ol.color, olPacked);
+			}
 		}
+
+		this._decorations = gfx;
+		this.addChild(gfx);
 	}
 
 	public destroy(): void {
 		this._releaseFontOnDestroy();
+		// Bump the token so any in-flight `programReady` callback that
+		// resolves after destruction notices and skips re-arming work
+		// against a dead instance.
+		this._attachToken++;
+		this._pendingPlan = null;
 		for (const mesh of this._meshes) {
 			mesh.destroy();
 		}

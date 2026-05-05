@@ -1,4 +1,5 @@
 import './slug/fonts/ticker';
+import './slug/fonts/prewarm-install';
 export {SlugFont} from '../shared/slug/font';
 export {SlugFonts} from '../shared/slug/fonts';
 export {SlugText} from './slug/text';

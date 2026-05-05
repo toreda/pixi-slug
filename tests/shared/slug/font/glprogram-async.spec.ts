@@ -1,4 +1,4 @@
-import {slugBuildGlProgramAsync} from '../../../../src/v8/slug/font/glprogram-async';
+import {slugBuildGlProgramAsync} from '../../../../src/shared/slug/font/glprogram-async';
 
 const COMPLETION_STATUS_KHR = 0x91b1;
 const LINK_STATUS = 0x8b82;

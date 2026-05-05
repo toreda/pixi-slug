@@ -1,5 +1,5 @@
 import type {GlProgram, WebGLRenderer} from 'pixi.js';
-import {slugBuildGlProgramAsync} from './glprogram-async';
+import {slugBuildGlProgramAsync} from '../../../shared/slug/font/glprogram-async';
 import {slugBuildGlProgramData} from './glprogramdata';
 import {slugInjectGlProgramData} from './inject';
 

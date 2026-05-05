@@ -11,6 +11,11 @@ const SLUG_RESIZE_OBSERVER = Symbol('slug.resizeObserver');
  * Minimal shape of PIXI v6 `Application` the plugin relies on.
  * Inlined to avoid adding `@pixi/app` as a dev dependency purely for
  * type-checking — host apps provide the real `Application` at runtime.
+ *
+ * `renderer` is typed as `unknown` because the v6 `Renderer` shape is
+ * not in scope here (we don't import `@pixi/core` from this module).
+ * It's handed straight to {@link SlugFonts.attachRenderer}, which
+ * takes `unknown` and lets the prewarm hook do the structural check.
  */
 interface ApplicationV6Like {
 	ticker: {
@@ -18,6 +23,7 @@ interface ApplicationV6Like {
 		add(fn: () => void): void;
 		remove(fn: () => void): void;
 	};
+	renderer?: unknown;
 	resizeTo?: Window | HTMLElement | null;
 	resize?: () => void;
 	[SLUG_RESIZE_OBSERVER]?: ResizeObserver;
@@ -60,6 +66,14 @@ export class SlugApplicationPluginV6 {
 			return () => app.ticker.remove(handler);
 		});
 
+		// Register the app's renderer so the v6 prewarm hook can compile
+		// the Slug shader off the main thread during font load (spec §6.2).
+		// `attachRenderer` is idempotent and no-ops gracefully when the
+		// hook is absent or the renderer is unrecognized.
+		if (app.renderer) {
+			SlugFonts.attachRenderer(app.renderer);
+		}
+
 		// PIXI's `ResizePlugin` only listens for `window` resize events.
 		// When `resizeTo` is a DOM element, any layout change that affects
 		// that element without triggering a window resize (sidebar inject,
@@ -95,6 +109,7 @@ export class SlugApplicationPluginV6 {
 			delete this[SLUG_RESIZE_OBSERVER];
 		}
 		SlugFonts.detachTicker();
+		SlugFonts.detachRenderer();
 		SlugFonts.sweepImmediate();
 	}
 }

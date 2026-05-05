@@ -1,9 +1,19 @@
 import {FORMATS, TYPES} from '@pixi/constants';
-import {BaseTexture, Program, Texture} from '@pixi/core';
+import {BaseTexture, Program, Texture, type Renderer} from '@pixi/core';
 import type {SlugFont, SlugFontEnsureResult} from '../../../shared/slug/font';
+import {SlugFonts} from '../../../shared/slug/fonts';
 
 import vertSource from '../../shader/slug/vert.glsl';
 import fragSource from '../../../shared/shader/slug/frag.glsl';
+import {slugCompileAndInject} from './compile';
+
+/** Slug's GLSL is `#version 300 es`. PIXI v7's own `generateProgram`
+ * (line 11 of node_modules/pixi-v7-core/.../generateProgram.js) uses the
+ * same regex check to skip the alphabetical attribute pre-sort for
+ * `#version 300 es` shaders — we mirror that decision so post-link
+ * state matches what PIXI's sync path would have produced. */
+const SORT_ATTRIBUTES = false;
+const KHR_EXT = 'KHR_parallel_shader_compile';
 
 /**
  * Cached GPU resources for a SlugFont in PixiJS v7.
@@ -21,6 +31,19 @@ export interface SlugFontGpuV7 {
 	bandTexture: Texture;
 	fallbackWhite: Texture;
 	program: Program;
+	/**
+	 * When the parallel-compile path is taken, resolves once the program
+	 * is linked AND the resulting `GLProgram` has been injected into
+	 * PIXI v7's per-program/per-context cache (`program.glPrograms`).
+	 * Resolves to `true` on a successful injection, `false` when
+	 * injection failed (PIXI internal drift) and the caller should
+	 * expect PIXI's sync path on first draw instead.
+	 *
+	 * Absent on the legacy / sync path — callers should treat
+	 * `programReady === undefined` as "no async wait needed; PIXI will
+	 * compile on first draw".
+	 */
+	programReady?: Promise<boolean>;
 	/**
 	 * Reference to the `Float32Array` currently owned by the curve
 	 * texture. When `font.curveData` no longer matches this reference,
@@ -61,8 +84,24 @@ function makeBandTexture(font: SlugFont, bandView: Float32Array): Texture {
  * the curve and band textures with whatever glyph data the font now
  * holds. See {@link slugFontGpuV8} for the full sync semantics —
  * behavior is identical aside from the v7-specific `BaseTexture` API.
+ *
+ * `renderer` is optional. When provided AND
+ * `SlugFonts.parallelShaderCompile === true` AND
+ * `KHR_parallel_shader_compile` is available on the renderer's GL
+ * context, the cache-miss path compiles the Slug shader off the main
+ * thread using {@link slugBuildGlProgramAsync} and pre-populates PIXI's
+ * `program.glPrograms[CONTEXT_UID]` so the next draw skips PIXI's
+ * blocking compile. Otherwise the cache-miss path constructs a
+ * `Program` exactly as before and PIXI compiles synchronously on first
+ * draw — preserving pre-feature behavior verbatim. The decision is
+ * read once on cache miss; flipping the toggle later does not affect
+ * already-compiled fonts.
  */
-export function slugFontGpuV7(font: SlugFont, ensureResult: SlugFontEnsureResult | null = null): SlugFontGpuV7 {
+export function slugFontGpuV7(
+	font: SlugFont,
+	ensureResult: SlugFontEnsureResult | null = null,
+	renderer: Renderer | null = null
+): SlugFontGpuV7 {
 	const cached = font.gpuCache as SlugFontGpuV7 | null;
 
 	if (cached) {
@@ -109,6 +148,26 @@ export function slugFontGpuV7(font: SlugFont, ensureResult: SlugFontEnsureResult
 		_curveBuffer: font.curveData,
 		_bandBuffer: bandView
 	};
+
+	// Parallel-compile path: only entered when a renderer is available
+	// (i.e. the caller knows which GL context to compile against), the
+	// global toggle is on, and the GL context advertises the KHR
+	// extension. Any failure short of a thrown exception falls back
+	// transparently — `programReady` is omitted in that case so callers
+	// know to expect PIXI's sync compile on first draw (today's path).
+	if (renderer && SlugFonts.parallelShaderCompile) {
+		const gl = renderer.gl as WebGL2RenderingContext;
+		if (gl && typeof gl.getExtension === 'function' && gl.getExtension(KHR_EXT)) {
+			cache.programReady = slugCompileAndInject(
+				gl,
+				renderer,
+				program,
+				program.vertexSrc,
+				program.fragmentSrc,
+				SORT_ATTRIBUTES
+			);
+		}
+	}
 
 	font.gpuCache = cache;
 	font.setGpuDestroy(() => {

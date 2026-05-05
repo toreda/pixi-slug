@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+* Configurable 'prewarm' feature that starts shader init as soon as possible. Defaults to `true` (active).
+* Configurable parallel compilation for shader to reduce shader compilation time. Defaults to `true` (active), but gracefully falls back to non-parallel compilation when the required WebGL extension isnt available.
+
 ### Fixed
 * Fixed a rendering bug in the shader math related to the epsilon value when rendering specific glyphs like 'A', 'Z', and '#' at large font sizes on large screens. Rendering artifacts did not appear on all glyphs and did not appear at smaller font sizes below ~90ish, depending on resolution. 
 

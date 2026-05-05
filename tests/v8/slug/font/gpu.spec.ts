@@ -42,21 +42,15 @@ jest.mock('pixi.js', () => {
 jest.mock('../../../../src/shared/shader/slug/vert.glsl', () => 'STUB_VERT', {virtual: true});
 jest.mock('../../../../src/shared/shader/slug/frag.glsl', () => 'STUB_FRAG', {virtual: true});
 
-const mockBuildAsync = jest.fn();
-const mockBuildData = jest.fn();
-const mockInject = jest.fn();
-
-jest.mock('../../../../src/v8/slug/font/glprogram-async', () => ({
+// `gpu.ts` calls `slugCompileAndInject` from `compile.ts`, which in
+// turn drives the async build / data extraction / injection helpers.
+// Mock the single entry point — the inner helpers are exercised by
+// their own specs (glprogram-async.spec.ts, glprogramdata.spec.ts,
+// inject.spec.ts).
+const mockCompileAndInject = jest.fn();
+jest.mock('../../../../src/v8/slug/font/compile', () => ({
 	__esModule: true,
-	slugBuildGlProgramAsync: (...args: unknown[]) => mockBuildAsync(...args)
-}));
-jest.mock('../../../../src/v8/slug/font/glprogramdata', () => ({
-	__esModule: true,
-	slugBuildGlProgramData: (...args: unknown[]) => mockBuildData(...args)
-}));
-jest.mock('../../../../src/v8/slug/font/inject', () => ({
-	__esModule: true,
-	slugInjectGlProgramData: (...args: unknown[]) => mockInject(...args)
+	slugCompileAndInject: (...args: unknown[]) => mockCompileAndInject(...args)
 }));
 
 import {SlugFont} from '../../../../src/shared/slug/font';
@@ -99,40 +93,35 @@ function makeFont(): SlugFont {
 describe('slugFontGpuV8 parallel-compile path', () => {
 	beforeEach(() => {
 		jest.restoreAllMocks();
-		mockBuildAsync.mockReset();
-		mockBuildData.mockReset();
-		mockInject.mockReset();
-		// Default to a "happy path" async build; individual tests override.
-		mockBuildAsync.mockReturnValue({program: {}, ready: Promise.resolve()});
-		mockBuildData.mockReturnValue({mocked: 'GlProgramData'});
-		mockInject.mockReturnValue(true);
+		mockCompileAndInject.mockReset();
+		// Happy-path default; individual tests override to exercise
+		// failure modes (rejected ready promise, injection miss, etc.).
+		mockCompileAndInject.mockResolvedValue(true);
 	});
 
 	describe('renderer omitted (legacy path)', () => {
-		it('does not invoke the parallel build helpers', () => {
-			const font = makeFont();
-			const cache = slugFontGpuV8(font);
+		it('does not invoke slugCompileAndInject', () => {
+			const cache = slugFontGpuV8(makeFont());
 
-			expect(mockBuildAsync).not.toHaveBeenCalled();
+			expect(mockCompileAndInject).not.toHaveBeenCalled();
 			expect(cache.programReady).toBeUndefined();
 		});
 
 		it('does not query getExtension when no renderer is supplied', () => {
 			// No renderer ⇒ no GL access at all ⇒ nothing to query.
 			expect(() => slugFontGpuV8(makeFont(), null, null)).not.toThrow();
-			expect(mockBuildAsync).not.toHaveBeenCalled();
+			expect(mockCompileAndInject).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('renderer supplied + toggle off', () => {
 		it('skips the parallel path entirely; no extension probe', () => {
 			setToggle(false);
-			const font = makeFont();
 			const {renderer, gl} = makeRenderer(true);
-			const cache = slugFontGpuV8(font, null, renderer);
+			const cache = slugFontGpuV8(makeFont(), null, renderer);
 
 			expect(gl.getExtension).not.toHaveBeenCalled();
-			expect(mockBuildAsync).not.toHaveBeenCalled();
+			expect(mockCompileAndInject).not.toHaveBeenCalled();
 			expect(cache.programReady).toBeUndefined();
 		});
 	});
@@ -140,72 +129,45 @@ describe('slugFontGpuV8 parallel-compile path', () => {
 	describe('renderer supplied + toggle on + extension absent', () => {
 		it('queries the extension once, then falls through to the legacy path', () => {
 			setToggle(true);
-			const font = makeFont();
 			const {renderer, gl} = makeRenderer(false);
 
-			const cache = slugFontGpuV8(font, null, renderer);
+			const cache = slugFontGpuV8(makeFont(), null, renderer);
 
 			expect(gl.getExtension).toHaveBeenCalledWith('KHR_parallel_shader_compile');
-			expect(mockBuildAsync).not.toHaveBeenCalled();
+			expect(mockCompileAndInject).not.toHaveBeenCalled();
 			expect(cache.programReady).toBeUndefined();
 		});
 	});
 
 	describe('renderer supplied + toggle on + extension present', () => {
-		it('runs the async build, builds program data, and injects it (programReady → true)', async () => {
+		it('drives slugCompileAndInject and exposes its resolved boolean as programReady', async () => {
 			setToggle(true);
-			const font = makeFont();
 			const {renderer} = makeRenderer(true);
 
-			const cache = slugFontGpuV8(font, null, renderer);
+			const cache = slugFontGpuV8(makeFont(), null, renderer);
 
-			expect(mockBuildAsync).toHaveBeenCalledTimes(1);
+			expect(mockCompileAndInject).toHaveBeenCalledTimes(1);
 			expect(cache.programReady).toBeInstanceOf(Promise);
-
 			await expect(cache.programReady).resolves.toBe(true);
-			expect(mockBuildData).toHaveBeenCalledTimes(1);
-			expect(mockInject).toHaveBeenCalledTimes(1);
 		});
 
-		it('resolves programReady to false when injection reports a miss', async () => {
+		it('resolves programReady to false when slugCompileAndInject reports a miss', async () => {
 			setToggle(true);
-			mockInject.mockReturnValue(false);
-
-			const font = makeFont();
+			mockCompileAndInject.mockResolvedValue(false);
 			const {renderer} = makeRenderer(true);
-			const cache = slugFontGpuV8(font, null, renderer);
-
+			const cache = slugFontGpuV8(makeFont(), null, renderer);
 			await expect(cache.programReady).resolves.toBe(false);
 		});
 
-		it('resolves programReady to false when the async link rejects', async () => {
+		it('surfaces a slugCompileAndInject rejection through programReady', async () => {
 			setToggle(true);
-			mockBuildAsync.mockReturnValue({
-				program: {},
-				ready: Promise.reject(new Error('link failure'))
-			});
-
-			const font = makeFont();
+			mockCompileAndInject.mockRejectedValue(new Error('link failure'));
 			const {renderer} = makeRenderer(true);
-			const cache = slugFontGpuV8(font, null, renderer);
 
-			await expect(cache.programReady).resolves.toBe(false);
-			expect(mockBuildData).not.toHaveBeenCalled();
-			expect(mockInject).not.toHaveBeenCalled();
-		});
-
-		it('resolves programReady to false when slugBuildGlProgramData throws', async () => {
-			setToggle(true);
-			mockBuildData.mockImplementation(() => {
-				throw new Error('PIXI internal drift');
-			});
-
-			const font = makeFont();
-			const {renderer} = makeRenderer(true);
-			const cache = slugFontGpuV8(font, null, renderer);
-
-			await expect(cache.programReady).resolves.toBe(false);
-			expect(mockInject).not.toHaveBeenCalled();
+			const cache = slugFontGpuV8(makeFont(), null, renderer);
+			// Construction must not throw; rejection lives on programReady.
+			expect(cache.programReady).toBeInstanceOf(Promise);
+			await expect(cache.programReady).rejects.toThrow(/link failure/);
 		});
 	});
 });

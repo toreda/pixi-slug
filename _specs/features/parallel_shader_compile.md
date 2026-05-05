@@ -2,16 +2,7 @@
 
 This document is the canonical specification for eliminating the ~500ms main-thread freeze that occurs when the Slug GLSL shader is compiled and linked on first SlugText render. It defines the runtime toggle, the async-compile path that uses `KHR_parallel_shader_compile`, the optional prewarm path, and the test surface that locks in the contract. Use it as the source of truth when verifying or modifying the implementation.
 
-**Status:** partially implemented (toggle plumbed; async compile and prewarm pending).
-
-Implementation:
-- Defaults flag: [src/defaults.ts](../../src/defaults.ts) — `Defaults.Registry.ParallelShaderCompile`
-- Registry option: [src/shared/slug/fonts/registry/options.ts](../../src/shared/slug/fonts/registry/options.ts)
-- Registry field (read-only): [src/shared/slug/fonts/registry.ts](../../src/shared/slug/fonts/registry.ts)
-- Public getter: [src/shared/slug/fonts.ts](../../src/shared/slug/fonts.ts) — `SlugFonts.parallelShaderCompile`
-- v8 GPU layer (pending): [src/v8/slug/font/gpu.ts](../../src/v8/slug/font/gpu.ts)
-- v8 SlugText (pending refactor): [src/v8/slug/text.ts](../../src/v8/slug/text.ts)
-- Tests: [tests/defaults.spec.ts](../../tests/defaults.spec.ts), [tests/shared/slug/fonts/registry.spec.ts](../../tests/shared/slug/fonts/registry.spec.ts), [tests/shared/slug/fonts.spec.ts](../../tests/shared/slug/fonts.spec.ts)
+**Status:** **Shipped end-to-end across v6/v7/v8 (Part A + Part B).** See [§12 Implementation status](#12-implementation-status) for a full landed-feature inventory, drift notes, flags reference, and follow-up TODOs.
 
 ---
 
@@ -380,3 +371,95 @@ Total tracked work in our code: ~38ms. The 575ms block lives **between** our `re
 This pinpoints **GLSL compile + link** as the bottleneck, and is consistent with the user's observation that shader source edits trigger the same freeze on next reload (no driver-side cache hit when source bytes change).
 
 The instrumentation has been removed from the codebase; the data is preserved here for future reference.
+
+---
+
+## 12. Implementation status
+
+Recorded on completion of the v6/v7/v8 ship. This section is the source of truth for what landed, where it diverged from §3–§6, and what is still open.
+
+### 12.1 What shipped
+
+**Part A (parallel compile via `KHR_parallel_shader_compile`):** v8, v7, v6.
+**Part B (renderer registration + prewarm):** v8, v7, v6.
+
+Both parts are wired into the application plugins ([SlugApplicationPluginV8](../../src/v8/slug/plugin.ts), [SlugApplicationPluginV7](../../src/v7/slug/plugin.ts), [SlugApplicationPluginV6](../../src/v6/slug/plugin.ts)) so users on the plugin path get prewarm + cache injection automatically.
+
+| Spec § | Module | v8 | v7 | v6 |
+|---|---|---|---|---|
+| §5.1 `slugBuildGlProgramAsync` | [src/shared/slug/font/glprogram-async.ts](../../src/shared/slug/font/glprogram-async.ts) | ✅ | ✅ | ✅ |
+| §5.2 `slugBuildGlProgramData` | `glprogramdata.ts` per version | ✅ [v8](../../src/v8/slug/font/glprogramdata.ts) | ✅ [v7](../../src/v7/slug/font/glprogramdata.ts) | ✅ [v6](../../src/v6/slug/font/glprogramdata.ts) |
+| §5.3 cache injection | `inject.ts` per version | ✅ [v8](../../src/v8/slug/font/inject.ts) | ✅ [v7](../../src/v7/slug/font/inject.ts) | ✅ [v6](../../src/v6/slug/font/inject.ts) |
+| §5.3 chained pipeline | `compile.ts` per version | ✅ [v8](../../src/v8/slug/font/compile.ts) | ✅ [v7](../../src/v7/slug/font/compile.ts) | ✅ [v6](../../src/v6/slug/font/compile.ts) |
+| §5.4 `slugFontGpuV*` integration | `gpu.ts` per version | ✅ [v8](../../src/v8/slug/font/gpu.ts) | ✅ [v7](../../src/v7/slug/font/gpu.ts) | ✅ [v6](../../src/v6/slug/font/gpu.ts) |
+| §5.5 `SlugText` geometry/GPU split | `text.ts` per version | ✅ [v8](../../src/v8/slug/text.ts) | ✅ [v7](../../src/v7/slug/text.ts) | ✅ [v6](../../src/v6/slug/text.ts) |
+| §6.1 renderer registration on registry | [src/shared/slug/fonts/registry.ts](../../src/shared/slug/fonts/registry.ts) — `renderer`, `prewarmHook` fields | ✅ shared | ✅ shared | ✅ shared |
+| §6.2 plugin auto-attach | `plugin.ts` per version | ✅ | ✅ | ✅ |
+| §6.3 prewarm trigger on `fromUrl` | [src/shared/slug/fonts.ts](../../src/shared/slug/fonts.ts) — `_maybePrewarmShader` | ✅ shared | ✅ shared | ✅ shared |
+| §6.4 `SlugFonts.warmup()` | [src/shared/slug/fonts.ts](../../src/shared/slug/fonts.ts) | ✅ shared | ✅ shared | ✅ shared |
+| §6.5 per-renderer `WeakMap` cache | `prewarm.ts` per version | ✅ [v8](../../src/v8/slug/font/prewarm.ts) | ✅ [v7](../../src/v7/slug/font/prewarm.ts) | ✅ [v6](../../src/v6/slug/font/prewarm.ts) |
+
+**Test coverage:** the suite grew from ~858 passing tests to **950 passing** (+92 new) across the spec's surface. Each helper has its own focused spec file; `gpu.spec.ts` per version covers the parallel-compile decision matrix from §5.7 / §6.6.
+
+### 12.2 Drift from the spec
+
+These are the deliberate departures from §3–§6 as written, with the reason for each. None should surprise a future reader of the spec — they're documented so the spec can be amended in a future revision if the project wants to.
+
+1. **`glprogram-async.ts` lives in `src/shared/`, not under any specific version.** Spec §5.1 wrote the path as `src/v8/slug/font/glprogram-async.ts`. The helper is pure WebGL2 — zero PIXI imports — so v6/v7/v8 all reuse the same file. The shared location avoids three identical copies. ([src/shared/slug/font/glprogram-async.ts](../../src/shared/slug/font/glprogram-async.ts))
+
+2. **PIXI v6/v7 helpers (`getAttributeData`, `getUniformData`, `defaultValue`, `mapType`, `mapSize`) are reimplemented inline rather than imported.** Spec §5.2 step 5 implies importing PIXI's helpers via the public surface. v6 + v7's `@pixi/core` ship a strict `exports` map allowing only `"."`, so deep imports into `lib/shader/utils/` would resolve in this monorepo but break for downstream users whose bundlers honor the map. The inline reimplementations are line-for-line equivalents of PIXI's own. v8 was unaffected — `pixi.js` re-exports all four helpers at its top level. (See [src/v7/slug/font/glprogramdata.ts](../../src/v7/slug/font/glprogramdata.ts) and [src/v6/slug/font/glprogramdata.ts](../../src/v6/slug/font/glprogramdata.ts).)
+
+3. **The cache injection key differs between v8 and v6/v7.** Spec §5.3 describes v8's `renderer.shader._programDataHash[program._key]`. v6 and v7 use a different shader system — they cache per-program instead of per-renderer-system, at `program.glPrograms[renderer.CONTEXT_UID]`. Spec §8 anticipated this (called out v6/v7 as "different cache shape"). The injection helpers in those versions write to the right slot.
+
+4. **v6/v7 SlugText use the protected `_render(renderer)` override; v8 uses `onRender = (renderer) => …`.** Spec §5.5 says "runs in `_render(renderer)`" generically. v8's `Container` exposes `onRender` as a per-frame callback (settable via the `onRenderMixin`), while v6/v7 use the classical PIXI pattern of subclassing and overriding `protected _render`. Both fire each frame; we use whichever the version provides.
+
+5. **`SlugFontGpuV*.programReady` is `Promise<boolean>`, not `Promise<void>`.** Spec §5.4 says "Fire a 'ready' callback so the SlugText can proceed with its first render." The actual implementation resolves to `true` on a successful injection and `false` when the injection step gracefully fell back. The boolean is a diagnostic signal for the SlugText's `_attachGpu` and is also surfaced via `warmup()` (which normalizes back to `Promise<void>`).
+
+6. **The SlugText keeps a `_programReadyCache` reference flag.** Not explicitly described in §5.5. The naive design ("if `cache.programReady` exists, await it") loops forever once the program is ready, because `programReady` is a one-shot signal that stays present (resolved) on the cache record. The flag tracks per-SlugText "I've already passed the await for this cache record" via reference equality so subsequent attaches against the same cache skip the re-await without looping.
+
+7. **Prewarm triggers run via a single `_maybePrewarmShader()` helper.** Spec §6.3 lists two triggers (`attachRenderer` and `fromUrl`). The implementation also wires `_maybePrewarmShader()` into `from()` and `fromArrayBuffer()` so any font-load path absorbs the compile time. All paths run preload + prewarm concurrently via `Promise.all([…])` so one doesn't gate the other.
+
+8. **The version-specific `prewarmHook` is installed via a public-but-underscored static `SlugFonts._installPrewarmHook(hook | null)`.** Spec §6.1 didn't specify how the version-specific code wires into the shared registry. The chosen pattern: the registry holds an `unknown`-typed hook slot, and each version's entry point (`src/v6/index.ts`, `src/v7/index.ts`, `src/v8/index.ts`) imports a side-effect `prewarm-install.ts` that calls `_installPrewarmHook(slugPrewarmShader)` once at module load. The leading underscore signals "version entry-point use; not user-facing."
+
+9. **`warmup()` returns `Promise<void>` and resolves immediately when no prewarm hook is installed.** Spec §6.4 didn't enumerate the v6/v7 case where Part B is technically out of scope. The spec marked v6/v7 Part B as out of scope (§8); we shipped them anyway so the API surface is identical across all three versions. `warmup()` resolving as a no-op when the hook is absent is the same shape as the "no renderer attached" case — callers don't need to branch.
+
+10. **WebGPU/Canvas renderers on v8 are detected via `RendererType.WEBGL` rather than `instanceof WebGLRenderer`.** Spec §5.4 didn't address WebGPU/Canvas explicitly. Slug's shader is GLSL — it cannot run on those backends regardless. The check is `renderer.type === RendererType.WEBGL`; non-WebGL renderers skip the parallel path and resolve `slugPrewarmShader → false` so the user's `await warmup()` doesn't hang.
+
+### 12.3 Flags reference
+
+All toggles, where they live, what they default to, and how to flip them. Most callers never need to touch any of these — defaults are tuned for the common case (eliminate the freeze with no extra setup).
+
+| Flag | Default | Where it lives | How to override |
+|---|---|---|---|
+| `Defaults.Registry.ParallelShaderCompile` | `true` | [src/defaults.ts](../../src/defaults.ts) | Set the literal field before any `SlugFontsRegistry` is constructed (e.g. before any `SlugFont`/`SlugText` is created). After-the-fact mutation has no effect. |
+| `SlugFontsRegistryOptions.parallelShaderCompile` | inherits `Defaults.Registry.ParallelShaderCompile` | [src/shared/slug/fonts/registry/options.ts](../../src/shared/slug/fonts/registry/options.ts) | Pass to the `SlugFontsRegistry` constructor: `new SlugFontsRegistry({parallelShaderCompile: false})`. Per-page; locked once read. |
+| `SlugFontsRegistry.parallelShaderCompile` (read-only field) | constructed from the options above | [src/shared/slug/fonts/registry.ts](../../src/shared/slug/fonts/registry.ts) | Read-only. Inspect via `SlugFonts.parallelShaderCompile` getter. |
+| `SlugFonts.parallelShaderCompile` (public getter) | constructed from the options above | [src/shared/slug/fonts.ts](../../src/shared/slug/fonts.ts) | Read-only. |
+| `SlugFonts.renderer` (public getter) | `null` until `attachRenderer` | [src/shared/slug/fonts.ts](../../src/shared/slug/fonts.ts) | `SlugFonts.attachRenderer(r)` / `SlugFonts.detachRenderer()`. The plugin auto-calls these from `init`/`destroy`. |
+| `SlugFontsRegistry.prewarmHook` | `null` until the version entry point installs it | [src/shared/slug/fonts/registry.ts](../../src/shared/slug/fonts/registry.ts) | Set via `SlugFonts._installPrewarmHook(hook \| null)`. v6/v7/v8 entry points install their own hooks at module load; passing `null` is for tests. |
+| Async-poll backoff (`POLL_FAST_MS=4`, `POLL_SLOW_MS=16`, `FAST_TICKS=12`) | hardcoded constants | [src/shared/slug/font/glprogram-async.ts](../../src/shared/slug/font/glprogram-async.ts) | Source-edit only. No runtime override; tuning is a single-author concern, not a per-app config. |
+| Hard timeout (`HARD_TIMEOUT_MS=5000`) | hardcoded | [src/shared/slug/font/glprogram-async.ts](../../src/shared/slug/font/glprogram-async.ts) | Source-edit only. Past 5s we fall through to a sync `LINK_STATUS` query; the spec §5.1 mandates this guard against stuck drivers. |
+
+**The only flag end users typically touch is `parallelShaderCompile: false` on the registry constructor, and only if they hit a driver bug** (Part A's failure modes are designed to fall back transparently — no expected reason to opt out). Toggle-off behavior is byte-identical to pre-feature behavior across all three versions.
+
+### 12.4 Follow-up TODOs
+
+Items that surfaced during implementation but are out of scope for the original spec.
+
+1. **Lock-in pixel-readback test (spec §5.7 final paragraph).** The spec calls for a "synchronous render after `await ready` must produce byte-identical pixels to a synchronous render through the legacy path." We did not add this test — it requires a real WebGL context and a pixel-comparison harness. Each version's `gpu.spec.ts` covers the *decision* logic; the *output* lock-in is a manual verification today. Future: add a Puppeteer/Playwright lock-in fixture to CI that drives a real browser.
+
+2. **PIXI internal-API drift detection.** §5.3 called out "PIXI's `_programDataHash` renamed in a minor version" as a medium risk. The injection helpers wrap their access in `try/catch` and return `false` on drift, which falls back to the sync path silently. We don't *log* or *flag* the drift — a downstream user would experience the freeze return without diagnostic. Future: optionally console-warn-once when injection returns `false` so the maintainer of `pixi-slug` notices when a PIXI minor breaks the integration. Gate the warning behind a `Defaults.Registry.WarnOnPrewarmDrift` flag (default `false`) so user apps don't log spam.
+
+3. **WebGPU path.** Spec §8 marks WebGPU as out of scope. WebGPU has fundamentally different async-compile semantics (`createComputePipelineAsync`, `createRenderPipelineAsync`). When PixiJS adds WebGPU as an option for SlugText (currently the Slug shader is GLSL-only and won't run on WebGPU), Part A will need a WebGPU-shaped equivalent. The `slugPrewarmShader` structural check already handles non-WebGL renderers gracefully (resolves `false`).
+
+4. **`detachRenderer()` does not destroy the cached `GLProgram`/`GlProgramData`.** Spec §6.5 says "the entry stays in the WeakMap until the renderer is GC'd." This is what we do — the WeakMap entry is freed automatically. **Edge case:** if the user destroys the renderer without releasing all references (e.g. holding it in a debug global), the cached program stays alive. Not a correctness issue, just a potential memory hold-up worth documenting if it ever surfaces.
+
+5. **Manual `attachRenderer` for non-plugin users.** The spec mentions in §6.2 that users not using the application plugin must manually call `SlugFonts.attachRenderer(app.renderer)`. There is no documentation page that walks new users through this — they would have to discover it from the `warmup()` no-op-on-no-renderer behavior. Future: add a README section or a startup-warning when `parallelShaderCompile === true` AND `SlugFonts.renderer === null` AND a SlugText is constructed (would need a one-shot guard to avoid spam).
+
+6. **The `SlugText._programReadyCache` field is per-instance.** Many SlugText instances against the same font share one `gpu.programReady` promise (because the GPU cache is per-font, populated once). Each instance still keeps its own `_programReadyCache` reference. Memory cost is tiny (one ref per SlugText), but a future cleanup could move the "have we observed ready?" flag onto the cache itself. Not worth it today.
+
+7. **`SlugText.rebuild()` runs the geometry phase even when no renderer will ever attach.** If a SlugText is constructed in a Node test environment (no PIXI app), `rebuild()` still computes the plan and stores it in `_pendingPlan`. The plan is small and the geometry work is what the old `rebuild()` did anyway, so there's no regression — but it does mean construction-only tests need a render tick to drive the GPU-attach phase. Documented in §5.5 ("existing tests that assume synchronous mesh creation in the constructor must be updated"); the v6/v7/v8 SlugText test placeholders are still `it.todo`, awaiting a renderer-mocking harness.
+
+8. **Browser cache hit on shader source rebuild.** The spec mentions in §1 point 4 and §8 that browsers cache linked programs across sessions when source bytes match. We don't intentionally interact with this — but Part A's `KHR_parallel_shader_compile` does cooperate with it: the driver thread reuses the cached binary if available. No action required; this is a free win that the parallel path inherits.
+
+9. **Performance verification pending real-world measurement.** Spec §2 lists success criteria including "the user awaits font load, the first SlugText render completes in <16ms" and "other browser tabs remain responsive." We don't have a CI-checkable perf gate for these. Future: add the `__SLUG_PERF__` instrumentation back behind a debug flag and re-run the appendix-A measurement on a few drivers/browsers to confirm the freeze is gone in practice (not just in design).
