@@ -55,28 +55,44 @@ t2 = p12.y / (by - d);
 
 **This is not the form to ship.** It swaps which root is unstable: `(by - d)` cancels when `by < 0` and `d → |by|`. Half the near-horizontal curves get fixed; the other half regress. The H-ray and V-ray would exercise the failure on different glyph subsets.
 
-**Use the textbook per-root sign-safe form**:
+**Use the textbook per-root sign-safe form**. The shader's quadratic is `ay·t² - 2·by·t + py = 0` (note the **−2·by**, not the textbook +b). Walking through the algebra: define `Q = by + sign(by)·d` so `|Q| = |by| + d` never cancels. The identity `(by - d)(by + d) = by² - d² = ay·py` then rewrites the cancelling root in a stable form:
 
 ```glsl
-float q = -(abs(by) + d);                       // safe denominator: never cancels, never zero unless degenerate
-float t1 = (by >= 0.0) ? (q / ay) : (p12.y / q);
-float t2 = (by >= 0.0) ? (p12.y / q) : (q / ay);
+float d = sqrt(max(by * by - ay * py, 0.0));
+float Q = (by >= 0.0) ? (by + d) : (by - d);   // |Q| = |by| + d, never cancels
+float t1, t2;
+if (by >= 0.0) {
+    t1 = py / Q;     // == classical (by - d)/ay (the cancellation-prone side)
+    t2 = Q / ay;     // == classical (by + d)/ay
+} else {
+    t1 = Q / ay;     // == classical (by - d)/ay
+    t2 = py / Q;     // == classical (by + d)/ay (the cancellation-prone side)
+}
 ```
 
-`abs(by) + d` avoids the `sign(by) == 0` edge case automatically (since `d ≥ 0`). The `(by >= 0.0)` branch keeps `t1` as the smaller root in the same sense the classical formula does — important because the upstream `code & 1` and `code > 1` checks use `t1` and `t2` respectively. Swapping which root is which would render every code-3 curve backwards.
+The `(by >= 0.0)` branch keeps `t1` as the same root the classical formula calls `t1` (numerator `by - d`) — important because the upstream `code & 1` and `code > 1` checks use `t1` and `t2` respectively. Swapping which root is which would render every code-3 curve backwards.
 
-**Verify root ordering matches classical** on a handful of test curves in the simulator before going further.
+> **Note:** an earlier sketch of this doc had `q = -(abs(by) + d)` with `t1 = q/ay` for `by ≥ 0`, which inverts both signs vs classical — `t1 = -classical_t2`. The simulator's root-ordering test caught this on first run. The form above is the version the simulator and shader actually ship.
+
+**Verify root ordering matches classical** on a handful of test curves in the simulator before going further. The simulator's `solveCitardauq` and the synthetic-sweep / real-glyph tests in [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) cover this.
 
 ### Edge case: `ay == 0.0` exactly
 
-When `ay` is exactly zero (possible from float32 subtraction collapse), `q / ay` is `inf`. The other branch `p12.y / q` is finite. Verify in the simulator that an `inf` `t2` either gets dropped by the curve being skipped upstream (degenerate-code check) or lands in `clamp(x + 0.5, 0, 1)` correctly without contaminating `xcov`. If it propagates, add a `t2 = (ay == 0.0) ? safe_value : t2` guard.
+When `ay` is exactly zero (possible from float32 subtraction collapse), `Q / ay` is `inf`. The other branch `py / Q` is finite. Verify in the simulator that an `inf` root either gets dropped by the curve being skipped upstream (degenerate-code check) or lands in `clamp(x + 0.5, 0, 1)` correctly without contaminating `xcov`. The `ay == 0.0` test in the simulator suite covers this case directly.
 
-### Genuine degeneracy guard
+### Edge case: double root (disc → 0)
 
-When both `by` and `d` are tiny, `q ≈ 0` and `p12.y / q` blows up. This is the "curve is essentially a point" case and matches the existing `if (abs(by) < kQuadraticEpsilon) continue;` skip. Replace with a much smaller, less arbitrary threshold:
+When `by² ≈ ay·py`, `d → |by|` and `Q → by`. If `by` is *also* near zero, `Q → 0` and `py/Q` blows up — but this isn't true degeneracy. The actual mathematical root is `t = by/ay` (a single root with multiplicity 2). The simulator caught this case during the O-glyph regression test — curves where `by = 0` and `py = 0` exactly produced `Q = 0` and `py/Q = NaN`, even though `ay = 48` and the classical formula gave a fine `t = 0` answer.
+
+Handle it by special-casing `|Q| < eps` while `|ay|` is not tiny: fall back to `t1 = t2 = Q/ay`, which stays well-defined. Genuine degeneracy is when **both** `Q` and `ay` are below the threshold:
 
 ```glsl
-if (abs(q) < 1e-7) { /* skip — genuinely degenerate */ continue; }
+if (abs(Q) < 1e-7 && abs(ay) < 1e-7) { /* skip — genuinely degenerate */ }
+else if (abs(Q) < 1e-7) {
+    // double-root case: t = Q/ay (well-defined since ay is non-tiny)
+    float t = Q / ay;
+    t1 = t; t2 = t;
+}
 ```
 
 `1e-7` is sub-precision-noise for float32 in the relevant ranges and not a regime switch — it only fires for actually-degenerate inputs.
@@ -95,19 +111,29 @@ Both paths live in the shader simultaneously. Build with `0`, screenshot, build 
 
 The current epsilon appears at four sites in [frag.glsl](../src/shared/shader/slug/frag.glsl): H-ray and V-ray, each in supersampling and non-supersampling code paths. **All four must change together.** Leaving any on the classical formula creates inconsistent rendering between paths (e.g., supersampling on vs off would produce different artifacts on the same glyph).
 
-Factor into a helper to keep the four sites in sync:
+Factor into a helper to keep the four sites in sync. The helper returns a `bool`
+so the caller can `continue` the loop on genuine degeneracy:
 
 ```glsl
-void solveQuadraticRoots(float ay, float by, float p_y, out float t1, out float t2) {
-    float d = sqrt(max(by * by - ay * p_y, 0.0));
-    float q = -(abs(by) + d);
-    if (abs(q) < 1e-7) { t1 = 0.0; t2 = 0.0; return; }   // upstream code check should drop these
-    if (by >= 0.0) { t1 = q / ay;    t2 = p_y / q; }
-    else           { t1 = p_y / q;   t2 = q / ay;  }
+bool solveQuadraticRoots(float ay, float by, float py, out float t1, out float t2) {
+    float disc = max(by * by - ay * py, 0.0);
+    float d = sqrt(disc);
+    float Q = (by >= 0.0) ? (by + d) : (by - d);
+    if (abs(Q) < kCitardauqDegenEps && abs(ay) < kCitardauqDegenEps) {
+        t1 = 0.0; t2 = 0.0; return false;   // genuinely degenerate — skip curve
+    }
+    if (abs(Q) < kCitardauqDegenEps) {
+        // double root: Q → by → 0 with ay non-tiny. Use Q/ay for both.
+        float t = Q / ay;
+        t1 = t; t2 = t; return true;
+    }
+    if (by >= 0.0) { t1 = py / Q;  t2 = Q / ay; }
+    else           { t1 = Q / ay;  t2 = py / Q; }
+    return true;
 }
 ```
 
-GLSL inlines this; no call overhead.
+GLSL inlines this; no call overhead. The actual implementation in [frag.glsl](../src/shared/shader/slug/frag.glsl) wraps both classical and Citardauq paths under `#if SLUG_USE_CITARDAUQ`.
 
 ## Step 5 — Visual-diff and walk the regression list
 

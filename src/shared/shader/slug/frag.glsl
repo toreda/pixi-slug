@@ -11,6 +11,15 @@ precision highp sampler2D;
 #define kMaxCurvesPerBand 512
 #define kQuadraticEpsilon 0.01
 
+// Solver selection (compile-time). Both paths produce equivalent results in
+// the stable regime; Citardauq stays accurate where the classical formula
+// would catastrophically cancel (|ay| small AND by ≈ ±d).
+//   0 = classical t = (by ± d)/ay with kQuadraticEpsilon linear fallback (legacy)
+//   1 = Citardauq per-root sign-safe form (default)
+// See _docs/citardauq_migration.md.
+#define SLUG_USE_CITARDAUQ 1
+#define kCitardauqDegenEps 1e-7
+
 // Debug visualization (compile-time). Paint raw ray-accumulator values to
 // the screen instead of the final coverage. Reset to 0 before shipping.
 //   0 = off (production)
@@ -111,6 +120,65 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 	bandLoc.y += bandLoc.x >> kLogBandTextureWidth;
 	bandLoc.x &= (1 << kLogBandTextureWidth) - 1;
 	return bandLoc;
+}
+
+// Solve ay·t² - 2·by·t + py = 0 for the two ray-intersection parameters t1, t2.
+// Returns false when the curve is degenerate at this pixel and should be skipped.
+//
+// SLUG_USE_CITARDAUQ = 0: classical (by ± d)/ay with kQuadraticEpsilon linear
+// fallback. Skips when |ay| AND |by| are both below the epsilon (curve is
+// essentially a point along the ray axis).
+//
+// SLUG_USE_CITARDAUQ = 1: per-root sign-safe Citardauq. Defines
+// Q = by + sign(by)·d so |Q| = |by| + d and never suffers cancellation.
+// Algebraic identity (by - d)(by + d) = ay·py gives an alternate form for the
+// otherwise-cancelling root: classical_t1 = py/Q (by ≥ 0) or Q/ay (by < 0).
+// Order matches classical (Citardauq t1 == classical t1) so upstream
+// `code & 1` and `code > 1` checks remain correct. The double-root case
+// (disc → 0 ⇒ Q → by ⇒ Q → 0 when by → 0) falls back to t = Q/ay, which is
+// well-defined as long as ay is non-tiny.
+bool solveQuadraticRoots(float ay, float by, float py, out float t1, out float t2)
+{
+	float disc = max(by * by - ay * py, 0.0);
+	float d = sqrt(disc);
+#if SLUG_USE_CITARDAUQ
+	float Q = (by >= 0.0) ? (by + d) : (by - d);
+	if (abs(Q) < kCitardauqDegenEps && abs(ay) < kCitardauqDegenEps)
+	{
+		t1 = 0.0;
+		t2 = 0.0;
+		return false;
+	}
+	if (abs(Q) < kCitardauqDegenEps)
+	{
+		float t = Q / ay;
+		t1 = t;
+		t2 = t;
+		return true;
+	}
+	if (by >= 0.0)
+	{
+		t1 = py / Q;
+		t2 = Q / ay;
+	}
+	else
+	{
+		t1 = Q / ay;
+		t2 = py / Q;
+	}
+	return true;
+#else
+	float ra = 1.0 / ay;
+	t1 = (by - d) * ra;
+	t2 = (by + d) * ra;
+	if (abs(ay) < kQuadraticEpsilon)
+	{
+		if (abs(by) < kQuadraticEpsilon) return false;
+		t1 = py * 0.5 / by;
+		t2 = t1;
+	}
+	return true;
+#endif
 }
 
 // Combine horizontal and vertical fractional winding into coverage.
@@ -245,18 +313,9 @@ vec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float s
 			float ay = p12.y - p12.w * 2.0 + p3.y;
 			float bx = p12.x - p12.z;
 			float by = p12.y - p12.w;
-			float ra = 1.0 / ay;
 
-			float d = sqrt(max(by * by - ay * p12.y, 0.0));
-			float t1 = (by - d) * ra;
-			float t2 = (by + d) * ra;
-
-			if (abs(ay) < kQuadraticEpsilon)
-			{
-				if (abs(by) < kQuadraticEpsilon) continue;
-				t1 = p12.y * 0.5 / by;
-				t2 = t1;
-			}
+			float t1, t2;
+			if (!solveQuadraticRoots(ay, by, p12.y, t1, t2)) continue;
 
 			float x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;
 			float x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;
@@ -314,18 +373,9 @@ vec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float s
 			float ay = p12.x - p12.z * 2.0 + p3.x;
 			float bx = p12.y - p12.w;
 			float by = p12.x - p12.z;
-			float ra = 1.0 / ay;
 
-			float d = sqrt(max(by * by - ay * p12.x, 0.0));
-			float t1 = (by - d) * ra;
-			float t2 = (by + d) * ra;
-
-			if (abs(ay) < kQuadraticEpsilon)
-			{
-				if (abs(by) < kQuadraticEpsilon) continue;
-				t1 = p12.x * 0.5 / by;
-				t2 = t1;
-			}
+			float t1, t2;
+			if (!solveQuadraticRoots(ay, by, p12.x, t1, t2)) continue;
 
 			float y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;
 			float y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;
@@ -395,14 +445,8 @@ vec4 SlugRenderRaw(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 		float ay = p12.y - p12.w * 2.0 + p3.y;
 		float bx = p12.x - p12.z;
 		float by = p12.y - p12.w;
-		float ra = 1.0 / ay;
-		float d = sqrt(max(by * by - ay * p12.y, 0.0));
-		float t1 = (by - d) * ra;
-		float t2 = (by + d) * ra;
-		if (abs(ay) < kQuadraticEpsilon) {
-			if (abs(by) < kQuadraticEpsilon) continue;
-			t1 = p12.y * 0.5 / by; t2 = t1;
-		}
+		float t1, t2;
+		if (!solveQuadraticRoots(ay, by, p12.y, t1, t2)) continue;
 		float x1 = ((ax * t1 - bx * 2.0) * t1 + p12.x) * pixelsPerEm.x;
 		float x2 = ((ax * t2 - bx * 2.0) * t2 + p12.x) * pixelsPerEm.x;
 		if ((code & 1u) != 0u) { xcov += clamp(x1 + 0.5, 0.0, 1.0); xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0)); }
@@ -425,14 +469,8 @@ vec4 SlugRenderRaw(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)
 		float ay = p12.x - p12.z * 2.0 + p3.x;
 		float bx = p12.y - p12.w;
 		float by = p12.x - p12.z;
-		float ra = 1.0 / ay;
-		float d = sqrt(max(by * by - ay * p12.x, 0.0));
-		float t1 = (by - d) * ra;
-		float t2 = (by + d) * ra;
-		if (abs(ay) < kQuadraticEpsilon) {
-			if (abs(by) < kQuadraticEpsilon) continue;
-			t1 = p12.x * 0.5 / by; t2 = t1;
-		}
+		float t1, t2;
+		if (!solveQuadraticRoots(ay, by, p12.x, t1, t2)) continue;
 		float y1 = ((ax * t1 - bx * 2.0) * t1 + p12.y) * pixelsPerEm.y;
 		float y2 = ((ax * t2 - bx * 2.0) * t2 + p12.y) * pixelsPerEm.y;
 		if ((code & 1u) != 0u) { ycov += clamp(y1 + 0.5, 0.0, 1.0); ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0)); }
