@@ -11,6 +11,8 @@
 **Status**: All artifacts eliminated. Rendering is correct with antialiasing at all font sizes (tested 24px, 32px, 130px, 280px). No bright lines, dark bands, notches, or stray pixels on any character including V, X, x, v, R, r, W, w, and all other diagonal-stroke glyphs.
 
 > **Note (2026-05-02):** A separate, pre-existing artifact specific to **uppercase A and Z at large sizes** was discovered later. It is unrelated to the V/X/R/W family resolved here and is documented separately in [_docs/artifact_investigation_a_z.md](artifact_investigation_a_z.md).
+>
+> **Note (2026-05-04, post-Citardauq migration):** the H-ray and V-ray solver was replaced with the per-root sign-safe Citardauq form (see [citardauq_migration.md](citardauq_migration.md)). The two bugs documented below — vertical solver sign and CalcCoverage min→max — are still present in the final shader and were re-verified clean on V/X/R/W/B at 800pt after the solver replacement. The Citardauq change is a numerical-stability improvement to the cross-axis intersection math; it does not interact with either of the bugs fixed here.
 
 ---
 

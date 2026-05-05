@@ -9,15 +9,9 @@ precision highp sampler2D;
 
 #define kLogBandTextureWidth 12
 #define kMaxCurvesPerBand 512
-#define kQuadraticEpsilon 0.01
-
-// Solver selection (compile-time). Both paths produce equivalent results in
-// the stable regime; Citardauq stays accurate where the classical formula
-// would catastrophically cancel (|ay| small AND by ≈ ±d).
-//   0 = classical t = (by ± d)/ay with kQuadraticEpsilon linear fallback (legacy)
-//   1 = Citardauq per-root sign-safe form (default)
-// See _docs/citardauq_migration.md.
-#define SLUG_USE_CITARDAUQ 1
+// Sub-precision-noise threshold for the Citardauq solver's degeneracy check.
+// Smaller than any meaningful float32 input in this pipeline, so it only fires
+// for genuinely degenerate curves — not as a regime switch.
 #define kCitardauqDegenEps 1e-7
 
 // Debug visualization (compile-time). Paint raw ray-accumulator values to
@@ -123,25 +117,28 @@ ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)
 }
 
 // Solve ay·t² - 2·by·t + py = 0 for the two ray-intersection parameters t1, t2.
-// Returns false when the curve is degenerate at this pixel and should be skipped.
+// Returns false when the curve is genuinely degenerate at this pixel and
+// should be skipped (caller must `continue` the loop).
 //
-// SLUG_USE_CITARDAUQ = 0: classical (by ± d)/ay with kQuadraticEpsilon linear
-// fallback. Skips when |ay| AND |by| are both below the epsilon (curve is
-// essentially a point along the ray axis).
+// Per-root sign-safe Citardauq. Defines Q = by + sign(by)·d so |Q| = |by| + d
+// and never suffers cancellation. The algebraic identity (by - d)(by + d) = ay·py
+// gives an alternate form for the otherwise-cancelling root:
+// classical_t1 = py/Q (by ≥ 0) or Q/ay (by < 0). Order matches the classical
+// formula (t1 corresponds to numerator (by - d), t2 to (by + d)), so upstream
+// `code & 1` and `code > 1` checks remain correct.
 //
-// SLUG_USE_CITARDAUQ = 1: per-root sign-safe Citardauq. Defines
-// Q = by + sign(by)·d so |Q| = |by| + d and never suffers cancellation.
-// Algebraic identity (by - d)(by + d) = ay·py gives an alternate form for the
-// otherwise-cancelling root: classical_t1 = py/Q (by ≥ 0) or Q/ay (by < 0).
-// Order matches classical (Citardauq t1 == classical t1) so upstream
-// `code & 1` and `code > 1` checks remain correct. The double-root case
-// (disc → 0 ⇒ Q → by ⇒ Q → 0 when by → 0) falls back to t = Q/ay, which is
-// well-defined as long as ay is non-tiny.
+// Two edge cases:
+//  - |Q| AND |ay| both tiny: curve is essentially a point along the ray axis.
+//    Skip via `return false`.
+//  - |Q| tiny but |ay| non-tiny: double root (disc → 0, Q → by → 0 when by → 0).
+//    py/Q would be NaN, but the actual root is t = Q/ay. Use that for both.
+//
+// See _docs/citardauq_migration.md for the derivation and the simulator-caught
+// bugs in earlier sketches of this formula.
 bool solveQuadraticRoots(float ay, float by, float py, out float t1, out float t2)
 {
 	float disc = max(by * by - ay * py, 0.0);
 	float d = sqrt(disc);
-#if SLUG_USE_CITARDAUQ
 	float Q = (by >= 0.0) ? (by + d) : (by - d);
 	if (abs(Q) < kCitardauqDegenEps && abs(ay) < kCitardauqDegenEps)
 	{
@@ -167,18 +164,6 @@ bool solveQuadraticRoots(float ay, float by, float py, out float t1, out float t
 		t2 = py / Q;
 	}
 	return true;
-#else
-	float ra = 1.0 / ay;
-	t1 = (by - d) * ra;
-	t2 = (by + d) * ra;
-	if (abs(ay) < kQuadraticEpsilon)
-	{
-		if (abs(by) < kQuadraticEpsilon) return false;
-		t1 = py * 0.5 / by;
-		t2 = t1;
-	}
-	return true;
-#endif
 }
 
 // Combine horizontal and vertical fractional winding into coverage.

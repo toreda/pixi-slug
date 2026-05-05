@@ -4,13 +4,16 @@
  * and report xcov per-curve to find where my hand math diverges from the GPU.
  *
  * Two solvers live here in parallel:
- *   - hRayClassical:  classical t = (by ± d)/ay with kQuadraticEpsilon fallback.
- *                     Mirrors the production shader's current path bit-for-bit.
- *   - hRayCitardauq:  per-root sign-safe Citardauq form with a tiny degeneracy guard.
- *                     The candidate replacement (see _docs/citardauq_migration.md).
+ *   - solveCitardauq:  per-root sign-safe Citardauq form with a tiny degeneracy
+ *                      guard. Mirrors the production shader's path bit-for-bit
+ *                      (post-Citardauq migration; see _docs/citardauq_migration.md).
+ *   - solveClassical:  legacy t = (by ± d)/ay with kQuadraticEpsilon linear
+ *                      fallback. No longer in the shader; retained as a
+ *                      numerical reference for comparison tests below.
  *
- * Tests below compare the two across synthetic sweeps and real glyph data so
- * a math regression surfaces as a unit-test failure, not a screenshot diff.
+ * Tests below cross-check the two against a float64 reference and against
+ * real glyph data so a math regression surfaces as a unit-test failure,
+ * not a screenshot diff.
  */
 import {readFileSync} from 'fs';
 import {resolve} from 'path';

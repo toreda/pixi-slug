@@ -4,9 +4,11 @@
 
 **RESOLVED** as of 2026-05-04. Root cause: **`kQuadraticEpsilon = 0.0001` was too tight**, leaving a precision gap where near-horizontal curves with small-but-not-tiny `ay` (Y-quadratic coefficient) bypassed the linear-fallback branch and produced wildly out-of-range `t1`/`t2` values in the H-ray solver. The runaway `t1`²/`t2`² terms made `x1`/`x2` saturate the `clamp(x + 0.5, 0, 1)` AA window, contributing a spurious `+1` to `xcov` for every pixel along the curve's em-Y row.
 
-**Fix**: bumped `kQuadraticEpsilon` from `0.0001` to `0.01` in [src/shared/shader/slug/frag.glsl:12](../src/shared/shader/slug/frag.glsl#L12). This extends the linear-fallback regime to absorb the precision-unstable near-horizontal curves. Verified at fontSize=800 with text "AZ" — no more stripes.
+**Initial fix (2026-05-04)**: bumped `kQuadraticEpsilon` from `0.0001` to `0.01` in `src/shared/shader/slug/frag.glsl`. This extended the linear-fallback regime to absorb the precision-unstable near-horizontal curves. Verified at fontSize=800 with text "AZ" — no more stripes.
 
-See **Latest findings (2026-05-04)** below for the full investigation trail.
+**Final fix (Citardauq migration)**: replaced the classical `t = (by ± d)/ay` solver with the per-root sign-safe Citardauq form, eliminating the magic-threshold problem entirely. `kQuadraticEpsilon` and the linear fallback have been retired from the shader. See [citardauq_migration.md](citardauq_migration.md) for the migration plan, the simulator-driven test suite, and the two formula bugs the simulator caught before they reached the shader.
+
+See **Latest findings (2026-05-04)** below for the full investigation trail that motivated both fixes.
 
 ## Symptom recap
 
@@ -139,37 +141,15 @@ This computes `t` as a stable linear-equation solution `t = -p12.y / (2 * by)` (
 
 ### Caveats and follow-ups
 
-1. **The threshold is still hardcoded.** Shipped as-is on 2026-05-04 because it resolves the artifact across all tested font sizes (verified visually at 800pt, no regressions on V/X/R/W/B). Two follow-up options when this needs revisiting:
+1. **Citardauq migration completed.** The `kQuadraticEpsilon = 0.01` patch was the right thing to ship in 2026-05 — it killed the visible artifact across all tested sizes. But the threshold was still magic, and the same failure mode could resurface at extreme sizes or on differently-distributed `ay` glyphs. The follow-up plan in [citardauq_migration.md](citardauq_migration.md) replaced the classical solver with the per-root sign-safe Citardauq form, retiring `kQuadraticEpsilon` entirely. The migration's simulator-driven approach (Step 1 — implement and test the math in a CPU mirror of the H-ray before touching the shader) caught two real bugs that would otherwise have been screenshot-diff-only:
+   - The originally-sketched `q = -(|by| + d)` form on line 144 of an earlier revision of *this* doc inverted both root signs vs classical (the shader's quadratic is `at² − 2bt + c`, not `at² + bt + c`). Would have rendered every code-3 curve backwards.
+   - A double-root edge case: when `disc → 0` and `by → 0` exactly (e.g. O glyph, curve 10 at certain pixels), Citardauq's `Q → 0` and `py/Q → NaN`. Falls back to `t = Q/ay` which stays well-defined.
 
-   **Preferred (textbook) fix — Citardauq formula.** Replace the unstable `t = (by - d) / ay` with the numerically stable alternate form `t = p12.y / (by + d)`, which avoids subtraction-cancellation as `ay → 0`. The current linear fallback is a special case of Citardauq when `d → |by|`; switching to Citardauq handles all in-between cases too and removes the magic-threshold problem entirely. Sketch:
+   Net result: the shader's curve loop is one branch shorter, scale-independent, and ~5e-5 max relative error vs a float64 reference (down from 5.5 max for classical at the worst-conditioned synthetic inputs).
 
-   ```glsl
-   // For ay*t² - 2*by*t + p12.y = 0:
-   //   classical: t1 = (by - d)/ay, t2 = (by + d)/ay   ← unstable as ay → 0
-   //   Citardauq: t1 = p12.y/(by + d), t2 = p12.y/(by - d)  ← stable as ay → 0
-   if (abs(ay) < kQuadraticEpsilon) {
-       t1 = p12.y / (by + d);
-       t2 = p12.y / (by - d);
-   } else {
-       t1 = (by - d) / ay;
-       t2 = (by + d) / ay;
-   }
-   ```
+2. **V/X/R/W/B regression re-verified.** The 2026-03 fix family from [artifact_investigation.md](artifact_investigation.md) (vertical solver sign + CalcCoverage min→max) was re-checked after the Citardauq migration. No regressions on V, X, R, W, B at 800pt.
 
-   Touches the solver math, so V/X/R/W/A/Z/# all need a regression check after.
-
-   **Fallback fix — scale `kQuadraticEpsilon` with `pixelsPerEm`.** If the Citardauq switch turns out to break some other path or interact badly with the elsewhere-in-the-shader assumptions, just scale the existing threshold:
-
-   ```glsl
-   float kQuadraticEpsilon = max(0.0001 * pixelsPerEm.x, 0.0001);  // H-ray
-   // and pixelsPerEm.y in the V-ray
-   ```
-
-   Pins the precision boundary to screen-space scale, robust at any font size, no math change. Roughly 5-line patch.
-
-2. **Verify the fix on the prior V/X/R/W test cases.** The 2026-03 fix for those glyphs touched the vertical solver and CalcCoverage. The new `kQuadraticEpsilon = 0.01` was visually verified to not regress them on 2026-05-04 (no artifacts on V, X, R, W, B at 800pt). Re-verify if `kQuadraticEpsilon` is changed again.
-
-3. **The `SLUG_DEBUG_HRAY_LIMIT` flag is now staged at [frag.glsl line ~36](../src/shared/shader/slug/frag.glsl)** alongside `SLUG_DEBUG_HRAY_SKIP_POS`. Set to a non-negative integer to limit the H-ray loop to the first N curves. Useful for future curve-position binary searches. Default `-1` (disabled).
+3. **The `SLUG_DEBUG_HRAY_LIMIT` flag is staged at [frag.glsl](../src/shared/shader/slug/frag.glsl)** alongside `SLUG_DEBUG_HRAY_SKIP_POS`. Set to a non-negative integer to limit the H-ray loop to the first N curves. Useful for future curve-position binary searches. Default `-1` (disabled).
 
 ### Investigation summary — what cracked it
 

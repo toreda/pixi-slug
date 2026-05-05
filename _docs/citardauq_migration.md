@@ -1,5 +1,18 @@
 # Citardauq Migration Plan — Replacing `kQuadraticEpsilon`
 
+## Status
+
+**COMPLETED** as of 2026-05-04. All six steps of the plan below were executed in order. `kQuadraticEpsilon`, the linear fallback, and the `SLUG_USE_CITARDAUQ` feature flag have been removed from [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl). The Citardauq solver is the only path. Visual verification (user-driven, browser-side) confirmed clean rendering on AAZZ##! / VXRWB / OoeQg / pangram at 800pt for both Roboto TTF and OTF, plus 16/64/270/800pt size sweeps.
+
+The simulator-first approach in Step 1 caught two real bugs before any shader change reached the screen:
+
+1. The original `q = -(|by| + d)` sketch in [artifact_investigation_a_z.md](artifact_investigation_a_z.md) (and replicated in Step 2 of this doc — corrected since) inverts both root signs vs the classical formula, because the shader's quadratic is `at² − 2bt + c`, not the textbook `at² + bt + c`. Would have rendered every code-3 curve backwards.
+2. Double-root edge case: when `disc → 0` and `by → 0` exactly (e.g. O glyph, curve 10 at certain pixels, where the curve sits horizontally at the ray height), `Q → 0` and `py/Q → NaN` despite `ay` being well-conditioned. Falls back to `t = Q/ay` for both roots, which stays well-defined.
+
+Synthetic-sweep test results (673 cases, vs float64 reference): classical max relative error **5.5** (552%), Citardauq max relative error **7.7e-5**. Citardauq beats classical by ≥ 2× on 87% of cases. See [artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) for the full test suite.
+
+The plan below is preserved as the historical record.
+
 ## Background
 
 The fragment shader's H-ray and V-ray solvers currently use the classical quadratic root formula `t = (by ± d) / ay` to find ray-curve intersections. As `ay → 0` (near-horizontal curves for the H-ray, near-vertical for the V-ray), `1/ay` blows up and `(by - d)` suffers catastrophic float32 cancellation. The current mitigation is `kQuadraticEpsilon`: a hard-coded threshold (`0.01`) that switches to a linear-equation fallback when `|ay|` is small.
