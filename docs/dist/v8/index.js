@@ -11931,12 +11931,15 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
 // skip per-frame churn entirely.
 this.onRender=plan?this._onRenderHandler:null}
 /**
-     * Remove and discard meshes, decorations, and the per-instance fill
+     * Remove and destroy meshes, decorations, and the per-instance fill
      * GPU record from the previous attach. Reuses `_meshes` so we don't
-     * churn an array per rebuild. Does NOT call `mesh.destroy()` — that
-     * can interfere with shared `GlProgram` resources when multiple
-     * meshes use the same shader program.
-     */_teardownAttached(){for(let i=this._meshes.length-1;i>=0;i--)this.removeChild(this._meshes[i]),this._meshes.pop();this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),
+     * churn an array per rebuild. Each mesh owns a fresh `Buffer` +
+     * `Geometry` + `Shader` (built per-text in `_buildMesh`); without
+     * teardown those orphan after every text change. `Geometry.destroy(true)`
+     * releases the vertex Buffer; `Shader.destroy()` defaults to
+     * `destroyPrograms=false`, so the `GlProgram` stays shared with other
+     * SlugText instances using the same font.
+     */_teardownAttached(){for(let i=this._meshes.length-1;i>=0;i--){const mesh=this._meshes[i];this.removeChild(mesh),mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy(),this._meshes.pop()}this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),
 // Dispose previous gradient LUT before creating a new one. User-
 // supplied fill textures are not owned and not destroyed.
 this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null)}
@@ -12076,7 +12079,7 @@ if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoratio
 // Bump the token so any in-flight `programReady` callback that
 // resolves after destruction notices and skips re-arming
 // `onRender` on a dead instance.
-this._attachToken++,this.onRender=null,this._pendingPlan=null;for(const mesh of this._meshes)mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null),super.destroy()}}// ./src/v8/slug/pipe.ts
+this._attachToken++,this.onRender=null,this._pendingPlan=null;for(const mesh of this._meshes)mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null),super.destroy()}}// ./src/v8/slug/pipe.ts
 /**
  * PixiJS v8 render pipe for SlugText renderables.
  * Handles the rendering lifecycle for Slug-based text objects.

@@ -318,15 +318,22 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	/**
-	 * Remove and discard meshes, decorations, and the per-instance fill
+	 * Remove and destroy meshes, decorations, and the per-instance fill
 	 * GPU record from the previous attach. Reuses `_meshes` so we don't
-	 * churn an array per rebuild. Does NOT call `mesh.destroy()` — that
-	 * can interfere with shared `GlProgram` resources when multiple
-	 * meshes use the same shader program.
+	 * churn an array per rebuild. Each mesh owns a fresh `Buffer` +
+	 * `Geometry` + `Shader` (built per-text in `_buildMesh`); without
+	 * teardown those orphan after every text change. `Geometry.destroy(true)`
+	 * releases the vertex Buffer; `Shader.destroy()` defaults to
+	 * `destroyPrograms=false`, so the `GlProgram` stays shared with other
+	 * SlugText instances using the same font.
 	 */
 	private _teardownAttached(): void {
 		for (let i = this._meshes.length - 1; i >= 0; i--) {
-			this.removeChild(this._meshes[i]);
+			const mesh = this._meshes[i];
+			this.removeChild(mesh);
+			mesh.geometry.destroy(true);
+			mesh.shader?.destroy();
+			mesh.destroy();
 			this._meshes.pop();
 		}
 
@@ -796,6 +803,8 @@ export class SlugText extends SlugTextV8Base {
 		this.onRender = null;
 		this._pendingPlan = null;
 		for (const mesh of this._meshes) {
+			mesh.geometry.destroy(true);
+			mesh.shader?.destroy();
 			mesh.destroy();
 		}
 		this._meshes = [];

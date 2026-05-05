@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Configurable parallel compilation for shader to reduce shader compilation time. Defaults to `true` (active), but gracefully falls back to non-parallel compilation when the required WebGL extension isnt available.
 
 ### Fixed
-* Fixed a rendering bug in the shader math related to the epsilon value when rendering specific glyphs like 'A', 'Z', and '#' at large font sizes on large screens. Rendering artifacts did not appear on all glyphs and did not appear at smaller font sizes below ~90ish, depending on resolution. 
+* Rendering artifacts appearing on specific characters like 'A', 'Z', and '#' at large font sizes. The bug was related to shader math where the epsilon value used by the quadratic solver. Artifacts did not appear on all glyphs and did not appear at font sizes below 90ish depending on screen resolution. 
+* v8: `SlugText` no longer leaves orphaned mesh references after text changing its text content. This behavior was only in `v8` and didn't affect `v7`/`v6`. The impact was small but was effectively a memory leak that caused JS heap usage to grow slightly every time the content of a `SlugText` changed. 
 
 ### Changed
 * Each unique glyph is now lazy loaded from font data instead of loading all glyphs at startup. Glyphs used one or more times still remain cached in memory for fast lookups until the font is unloaded. Switching from eager to lazy loading glyphs reduced startup time by loading a much smaller number of glyphs from the font at startup (depends on scene) instead of 1300+ glyphs every time the page reloads.
