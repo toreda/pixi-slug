@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
 ### Fixed
 * Fixed a rendering bug in the shader math related to the epsilon value when rendering specific glyphs like 'A', 'Z', and '#' at large font sizes on large screens. Rendering artifacts did not appear on all glyphs and did not appear at smaller font sizes below ~90ish, depending on resolution. 
 

@@ -8,7 +8,56 @@
 
 **Final fix (Citardauq migration)**: replaced the classical `t = (by ± d)/ay` solver with the per-root sign-safe Citardauq form, eliminating the magic-threshold problem entirely. `kQuadraticEpsilon` and the linear fallback have been retired from the shader. See [citardauq_migration.md](citardauq_migration.md) for the migration plan, the simulator-driven test suite, and the two formula bugs the simulator caught before they reached the shader.
 
-See **Latest findings (2026-05-04)** below for the full investigation trail that motivated both fixes.
+See **Final notes & findings** (immediately below) for the migration's lessons-learned, and **Latest findings (2026-05-04)** further down for the full investigation trail that motivated both fixes.
+
+## Final notes & findings (post-Citardauq, 2026-05-04)
+
+### What the migration actually proved
+
+The 0.0001 → 0.01 epsilon bump fixed the *visible* artifact, but the underlying claim — "small-but-not-tiny `ay` produces runaway `t1`/`t2`" — was a hypothesis, not a measurement. The Citardauq migration's CPU simulator put a number on it. From the synthetic-sweep test in [artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) (673 cases, comparing both solvers to a float64 reference):
+
+| Metric | Classical (with linear fallback) | Citardauq |
+|---|---|---|
+| Max relative error | **5.525** (552%) | **7.7e-5** |
+| Cases where Citardauq beats classical by ≥ 2× | — | **585 / 673** (87%) |
+| Cases in `\|ay\| ≤ 0.01` regime where classical degrades past 1e-3 rel err | **104 / 397** (26%) | **0** |
+
+So the runaway hypothesis was right, and 26% of curves in the unstable regime were in fact producing degraded roots even *with* the fallback. The 0.01 threshold visibly cleaned things up because it caught the worst offenders, but didn't catch all of them — Citardauq does.
+
+### The CPU simulator was the load-bearing tool
+
+Two real bugs surfaced as unit-test failures during Step 1, before any shader change:
+
+1. **Sign inversion in the originally-sketched formula.** This doc's earlier revision proposed `q = -(|by| + d)` with `t1 = q/ay` for `by ≥ 0`. The shader's quadratic is `at² − 2bt + c` (note the −2), not the textbook `at² + bt + c`. Working through the algebra: `q/ay = -(by + d)/ay`, but classical `t1 = (by - d)/ay`. So `q/ay = -classical_t2`, not `classical_t1`. Both root signs flip vs classical. The root-ordering test (synthetic sweep, 100+ cases) caught this on first run. Without the simulator, this would have rendered every code-3 curve backwards in production, surfacing as a screenshot-diff regression that's hard to localize back to "the formula in the doc is wrong."
+
+2. **Double-root NaN on horizontal-tangent curves.** The O glyph's curve 10 (Roboto TTF) has `p1.y = p2.y = -20` exactly — a horizontal segment. At pixel `ey = -20`, both `by = 0` and `py = 0` exactly, so `disc = 0`, `d = 0`, `Q = 0`, and `py / Q = 0/0 = NaN`. Classical handled this fine (disc=0 → t1=t2=0 from the standard branch, since |ay| was non-tiny so the linear fallback didn't fire). Citardauq's textbook form blows up here. Fix: when `|Q|` is below the degeneracy threshold but `|ay|` is non-tiny, fall back to `t1 = t2 = Q/ay`, which is well-defined and correct (it's the double-root case). This case never hits the artifact-prone glyphs (A, Z, V, X) — it hits a clean glyph (O) at a benign pixel — so a screenshot-only workflow would have shipped a NaN-contaminated O before noticing.
+
+These two bugs were why the doc's original "spend a release cycle baking the flag" plan compressed to same-day completion: the simulator made the math falsifiable, so the shader change carried no remaining unknowns by the time it got there.
+
+### Investigation methodology lesson
+
+The original A/Z investigation hit a wall at the **"Crucial unresolved discrepancy"** section below — the CPU simulator at the time replicated only one code path and never produced the GPU's `xcov ≈ 1` artifact value. The conclusion was "the simulator is missing something the GPU does." That was correct, but the productive response wasn't *more* GPU debug modes — it was *fixing the simulator*. Once Citardauq's simulator computed the `ay` precision regime correctly, the artifact mechanism became visible as a 552% relative-error blip, not a mysterious GPU-only effect.
+
+For future precision investigations, the order of operations should be:
+
+1. **Build a CPU simulator first.** The bit-exact float32 mirror is cheap (sub-second test runs) and falsifiable.
+2. **Verify it reproduces the bug.** If it doesn't, the simulator is incomplete — *fix the simulator before believing GPU-only theories*. The original A/Z simulator missed the `ay → 0` runaway because it had the same bug as the shader; both used the same classical formula. A simulator that mirrors the buggy code reproduces the bug only by accident.
+3. **Then change the math.** Once the simulator agrees with the GPU on a known-bad pixel, every subsequent change is observable in milliseconds, not in shader-rebuild + screenshot loops.
+
+### What's permanent
+
+- [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) now contains both solvers (Citardauq as primary, classical retained as numerical reference) plus 5 new tests: float64-reference accuracy, unstable-regime accuracy, root-ordering, NaN handling, and per-glyph regression for A / Z / O. These run in ~1.3 s and would catch any future regression in either solver.
+- The `SLUG_DEBUG_HRAY_LIMIT` and `SLUG_DEBUG_HRAY_SKIP_POS` flags remain in [frag.glsl](../src/shared/shader/slug/frag.glsl) for future curve-position binary searches.
+- The `SLUG_DEBUG_RAW` debug-mode menu (modes 1–13) remains intact. Modes 9 (axis-disagreement) and 12 (fine-grained xcov) were the most informative single visualizations during the original investigation.
+
+### What's gone
+
+- `kQuadraticEpsilon` define
+- The classical `t = (by ± d) / ay` formula
+- The `if (abs(ay) < kQuadraticEpsilon) { ... }` linear fallback (4 sites: H/V × `SlugRenderEx`/`SlugRenderRaw`)
+- The `SLUG_USE_CITARDAUQ` feature flag (was staged during migration, retired after visual verification)
+
+All four solver sites in the shader now route through a single `solveQuadraticRoots` helper that GLSL inlines with no call overhead.
 
 ## Symptom recap
 
@@ -49,7 +98,9 @@ The artifact also appears on **uppercase X**, **#**, **!**, and other glyphs at 
 
 The previously-claimed CalcCoverage fix was **incorrect**. The artifact pixels have `weighted = interior = 1` (both equal), so `mix` and `max` produce the same value. Reverted on 2026-05-03.
 
-## Crucial unresolved discrepancy
+## Crucial unresolved discrepancy — RESOLVED post-Citardauq
+
+> **Status (2026-05-04):** resolved. The "simulator never produces xcov ≈ 1" mystery had a simpler explanation than #1/#2/#3 below: the simulator at the time mirrored the *buggy* classical solver, and the same `ay → 0` runaway happened in both — except the simulator was sweeping em-x/em-y in coarse steps and missing the precision-knife-edge pixels the GPU happened to render. The Citardauq migration's simulator added (a) a synthetic-sweep that didn't depend on guessing the right pixels, and (b) a float64-reference comparison that quantified classical's max relative error at 552%. With those in place, the original mechanism (small-but-not-tiny `ay` → catastrophic cancellation in `(by - d)`) became visible as a numerical fact, not a GPU-only mystery. Preserved below as the original analysis.
 
 The bit-exact float32 CPU simulator at [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) computes xcov values for every (em-x, em-y) pair in the artifact region. **The simulator never produces the white xcov ≈ 1 the GPU shows at the artifact pixels.** Either:
 
@@ -161,13 +212,18 @@ After the doc's prior section ruled out band assignment, sort, dilation, and Cal
 
 Both tools should be the first ones reached for in any future similar investigation.
 
-### Reproduction recipe
+### Reproduction recipe — verifying the fix is still in place
 
-1. `git diff` should show: `kQuadraticEpsilon` bumped to `0.01`, `SLUG_DEBUG_HRAY_LIMIT` added (currently `-1` = disabled).
-2. `npx pnpm run build:v8:dev`
-3. Open `http://localhost:3000/examples/v8/`, hard-reload.
-4. Set fontSize = 800, text = "AZ".
-5. Verify no stripes at bottom-left of A or bottom-right of Z.
+(Updated post-Citardauq, 2026-05-04. The original recipe described the epsilon-bump fix that was retired in Step 6 of the migration.)
+
+1. `git log --oneline src/shared/shader/slug/frag.glsl` should show the Citardauq migration commits.
+2. `grep kQuadraticEpsilon src/shared/shader/slug/frag.glsl` should return nothing — the symbol is gone.
+3. `solveQuadraticRoots` should be the only solver, called from all four sites (H/V × `SlugRenderEx`/`SlugRenderRaw`).
+4. `npx pnpm run build:v8:dev`, open `http://localhost:3000/examples/v8/`, hard-reload.
+5. Set fontSize = 800, text = `AAZZ##!`. Verify: no stripes anywhere, including bottom-left of A and bottom of Z.
+6. Run `npx jest tests/shared/slug/artifact-pixel-simulator.spec.ts --no-coverage` — all 9 tests pass, including the synthetic-sweep accuracy comparison and the per-glyph regression for A / Z / O.
+
+To intentionally regress and observe the original artifact (e.g. for educational purposes or to test new debug machinery), `git checkout` to a commit before the Citardauq migration began.
 
 ## Debug machinery (staged in shaders)
 
@@ -204,31 +260,24 @@ Both can be re-staged from git history if needed.
 - [tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts](../tests/shared/slug/bandscale-cpu-vs-vertex.spec.ts) — asserts CPU↔GPU bandScale/offset match
 - [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts) — bit-exact float32 simulator of the H-ray. Currently sweeps em-x and em-y in the artifact zone. **Useful starting point** for the next investigator — extend it to model `fwidth()`, `vTexcoord` interpolation, or whatever the next hypothesis requires.
 
-## Where to resume
+## Where to resume — A/Z investigation closed
 
-Three best paths to try next:
+The A/Z investigation is closed (Citardauq migration, 2026-05-04). The three "next paths" originally listed here (read GPU xcov via color encoding; disable dilation; investigate supersampling) were not needed — the simulator-driven approach landed the fix without them. They remain valid debug tactics for *future* precision investigations on different glyph families, so the original text is preserved at the bottom of this file under "Investigation history."
 
-### Path 1 — Get the GPU's actual xcov value for a known artifact pixel
+### If a similar artifact resurfaces on a different glyph family
 
-Add a debug mode that **encodes xcov as a precise color** (e.g., R = (xcov + 1) * 0.5 with high precision, or use `SLUG_DEBUG_RAW = 12` which already does coarse bands). Use the browser's color picker / pixel inspector to read the exact xcov value at one or two artifact pixels. Then plug those exact (em-x, em-y) values into the CPU simulator and see if it reproduces. If the simulator gives xcov = 0 but the GPU gives xcov = 1 at the SAME (em-x, em-y), then there's a code-path divergence we haven't identified.
+Recommended order of operations (refined from this investigation's lessons):
 
-To compute the (em-x, em-y) at a screen pixel: re-add the quad-attributes console log in `quad.ts`, hover over the artifact pixel in the browser to read its screen coords, then linearly interpolate using the quad's screen→em transform.
+1. **First, run the existing simulator suite** at [tests/shared/slug/artifact-pixel-simulator.spec.ts](../tests/shared/slug/artifact-pixel-simulator.spec.ts). If a per-glyph regression test fails for the affected glyph, the bug is reproducible in CPU and you have a falsifiable test case.
+2. **If the simulator is clean but the GPU artifacts**, the simulator is missing something the GPU does. *Fix the simulator before chasing GPU-side hypotheses.* The 2026-05 investigation hit a wall here exactly because the simulator mirrored the same buggy solver as the shader — both produced clean output for the wrong reason. Add whatever the simulator is missing (alternate code path, derivative term, dilation logic) until it agrees with the GPU on a known-bad pixel.
+3. **Then change the math.** Once the simulator is faithful, every shader change is observable in milliseconds, not in build + screenshot loops. Use the synthetic-sweep style (compare both old and new solvers against a float64 reference) to quantify the improvement, not just confirm the artifact disappears.
+4. **Stage behind a flag during integration**, retire the flag after one bake cycle of visual verification. The Citardauq migration's `SLUG_USE_CITARDAUQ` flag was useful for ~30 minutes; the value was the test suite, not the flag.
 
-### Path 2 — Disable dilation and check if the artifact persists
+### Debug machinery still available for future work
 
-Re-add `SLUG_DEBUG_DISABLE_DILATION` in [vert.glsl](../src/shared/shader/slug/vert.glsl) (was previously staged at line ~10 and used at line ~127). Build with it set to 1. If the artifact disappears, the bug lives in the dilation halo (em-y outside `[bounds.minY, bounds.maxY]`). If it persists, dilation is innocent and the bug is purely in the ray solver / band arithmetic for in-bbox pixels.
-
-### Path 3 — Look at supersampling
-
-The investigation assumed supersampling is off (`Defaults.Supersampling = false`). Confirm in DevTools that `uSupersampleCount = 0` for the example, and verify by setting it to a non-zero value to see if the artifact gets averaged-out (which would suggest a sub-pixel sampling effect).
-
-## Context for an LLM resuming this work
-
-- The current code at [src/shared/shader/slug/frag.glsl](../src/shared/shader/slug/frag.glsl) is the **production state** with all debug flags off (`SLUG_DEBUG_RAW = 0`). All `#elif` branches for the debug modes remain in place — flip the flag, rebuild, screenshot.
-- The `CalcCoverage` formula is back to `max(weighted, max(abs(xcov), abs(ycov)))` — the original V/X/R/W fix from 2026-03. **Do not change this without first solving the open A/Z problem**, as the fix interacts with both glyph families.
-- The user's reproduction setup: v8 example, Roboto TTF (default), test string `AAZZ##!`, size 270pt+ for clear visibility. Mode 12 (fine-grained xcov) is the most informative single visualization.
-- The user has the example running at `http://localhost:3000/examples/v8/`. Build with `npx pnpm run build:v8:dev`, hard-reload the page.
-- Extensive screenshots from this investigation are preserved in the user's chat history but not in the repo. The most useful: mode-9 (axis-disagreement) and mode-12 (fine-grained xcov).
+- `SLUG_DEBUG_RAW` modes 1–13 in [frag.glsl](../src/shared/shader/slug/frag.glsl). Modes 9 and 12 were the most informative; the rest cover narrower hypotheses.
+- `SLUG_DEBUG_HRAY_SKIP_POS` and `SLUG_DEBUG_HRAY_LIMIT` for binary-searching the offending curve in a band's sorted list.
+- `solveCitardauq` and `solveClassical` both available in the simulator for cross-comparison against any future third solver.
 
 ---
 
