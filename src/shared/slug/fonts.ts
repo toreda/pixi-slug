@@ -423,6 +423,21 @@ export class SlugFonts {
 	}
 
 	/**
+	 * Whether the GPU layer attempts a `KHR_parallel_shader_compile`
+	 * compile before falling back to PIXI's synchronous path.
+	 *
+	 * **Read-only after startup.** The Slug shader is compiled exactly
+	 * once per page and the value is locked in at that point. To
+	 * override the default, construct the registry with
+	 * `parallelShaderCompile: false` (or set
+	 * `Defaults.Registry.ParallelShaderCompile = false` before the
+	 * first font load). Mutating after first compile has no effect.
+	 */
+	public static get parallelShaderCompile(): boolean {
+		return SlugFonts._reg().parallelShaderCompile;
+	}
+
+	/**
 	 * Update how `attachTicker` reacts on a re-attach attempt when the
 	 * caller did not pass `force: true`. Only accepts exact matches to
 	 * the {@link SlugFontErrorMode} literals (`'throw'`, `'error'`,

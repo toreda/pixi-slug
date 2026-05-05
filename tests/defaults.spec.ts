@@ -72,6 +72,11 @@ const DEFAULT_ENTRIES: DefaultKeyTest<number | boolean | string | readonly numbe
 		nonEmptyString: true,
 		validValues: ['throw', 'error', 'warn', 'silent']
 	},
+	{
+		value: Defaults.Registry.ParallelShaderCompile,
+		key: 'Defaults.Registry.ParallelShaderCompile',
+		type: 'boolean'
+	},
 	{value: Defaults.SlugText.FontSize, key: 'Defaults.SlugText.FontSize', type: 'int'},
 	{value: Defaults.SlugText.Text, key: 'Defaults.SlugText.Text', type: 'string'},
 	{value: Defaults.SlugText.WordWrap, key: 'Defaults.SlugText.WordWrap', type: 'boolean'},

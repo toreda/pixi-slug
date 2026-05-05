@@ -90,6 +90,16 @@ describe('SlugFontsRegistry', () => {
 				const r = new SlugFontsRegistry({autoDestroyDelay: 7});
 				expect(r.autoDestroyDelayMs).toBe(7000);
 			});
+
+			it('should accept parallelShaderCompile=false', () => {
+				const r = new SlugFontsRegistry({parallelShaderCompile: false});
+				expect(r.parallelShaderCompile).toBe(false);
+			});
+
+			it('should accept parallelShaderCompile=true', () => {
+				const r = new SlugFontsRegistry({parallelShaderCompile: true});
+				expect(r.parallelShaderCompile).toBe(true);
+			});
 		});
 
 		describe('initial public property values', () => {
@@ -162,6 +172,10 @@ describe('SlugFontsRegistry', () => {
 
 			it('should default reattachPolicy from Defaults.Registry', () => {
 				expect(r.reattachPolicy).toBe(Defaults.Registry.ReattachPolicy);
+			});
+
+			it('should default parallelShaderCompile from Defaults.Registry', () => {
+				expect(r.parallelShaderCompile).toBe(Defaults.Registry.ParallelShaderCompile);
 			});
 		});
 	});

@@ -51,6 +51,14 @@ export class SlugFontsRegistry {
 	public readonly updateRate: number;
 	/** `performance.now()` timestamp of the last sweep, 0 if never run. */
 	public lastUpdate: number;
+	/**
+	 * Read-only after registry construction. Must be set via the
+	 * `SlugFontsRegistry` constructor options (or
+	 * `Defaults.Registry.ParallelShaderCompile`) before the first
+	 * SlugText renders — the shader is compiled exactly once per page
+	 * and the toggle has no effect after that.
+	 */
+	public readonly parallelShaderCompile: boolean;
 
 	/**
 	 * How `attachTicker` reacts to a second attach while already bound,
@@ -89,6 +97,10 @@ export class SlugFontsRegistry {
 		this.updateRate = Math.max(0, numberValue(options?.updateRate, Defaults.Registry.UpdateRate));
 		this.lastUpdate = 0;
 		this.reattachPolicy = resolveErrorMode(options?.reattachPolicy, Defaults.Registry.ReattachPolicy);
+		this.parallelShaderCompile = booleanValue(
+			options?.parallelShaderCompile,
+			Defaults.Registry.ParallelShaderCompile
+		);
 
 		this.tickerDetach = null;
 		this.tickerSubscribe = null;

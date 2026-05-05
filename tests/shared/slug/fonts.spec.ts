@@ -908,4 +908,16 @@ describe('SlugFonts', () => {
 			expect(SlugFonts.removeRegistered(fb!)).toEqual({ok: false, reason: 'forbidden-fallback'});
 		});
 	});
+
+	describe('parallelShaderCompile', () => {
+		it('reflects the registry default', () => {
+			expect(typeof SlugFonts.parallelShaderCompile).toBe('boolean');
+		});
+
+		it('is read-only (no setter)', () => {
+			const desc = Object.getOwnPropertyDescriptor(SlugFonts, 'parallelShaderCompile');
+			expect(desc?.get).toBeDefined();
+			expect(desc?.set).toBeUndefined();
+		});
+	});
 });

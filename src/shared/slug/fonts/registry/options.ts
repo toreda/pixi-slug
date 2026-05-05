@@ -29,4 +29,12 @@ export interface SlugFontsRegistryOptions {
 	 * to replace silently without firing this policy.
 	 */
 	reattachPolicy: 'throw' | 'error' | 'warn' | 'silent';
+	/**
+	 * Compile the Slug shader using `KHR_parallel_shader_compile` when
+	 * the extension is available. Default true. Set false to force the
+	 * synchronous PIXI compile path (e.g. for debugging or strict
+	 * lock-step expectations in tests). Must be set before the first
+	 * SlugText render — once compile starts, the value is locked in.
+	 */
+	parallelShaderCompile: boolean;
 }

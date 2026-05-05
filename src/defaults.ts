@@ -40,7 +40,19 @@ export class Defaults {
 		 * Use `force: true` on the second attach to replace silently
 		 * without triggering this policy.
 		 */
-		ReattachPolicy: 'throw' as 'throw' | 'error' | 'warn' | 'silent'
+		ReattachPolicy: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
+		/**
+		 * When true, the version-specific GPU layer attempts to compile
+		 * the Slug shader using the WebGL `KHR_parallel_shader_compile`
+		 * extension so the driver compile/link runs off the main thread.
+		 * The 500ms+ first-draw stall is reduced to a few ms of polling.
+		 *
+		 * Falls back transparently to the synchronous PIXI path when the
+		 * extension is unavailable. Must be set before the first
+		 * SlugText render — once the program is compiled the toggle has
+		 * no further effect.
+		 */
+		ParallelShaderCompile: true as const
 	} as const;
 
 	public static readonly SlugText = {
