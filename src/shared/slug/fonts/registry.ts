@@ -75,6 +75,32 @@ export class SlugFontsRegistry {
 	 * source passed twice returns silently).
 	 */
 	public tickerSubscribe: ((cb: (deltaMs: number) => void) => () => void) | null;
+	/**
+	 * Renderer most recently passed to {@link SlugFonts.attachRenderer}.
+	 * Stored as `unknown` so this shared module remains agnostic of any
+	 * specific PIXI version's `Renderer` type — version-specific code
+	 * (the prewarm hook, the application plugin) does the cast.
+	 *
+	 * `null` until a renderer is attached. Single-slot: re-attaching
+	 * with a different renderer overwrites this and any cached prewarm
+	 * promise the new renderer hasn't seen lives in the prewarm map's
+	 * own per-renderer entry.
+	 */
+	public renderer: unknown;
+	/**
+	 * Optional version-specific shader-prewarm hook. v8 sets this from
+	 * its entry point; v6/v7 leave it null (Part B is out of scope per
+	 * spec §8). Returns a promise that resolves to `true` when the
+	 * shader is compiled, linked, and cached for the renderer (so first
+	 * draw skips PIXI's blocking compile), or `false` when any step
+	 * fell back transparently.
+	 *
+	 * Idempotency / per-renderer caching is the hook's responsibility —
+	 * `attachRenderer` and `fromUrl` call this freely on every
+	 * trigger, expecting the hook to dedupe internally (typically with
+	 * a `WeakMap<Renderer, Promise<boolean>>`).
+	 */
+	public prewarmHook: ((renderer: unknown) => Promise<boolean>) | null;
 
 	constructor(options?: Partial<SlugFontsRegistryOptions>) {
 		this.byUrl = new Map<string, SlugFontsRegistryEntry>();
@@ -104,6 +130,8 @@ export class SlugFontsRegistry {
 
 		this.tickerDetach = null;
 		this.tickerSubscribe = null;
+		this.renderer = null;
+		this.prewarmHook = null;
 	}
 
 	/**

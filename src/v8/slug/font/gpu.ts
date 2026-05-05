@@ -1,9 +1,20 @@
 import {BufferImageSource, GlProgram, Texture} from 'pixi.js';
+import type {WebGLRenderer} from 'pixi.js';
 import type {SlugFont} from '../../../shared/slug/font';
 import type {SlugFontEnsureResult} from '../../../shared/slug/font';
+import {SlugFonts} from '../../../shared/slug/fonts';
 
 import vertSource from '../../../shared/shader/slug/vert.glsl';
 import fragSource from '../../../shared/shader/slug/frag.glsl';
+import {slugCompileAndInject} from './compile';
+
+/** Slug's GLSL is `#version 300 es`, which PIXI's own `generateProgram`
+ * recognizes (regex match in node_modules/.../generateProgram.js) and
+ * uses to disable the alphabetical attribute pre-sort. We mirror that
+ * decision here so post-link attribute extraction lines up identically
+ * to PIXI's own path. */
+const SORT_ATTRIBUTES = false;
+const KHR_EXT = 'KHR_parallel_shader_compile';
 
 /**
  * Cached GPU resources for a SlugFont in PixiJS v8.
@@ -20,6 +31,19 @@ export interface SlugFontGpuV8 {
 	 * `uFillMode == 0` and the sampler is never read).
 	 */
 	fallbackWhite: Texture;
+	/**
+	 * When the parallel-compile path is taken, resolves once the program
+	 * is linked AND the resulting `GlProgramData` has been injected into
+	 * PIXI's per-renderer cache (so the next draw is a cache hit and
+	 * skips PIXI's blocking compile). Resolves to `true` on a successful
+	 * injection, `false` when injection failed (PIXI internal drift) and
+	 * the caller should expect PIXI's sync path on first draw instead.
+	 *
+	 * Absent on the legacy / sync path — callers should treat
+	 * `programReady === undefined` as "no async wait needed; PIXI will
+	 * compile on first draw".
+	 */
+	programReady?: Promise<boolean>;
 	/**
 	 * Reference to the `Float32Array` currently owned by the curve
 	 * texture. When `font.curveData` no longer matches this reference,
@@ -115,8 +139,24 @@ function makeFallbackWhite(): Texture {
  * `ensureResult` is optional. Pass `null` (or omit) when no
  * `ensureGlyphs` call preceded this — typical for the cache-miss path
  * where every byte of the texture is fresh anyway.
+ *
+ * `renderer` is optional. When provided AND
+ * `SlugFonts.parallelShaderCompile === true` AND
+ * `KHR_parallel_shader_compile` is available on the renderer's GL
+ * context, the cache-miss path compiles the Slug shader off the main
+ * thread using {@link slugBuildGlProgramAsync} and pre-populates PIXI's
+ * `_programDataHash` so the next draw skips PIXI's blocking compile.
+ * Otherwise the cache-miss path constructs a `GlProgram` exactly as
+ * before and PIXI compiles synchronously on first draw — preserving
+ * pre-feature behavior verbatim. The decision is read once on cache
+ * miss; flipping the toggle later does not affect already-compiled
+ * fonts.
  */
-export function slugFontGpuV8(font: SlugFont, ensureResult: SlugFontEnsureResult | null = null): SlugFontGpuV8 {
+export function slugFontGpuV8(
+	font: SlugFont,
+	ensureResult: SlugFontEnsureResult | null = null,
+	renderer: WebGLRenderer | null = null
+): SlugFontGpuV8 {
 	const cached = font.gpuCache as SlugFontGpuV8 | null;
 
 	if (cached) {
@@ -178,6 +218,26 @@ export function slugFontGpuV8(font: SlugFont, ensureResult: SlugFontEnsureResult
 		_bandBuffer: bandView
 	};
 
+	// Parallel-compile path: only entered when a renderer is available
+	// (i.e. the caller knows which GL context to compile against), the
+	// global toggle is on, and the GL context advertises the KHR
+	// extension. Any failure short of a thrown exception falls back
+	// transparently — `programReady` is omitted in that case so callers
+	// know to expect PIXI's sync compile on first draw (today's path).
+	if (renderer && SlugFonts.parallelShaderCompile) {
+		const gl = renderer.gl as WebGL2RenderingContext;
+		if (gl && gl.getExtension(KHR_EXT)) {
+			cache.programReady = slugCompileAndInject(
+				gl,
+				renderer,
+				glProgram,
+				vertSource,
+				fragSource,
+				SORT_ATTRIBUTES
+			);
+		}
+	}
+
 	font.gpuCache = cache;
 	font.setGpuDestroy(() => {
 		cache.curveTexture.destroy();
@@ -187,3 +247,4 @@ export function slugFontGpuV8(font: SlugFont, ensureResult: SlugFontEnsureResult
 
 	return cache;
 }
+

@@ -61,6 +61,14 @@ export const SlugApplicationPluginV8 = {
 			return () => app.ticker.remove(handler);
 		});
 
+		// Register the app's renderer so the v8 prewarm hook can compile
+		// the Slug shader off the main thread during font load (spec §6.2).
+		// `attachRenderer` is idempotent and no-ops gracefully when the
+		// hook is absent or the renderer isn't WebGL.
+		if (app.renderer) {
+			SlugFonts.attachRenderer(app.renderer);
+		}
+
 		// PIXI's `ResizePlugin` only listens for `window` resize events.
 		// When `resizeTo` is a DOM element, any layout change that affects
 		// that element without triggering a window resize (sidebar inject,
@@ -95,6 +103,7 @@ export const SlugApplicationPluginV8 = {
 			delete (this as AppWithObserver)[SLUG_RESIZE_OBSERVER];
 		}
 		SlugFonts.detachTicker();
+		SlugFonts.detachRenderer();
 		SlugFonts.sweepImmediate();
 	}
 };

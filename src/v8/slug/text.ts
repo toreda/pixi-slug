@@ -6,25 +6,59 @@ import {
 	Graphics,
 	Mesh,
 	Rectangle,
+	RendererType,
 	Shader,
 	UniformGroup
 } from 'pixi.js';
+import type {Renderer, WebGLRenderer} from 'pixi.js';
 import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
 import {slugApplyLineLayoutX} from '../../shared/slug/glyph/shift';
+import type {SlugLineLayout} from '../../shared/slug/text/layout/align';
 import {slugComputeLineLayout} from '../../shared/slug/text/layout/align';
 import {slugResolvePhysicalAlign} from '../../shared/slug/text/style/align';
 import {slugTextWrap} from '../../shared/slug/text/wrap';
 import {slugMeasureText} from '../../shared/slug/text/measure';
 import {slugBuildDecorationFill} from './decoration/fill';
 import {slugBuildFillGpuV8, type SlugFillGpuV8} from './fill/gpu';
-import {slugFontGpuV8} from './font/gpu';
+import {slugFontGpuV8, type SlugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
 import type {SlugFont} from '../../shared/slug/font';
+import type {SlugFontEnsureResult} from '../../shared/slug/font';
 import {Constants} from '../../constants';
 import type {Rgba} from '../../rgba';
+
+/**
+ * CPU-side render plan computed by the geometry phase
+ * ({@link SlugText.rebuild}) and consumed by the GPU-attach phase
+ * ({@link SlugText._attachGpu}). Splitting this out lets us defer the
+ * Mesh/Shader/Geometry construction (which binds the Slug `GlProgram`
+ * and triggers PIXI's blocking `generateProgram` on first draw) to a
+ * point where we have a renderer in hand and can route it through the
+ * parallel-compile path. See `_specs/features/parallel_shader_compile.md`
+ * §5.5.
+ */
+interface SlugTextRenderPlan {
+	font: SlugFont;
+	ensureResult: SlugFontEnsureResult;
+	lines: string[];
+	scale: number;
+	lineQuadCounts: Int32Array;
+	layout: SlugLineLayout;
+	needsShift: boolean;
+	fillBounds: [number, number, number, number];
+	bboxRect: Rectangle | null;
+	fillQuads: SlugGlyphQuads | null;
+	shadowQuads: SlugGlyphQuads | null;
+	shadowColor: Rgba | null;
+	shadowBlur: number;
+	shadowAlpha: number;
+	shadowOffsetX: number;
+	shadowOffsetY: number;
+	strokeQuads: SlugGlyphQuads | null;
+}
 
 /**
  * The Mixin pattern is necessary due to Container API difference
@@ -57,6 +91,36 @@ export class SlugText extends SlugTextV8Base {
 	 * a fresh LUT.
 	 */
 	private _fillGpu: SlugFillGpuV8 | null;
+	/**
+	 * Computed by {@link rebuild} (geometry phase) and consumed by
+	 * {@link _attachGpu} (GPU phase) on the next `onRender` tick.
+	 * `null` when there is nothing to draw OR when the previous plan
+	 * has already been attached to the display list.
+	 */
+	private _pendingPlan: SlugTextRenderPlan | null;
+	/**
+	 * Bound `onRender` callback. Stored so we can hand the same
+	 * function reference to PIXI repeatedly without allocating, and so
+	 * the parallel-compile readiness chain can re-arm it after the
+	 * shader finishes linking.
+	 */
+	private _onRenderHandler: (renderer: Renderer) => void;
+	/**
+	 * Token tracking the in-flight `programReady` chain. Bumped by
+	 * every {@link rebuild} so a late-arriving program-ready callback
+	 * from a stale plan can detect that the SlugText has moved on and
+	 * skip re-arming `onRender`.
+	 */
+	private _attachToken: number;
+	/**
+	 * Most recent `SlugFontGpuV8` cache record this SlugText has
+	 * confirmed as program-ready. `programReady` lives on the cache
+	 * record forever once set (a one-shot signal, not cleared on
+	 * resolve), so we use this reference-equality flag to skip the
+	 * await on subsequent attaches against the same cache. Reset to
+	 * `null` only when the SlugText has never seen a ready signal yet.
+	 */
+	private _programReadyCache: SlugFontGpuV8 | null;
 
 	constructor(init: SlugTextInit) {
 		super();
@@ -64,6 +128,12 @@ export class SlugText extends SlugTextV8Base {
 		this._meshes = [];
 		this._decorations = null;
 		this._fillGpu = null;
+		this._pendingPlan = null;
+		this._attachToken = 0;
+		this._programReadyCache = null;
+		this._onRenderHandler = (renderer: Renderer): void => {
+			this._attachGpu(renderer);
+		};
 
 		// Opt the whole subtree out of hit-testing by default. The
 		// internal meshes use a custom geometry (aPositionNormal, not
@@ -209,14 +279,52 @@ export class SlugText extends SlugTextV8Base {
 		);
 	}
 
+	/**
+	 * Geometry phase: wraps + measures + lays out the text, builds the
+	 * per-pass `SlugGlyphQuads` arrays, computes the fill bbox, and
+	 * stores the result in {@link _pendingPlan}. **Does not** create
+	 * Mesh/Geometry/Shader objects or touch the display list — those
+	 * happen in {@link _attachGpu} on the next `onRender` tick. Splitting
+	 * the work this way lets the GPU-attach step route through the
+	 * parallel-compile path (see
+	 * `_specs/features/parallel_shader_compile.md` §5.5).
+	 *
+	 * Tearing down the previous frame's meshes / decorations / fill GPU
+	 * resources still happens here so observers checking `this.children`
+	 * mid-rebuild see the same "removed before added" behavior they used
+	 * to. Setters that mutate per-frame uniforms (e.g. supersampling)
+	 * iterate `_meshes` — when the array is empty (pending attach) they
+	 * naturally no-op and the next `_buildMesh` call picks up the
+	 * latest values.
+	 */
 	public rebuild(): void {
 		this._rebuildCount++;
+		this._attachToken++;
 
-		// Remove all previous meshes from display list and drop them from
-		// `_meshes` in the same pass — reusing the array avoids per-rebuild
-		// GC pressure. Don't call mesh.destroy() — it can interfere with
-		// shared GlProgram resources when multiple meshes use the same
-		// shader program.
+		this._teardownAttached();
+
+		const plan = this._buildPlan();
+		this._pendingPlan = plan;
+
+		// Schedule the GPU-attach phase for the next render tick. If the
+		// plan ended up empty (no font / empty text / unitsPerEm == 0),
+		// there's nothing to attach so we can leave `onRender` clear and
+		// skip per-frame churn entirely.
+		if (plan) {
+			this.onRender = this._onRenderHandler;
+		} else {
+			this.onRender = null;
+		}
+	}
+
+	/**
+	 * Remove and discard meshes, decorations, and the per-instance fill
+	 * GPU record from the previous attach. Reuses `_meshes` so we don't
+	 * churn an array per rebuild. Does NOT call `mesh.destroy()` — that
+	 * can interfere with shared `GlProgram` resources when multiple
+	 * meshes use the same shader program.
+	 */
+	private _teardownAttached(): void {
 		for (let i = this._meshes.length - 1; i >= 0; i--) {
 			this.removeChild(this._meshes[i]);
 			this._meshes.pop();
@@ -233,10 +341,20 @@ export class SlugText extends SlugTextV8Base {
 			this._fillGpu.dispose();
 			this._fillGpu = null;
 		}
+	}
 
+	/**
+	 * Pure-CPU geometry computation. Returns `null` for the empty-text
+	 * / no-font early-exit case so the caller can skip scheduling an
+	 * attach. All references the result holds (`font.glyphs`,
+	 * `font.advances`, layout arrays) are stable for the lifetime of
+	 * the plan — `ensureGlyphs` only appends, never mutates existing
+	 * glyph entries.
+	 */
+	private _buildPlan(): SlugTextRenderPlan | null {
 		const font = this._fontRef?.deref();
 		if (!font || this._text.length === 0 || font.unitsPerEm === 0) {
-			return;
+			return null;
 		}
 
 		// Lazy glyph processing: ensure every codepoint in the current
@@ -244,14 +362,11 @@ export class SlugText extends SlugTextV8Base {
 		// textures before we read offsets from them. Cached glyphs
 		// short-circuit at the cost of one Map.has() per codepoint;
 		// only NEW codepoints trigger outline processing. The result
-		// drives the GPU sync below — a buffer grow forces a texture
-		// recreate, an in-place append triggers a reupload, and a
-		// no-op return path leaves both textures untouched.
+		// drives the GPU sync inside `slugFontGpuV8` later — a buffer
+		// grow forces a texture recreate, an in-place append triggers a
+		// reupload, and a no-op return path leaves both textures
+		// untouched.
 		const ensureResult = font.ensureGlyphs(this._text);
-
-		const gpu = slugFontGpuV8(font, ensureResult);
-		const hasShadow = this._dropShadow !== null;
-		const hasStroke = this._strokeWidth > 0;
 
 		// --- Line layout (text-align / text-justify) ---
 		// Wrap once, measure once, resolve alignment once. The resulting
@@ -282,10 +397,6 @@ export class SlugText extends SlugTextV8Base {
 			lineQuadCounts[l] = count;
 		}
 
-		// Box width: wrap width when wrapping is on; otherwise the
-		// widest natural line. Single-line, no-wrap cases collapse to
-		// `widestLine === lineWidths[0]`, so any align resolves to a
-		// zero offset (start/center/right all agree on a 1-line block).
 		const boxWidth = wrapping ? this._wordWrapWidth : widestLine;
 		const physicalAlign = slugResolvePhysicalAlign(this._align, this._direction);
 		const layout = slugComputeLineLayout(
@@ -334,254 +445,356 @@ export class SlugText extends SlugTextV8Base {
 			Math.max(bboxMaxX - bboxMinX, 1),
 			Math.max(bboxMaxY - bboxMinY, 1)
 		];
+		const bboxRect =
+			fillQuads.quadCount > 0
+				? new Rectangle(bboxMinX, bboxMinY, bboxMaxX - bboxMinX, bboxMaxY - bboxMinY)
+				: null;
 
-		// Build per-instance fill GPU resources (gradient LUT or wrapped
-		// fill texture). Solid fills produce a no-op record.
+		let shadowQuads: SlugGlyphQuads | null = null;
+		let shadowColor: Rgba | null = null;
+		let shadowBlur = 0;
+		let shadowAlpha = 0;
+		let shadowOffsetX = 0;
+		let shadowOffsetY = 0;
+		if (this._dropShadow !== null) {
+			const ds = this._dropShadow;
+			shadowAlpha = ds.alpha;
+			shadowColor = [ds.color[0], ds.color[1], ds.color[2], shadowAlpha];
+			shadowBlur = ds.blur;
+			shadowOffsetX = Math.cos(ds.angle) * ds.distance;
+			shadowOffsetY = Math.sin(ds.angle) * ds.distance;
+			const quads = this._makeQuads(font, lines, shadowColor, shadowBlur);
+			if (quads.quadCount > 0) {
+				if (needsShift) {
+					slugApplyLineLayoutX(
+						quads,
+						lineQuadCounts,
+						layout.lineOffsetX,
+						layout.perGlyphShiftX
+					);
+				}
+				shadowQuads = quads;
+			}
+		}
+
+		let strokeQuads: SlugGlyphQuads | null = null;
+		if (this._strokeWidth > 0) {
+			const quads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
+			if (quads.quadCount > 0) {
+				if (needsShift) {
+					slugApplyLineLayoutX(
+						quads,
+						lineQuadCounts,
+						layout.lineOffsetX,
+						layout.perGlyphShiftX
+					);
+				}
+				strokeQuads = quads;
+			}
+		}
+
+		return {
+			font,
+			ensureResult,
+			lines,
+			scale,
+			lineQuadCounts,
+			layout,
+			needsShift,
+			fillBounds,
+			bboxRect,
+			fillQuads: fillQuads.quadCount > 0 ? fillQuads : null,
+			shadowQuads,
+			shadowColor,
+			shadowBlur,
+			shadowAlpha,
+			shadowOffsetX,
+			shadowOffsetY,
+			strokeQuads
+		};
+	}
+
+	/**
+	 * GPU-attach phase. Runs from `onRender(renderer)`. Calls
+	 * {@link slugFontGpuV8} with the renderer in hand so the
+	 * cache-miss path can route through `KHR_parallel_shader_compile`
+	 * when the toggle is on. While the parallel link is in flight
+	 * (`gpu.programReady` unresolved), this is a no-op render-wise —
+	 * `onRender` is detached and we re-arm it from the readiness
+	 * callback so the next frame after the link completes does the
+	 * mesh attach. The user sees nothing for those few frames; the
+	 * alternative was a ~500 ms freeze.
+	 *
+	 * Non-WebGL renderers (WebGPU, Canvas) skip the parallel path
+	 * entirely and use the synchronous attach (legacy behavior).
+	 */
+	private _attachGpu(renderer: Renderer): void {
+		const plan = this._pendingPlan;
+		if (!plan) return;
+
+		const webglRenderer = renderer.type === RendererType.WEBGL ? (renderer as WebGLRenderer) : null;
+		const gpu = slugFontGpuV8(plan.font, plan.ensureResult, webglRenderer);
+
+		// `programReady` is a one-shot signal: present while the parallel
+		// link is in flight, still present (resolved) after it completes.
+		// We gate on a per-SlugText flag that flips once we've confirmed
+		// readiness, so subsequent attaches skip the await without
+		// looping. The flag tracks the *cache record* so a re-rebuild
+		// that lands on the same cache entry doesn't re-wait either.
+		if (gpu.programReady && this._programReadyCache !== gpu) {
+			// Parallel link in flight. Stop firing `onRender` every frame
+			// and re-arm only when the link reports readiness; this also
+			// hands a stable token to the resolution callback so a stale
+			// readiness from an earlier rebuild can detect the SlugText
+			// has moved on.
+			this.onRender = null;
+			const token = this._attachToken;
+			gpu.programReady.then(() => {
+				if (this._attachToken !== token) return;
+				this._programReadyCache = gpu;
+				if (this._pendingPlan === null) return;
+				this.onRender = this._onRenderHandler;
+			});
+			return;
+		}
+
+		this._buildAndAttachMeshes(plan, gpu);
+		this._pendingPlan = null;
+		// Per-frame `onRender` no longer needed — clear so PIXI removes
+		// us from its onRender list.
+		this.onRender = null;
+	}
+
+	/**
+	 * Construct Mesh/Geometry/Shader objects from a finalized plan and
+	 * attach them to the display list. Also builds the decoration
+	 * Graphics (which doesn't use the Slug shader and is cheap, but is
+	 * grouped here so a single attach pass covers all child additions).
+	 */
+	private _buildAndAttachMeshes(plan: SlugTextRenderPlan, gpu: SlugFontGpuV8): void {
 		this._fillGpu = slugBuildFillGpuV8(this._fill);
 
 		// --- Drop shadow pass (always solid color, mode 0) ---
-		if (hasShadow) {
-			const ds = this._dropShadow!;
-			const shadowAlpha = ds.alpha;
-			const shadowColor: Rgba = [
-				ds.color[0],
-				ds.color[1],
-				ds.color[2],
-				shadowAlpha
-			];
-			const blur = ds.blur;
-
-			const shadowQuads = this._makeQuads(font, lines, shadowColor, blur);
-
-			if (shadowQuads.quadCount > 0) {
-				if (needsShift) {
-					slugApplyLineLayoutX(
-						shadowQuads,
-						lineQuadCounts,
-						layout.lineOffsetX,
-						layout.perGlyphShiftX
-					);
-				}
-				const solidGpu = slugBuildFillGpuV8({
-					kind: 'solid',
-					color: [0, 0, 0, 1],
-					rgbProvided: true,
-					alphaProvided: true
-				});
-				const {mesh, uniforms: shadowUniforms} = this._buildMesh(
-					shadowQuads,
-					gpu,
-					solidGpu,
-					fillBounds,
-					blur
-				);
-				if (blur > 0) {
-					shadowUniforms.uniforms.uStrokeAlphaStart = shadowAlpha;
-					shadowUniforms.uniforms.uStrokeAlphaRate = -shadowAlpha / blur;
-				}
-				mesh.x = Math.cos(ds.angle) * ds.distance;
-				mesh.y = Math.sin(ds.angle) * ds.distance;
-				this.addChild(mesh);
-				this._meshes.push(mesh);
+		if (plan.shadowQuads !== null) {
+			const solidGpu = slugBuildFillGpuV8({
+				kind: 'solid',
+				color: [0, 0, 0, 1],
+				rgbProvided: true,
+				alphaProvided: true
+			});
+			const {mesh, uniforms: shadowUniforms} = this._buildMesh(
+				plan.shadowQuads,
+				gpu,
+				solidGpu,
+				plan.fillBounds,
+				plan.shadowBlur
+			);
+			if (plan.shadowBlur > 0) {
+				shadowUniforms.uniforms.uStrokeAlphaStart = plan.shadowAlpha;
+				shadowUniforms.uniforms.uStrokeAlphaRate = -plan.shadowAlpha / plan.shadowBlur;
 			}
+			mesh.x = plan.shadowOffsetX;
+			mesh.y = plan.shadowOffsetY;
+			this.addChild(mesh);
+			this._meshes.push(mesh);
 		}
 
 		// --- Stroke pass (always solid color, mode 0) ---
-		if (hasStroke) {
-			const strokeQuads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
-
-			if (strokeQuads.quadCount > 0) {
-				if (needsShift) {
-					slugApplyLineLayoutX(
-						strokeQuads,
-						lineQuadCounts,
-						layout.lineOffsetX,
-						layout.perGlyphShiftX
-					);
-				}
-				const solidGpu = slugBuildFillGpuV8({
-					kind: 'solid',
-					color: [0, 0, 0, 1],
-					rgbProvided: true,
-					alphaProvided: true
-				});
-				const {mesh, uniforms: strokeUniforms} = this._buildMesh(
-					strokeQuads,
-					gpu,
-					solidGpu,
-					fillBounds,
-					this._strokeWidth
-				);
-				strokeUniforms.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
-				strokeUniforms.uniforms.uStrokeAlphaRate =
-					this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
-				this.addChild(mesh);
-				this._meshes.push(mesh);
-			}
+		if (plan.strokeQuads !== null) {
+			const solidGpu = slugBuildFillGpuV8({
+				kind: 'solid',
+				color: [0, 0, 0, 1],
+				rgbProvided: true,
+				alphaProvided: true
+			});
+			const {mesh, uniforms: strokeUniforms} = this._buildMesh(
+				plan.strokeQuads,
+				gpu,
+				solidGpu,
+				plan.fillBounds,
+				this._strokeWidth
+			);
+			strokeUniforms.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
+			strokeUniforms.uniforms.uStrokeAlphaRate =
+				this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
+			this.addChild(mesh);
+			this._meshes.push(mesh);
 		}
 
 		// --- Fill pass (uses the resolved fill mode) ---
-		if (fillQuads.quadCount > 0) {
-			const {mesh} = this._buildMesh(fillQuads, gpu, this._fillGpu, fillBounds);
+		if (plan.fillQuads !== null) {
+			const {mesh} = this._buildMesh(plan.fillQuads, gpu, this._fillGpu, plan.fillBounds);
 			this.addChild(mesh);
 			this._meshes.push(mesh);
 
-			// Track memory for the fill pass (representative of total)
-			this._vertexBytes = fillQuads.vertices.byteLength;
-			this._indexBytes = fillQuads.indices.byteLength;
+			this._vertexBytes = plan.fillQuads.vertices.byteLength;
+			this._indexBytes = plan.fillQuads.indices.byteLength;
 
-			this.boundsArea = new Rectangle(bboxMinX, bboxMinY, bboxMaxX - bboxMinX, bboxMaxY - bboxMinY);
+			if (plan.bboxRect) this.boundsArea = plan.bboxRect;
 		}
 
-		// --- Text decorations (underline / strikethrough / overline) ---
-		// Reads only the concrete `_*Draw` records — base.ts has already
-		// folded user input + fill color + font metrics into final RGBA
-		// and pixel thickness. Decorations sit above/below the glyphs on
-		// each line, so they share the same per-line offset (`layout`)
-		// and effective width (post-justify) the quad shifter applied.
-		//
-		// Fill inheritance: when the resolved fill is a gradient/texture
-		// AND the decoration did not explicitly set RGB (sticky null),
-		// build a parallel PIXI FillGradient/FillPattern sized to the
-		// decoration rect so the decoration shows the same fill as the
-		// glyphs. The decoration's resolved alpha (which honors per-
-		// channel sticky overrides) multiplies onto the PIXI fill via
-		// `Graphics.fill({fill, alpha})`.
+		this._buildDecorations(plan);
+	}
+
+	/**
+	 * Build the underline/strikethrough/overline Graphics from the
+	 * plan. Reads only the concrete `_*Draw` records — base.ts has
+	 * already folded user input + fill color + font metrics into final
+	 * RGBA and pixel thickness. Decorations sit above/below the glyphs
+	 * on each line, so they share the same per-line offset (`layout`)
+	 * and effective width (post-justify) the quad shifter applied.
+	 *
+	 * Fill inheritance: when the resolved fill is a gradient/texture
+	 * AND the decoration did not explicitly set RGB (sticky null),
+	 * build a parallel PIXI FillGradient/FillPattern sized to the
+	 * decoration rect so the decoration shows the same fill as the
+	 * glyphs. The decoration's resolved alpha (which honors per-channel
+	 * sticky overrides) multiplies onto the PIXI fill via
+	 * `Graphics.fill({fill, alpha})`.
+	 */
+	private _buildDecorations(plan: SlugTextRenderPlan): void {
 		const ul = this._underlineDraw,
 			st = this._strikethroughDraw,
 			ol = this._overlineDraw;
-		if ((ul.enabled || st.enabled || ol.enabled) && font) {
-			const lineHeight = (font.ascender - font.descender) * scale;
+		if (!(ul.enabled || st.enabled || ol.enabled)) return;
 
-			const packColor = (rgba: Rgba): number =>
-				(((rgba[0] * 255) & 0xff) << 16) | (((rgba[1] * 255) & 0xff) << 8) | ((rgba[2] * 255) & 0xff);
-			const ulPacked = packColor(ul.color),
-				stPacked = packColor(st.color),
-				olPacked = packColor(ol.color);
+		const {font, lines, scale, layout, fillBounds} = plan;
+		const lineHeight = (font.ascender - font.descender) * scale;
 
-			const fillIsNonSolid = this._fill.kind !== 'solid';
-			const ulInheritsFill = fillIsNonSolid && this._underline.colorRgb === null;
-			const stInheritsFill = fillIsNonSolid && this._strikethrough.colorRgb === null;
-			const olInheritsFill = fillIsNonSolid && this._overline.colorRgb === null;
+		const packColor = (rgba: Rgba): number =>
+			(((rgba[0] * 255) & 0xff) << 16) | (((rgba[1] * 255) & 0xff) << 8) | ((rgba[2] * 255) & 0xff);
+		const ulPacked = packColor(ul.color),
+			stPacked = packColor(st.color),
+			olPacked = packColor(ol.color);
 
-			const gfx = new Graphics();
+		const fillIsNonSolid = this._fill.kind !== 'solid';
+		const ulInheritsFill = fillIsNonSolid && this._underline.colorRgb === null;
+		const stInheritsFill = fillIsNonSolid && this._strikethrough.colorRgb === null;
+		const olInheritsFill = fillIsNonSolid && this._overline.colorRgb === null;
 
-			// Inner offset for a length-restricted decoration within its
-			// line box. `align` here is the decoration's own physical
-			// alignment (already resolved against direction in base.ts).
-			const xForDecoration = (
-				lineW: number,
-				drawW: number,
-				align: 'left' | 'center' | 'right'
-			): number => {
-				if (align === 'right') return lineW - drawW;
-				if (align === 'center') return (lineW - drawW) / 2;
-				return 0;
-			};
+		const gfx = new Graphics();
 
-			for (let l = 0; l < lines.length; l++) {
-				const line = lines[l];
-				const effLineW = layout.effectiveLineWidth[l];
-				const lineX = layout.lineOffsetX[l];
-				const lineY = l * lineHeight;
+		// Inner offset for a length-restricted decoration within its
+		// line box. `align` here is the decoration's own physical
+		// alignment (already resolved against direction in base.ts).
+		const xForDecoration = (
+			lineW: number,
+			drawW: number,
+			align: 'left' | 'center' | 'right'
+		): number => {
+			if (align === 'right') return lineW - drawW;
+			if (align === 'center') return (lineW - drawW) / 2;
+			return 0;
+		};
 
-				// Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
-				// so decorations align with the actual glyph positions on this line.
-				let maxGlyphTop = 0;
-				for (let i = 0; i < line.length; i++) {
-					const g = font.glyphs.get(line.charCodeAt(i));
-					if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
-				}
-				const baselineY = maxGlyphTop * scale;
+		for (let l = 0; l < lines.length; l++) {
+			const line = lines[l];
+			const effLineW = layout.effectiveLineWidth[l];
+			const lineX = layout.lineOffsetX[l];
+			const lineY = l * lineHeight;
 
-				if (ul.enabled && ul.length > 0) {
-					const drawW = effLineW * ul.length;
-					const x = lineX + xForDecoration(effLineW, drawW, ul.align);
-					const ulY = baselineY + lineY - font.underlinePosition * scale;
-					gfx.rect(x, ulY, drawW, ul.thickness);
-					if (ulInheritsFill) {
-						const pixiFill = slugBuildDecorationFill(
-							this._fill,
-							fillBounds[0],
-							fillBounds[1],
-							fillBounds[2],
-							fillBounds[3]
-						);
-						if (pixiFill) {
-							// textureSpace: 'global' opts out of PIXI's default
-							// "normalize UV to 0..1 across the shape's bounds"
-							// behavior — for a thin underline rect that would
-							// compress the texture vertically. We want world-
-							// pixel mapping anchored at the bbox so the
-							// decoration tile size matches the glyph fill.
-							gfx.fill({fill: pixiFill, alpha: ul.color[3], textureSpace: 'global'});
-						} else {
-							gfx.fill({color: ulPacked, alpha: ul.color[3]});
-						}
+			// Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
+			// so decorations align with the actual glyph positions on this line.
+			let maxGlyphTop = 0;
+			for (let i = 0; i < line.length; i++) {
+				const g = font.glyphs.get(line.charCodeAt(i));
+				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
+			}
+			const baselineY = maxGlyphTop * scale;
+
+			if (ul.enabled && ul.length > 0) {
+				const drawW = effLineW * ul.length;
+				const x = lineX + xForDecoration(effLineW, drawW, ul.align);
+				const ulY = baselineY + lineY - font.underlinePosition * scale;
+				gfx.rect(x, ulY, drawW, ul.thickness);
+				if (ulInheritsFill) {
+					const pixiFill = slugBuildDecorationFill(
+						this._fill,
+						fillBounds[0],
+						fillBounds[1],
+						fillBounds[2],
+						fillBounds[3]
+					);
+					if (pixiFill) {
+						// textureSpace: 'global' opts out of PIXI's default
+						// "normalize UV to 0..1 across the shape's bounds"
+						// behavior — for a thin underline rect that would
+						// compress the texture vertically. We want world-
+						// pixel mapping anchored at the bbox so the
+						// decoration tile size matches the glyph fill.
+						gfx.fill({fill: pixiFill, alpha: ul.color[3], textureSpace: 'global'});
 					} else {
 						gfx.fill({color: ulPacked, alpha: ul.color[3]});
 					}
-				}
-
-				if (st.enabled && st.length > 0) {
-					const drawW = effLineW * st.length;
-					const x = lineX + xForDecoration(effLineW, drawW, st.align);
-					const stY = baselineY + lineY - font.strikethroughPosition * scale;
-					gfx.rect(x, stY, drawW, st.thickness);
-					if (stInheritsFill) {
-						const pixiFill = slugBuildDecorationFill(
-							this._fill,
-							fillBounds[0],
-							fillBounds[1],
-							fillBounds[2],
-							fillBounds[3]
-						);
-						if (pixiFill) {
-							gfx.fill({fill: pixiFill, alpha: st.color[3], textureSpace: 'global'});
-						} else {
-							gfx.fill({color: stPacked, alpha: st.color[3]});
-						}
-					} else {
-						gfx.fill({color: stPacked, alpha: st.color[3]});
-					}
-				}
-
-				// Overline: font tables don't define an overline metric, so by
-				// CSS-engine convention reuse the underline thickness. Place the
-				// line's bottom edge at the top of the rendered glyphs (y=0 in
-				// local coords, which the quad builder pins to the tallest glyph
-				// on the line — see slugGlyphQuads).
-				if (ol.enabled && ol.length > 0) {
-					const drawW = effLineW * ol.length;
-					const x = lineX + xForDecoration(effLineW, drawW, ol.align);
-					const olY = lineY - ol.thickness;
-					gfx.rect(x, olY, drawW, ol.thickness);
-					if (olInheritsFill) {
-						const pixiFill = slugBuildDecorationFill(
-							this._fill,
-							fillBounds[0],
-							fillBounds[1],
-							fillBounds[2],
-							fillBounds[3]
-						);
-						if (pixiFill) {
-							gfx.fill({fill: pixiFill, alpha: ol.color[3], textureSpace: 'global'});
-						} else {
-							gfx.fill({color: olPacked, alpha: ol.color[3]});
-						}
-					} else {
-						gfx.fill({color: olPacked, alpha: ol.color[3]});
-					}
+				} else {
+					gfx.fill({color: ulPacked, alpha: ul.color[3]});
 				}
 			}
 
-			this._decorations = gfx;
-			this.addChild(gfx);
+			if (st.enabled && st.length > 0) {
+				const drawW = effLineW * st.length;
+				const x = lineX + xForDecoration(effLineW, drawW, st.align);
+				const stY = baselineY + lineY - font.strikethroughPosition * scale;
+				gfx.rect(x, stY, drawW, st.thickness);
+				if (stInheritsFill) {
+					const pixiFill = slugBuildDecorationFill(
+						this._fill,
+						fillBounds[0],
+						fillBounds[1],
+						fillBounds[2],
+						fillBounds[3]
+					);
+					if (pixiFill) {
+						gfx.fill({fill: pixiFill, alpha: st.color[3], textureSpace: 'global'});
+					} else {
+						gfx.fill({color: stPacked, alpha: st.color[3]});
+					}
+				} else {
+					gfx.fill({color: stPacked, alpha: st.color[3]});
+				}
+			}
+
+			// Overline: font tables don't define an overline metric, so by
+			// CSS-engine convention reuse the underline thickness. Place the
+			// line's bottom edge at the top of the rendered glyphs (y=0 in
+			// local coords, which the quad builder pins to the tallest glyph
+			// on the line — see slugGlyphQuads).
+			if (ol.enabled && ol.length > 0) {
+				const drawW = effLineW * ol.length;
+				const x = lineX + xForDecoration(effLineW, drawW, ol.align);
+				const olY = lineY - ol.thickness;
+				gfx.rect(x, olY, drawW, ol.thickness);
+				if (olInheritsFill) {
+					const pixiFill = slugBuildDecorationFill(
+						this._fill,
+						fillBounds[0],
+						fillBounds[1],
+						fillBounds[2],
+						fillBounds[3]
+					);
+					if (pixiFill) {
+						gfx.fill({fill: pixiFill, alpha: ol.color[3], textureSpace: 'global'});
+					} else {
+						gfx.fill({color: olPacked, alpha: ol.color[3]});
+					}
+				} else {
+					gfx.fill({color: olPacked, alpha: ol.color[3]});
+				}
+			}
 		}
+
+		this._decorations = gfx;
+		this.addChild(gfx);
 	}
 
 	override destroy(): void {
 		this._releaseFontOnDestroy();
+		// Bump the token so any in-flight `programReady` callback that
+		// resolves after destruction notices and skips re-arming
+		// `onRender` on a dead instance.
+		this._attachToken++;
+		this.onRender = null;
+		this._pendingPlan = null;
 		for (const mesh of this._meshes) {
 			mesh.destroy();
 		}

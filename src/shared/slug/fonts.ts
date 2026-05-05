@@ -100,14 +100,22 @@ export class SlugFonts {
 	): Promise<SlugFont | null> {
 		if (input instanceof SlugFont) {
 			// Caller-supplied font is already loaded — preload is the
-			// only work we still owe them.
-			await SlugFonts._maybeRunPreload(input, options);
+			// only work we still owe them. Prewarm runs in parallel so a
+			// renderer attached after a manual `from(font)` still
+			// absorbs the compile into the await.
+			await Promise.all([
+				SlugFonts._maybeRunPreload(input, options),
+				SlugFonts._maybePrewarmShader()
+			]);
 			return input;
 		}
 		if (typeof input === 'string') {
 			const named = SlugFonts._reg().byName.get(input);
 			if (named) {
-				await SlugFonts._maybeRunPreload(named.font, options);
+				await Promise.all([
+					SlugFonts._maybeRunPreload(named.font, options),
+					SlugFonts._maybePrewarmShader()
+				]);
 				return named.font;
 			}
 			return SlugFonts.fromUrl(input, options);
@@ -142,7 +150,14 @@ export class SlugFonts {
 		try {
 			const font = new SlugFont(opts.textureWidth);
 			await font.load(data);
-			await SlugFonts._maybeRunPreload(font, opts);
+			// Run preload + shader prewarm concurrently so the user's
+			// `await fromArrayBuffer(...)` absorbs both costs into the
+			// time they're already waiting (spec §6.3 trigger #2). Prewarm
+			// is a no-op when no renderer is attached.
+			await Promise.all([
+				SlugFonts._maybeRunPreload(font, opts),
+				SlugFonts._maybePrewarmShader()
+			]);
 			return font;
 		} catch {
 			return null;
@@ -207,7 +222,10 @@ export class SlugFonts {
 
 		const font = await task;
 		if (font) {
-			await SlugFonts._maybeRunPreload(font, opts);
+			await Promise.all([
+				SlugFonts._maybeRunPreload(font, opts),
+				SlugFonts._maybePrewarmShader()
+			]);
 		}
 		return font;
 	}
@@ -226,6 +244,23 @@ export class SlugFonts {
 		}
 
 		await slugFontRunPreload(font, options);
+	}
+
+	/**
+	 * Kick off shader prewarm if a renderer is attached and a
+	 * version-specific prewarm hook is installed. Awaited by font-load
+	 * paths so the user's `await SlugFonts.fromUrl(...)` naturally
+	 * absorbs the compile time — see spec §6.3 trigger #2. Idempotent
+	 * because the hook dedupes per renderer in its own WeakMap; called
+	 * after every successful load without measurable cost beyond that
+	 * lookup.
+	 */
+	private static async _maybePrewarmShader(): Promise<void> {
+		const reg = SlugFonts._reg();
+		if (!reg.renderer || !reg.prewarmHook) return;
+		// Errors here are not user-visible: the worst case is PIXI's sync
+		// compile on first draw, which is exactly the pre-feature behavior.
+		await reg.prewarmHook(reg.renderer).catch(() => false);
 	}
 
 	/**
@@ -435,6 +470,105 @@ export class SlugFonts {
 	 */
 	public static get parallelShaderCompile(): boolean {
 		return SlugFonts._reg().parallelShaderCompile;
+	}
+
+	/**
+	 * Renderer the registry currently holds, or `null` when none is
+	 * attached. Typed `unknown` so this shared module stays
+	 * version-agnostic; v8 callers can cast to their `Renderer` type.
+	 */
+	public static get renderer(): unknown {
+		return SlugFonts._reg().renderer;
+	}
+
+	/**
+	 * Register the renderer the registry should target for shader
+	 * prewarming. Idempotent for the same renderer reference. Re-attach
+	 * with a different renderer detaches the old (programs are not
+	 * portable across GL contexts) before storing the new one.
+	 *
+	 * When a version-specific prewarm hook is installed (v8 sets it from
+	 * its entry point), `attachRenderer` immediately kicks off a compile
+	 * for the new renderer. The hook dedupes per renderer so calling
+	 * this with the same renderer twice does not double-compile.
+	 *
+	 * No-op when `renderer` is null/undefined — that case is reserved
+	 * for {@link detachRenderer}.
+	 */
+	public static attachRenderer(renderer: unknown): void {
+		if (!renderer) return;
+		const reg = SlugFonts._reg();
+		if (reg.renderer === renderer) return;
+
+		// Different renderer — clear the previous slot first so callers
+		// observing `renderer` mid-swap never see stale state.
+		if (reg.renderer && reg.renderer !== renderer) {
+			reg.renderer = null;
+		}
+		reg.renderer = renderer;
+
+		if (reg.prewarmHook) {
+			// Fire-and-forget: the hook owns the in-flight cache so
+			// concurrent attaches/warmups still share one promise.
+			// Discard the resolution — `warmup()` is the caller's path
+			// to await readiness explicitly.
+			reg.prewarmHook(renderer).catch(() => {
+				/* swallowed; falls back to PIXI sync compile on first draw */
+			});
+		}
+	}
+
+	/**
+	 * Clear the registered renderer. The prewarm hook's per-renderer
+	 * cache entry stays in its own `WeakMap` until the renderer is
+	 * GC'd — that lets a subsequent re-attach of the same renderer skip
+	 * recompilation while still freeing memory automatically when the
+	 * renderer is destroyed.
+	 */
+	public static detachRenderer(): void {
+		SlugFonts._reg().renderer = null;
+	}
+
+	/**
+	 * Resolve when the Slug shader is compiled and cached for the
+	 * currently-attached renderer. Behavior matrix:
+	 *
+	 *  - No renderer attached → resolves immediately (no-op). The
+	 *    compile will trigger on the next {@link attachRenderer} call.
+	 *  - Renderer attached, prewarm hook absent (v6/v7) → resolves
+	 *    immediately. Part B is v8-only per spec §8.
+	 *  - Renderer attached, compile in flight → returns the in-flight
+	 *    promise so multiple awaiters share one outcome.
+	 *  - Renderer attached, compile complete → resolves immediately.
+	 *  - Renderer attached, compile not yet started → kicks it off and
+	 *    returns the new promise.
+	 *
+	 * Useful for callers gating loading-screen dismissal on shader
+	 * readiness independently of font load.
+	 */
+	public static warmup(): Promise<void> {
+		const reg = SlugFonts._reg();
+		const renderer = reg.renderer;
+		if (!renderer || !reg.prewarmHook) return Promise.resolve();
+		return reg.prewarmHook(renderer).then(() => {
+			/* normalize to void — boolean outcome is a hook implementation detail */
+		});
+	}
+
+	/**
+	 * Install the version-specific shader prewarm hook on the registry.
+	 * Public-but-underscore-prefixed to signal "version entry point use
+	 * only" — typical user code never calls this. v8's entry point
+	 * (`src/v8/index.ts`) wires {@link slugPrewarmShader} here at module
+	 * load; v6/v7 leave the hook null and Part B operations no-op.
+	 *
+	 * Calling with `null` clears the hook (used by tests; production
+	 * code never needs to clear).
+	 */
+	public static _installPrewarmHook(
+		hook: ((renderer: unknown) => Promise<boolean>) | null
+	): void {
+		SlugFonts._reg().prewarmHook = hook;
 	}
 
 	/**
@@ -784,5 +918,11 @@ export class SlugFonts {
 			reg.tickerDetach = null;
 		}
 		reg.tickerSubscribe = null;
+		reg.renderer = null;
+		// `prewarmHook` is intentionally NOT cleared — it is installed
+		// once at module load by the version-specific entry point and
+		// would not be re-installed by a `clear()`. Tests that need a
+		// pristine hook state can call `_installPrewarmHook(null)`
+		// explicitly.
 	}
 }
