@@ -31,10 +31,22 @@ export function slugCompileAndInject(
 			try {
 				const programData = slugBuildGlProgramData(gl, program, pixiGlProgram, sortAttributes);
 				return slugInjectGlProgramData(renderer, pixiGlProgram, programData);
-			} catch {
+			} catch (err) {
+				// PIXI internal drift (renamed/removed `extractAttributesFromGlProgram`,
+				// `getUniformData`, etc). Surface to the console so the cause is
+				// visible, then fall back: PIXI's sync compile will run on first draw.
+				console.error('[slug] post-link program-data build failed; falling back to PIXI sync compile.', err);
 				return false;
 			}
 		},
-		() => false
+		(err: unknown) => {
+			// Link failure or extension-level error from `slugBuildGlProgramAsync`.
+			// The Error message contains the program/vertex/fragment info logs —
+			// surface them so a real shader error isn't invisible. We still resolve
+			// `false` so the caller can fall through to the sync compile path
+			// (which will most likely re-report the same error).
+			console.error('[slug] parallel shader compile failed; falling back to PIXI sync compile.', err);
+			return false;
+		}
 	);
 }

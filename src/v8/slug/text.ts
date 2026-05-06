@@ -149,7 +149,10 @@ export class SlugText extends SlugTextV8Base {
 	public onSupersamplingChanged(): void {
 		const value = this._supersampling ? this._supersampleCount : 0;
 		for (const mesh of this._meshes) {
-			if (!mesh.shader) continue;
+			if (!mesh.shader) {
+				continue;
+			}
+
 			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
 			group.uniforms.uSupersampleCount = value;
 		}
@@ -164,6 +167,7 @@ export class SlugText extends SlugTextV8Base {
 			if (!mesh.shader) {
 				continue;
 			}
+
 			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
 			group.uniforms.uSupersampleCount = this._supersampleCount;
 		}
@@ -221,12 +225,33 @@ export class SlugText extends SlugTextV8Base {
 		uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		uniforms.uniforms.uStrokeExpand = strokeExpand;
 		uniforms.uniforms.uFillMode = fillGpu.mode;
-		uniforms.uniforms.uFillBoundsPx = new Float32Array(fillBounds);
-		uniforms.uniforms.uFillParams0 = new Float32Array(fillGpu.params0);
-		uniforms.uniforms.uFillTextureSizePx = new Float32Array(fillGpu.textureSizePx);
 		uniforms.uniforms.uFillTextureFit = fillGpu.textureFit;
-		uniforms.uniforms.uFillTextureScale = new Float32Array(fillGpu.textureScale);
-		uniforms.uniforms.uFillTextureOffset = new Float32Array(fillGpu.textureOffset);
+		// Mutate the typed-array slots in place rather than allocating
+		// fresh `Float32Array`s. PIXI v8's WebGL uniform sync compares
+		// element-wise against a cached snapshot (see
+		// `generateUniformsSyncTypes.UNIFORM_TO_SINGLE_SETTERS`), so
+		// changing the buffer contents is detected and pushed to the
+		// GPU on the next draw — no `update()` call needed. Avoids ~5
+		// short-lived typed arrays per pass × up to 3 passes per rebuild.
+		const boundsBuf = uniforms.uniforms.uFillBoundsPx as Float32Array;
+		boundsBuf[0] = fillBounds[0];
+		boundsBuf[1] = fillBounds[1];
+		boundsBuf[2] = fillBounds[2];
+		boundsBuf[3] = fillBounds[3];
+		const params0Buf = uniforms.uniforms.uFillParams0 as Float32Array;
+		params0Buf[0] = fillGpu.params0[0];
+		params0Buf[1] = fillGpu.params0[1];
+		params0Buf[2] = fillGpu.params0[2];
+		params0Buf[3] = fillGpu.params0[3];
+		const texSizeBuf = uniforms.uniforms.uFillTextureSizePx as Float32Array;
+		texSizeBuf[0] = fillGpu.textureSizePx[0];
+		texSizeBuf[1] = fillGpu.textureSizePx[1];
+		const texScaleBuf = uniforms.uniforms.uFillTextureScale as Float32Array;
+		texScaleBuf[0] = fillGpu.textureScale[0];
+		texScaleBuf[1] = fillGpu.textureScale[1];
+		const texOffsetBuf = uniforms.uniforms.uFillTextureOffset as Float32Array;
+		texOffsetBuf[0] = fillGpu.textureOffset[0];
+		texOffsetBuf[1] = fillGpu.textureOffset[1];
 
 		// Bind the fill samplers. When the fill is solid both stay on
 		// fallbackWhite (already bound by slugShader); otherwise swap in
@@ -298,6 +323,12 @@ export class SlugText extends SlugTextV8Base {
 	 * latest values.
 	 */
 	public rebuild(): void {
+		// Async font-resolve callbacks can fire after the SlugText has
+		// been destroyed (the `.then(...)` block in base.ts captures
+		// `this` before destroy runs). Bail before touching the display
+		// list or allocating quads on a dead instance.
+		if (this.destroyed) return;
+
 		this._rebuildCount++;
 		this._attachToken++;
 
@@ -548,6 +579,15 @@ export class SlugText extends SlugTextV8Base {
 		// readiness, so subsequent attaches skip the await without
 		// looping. The flag tracks the *cache record* so a re-rebuild
 		// that lands on the same cache entry doesn't re-wait either.
+		//
+		// The promise resolves to `boolean` (true on successful PIXI
+		// program-data injection, false on injection failure / PIXI
+		// internal drift). We don't branch on the value: false means
+		// PIXI's sync compile will run on the first draw — exactly the
+		// pre-feature behavior, so falling through to the normal attach
+		// is correct. A rejection is treated the same way: we cannot
+		// stay parked indefinitely, so we still attach and let PIXI's
+		// sync path surface any real shader error on first draw.
 		if (gpu.programReady && this._programReadyCache !== gpu) {
 			// Parallel link in flight. Stop firing `onRender` every frame
 			// and re-arm only when the link reports readiness; this also
@@ -556,12 +596,19 @@ export class SlugText extends SlugTextV8Base {
 			// has moved on.
 			this.onRender = null;
 			const token = this._attachToken;
-			gpu.programReady.then(() => {
+			const onSettled = (): void => {
 				if (this._attachToken !== token) return;
 				this._programReadyCache = gpu;
 				if (this._pendingPlan === null) return;
 				this.onRender = this._onRenderHandler;
-			});
+			};
+			// `slugCompileAndInject` resolves to `true`/`false` and does
+			// not reject — link / injection errors are logged at their
+			// source and mapped to `false` so the caller falls through to
+			// PIXI's sync compile. Reject branch is wired anyway as a
+			// belt-and-suspenders against future contract drift, so a
+			// stray rejection cannot strand the text with `onRender` null.
+			gpu.programReady.then(onSettled, onSettled);
 			return;
 		}
 
@@ -679,6 +726,21 @@ export class SlugText extends SlugTextV8Base {
 		const stInheritsFill = fillIsNonSolid && this._strikethrough.colorRgb === null;
 		const olInheritsFill = fillIsNonSolid && this._overline.colorRgb === null;
 
+		// Build the inherited fill once per decoration kind. Inputs
+		// (`_fill`, `fillBounds`) are constant across lines, so creating
+		// fresh `FillGradient` / `FillPattern` objects per line is pure
+		// overhead — N lines × 3 decorations would otherwise allocate
+		// 3N PIXI fill objects per rebuild.
+		const inheritedUlFill = ulInheritsFill
+			? slugBuildDecorationFill(this._fill, fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3])
+			: null;
+		const inheritedStFill = stInheritsFill
+			? slugBuildDecorationFill(this._fill, fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3])
+			: null;
+		const inheritedOlFill = olInheritsFill
+			? slugBuildDecorationFill(this._fill, fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3])
+			: null;
+
 		const gfx = new Graphics();
 
 		// Inner offset for a length-restricted decoration within its
@@ -714,25 +776,14 @@ export class SlugText extends SlugTextV8Base {
 				const x = lineX + xForDecoration(effLineW, drawW, ul.align);
 				const ulY = baselineY + lineY - font.underlinePosition * scale;
 				gfx.rect(x, ulY, drawW, ul.thickness);
-				if (ulInheritsFill) {
-					const pixiFill = slugBuildDecorationFill(
-						this._fill,
-						fillBounds[0],
-						fillBounds[1],
-						fillBounds[2],
-						fillBounds[3]
-					);
-					if (pixiFill) {
-						// textureSpace: 'global' opts out of PIXI's default
-						// "normalize UV to 0..1 across the shape's bounds"
-						// behavior — for a thin underline rect that would
-						// compress the texture vertically. We want world-
-						// pixel mapping anchored at the bbox so the
-						// decoration tile size matches the glyph fill.
-						gfx.fill({fill: pixiFill, alpha: ul.color[3], textureSpace: 'global'});
-					} else {
-						gfx.fill({color: ulPacked, alpha: ul.color[3]});
-					}
+				if (inheritedUlFill) {
+					// textureSpace: 'global' opts out of PIXI's default
+					// "normalize UV to 0..1 across the shape's bounds"
+					// behavior — for a thin underline rect that would
+					// compress the texture vertically. We want world-
+					// pixel mapping anchored at the bbox so the
+					// decoration tile size matches the glyph fill.
+					gfx.fill({fill: inheritedUlFill, alpha: ul.color[3], textureSpace: 'global'});
 				} else {
 					gfx.fill({color: ulPacked, alpha: ul.color[3]});
 				}
@@ -743,19 +794,8 @@ export class SlugText extends SlugTextV8Base {
 				const x = lineX + xForDecoration(effLineW, drawW, st.align);
 				const stY = baselineY + lineY - font.strikethroughPosition * scale;
 				gfx.rect(x, stY, drawW, st.thickness);
-				if (stInheritsFill) {
-					const pixiFill = slugBuildDecorationFill(
-						this._fill,
-						fillBounds[0],
-						fillBounds[1],
-						fillBounds[2],
-						fillBounds[3]
-					);
-					if (pixiFill) {
-						gfx.fill({fill: pixiFill, alpha: st.color[3], textureSpace: 'global'});
-					} else {
-						gfx.fill({color: stPacked, alpha: st.color[3]});
-					}
+				if (inheritedStFill) {
+					gfx.fill({fill: inheritedStFill, alpha: st.color[3], textureSpace: 'global'});
 				} else {
 					gfx.fill({color: stPacked, alpha: st.color[3]});
 				}
@@ -771,19 +811,8 @@ export class SlugText extends SlugTextV8Base {
 				const x = lineX + xForDecoration(effLineW, drawW, ol.align);
 				const olY = lineY - ol.thickness;
 				gfx.rect(x, olY, drawW, ol.thickness);
-				if (olInheritsFill) {
-					const pixiFill = slugBuildDecorationFill(
-						this._fill,
-						fillBounds[0],
-						fillBounds[1],
-						fillBounds[2],
-						fillBounds[3]
-					);
-					if (pixiFill) {
-						gfx.fill({fill: pixiFill, alpha: ol.color[3], textureSpace: 'global'});
-					} else {
-						gfx.fill({color: olPacked, alpha: ol.color[3]});
-					}
+				if (inheritedOlFill) {
+					gfx.fill({fill: inheritedOlFill, alpha: ol.color[3], textureSpace: 'global'});
 				} else {
 					gfx.fill({color: olPacked, alpha: ol.color[3]});
 				}

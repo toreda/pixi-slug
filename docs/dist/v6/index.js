@@ -10859,18 +10859,20 @@ const vert_namespaceObject="#version 300 es\n// ================================
  * qualifiers and must pass `false` to skip this step.
  */
 function slugBuildGlProgramAsync(gl,vertexSource,fragmentSource,sortAttributes){const ext=gl.getExtension(KHR_EXT),vertex=gl.createShader(gl.VERTEX_SHADER),fragment=gl.createShader(gl.FRAGMENT_SHADER),program=gl.createProgram();if(!vertex||!fragment||!program)
-// Context lost or out of resources. Resolve with whatever we have
-// and let the link/use path surface the real error to the caller.
-return{program,ready:Promise.reject(new Error("slugBuildGlProgramAsync: gl.createShader/createProgram returned null"))};gl.shaderSource(vertex,vertexSource),gl.compileShader(vertex),gl.shaderSource(fragment,fragmentSource),gl.compileShader(fragment),gl.attachShader(program,vertex),gl.attachShader(program,fragment),sortAttributes&&
+// Context lost or out of resources. Release whatever partial GL
+// objects did succeed so we don't leak them on the rejection path.
+return vertex&&gl.deleteShader(vertex),fragment&&gl.deleteShader(fragment),program&&gl.deleteProgram(program),{program,ready:Promise.reject(new Error("slugBuildGlProgramAsync: gl.createShader/createProgram returned null"))};gl.shaderSource(vertex,vertexSource),gl.compileShader(vertex),gl.shaderSource(fragment,fragmentSource),gl.compileShader(fragment),gl.attachShader(program,vertex),gl.attachShader(program,fragment),sortAttributes&&
 /**
  * Bind `in`/`attribute` locations in alphabetical order before
  * `linkProgram`. Matches PIXI's `extractAttributesFromGlProgram`
  * post-link sort so that PIXI's later `getAttribLocation` lookups land
  * on the same indices we baked in here.
  */
-function(gl,program,vertexSource){const names=[],re=/(?:^|\s)(?:in|attribute)\s+(?:highp|mediump|lowp\s+)?\w+\s+(\w+)\s*[;[]/g;
-// Match both GLSL 3.00 `in <type> <name>` and GLSL 1.00 `attribute <type> <name>`.
-let m;for(;null!==(m=re.exec(vertexSource));){const name=m[1];names.includes(name)||names.push(name)}names.sort();for(let i=0;i<names.length;i++)gl.bindAttribLocation(program,i,names[i])}(gl,program,vertexSource),gl.linkProgram(program);
+function(gl,program,vertexSource){
+// Strip line and block comments first so a commented-out attribute
+// declaration cannot bind a phantom location and shift every real
+// attribute's index downstream.
+const stripped=vertexSource.replace(/\/\*[\s\S]*?\*\//g," ").replace(/\/\/[^\n]*/g," "),names=[],re=/(?:^|\s)(?:(?:flat|smooth|centroid|invariant)\s+)?(?:in|attribute)\s+(?:(?:highp|mediump|lowp)\s+)?\w+\s+(\w+)\s*[;[]/g;let m;for(;null!==(m=re.exec(stripped));){const name=m[1];names.includes(name)||names.push(name)}names.sort();for(let i=0;i<names.length;i++)gl.bindAttribLocation(program,i,names[i])}(gl,program,vertexSource),gl.linkProgram(program);
 // Shaders can be detached + flagged for delete immediately after
 // linkProgram; the driver retains them for the duration of the link.
 // We defer the actual deleteShader until link completion to keep the

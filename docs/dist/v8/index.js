@@ -10851,18 +10851,20 @@ const vert_namespaceObject="#version 300 es\n// ================================
  * qualifiers and must pass `false` to skip this step.
  */
 function slugBuildGlProgramAsync(gl,vertexSource,fragmentSource,sortAttributes){const ext=gl.getExtension(KHR_EXT),vertex=gl.createShader(gl.VERTEX_SHADER),fragment=gl.createShader(gl.FRAGMENT_SHADER),program=gl.createProgram();if(!vertex||!fragment||!program)
-// Context lost or out of resources. Resolve with whatever we have
-// and let the link/use path surface the real error to the caller.
-return{program,ready:Promise.reject(new Error("slugBuildGlProgramAsync: gl.createShader/createProgram returned null"))};gl.shaderSource(vertex,vertexSource),gl.compileShader(vertex),gl.shaderSource(fragment,fragmentSource),gl.compileShader(fragment),gl.attachShader(program,vertex),gl.attachShader(program,fragment),sortAttributes&&
+// Context lost or out of resources. Release whatever partial GL
+// objects did succeed so we don't leak them on the rejection path.
+return vertex&&gl.deleteShader(vertex),fragment&&gl.deleteShader(fragment),program&&gl.deleteProgram(program),{program,ready:Promise.reject(new Error("slugBuildGlProgramAsync: gl.createShader/createProgram returned null"))};gl.shaderSource(vertex,vertexSource),gl.compileShader(vertex),gl.shaderSource(fragment,fragmentSource),gl.compileShader(fragment),gl.attachShader(program,vertex),gl.attachShader(program,fragment),sortAttributes&&
 /**
  * Bind `in`/`attribute` locations in alphabetical order before
  * `linkProgram`. Matches PIXI's `extractAttributesFromGlProgram`
  * post-link sort so that PIXI's later `getAttribLocation` lookups land
  * on the same indices we baked in here.
  */
-function(gl,program,vertexSource){const names=[],re=/(?:^|\s)(?:in|attribute)\s+(?:highp|mediump|lowp\s+)?\w+\s+(\w+)\s*[;[]/g;
-// Match both GLSL 3.00 `in <type> <name>` and GLSL 1.00 `attribute <type> <name>`.
-let m;for(;null!==(m=re.exec(vertexSource));){const name=m[1];names.includes(name)||names.push(name)}names.sort();for(let i=0;i<names.length;i++)gl.bindAttribLocation(program,i,names[i])}(gl,program,vertexSource),gl.linkProgram(program);
+function(gl,program,vertexSource){
+// Strip line and block comments first so a commented-out attribute
+// declaration cannot bind a phantom location and shift every real
+// attribute's index downstream.
+const stripped=vertexSource.replace(/\/\*[\s\S]*?\*\//g," ").replace(/\/\/[^\n]*/g," "),names=[],re=/(?:^|\s)(?:(?:flat|smooth|centroid|invariant)\s+)?(?:in|attribute)\s+(?:(?:highp|mediump|lowp)\s+)?\w+\s+(\w+)\s*[;[]/g;let m;for(;null!==(m=re.exec(stripped));){const name=m[1];names.includes(name)||names.push(name)}names.sort();for(let i=0;i<names.length;i++)gl.bindAttribLocation(program,i,names[i])}(gl,program,vertexSource),gl.linkProgram(program);
 // Shaders can be detached + flagged for delete immediately after
 // linkProgram; the driver retains them for the duration of the link.
 // We defer the actual deleteShader until link completion to keep the
@@ -10918,7 +10920,17 @@ function(gl,program,pixiGlProgram,sortAttributes){pixiGlProgram._attributeData=(
  * harmless because `generateProgram` would have produced an equivalent
  * record anyway.
  */
-return function(renderer,pixiGlProgram,programData){try{const hash=renderer.shader._programDataHash;if(!hash)return!1;const key=pixiGlProgram._key;return"number"==typeof key&&(hash[key]=programData,!0)}catch{return!1}}(renderer,pixiGlProgram,programData)}catch{return!1}},()=>!1)}// ./src/v8/slug/font/prewarm.ts
+return function(renderer,pixiGlProgram,programData){try{const hash=renderer.shader._programDataHash;if(!hash)return!1;const key=pixiGlProgram._key;return"number"==typeof key&&(hash[key]=programData,!0)}catch{return!1}}(renderer,pixiGlProgram,programData)}catch(err){
+// PIXI internal drift (renamed/removed `extractAttributesFromGlProgram`,
+// `getUniformData`, etc). Surface to the console so the cause is
+// visible, then fall back: PIXI's sync compile will run on first draw.
+return console.error("[slug] post-link program-data build failed; falling back to PIXI sync compile.",err),!1}},err=>(
+// Link failure or extension-level error from `slugBuildGlProgramAsync`.
+// The Error message contains the program/vertex/fragment info logs —
+// surface them so a real shader error isn't invisible. We still resolve
+// `false` so the caller can fall through to the sync compile path
+// (which will most likely re-report the same error).
+console.error("[slug] parallel shader compile failed; falling back to PIXI sync compile.",err),!1))}// ./src/v8/slug/font/prewarm.ts
 const inflight=new WeakMap;function isWebGLRenderer(r){return"object"==typeof r&&null!==r&&r.type===external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.RendererType.WEBGL}// ./src/v8/slug/fonts/prewarm-install.ts
 /**
  * Install the v8 shader prewarm hook on the shared registry. Runs once
@@ -11887,7 +11899,15 @@ this.eventMode="none",this.interactiveChildren=!1,this.rebuild()}onSupersampling
      * `interactiveChildren = false`). Anything that flips those back on
      * needs a custom `containsPoint` or a separate hit-test rectangle
      * — do not assume PIXI's default works on these meshes.
-     */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX}),geometry=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride,offset:vec4Bytes},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride,offset:2*vec4Bytes},aBanding:{buffer:vertexBuffer,format:"float32x4",stride,offset:3*vec4Bytes},aColor:{buffer:vertexBuffer,format:"float32x4",stride,offset:4*vec4Bytes}},indexBuffer:quads.indices}),{shader,uniforms}=slugShader(gpu.glProgram,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite);return uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,uniforms.uniforms.uFillMode=fillGpu.mode,uniforms.uniforms.uFillBoundsPx=new Float32Array(fillBounds),uniforms.uniforms.uFillParams0=new Float32Array(fillGpu.params0),uniforms.uniforms.uFillTextureSizePx=new Float32Array(fillGpu.textureSizePx),uniforms.uniforms.uFillTextureFit=fillGpu.textureFit,uniforms.uniforms.uFillTextureScale=new Float32Array(fillGpu.textureScale),uniforms.uniforms.uFillTextureOffset=new Float32Array(fillGpu.textureOffset),
+     */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX}),geometry=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride,offset:vec4Bytes},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride,offset:2*vec4Bytes},aBanding:{buffer:vertexBuffer,format:"float32x4",stride,offset:3*vec4Bytes},aColor:{buffer:vertexBuffer,format:"float32x4",stride,offset:4*vec4Bytes}},indexBuffer:quads.indices}),{shader,uniforms}=slugShader(gpu.glProgram,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite);uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,uniforms.uniforms.uFillMode=fillGpu.mode,uniforms.uniforms.uFillTextureFit=fillGpu.textureFit;
+// Mutate the typed-array slots in place rather than allocating
+// fresh `Float32Array`s. PIXI v8's WebGL uniform sync compares
+// element-wise against a cached snapshot (see
+// `generateUniformsSyncTypes.UNIFORM_TO_SINGLE_SETTERS`), so
+// changing the buffer contents is detected and pushed to the
+// GPU on the next draw — no `update()` call needed. Avoids ~5
+// short-lived typed arrays per pass × up to 3 passes per rebuild.
+const boundsBuf=uniforms.uniforms.uFillBoundsPx;boundsBuf[0]=fillBounds[0],boundsBuf[1]=fillBounds[1],boundsBuf[2]=fillBounds[2],boundsBuf[3]=fillBounds[3];const params0Buf=uniforms.uniforms.uFillParams0;params0Buf[0]=fillGpu.params0[0],params0Buf[1]=fillGpu.params0[1],params0Buf[2]=fillGpu.params0[2],params0Buf[3]=fillGpu.params0[3];const texSizeBuf=uniforms.uniforms.uFillTextureSizePx;texSizeBuf[0]=fillGpu.textureSizePx[0],texSizeBuf[1]=fillGpu.textureSizePx[1];const texScaleBuf=uniforms.uniforms.uFillTextureScale;texScaleBuf[0]=fillGpu.textureScale[0],texScaleBuf[1]=fillGpu.textureScale[1];const texOffsetBuf=uniforms.uniforms.uFillTextureOffset;return texOffsetBuf[0]=fillGpu.textureOffset[0],texOffsetBuf[1]=fillGpu.textureOffset[1],
 // Bind the fill samplers. When the fill is solid both stay on
 // fallbackWhite (already bound by slugShader); otherwise swap in
 // the gradient LUT or user texture.
@@ -11924,7 +11944,12 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
      * iterate `_meshes` — when the array is empty (pending attach) they
      * naturally no-op and the next `_buildMesh` call picks up the
      * latest values.
-     */rebuild(){this._rebuildCount++,this._attachToken++,this._teardownAttached();const plan=this._buildPlan();this._pendingPlan=plan,
+     */rebuild(){
+// Async font-resolve callbacks can fire after the SlugText has
+// been destroyed (the `.then(...)` block in base.ts captures
+// `this` before destroy runs). Bail before touching the display
+// list or allocating quads on a dead instance.
+if(this.destroyed)return;this._rebuildCount++,this._attachToken++,this._teardownAttached();const plan=this._buildPlan();this._pendingPlan=plan,
 // Schedule the GPU-attach phase for the next render tick. If the
 // plan ended up empty (no font / empty text / unitsPerEm == 0),
 // there's nothing to attach so we can leave `onRender` clear and
@@ -12022,13 +12047,28 @@ let bboxMinX=0,bboxMinY=0,bboxMaxX=0,bboxMaxY=0;if(fillQuads.quadCount>0){bboxMi
 // readiness, so subsequent attaches skip the await without
 // looping. The flag tracks the *cache record* so a re-rebuild
 // that lands on the same cache entry doesn't re-wait either.
+// The promise resolves to `boolean` (true on successful PIXI
+// program-data injection, false on injection failure / PIXI
+// internal drift). We don't branch on the value: false means
+// PIXI's sync compile will run on the first draw — exactly the
+// pre-feature behavior, so falling through to the normal attach
+// is correct. A rejection is treated the same way: we cannot
+// stay parked indefinitely, so we still attach and let PIXI's
+// sync path surface any real shader error on first draw.
 if(gpu.programReady&&this._programReadyCache!==gpu){
 // Parallel link in flight. Stop firing `onRender` every frame
 // and re-arm only when the link reports readiness; this also
 // hands a stable token to the resolution callback so a stale
 // readiness from an earlier rebuild can detect the SlugText
 // has moved on.
-this.onRender=null;const token=this._attachToken;return void gpu.programReady.then(()=>{this._attachToken===token&&(this._programReadyCache=gpu,null!==this._pendingPlan&&(this.onRender=this._onRenderHandler))})}this._buildAndAttachMeshes(plan,gpu),this._pendingPlan=null,
+this.onRender=null;const token=this._attachToken,onSettled=()=>{this._attachToken===token&&(this._programReadyCache=gpu,null!==this._pendingPlan&&(this.onRender=this._onRenderHandler))};
+// `slugCompileAndInject` resolves to `true`/`false` and does
+// not reject — link / injection errors are logged at their
+// source and mapped to `false` so the caller falls through to
+// PIXI's sync compile. Reject branch is wired anyway as a
+// belt-and-suspenders against future contract drift, so a
+// stray rejection cannot strand the text with `onRender` null.
+return void gpu.programReady.then(onSettled,onSettled)}this._buildAndAttachMeshes(plan,gpu),this._pendingPlan=null,
 // Per-frame `onRender` no longer needed — clear so PIXI removes
 // us from its onRender list.
 this.onRender=null}
@@ -12059,23 +12099,23 @@ if(null!==plan.fillQuads){const{mesh}=this._buildMesh(plan.fillQuads,gpu,this._f
      * glyphs. The decoration's resolved alpha (which honors per-channel
      * sticky overrides) multiplies onto the PIXI fill via
      * `Graphics.fill({fill, alpha})`.
-     */_buildDecorations(plan){const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if(!(ul.enabled||st.enabled||ol.enabled))return;const{font,lines,scale,layout,fillBounds}=plan,lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),fillIsNonSolid="solid"!==this._fill.kind,ulInheritsFill=fillIsNonSolid&&null===this._underline.colorRgb,stInheritsFill=fillIsNonSolid&&null===this._strikethrough.colorRgb,olInheritsFill=fillIsNonSolid&&null===this._overline.colorRgb,gfx=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Graphics,xForDecoration=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;
+     */_buildDecorations(plan){const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if(!(ul.enabled||st.enabled||ol.enabled))return;const{font,lines,scale,layout,fillBounds}=plan,lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),fillIsNonSolid="solid"!==this._fill.kind,ulInheritsFill=fillIsNonSolid&&null===this._underline.colorRgb,stInheritsFill=fillIsNonSolid&&null===this._strikethrough.colorRgb,olInheritsFill=fillIsNonSolid&&null===this._overline.colorRgb,inheritedUlFill=ulInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,inheritedStFill=stInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,inheritedOlFill=olInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,gfx=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Graphics,xForDecoration=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;
 // Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
 // so decorations align with the actual glyph positions on this line.
-let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=effLineW*ul.length,x=lineX+xForDecoration(effLineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;if(gfx.rect(x,ulY,drawW,ul.thickness),ulInheritsFill){const pixiFill=slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]);pixiFill?
+let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=effLineW*ul.length,x=lineX+xForDecoration(effLineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;gfx.rect(x,ulY,drawW,ul.thickness),inheritedUlFill?
 // textureSpace: 'global' opts out of PIXI's default
 // "normalize UV to 0..1 across the shape's bounds"
 // behavior — for a thin underline rect that would
 // compress the texture vertically. We want world-
 // pixel mapping anchored at the bbox so the
 // decoration tile size matches the glyph fill.
-gfx.fill({fill:pixiFill,alpha:ul.color[3],textureSpace:"global"}):gfx.fill({color:ulPacked,alpha:ul.color[3]})}else gfx.fill({color:ulPacked,alpha:ul.color[3]})}if(st.enabled&&st.length>0){const drawW=effLineW*st.length,x=lineX+xForDecoration(effLineW,drawW,st.align),stY=baselineY+lineY-font.strikethroughPosition*scale;if(gfx.rect(x,stY,drawW,st.thickness),stInheritsFill){const pixiFill=slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]);pixiFill?gfx.fill({fill:pixiFill,alpha:st.color[3],textureSpace:"global"}):gfx.fill({color:stPacked,alpha:st.color[3]})}else gfx.fill({color:stPacked,alpha:st.color[3]})}
+gfx.fill({fill:inheritedUlFill,alpha:ul.color[3],textureSpace:"global"}):gfx.fill({color:ulPacked,alpha:ul.color[3]})}if(st.enabled&&st.length>0){const drawW=effLineW*st.length,x=lineX+xForDecoration(effLineW,drawW,st.align),stY=baselineY+lineY-font.strikethroughPosition*scale;gfx.rect(x,stY,drawW,st.thickness),inheritedStFill?gfx.fill({fill:inheritedStFill,alpha:st.color[3],textureSpace:"global"}):gfx.fill({color:stPacked,alpha:st.color[3]})}
 // Overline: font tables don't define an overline metric, so by
 // CSS-engine convention reuse the underline thickness. Place the
 // line's bottom edge at the top of the rendered glyphs (y=0 in
 // local coords, which the quad builder pins to the tallest glyph
 // on the line — see slugGlyphQuads).
-if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoration(effLineW,drawW,ol.align),olY=lineY-ol.thickness;if(gfx.rect(x,olY,drawW,ol.thickness),olInheritsFill){const pixiFill=slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]);pixiFill?gfx.fill({fill:pixiFill,alpha:ol.color[3],textureSpace:"global"}):gfx.fill({color:olPacked,alpha:ol.color[3]})}else gfx.fill({color:olPacked,alpha:ol.color[3]})}}this._decorations=gfx,this.addChild(gfx)}destroy(){this._releaseFontOnDestroy(),
+if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoration(effLineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.rect(x,olY,drawW,ol.thickness),inheritedOlFill?gfx.fill({fill:inheritedOlFill,alpha:ol.color[3],textureSpace:"global"}):gfx.fill({color:olPacked,alpha:ol.color[3]})}}this._decorations=gfx,this.addChild(gfx)}destroy(){this._releaseFontOnDestroy(),
 // Bump the token so any in-flight `programReady` callback that
 // resolves after destruction notices and skips re-arming
 // `onRender` on a dead instance.
