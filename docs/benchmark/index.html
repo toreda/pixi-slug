@@ -329,6 +329,9 @@
 		<a href="../benchmark/" class="active">Benchmark</a>
 	</nav>
 	<h1>pixi-slug Benchmark</h1>
+	<div style="margin: 12px 0 16px; padding: 10px 14px; border-left: 3px solid #f5b942; background: #2a2418; color: #f0d89a; font-size: 13px; line-height: 1.4;">
+		<strong>Note:</strong> Keep this window in focus for the duration of the benchmark. Minimizing the window or switching to another app throttles requestAnimationFrame and will skew the results.
+	</div>
 
 	<!-- ===== Settings Panel ===== -->
 	<div id="settingsPanel">
@@ -676,8 +679,21 @@
 			};
 		}
 
+		// Whether Chrome was launched with --js-flags="--expose-gc". When
+		// present, we can force a synchronous full GC before each heap
+		// sample, making the deltas reliable. When absent (the default for
+		// users hitting the GitHub Pages copy of this benchmark), heap
+		// numbers are at the mercy of V8's adaptive GC heuristic and we
+		// surface them with an "approximate" warning so they're not
+		// mistaken for precise readings.
+		var hasGcFlag = (typeof window.gc === 'function');
+
 		function tryGC() {
-			if (window.gc) { window.gc(); window.gc(); }
+			// No-op without the flag — `window.gc` doesn't exist, and we
+			// don't want to silently pretend GC ran when it didn't.
+			if (!hasGcFlag) return;
+			window.gc();
+			window.gc();
 		}
 
 		function heapNow() {
@@ -1574,6 +1590,27 @@
 				var startTime = t0;
 				var stopping = false;
 
+				// PIXI v8 exposes 'postrender' as a SystemRunner (not an
+				// EventEmitter event). The runner calls `item.postrender(...)`
+				// on every registered listener after each frame's draw
+				// commands are submitted, which is exactly when we want to
+				// end the GPU TIME_ELAPSED query. Earlier versions of this
+				// benchmark used `renderer.on('postrender', ...)` — that
+				// silently did nothing, so a single query spanned the whole
+				// run and reported "GPU samples: 1".
+				var postRunner = (gpuTimer && app.renderer && app.renderer.runners)
+					? app.renderer.runners.postrender
+					: null;
+				var postRenderListener = {
+					postrender: function () {
+						if (gpuTimer && gpuActiveQuery && !stopping) {
+							gpuQueryEnd(gpuTimer);
+							gpuEnded.push(gpuActiveQuery);
+							gpuActiveQuery = null;
+						}
+					}
+				};
+
 				function onTick() {
 					var now = performance.now();
 					var dt = now - t0;
@@ -1598,9 +1635,7 @@
 					if (cancelled || now - startTime >= durationMs) {
 						stopping = true;
 						app.ticker.remove(onTick);
-						if (app.renderer && app.renderer.off) {
-							app.renderer.off('postrender', onPostRender);
-						}
+						if (postRunner) postRunner.remove(postRenderListener);
 
 						// End any active query before stopping
 						if (gpuTimer && gpuActiveQuery) {
@@ -1625,19 +1660,7 @@
 					}
 				}
 
-				function onPostRender() {
-					// End the GPU query after PixiJS has submitted all draw calls.
-					// Move it to the ended list so it can be polled for results.
-					if (gpuTimer && gpuActiveQuery && !stopping) {
-						gpuQueryEnd(gpuTimer);
-						gpuEnded.push(gpuActiveQuery);
-						gpuActiveQuery = null;
-					}
-				}
-
-				if (gpuTimer && app.renderer && app.renderer.on) {
-					app.renderer.on('postrender', onPostRender);
-				}
+				if (postRunner) postRunner.add(postRenderListener);
 
 				app.ticker.add(onTick);
 			});
@@ -1716,7 +1739,10 @@
 					done++;
 					progressFn(sys.label + ' — ' + scenario.name, done, total);
 
-					// Force GC if available
+					// Force GC if available so `heapBefore` reflects the
+					// post-collection baseline, not whatever sawtooth point
+					// V8 happens to be at. Without --expose-gc this is a
+					// no-op and heap numbers are best-effort.
 					tryGC();
 					await sleep(50);
 

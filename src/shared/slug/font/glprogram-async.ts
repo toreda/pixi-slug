@@ -60,8 +60,11 @@ export function slugBuildGlProgramAsync(
 	const fragment = gl.createShader(gl.FRAGMENT_SHADER);
 	const program = gl.createProgram();
 	if (!vertex || !fragment || !program) {
-		// Context lost or out of resources. Resolve with whatever we have
-		// and let the link/use path surface the real error to the caller.
+		// Context lost or out of resources. Release whatever partial GL
+		// objects did succeed so we don't leak them on the rejection path.
+		if (vertex) gl.deleteShader(vertex);
+		if (fragment) gl.deleteShader(fragment);
+		if (program) gl.deleteProgram(program);
 		return {
 			program: program as WebGLProgram,
 			ready: Promise.reject(new Error('slugBuildGlProgramAsync: gl.createShader/createProgram returned null'))
@@ -106,11 +109,21 @@ function bindAttributesAlphabetically(
 	program: WebGLProgram,
 	vertexSource: string
 ): void {
+	// Strip line and block comments first so a commented-out attribute
+	// declaration cannot bind a phantom location and shift every real
+	// attribute's index downstream.
+	const stripped = vertexSource.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
 	const names: string[] = [];
-	// Match both GLSL 3.00 `in <type> <name>` and GLSL 1.00 `attribute <type> <name>`.
-	const re = /(?:^|\s)(?:in|attribute)\s+(?:highp|mediump|lowp\s+)?\w+\s+(\w+)\s*[;[]/g;
+	// Match GLSL 3.00 `[<storage>] in <type> <name>` and GLSL 1.00
+	// `attribute <type> <name>`. Optional storage qualifier (flat/smooth/
+	// centroid/invariant) and optional precision qualifier (highp/mediump/
+	// lowp) are each followed by their own \s+ so neither gets fused into
+	// the type slot.
+	const re =
+		/(?:^|\s)(?:(?:flat|smooth|centroid|invariant)\s+)?(?:in|attribute)\s+(?:(?:highp|mediump|lowp)\s+)?\w+\s+(\w+)\s*[;[]/g;
 	let m: RegExpExecArray | null;
-	while ((m = re.exec(vertexSource)) !== null) {
+	while ((m = re.exec(stripped)) !== null) {
 		const name = m[1];
 		if (!names.includes(name)) names.push(name);
 	}

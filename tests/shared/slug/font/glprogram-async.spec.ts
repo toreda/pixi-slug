@@ -217,5 +217,47 @@ describe('slugBuildGlProgramAsync', () => {
 
 			expect(calls.bindAttribLocation).toEqual([]);
 		});
+
+		it('handles precision qualifiers (highp/mediump/lowp) on attribute types', () => {
+			const {gl, calls} = makeGlMock({hasExt: false, linkStatus: true});
+			const vert = `#version 300 es
+in highp vec4 aHigh;
+in mediump vec2 aMed;
+in lowp float aLow;
+void main() { gl_Position = aHigh; }`;
+
+			slugBuildGlProgramAsync(gl, vert, FRAG_GLSL_300, true);
+
+			const names = calls.bindAttribLocation.map((c) => c.name);
+			expect(names).toEqual(['aHigh', 'aLow', 'aMed']);
+		});
+
+		it('handles storage qualifiers (flat) on attribute declarations', () => {
+			const {gl, calls} = makeGlMock({hasExt: false, linkStatus: true});
+			const vert = `#version 300 es
+flat in uvec4 aPacked;
+in vec4 aPos;
+void main() { gl_Position = aPos; }`;
+
+			slugBuildGlProgramAsync(gl, vert, FRAG_GLSL_300, true);
+
+			const names = calls.bindAttribLocation.map((c) => c.name);
+			expect(names).toEqual(['aPacked', 'aPos']);
+		});
+
+		it('ignores attribute declarations inside line and block comments', () => {
+			const {gl, calls} = makeGlMock({hasExt: false, linkStatus: true});
+			const vert = `#version 300 es
+in vec4 aReal;
+// in vec4 aLineCommented;
+/* in vec4 aBlockCommented;
+   in vec4 aAlsoCommented; */
+void main() { gl_Position = aReal; }`;
+
+			slugBuildGlProgramAsync(gl, vert, FRAG_GLSL_300, true);
+
+			const names = calls.bindAttribLocation.map((c) => c.name);
+			expect(names).toEqual(['aReal']);
+		});
 	});
 });
