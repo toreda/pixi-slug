@@ -92,6 +92,23 @@ export class SlugText extends SlugTextV8Base {
 	 */
 	private _fillGpu: SlugFillGpuV8 | null;
 	/**
+	 * Previous attach state held over while a rebuild is in flight.
+	 * Old meshes / decorations / fillGpu stay on the display list
+	 * (so the user keeps seeing the old text) until the next
+	 * `_buildAndAttachMeshes` lands, at which point the swap is
+	 * atomic and these are flushed. Eliminates the one-frame blank
+	 * gap on every property mutation, and the multi-frame stall on
+	 * the parallel-compile slow path.
+	 *
+	 * Setters that iterate `_meshes` for per-frame uniform writes
+	 * (supersampling) keep the same "empty between rebuild and
+	 * attach" contract — the old references live here, not on
+	 * `_meshes`, so writes harmlessly target the empty array.
+	 */
+	private _oldMeshes: Mesh<Geometry, Shader>[];
+	private _oldDecorations: Graphics | null;
+	private _oldFillGpu: SlugFillGpuV8 | null;
+	/**
 	 * Computed by {@link rebuild} (geometry phase) and consumed by
 	 * {@link _attachGpu} (GPU phase) on the next `onRender` tick.
 	 * `null` when there is nothing to draw OR when the previous plan
@@ -128,6 +145,9 @@ export class SlugText extends SlugTextV8Base {
 		this._meshes = [];
 		this._decorations = null;
 		this._fillGpu = null;
+		this._oldMeshes = [];
+		this._oldDecorations = null;
+		this._oldFillGpu = null;
 		this._pendingPlan = null;
 		this._attachToken = 0;
 		this._programReadyCache = null;
@@ -332,7 +352,30 @@ export class SlugText extends SlugTextV8Base {
 		this._rebuildCount++;
 		this._attachToken++;
 
-		this._teardownAttached();
+		// Move the currently-attached state into the held-over slots
+		// instead of tearing it down now. The old meshes / decorations /
+		// fillGpu stay on the display list (and rendering) until the
+		// next `_buildAndAttachMeshes` lands, at which point the swap
+		// is atomic — no one-frame blank gap, no multi-frame stall on
+		// the parallel-compile slow path.
+		//
+		// If a previous rebuild's old state is still pending (rapid
+		// mutations before any attach), `_meshes` is already empty
+		// (nothing from the previous rebuild attached yet), so the
+		// move is a no-op and `_oldMeshes` keeps holding the genuinely
+		// on-screen meshes from the last successful attach.
+		if (this._meshes.length > 0) {
+			for (const mesh of this._meshes) this._oldMeshes.push(mesh);
+			this._meshes.length = 0;
+		}
+		if (this._decorations) {
+			this._oldDecorations = this._decorations;
+			this._decorations = null;
+		}
+		if (this._fillGpu) {
+			this._oldFillGpu = this._fillGpu;
+			this._fillGpu = null;
+		}
 
 		const plan = this._buildPlan();
 		this._pendingPlan = plan;
@@ -353,44 +396,42 @@ export class SlugText extends SlugTextV8Base {
 		// Schedule the GPU-attach phase for the next render tick. If the
 		// plan ended up empty (no font / empty text / unitsPerEm == 0),
 		// there's nothing to attach so we can leave `onRender` clear and
-		// skip per-frame churn entirely.
+		// skip per-frame churn entirely. We also have to flush the
+		// held-over state here — without an upcoming attach to drive the
+		// swap, the old meshes would stay on the display list forever.
 		if (plan) {
 			this.onRender = this._onRenderHandler;
 		} else {
+			this._flushOldAttachState();
 			this.onRender = null;
 		}
 	}
 
 	/**
-	 * Remove and destroy meshes, decorations, and the per-instance fill
-	 * GPU record from the previous attach. Reuses `_meshes` so we don't
-	 * churn an array per rebuild. Each mesh owns a fresh `Buffer` +
-	 * `Geometry` + `Shader` (built per-text in `_buildMesh`); without
-	 * teardown those orphan after every text change. `Geometry.destroy(true)`
-	 * releases the vertex Buffer; `Shader.destroy()` defaults to
-	 * `destroyPrograms=false`, so the `GlProgram` stays shared with other
-	 * SlugText instances using the same font.
+	 * Drop the held-over attach state from the previous rebuild. Called
+	 * atomically from {@link _buildAndAttachMeshes} after the new children
+	 * are on the display list, and from the empty-plan branch of
+	 * {@link rebuild} (no upcoming attach to drive the swap) and from
+	 * {@link destroy}.
 	 */
-	private _teardownAttached(): void {
-		for (let i = this._meshes.length - 1; i >= 0; i--) {
-			const mesh = this._meshes[i];
+	private _flushOldAttachState(): void {
+		for (let i = this._oldMeshes.length - 1; i >= 0; i--) {
+			const mesh = this._oldMeshes[i];
 			this.removeChild(mesh);
 			mesh.geometry.destroy(true);
 			mesh.shader?.destroy();
 			mesh.destroy();
-			this._meshes.pop();
 		}
+		this._oldMeshes.length = 0;
 
-		if (this._decorations) {
-			this.removeChild(this._decorations);
-			this._decorations.destroy();
-			this._decorations = null;
+		if (this._oldDecorations) {
+			this.removeChild(this._oldDecorations);
+			this._oldDecorations.destroy();
+			this._oldDecorations = null;
 		}
-		// Dispose previous gradient LUT before creating a new one. User-
-		// supplied fill textures are not owned and not destroyed.
-		if (this._fillGpu) {
-			this._fillGpu.dispose();
-			this._fillGpu = null;
+		if (this._oldFillGpu) {
+			this._oldFillGpu.dispose();
+			this._oldFillGpu = null;
 		}
 	}
 
@@ -699,6 +740,11 @@ export class SlugText extends SlugTextV8Base {
 		}
 
 		this._buildDecorations(plan);
+
+		// New children are now on the display list. Drop the previous
+		// frame's children atomically — the swap from the user's POV
+		// happens in a single frame with no gap.
+		this._flushOldAttachState();
 	}
 
 	/**
@@ -856,6 +902,12 @@ export class SlugText extends SlugTextV8Base {
 			this._fillGpu.dispose();
 			this._fillGpu = null;
 		}
+		// A rebuild may have moved the previously-attached state into
+		// the held-over slots without the next attach landing yet.
+		// PIXI's `super.destroy()` removes children from the display
+		// list as part of destruction, but we still own the geometry /
+		// shader / fillGpu lifecycles, so dispose them explicitly here.
+		this._flushOldAttachState();
 		super.destroy();
 	}
 }

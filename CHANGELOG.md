@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-05-06
+
+### Fixed
+* v8: `SlugText` no longer flickers blank for one frame on every property mutation (`text`, `color`, `fontSize`, etc.), and no longer goes blank for several frames on the parallel-shader-compile slow path. The 0.3.0 split-phase rebuild tore down the previous frame's meshes synchronously inside `rebuild()` and re-attached new meshes on the next `onRender` tick, leaving a one-frame gap with zero rendered children. The previous attach state is now held over and flushed atomically only after the new meshes are added to the display list, so UIs that mutate text frequently (Y-axis tick labels during scale drag, FPS counters, render-stat overlays, tooltips) render without visible flicker.
+
+### Performance
+* Peak v8 SlugText GPU resource usage briefly doubles between `rebuild()` and the next attach — old meshes and new meshes coexist for one frame on the fast path, or for the duration of the parallel-compile wait on the slow path. A few KB of vertex data per SlugText at typical sizes; not a real concern but worth flagging for callers with very large text or hundreds of simultaneous mutations.
+
 ## [0.3.1] - 2026-05-06
 
 ### Fixed
@@ -56,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/toreda/pixi-slug/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/toreda/pixi-slug/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/toreda/pixi-slug/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/toreda/pixi-slug/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/toreda/pixi-slug/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/toreda/pixi-slug/compare/v0.1.1...v0.2.0

@@ -144,6 +144,24 @@ jest.mock('../../../src/v8/slug/shader', () => ({
 	})
 }));
 
+// `_attachGpu` calls `slugFontGpuV8(font, ensureResult, renderer)` to
+// build / fetch the per-font GPU cache record. Stub it to return a
+// minimal record so the attach path runs without a real renderer or
+// GPU. `programReady` is left undefined so the attach takes the
+// synchronous path (the parallel-compile gate is not what this suite
+// is testing — the flicker regression is about the gap between
+// teardown and re-attach on the *fast* path; the parallel-compile
+// path makes the same gap longer but does not introduce it).
+jest.mock('../../../src/v8/slug/font/gpu', () => ({
+	__esModule: true,
+	slugFontGpuV8: () => ({
+		glProgram: {},
+		curveTexture: {},
+		bandTexture: {},
+		fallbackWhite: {}
+	})
+}));
+
 import {readFileSync} from 'fs';
 import {resolve} from 'path';
 import {SlugFont} from '../../../src/shared/slug/font';
@@ -195,6 +213,90 @@ describe('v8 SlugText', () => {
 			// for layout rounding — the assertion is "scales roughly with
 			// fontSize", not an exact pixel match.
 			expect(large.width).toBeGreaterThan(small.width * 3);
+		});
+	});
+
+	describe('atomic re-attach (regression: 0.3.x flicker on rapid mutation)', () => {
+		// Stand-in for a v8 `Renderer`. `_attachGpu` reads `renderer.type`
+		// to decide WebGL vs other; setting it to anything other than
+		// `RendererType.WEBGL` ('webgl') routes through the non-WebGL
+		// branch which skips the parallel-compile gate. The mocked
+		// `slugFontGpuV8` returns a record without `programReady`, so
+		// the synchronous attach path runs either way.
+		const fakeRenderer = {type: 'webgpu'} as unknown as Parameters<
+			NonNullable<SlugText['onRender']>
+		>[0];
+
+		// Drive one render tick. Mirrors what PIXI does each frame for
+		// containers with `onRender` set.
+		function tick(text: SlugText): void {
+			text.onRender?.(fakeRenderer);
+		}
+
+		it('keeps display-list children attached during the rebuild → attach gap', () => {
+			const text = new SlugText({text: 'Hello', font, options: {fontSize: 32}});
+			tick(text); // first attach lands
+			expect(text.children.length).toBeGreaterThan(0);
+
+			// Mutate. Under 0.3.0 / 0.3.1 the old children would be torn
+			// down here and `children.length` would drop to 0 until the
+			// next tick. Under the atomic-reattach fix they stay until
+			// the next attach replaces them.
+			text.text = 'World';
+			expect(text.children.length).toBeGreaterThan(0);
+
+			// After the next tick the new children are attached and the
+			// old ones are flushed, so the count is still > 0.
+			tick(text);
+			expect(text.children.length).toBeGreaterThan(0);
+		});
+
+		it('never drops child count to zero across a rapid mutation sequence', () => {
+			const text = new SlugText({text: 'frame-0', font, options: {fontSize: 24}});
+			tick(text);
+			expect(text.children.length).toBeGreaterThan(0);
+
+			// 30 frames of "every frame mutates the text" — the pattern
+			// that produced visible flicker on Y-axis tick labels and
+			// FPS counters in the bug report.
+			for (let i = 1; i <= 30; i++) {
+				text.text = `frame-${i}`;
+				// Sample BEFORE the tick — this is the window where the
+				// flicker happened (text was torn down inside `rebuild()`
+				// before `_attachGpu` re-attached on the next frame).
+				expect(text.children.length).toBeGreaterThan(0);
+				tick(text);
+				// Sample AFTER the tick — the new children are now on
+				// the display list and the old ones have been flushed.
+				expect(text.children.length).toBeGreaterThan(0);
+			}
+		});
+
+		it('flushes held-over children when text is set to empty', () => {
+			const text = new SlugText({text: 'Hello', font, options: {fontSize: 32}});
+			tick(text);
+			expect(text.children.length).toBeGreaterThan(0);
+
+			// Empty text produces no plan, so no upcoming attach drives
+			// the swap — `rebuild()` must flush the held-over state
+			// inline or the old meshes leak onto the display list.
+			text.text = '';
+			expect(text.children.length).toBe(0);
+		});
+
+		it('does not double-attach when destroyed mid-rebuild', () => {
+			const text = new SlugText({text: 'Hello', font, options: {fontSize: 32}});
+			tick(text);
+			expect(text.children.length).toBeGreaterThan(0);
+
+			// Mutate then destroy before the attach runs. `destroy()`
+			// must clean up both the still-attached old meshes AND any
+			// held-over state, so nothing leaks.
+			text.text = 'World';
+			text.destroy();
+			// `onRender` must be cleared so PIXI doesn't keep firing it
+			// on a dead instance.
+			expect(text.onRender).toBeNull();
 		});
 	});
 });

@@ -11848,6 +11848,21 @@ _decorations;
      */
 _fillGpu;
 /**
+     * Previous attach state held over while a rebuild is in flight.
+     * Old meshes / decorations / fillGpu stay on the display list
+     * (so the user keeps seeing the old text) until the next
+     * `_buildAndAttachMeshes` lands, at which point the swap is
+     * atomic and these are flushed. Eliminates the one-frame blank
+     * gap on every property mutation, and the multi-frame stall on
+     * the parallel-compile slow path.
+     *
+     * Setters that iterate `_meshes` for per-frame uniform writes
+     * (supersampling) keep the same "empty between rebuild and
+     * attach" contract — the old references live here, not on
+     * `_meshes`, so writes harmlessly target the empty array.
+     */
+_oldMeshes;_oldDecorations;_oldFillGpu;
+/**
      * Computed by {@link rebuild} (geometry phase) and consumed by
      * {@link _attachGpu} (GPU phase) on the next `onRender` tick.
      * `null` when there is nothing to draw OR when the previous plan
@@ -11876,7 +11891,7 @@ _attachToken;
      * await on subsequent attaches against the same cache. Reset to
      * `null` only when the SlugText has never seen a ready signal yet.
      */
-_programReadyCache;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,this._pendingPlan=null,this._attachToken=0,this._programReadyCache=null,this._onRenderHandler=renderer=>{this._attachGpu(renderer)},
+_programReadyCache;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,this._oldMeshes=[],this._oldDecorations=null,this._oldFillGpu=null,this._pendingPlan=null,this._attachToken=0,this._programReadyCache=null,this._onRenderHandler=renderer=>{this._attachGpu(renderer)},
 // Opt the whole subtree out of hit-testing by default. The
 // internal meshes use a custom geometry (aPositionNormal, not
 // aVertexPosition) so PIXI's Mesh.containsPoint crashes when the
@@ -11949,7 +11964,19 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
 // been destroyed (the `.then(...)` block in base.ts captures
 // `this` before destroy runs). Bail before touching the display
 // list or allocating quads on a dead instance.
-if(this.destroyed)return;this._rebuildCount++,this._attachToken++,this._teardownAttached();const plan=this._buildPlan();this._pendingPlan=plan,
+if(this.destroyed)return;
+// Move the currently-attached state into the held-over slots
+// instead of tearing it down now. The old meshes / decorations /
+// fillGpu stay on the display list (and rendering) until the
+// next `_buildAndAttachMeshes` lands, at which point the swap
+// is atomic — no one-frame blank gap, no multi-frame stall on
+// the parallel-compile slow path.
+// If a previous rebuild's old state is still pending (rapid
+// mutations before any attach), `_meshes` is already empty
+// (nothing from the previous rebuild attached yet), so the
+// move is a no-op and `_oldMeshes` keeps holding the genuinely
+// on-screen meshes from the last successful attach.
+if(this._rebuildCount++,this._attachToken++,this._meshes.length>0){for(const mesh of this._meshes)this._oldMeshes.push(mesh);this._meshes.length=0}this._decorations&&(this._oldDecorations=this._decorations,this._decorations=null),this._fillGpu&&(this._oldFillGpu=this._fillGpu,this._fillGpu=null);const plan=this._buildPlan();this._pendingPlan=plan,
 // Publish bounds synchronously from the plan so `width` / `height`
 // are valid immediately after `rebuild()` (and therefore after
 // construction and after every property setter), matching v6/v7
@@ -11964,21 +11991,17 @@ this.boundsArea=plan&&plan.bboxRect?plan.bboxRect:void 0,
 // Schedule the GPU-attach phase for the next render tick. If the
 // plan ended up empty (no font / empty text / unitsPerEm == 0),
 // there's nothing to attach so we can leave `onRender` clear and
-// skip per-frame churn entirely.
-this.onRender=plan?this._onRenderHandler:null}
+// skip per-frame churn entirely. We also have to flush the
+// held-over state here — without an upcoming attach to drive the
+// swap, the old meshes would stay on the display list forever.
+plan?this.onRender=this._onRenderHandler:(this._flushOldAttachState(),this.onRender=null)}
 /**
-     * Remove and destroy meshes, decorations, and the per-instance fill
-     * GPU record from the previous attach. Reuses `_meshes` so we don't
-     * churn an array per rebuild. Each mesh owns a fresh `Buffer` +
-     * `Geometry` + `Shader` (built per-text in `_buildMesh`); without
-     * teardown those orphan after every text change. `Geometry.destroy(true)`
-     * releases the vertex Buffer; `Shader.destroy()` defaults to
-     * `destroyPrograms=false`, so the `GlProgram` stays shared with other
-     * SlugText instances using the same font.
-     */_teardownAttached(){for(let i=this._meshes.length-1;i>=0;i--){const mesh=this._meshes[i];this.removeChild(mesh),mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy(),this._meshes.pop()}this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),
-// Dispose previous gradient LUT before creating a new one. User-
-// supplied fill textures are not owned and not destroyed.
-this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null)}
+     * Drop the held-over attach state from the previous rebuild. Called
+     * atomically from {@link _buildAndAttachMeshes} after the new children
+     * are on the display list, and from the empty-plan branch of
+     * {@link rebuild} (no upcoming attach to drive the swap) and from
+     * {@link destroy}.
+     */_flushOldAttachState(){for(let i=this._oldMeshes.length-1;i>=0;i--){const mesh=this._oldMeshes[i];this.removeChild(mesh),mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy()}this._oldMeshes.length=0,this._oldDecorations&&(this.removeChild(this._oldDecorations),this._oldDecorations.destroy(),this._oldDecorations=null),this._oldFillGpu&&(this._oldFillGpu.dispose(),this._oldFillGpu=null)}
 /**
      * Pure-CPU geometry computation. Returns `null` for the empty-text
      * / no-font early-exit case so the caller can skip scheduling an
@@ -12094,7 +12117,11 @@ if(this._fillGpu=slugBuildFillGpuV8(this._fill),null!==plan.shadowQuads){const s
 // --- Stroke pass (always solid color, mode 0) ---
 if(null!==plan.strokeQuads){const solidGpu=slugBuildFillGpuV8({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,uniforms:strokeUniforms}=this._buildMesh(plan.strokeQuads,gpu,solidGpu,plan.fillBounds,this._strokeWidth);strokeUniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,strokeUniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}
 // --- Fill pass (uses the resolved fill mode) ---
-if(null!==plan.fillQuads){const{mesh}=this._buildMesh(plan.fillQuads,gpu,this._fillGpu,plan.fillBounds);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=plan.fillQuads.vertices.byteLength,this._indexBytes=plan.fillQuads.indices.byteLength}this._buildDecorations(plan)}
+if(null!==plan.fillQuads){const{mesh}=this._buildMesh(plan.fillQuads,gpu,this._fillGpu,plan.fillBounds);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=plan.fillQuads.vertices.byteLength,this._indexBytes=plan.fillQuads.indices.byteLength}this._buildDecorations(plan),
+// New children are now on the display list. Drop the previous
+// frame's children atomically — the swap from the user's POV
+// happens in a single frame with no gap.
+this._flushOldAttachState()}
 /**
      * Build the underline/strikethrough/overline Graphics from the
      * plan. Reads only the concrete `_*Draw` records — base.ts has
@@ -12130,7 +12157,13 @@ if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoratio
 // Bump the token so any in-flight `programReady` callback that
 // resolves after destruction notices and skips re-arming
 // `onRender` on a dead instance.
-this._attachToken++,this.onRender=null,this._pendingPlan=null;for(const mesh of this._meshes)mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null),super.destroy()}}// ./src/v8/slug/pipe.ts
+this._attachToken++,this.onRender=null,this._pendingPlan=null;for(const mesh of this._meshes)mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null),
+// A rebuild may have moved the previously-attached state into
+// the held-over slots without the next attach landing yet.
+// PIXI's `super.destroy()` removes children from the display
+// list as part of destruction, but we still own the geometry /
+// shader / fillGpu lifecycles, so dispose them explicitly here.
+this._flushOldAttachState(),super.destroy()}}// ./src/v8/slug/pipe.ts
 /**
  * PixiJS v8 render pipe for SlugText renderables.
  * Handles the rendering lifecycle for Slug-based text objects.
