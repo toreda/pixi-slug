@@ -337,6 +337,19 @@ export class SlugText extends SlugTextV8Base {
 		const plan = this._buildPlan();
 		this._pendingPlan = plan;
 
+		// Publish bounds synchronously from the plan so `width` / `height`
+		// are valid immediately after `rebuild()` (and therefore after
+		// construction and after every property setter), matching v6/v7
+		// and 0.2.0. The plan already holds `bboxRect` from a CPU-only
+		// measurement pass; nothing about the deferred GPU-attach path
+		// requires waiting until `onRender` to expose it. PIXI's
+		// `getGlobalBounds` does a falsy check on `boundsArea`, so
+		// clearing it back to `undefined` correctly disables the override
+		// for empty text — but the public type is non-nullable, hence
+		// the cast.
+		this.boundsArea =
+			plan && plan.bboxRect ? plan.bboxRect : (undefined as unknown as Rectangle);
+
 		// Schedule the GPU-attach phase for the next render tick. If the
 		// plan ended up empty (no font / empty text / unitsPerEm == 0),
 		// there's nothing to attach so we can leave `onRender` clear and
@@ -683,8 +696,6 @@ export class SlugText extends SlugTextV8Base {
 
 			this._vertexBytes = plan.fillQuads.vertices.byteLength;
 			this._indexBytes = plan.fillQuads.indices.byteLength;
-
-			if (plan.bboxRect) this.boundsArea = plan.bboxRect;
 		}
 
 		this._buildDecorations(plan);

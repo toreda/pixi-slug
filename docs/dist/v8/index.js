@@ -11950,6 +11950,17 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
 // `this` before destroy runs). Bail before touching the display
 // list or allocating quads on a dead instance.
 if(this.destroyed)return;this._rebuildCount++,this._attachToken++,this._teardownAttached();const plan=this._buildPlan();this._pendingPlan=plan,
+// Publish bounds synchronously from the plan so `width` / `height`
+// are valid immediately after `rebuild()` (and therefore after
+// construction and after every property setter), matching v6/v7
+// and 0.2.0. The plan already holds `bboxRect` from a CPU-only
+// measurement pass; nothing about the deferred GPU-attach path
+// requires waiting until `onRender` to expose it. PIXI's
+// `getGlobalBounds` does a falsy check on `boundsArea`, so
+// clearing it back to `undefined` correctly disables the override
+// for empty text — but the public type is non-nullable, hence
+// the cast.
+this.boundsArea=plan&&plan.bboxRect?plan.bboxRect:void 0,
 // Schedule the GPU-attach phase for the next render tick. If the
 // plan ended up empty (no font / empty text / unitsPerEm == 0),
 // there's nothing to attach so we can leave `onRender` clear and
@@ -12083,7 +12094,7 @@ if(this._fillGpu=slugBuildFillGpuV8(this._fill),null!==plan.shadowQuads){const s
 // --- Stroke pass (always solid color, mode 0) ---
 if(null!==plan.strokeQuads){const solidGpu=slugBuildFillGpuV8({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,uniforms:strokeUniforms}=this._buildMesh(plan.strokeQuads,gpu,solidGpu,plan.fillBounds,this._strokeWidth);strokeUniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,strokeUniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}
 // --- Fill pass (uses the resolved fill mode) ---
-if(null!==plan.fillQuads){const{mesh}=this._buildMesh(plan.fillQuads,gpu,this._fillGpu,plan.fillBounds);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=plan.fillQuads.vertices.byteLength,this._indexBytes=plan.fillQuads.indices.byteLength,plan.bboxRect&&(this.boundsArea=plan.bboxRect)}this._buildDecorations(plan)}
+if(null!==plan.fillQuads){const{mesh}=this._buildMesh(plan.fillQuads,gpu,this._fillGpu,plan.fillBounds);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=plan.fillQuads.vertices.byteLength,this._indexBytes=plan.fillQuads.indices.byteLength}this._buildDecorations(plan)}
 /**
      * Build the underline/strikethrough/overline Graphics from the
      * plan. Reads only the concrete `_*Draw` records — base.ts has

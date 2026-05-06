@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-05-06
+
+### Fixed
+* v8: `SlugText.width` and `SlugText.height` are now valid synchronously after `new SlugText(...)` and after every property setter that triggers a rebuild, matching v6/v7 and 0.2.0. The 0.3.0 split-phase rebuild deferred the `boundsArea` assignment to the first `onRender` tick, which broke the standard PIXI pattern of measuring a text node synchronously to size its parent (button widths, menu layout, tooltip sizing). The bounds rectangle is computed CPU-side during the plan phase, so exposing it does not interact with the parallel-compile path.
+
 ## [0.3.0] - 2026-05-06
 
 ### Added
@@ -51,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/toreda/pixi-slug/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/toreda/pixi-slug/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/toreda/pixi-slug/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/toreda/pixi-slug/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/toreda/pixi-slug/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/toreda/pixi-slug/releases/tag/v0.1.1
