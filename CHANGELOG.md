@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[Unreleased]
+## [0.3.4] - 2026-05-07
+
+### Fixed
+* Published TypeScript declarations no longer fail to resolve `Rgba` / `RgbaReadonly` for consumers. The version index files (`dist/v{6,7,8}/index.d.ts`) shipped a broken `from '../rgba'` re-export — after the post-build flatten step moved the index up one directory, the path needed to be `'./rgba'` but the rewriter only handled `'../shared/'` and `'../defaults'`. The flatten script now rewrites all top-level `src/` siblings (`defaults`, `rgba`, `constants`).
+
+## [0.3.3] -2026-05-06
 
 ### Fixed 
 * `build:docs` no longer wipes out TS declaration files in `dist` when run after build steps. Doc build now calls the main build script unless the `--no-build` flag is provided, and it will use the existing `dist` content. 
@@ -70,7 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/toreda/pixi-slug/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/toreda/pixi-slug/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/toreda/pixi-slug/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/toreda/pixi-slug/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/toreda/pixi-slug/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/toreda/pixi-slug/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/toreda/pixi-slug/compare/v0.2.0...v0.3.0

@@ -11,6 +11,12 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const VERSIONS = ['v6', 'v7', 'v8'];
 
+// Top-level src/ files (siblings of shared/ and the version dirs) that may
+// be imported from within v6/v7/v8 source via '../<name>'. After flattening,
+// those imports need one '../' stripped so they resolve next to the moved
+// index.d.ts. Keep this in sync with src/*.ts files that v* code imports.
+const TOP_LEVEL_SRC_FILES = ['defaults', 'rgba', 'constants'];
+
 for (const version of VERSIONS) {
 	const versionDir = path.join(ROOT, 'dist', version);
 	const nestedDir = path.join(versionDir, version);
@@ -45,9 +51,13 @@ function rewriteTree(dir, versionDir) {
 
 function rewriteFile(file) {
 	const src = fs.readFileSync(file, 'utf8');
+	const siblings = TOP_LEVEL_SRC_FILES.join('|');
 	let out = src
 		.replace(/(['"])((?:\.\.\/)+)shared\//g, (_m, q, ups) => `${q}${stripOne(ups)}shared/`)
-		.replace(/(['"])((?:\.\.\/)+)defaults(?=['"])/g, (_m, q, ups) => `${q}${stripOne(ups)}defaults`);
+		.replace(
+			new RegExp(`(['"])((?:\\.\\./)+)(${siblings})(?=['"])`, 'g'),
+			(_m, q, ups, name) => `${q}${stripOne(ups)}${name}`
+		);
 	if (file.endsWith('.d.ts.map')) {
 		out = out.replace(/(['"])((?:\.\.\/)+)src\//g, (_m, q, ups) => `${q}${stripOne(ups)}src/`);
 	}
