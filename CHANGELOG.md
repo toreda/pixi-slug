@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[Unreleased]
+
+### Fixed 
+* `build:docs` no longer wipes out TS declaration files in `dist` when run after build steps. Doc build now calls the main build script unless the `--no-build` flag is provided, and it will use the existing `dist` content. 
+* Added missing types that were wiped out due to `build:docs` issue.
+
 ## [0.3.2] - 2026-05-06
 
 ### Fixed

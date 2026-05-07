@@ -1,6 +1,16 @@
 #!/usr/bin/env node
-// Build all bundles and copy examples + dist to docs/ for GitHub Pages.
-// Run from project root: node scripts/build-docs.js
+// Copy examples + dist to docs/ for GitHub Pages. Optionally run the full
+// package build first.
+//
+// Usage:
+//   node scripts/build-docs.js              # runs pnpm run build:all:prod first
+//   node scripts/build-docs.js --build      # explicit (same as default)
+//   node scripts/build-docs.js --no-build   # use existing dist/ artifacts as-is
+//
+// --no-build is for the release pipeline, where build:all:prod has already
+// run and the .d.ts files in dist/ must not be disturbed. Without --no-build
+// this script invokes the canonical build pipeline so docs and the published
+// package never drift apart.
 
 'use strict';
 
@@ -10,6 +20,18 @@ const path = require('path');
 
 // Always resolve paths relative to the project root (one level up from scripts/).
 const ROOT = path.resolve(__dirname, '..');
+
+const args = process.argv.slice(2);
+let runBuild = true;
+for (const a of args) {
+	if (a === '--build') runBuild = true;
+	else if (a === '--no-build') runBuild = false;
+	else {
+		console.error(`build-docs: unknown argument "${a}"`);
+		console.error('usage: build-docs.js [--build | --no-build]');
+		process.exit(2);
+	}
+}
 
 function run(cmd) {
 	console.log('> ' + cmd);
@@ -54,11 +76,27 @@ function sedReplace(file, from, to) {
 }
 
 try {
-	// ----- Build -----
-	console.log('Building all versions...');
-	run('pnpm exec webpack --config webpack.config.ts --env version=v6 --env target=prod');
-	run('pnpm exec webpack --config webpack.config.ts --env version=v7 --env target=prod');
-	run('pnpm exec webpack --config webpack.config.ts --env version=v8 --env target=prod');
+	// ----- Build (or verify existing artifacts) -----
+	if (runBuild) {
+		console.log('Building all versions via build:all:prod...');
+		run('pnpm run build:all:prod');
+	} else {
+		console.log('Skipping build (--no-build); verifying dist/ artifacts...');
+		// Bundles are required for docs/ to function. Declarations are required
+		// for a valid publish, so verify them too — running --no-build off a
+		// types-less dist almost certainly means a step was skipped upstream.
+		const required = [
+			'dist/v6/index.js', 'dist/v7/index.js', 'dist/v8/index.js',
+			'dist/v6/index.d.ts', 'dist/v7/index.d.ts', 'dist/v8/index.d.ts'
+		];
+		const missing = required.filter((p) => !fs.existsSync(path.join(ROOT, p)));
+		if (missing.length > 0) {
+			console.error('build-docs: required dist artifacts missing:');
+			for (const p of missing) console.error('  ' + p);
+			console.error('Run `pnpm run build:all:prod` first, or omit --no-build.');
+			process.exit(1);
+		}
+	}
 
 	// ----- Clean & create dirs -----
 	console.log('Cleaning docs/...');

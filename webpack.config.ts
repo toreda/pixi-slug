@@ -9,8 +9,10 @@ import TerserPlugin from 'terser-webpack-plugin';
 const ROOT = process.cwd();
 
 /**
- * Webpack plugin that removes all contents of the output directory before
- * each build. Only cleans if the directory already exists.
+ * Webpack plugin that removes only the previous bundle artifacts (index.js
+ * and its sourcemap) from the output directory before each build. Leaves
+ * sibling .d.ts declarations and other files in place so independent build
+ * steps (tsc --emitDeclarationOnly) aren't clobbered when webpack reruns.
  */
 class CleanOutputPlugin {
 	apply(compiler: Compiler): void {
@@ -21,15 +23,15 @@ class CleanOutputPlugin {
 				return;
 			}
 
-			fs.rm(outputPath, { recursive: true, force: true }, (err) => {
-				if (err) {
-					callback(err);
-					return;
-				}
-				fs.mkdir(outputPath, { recursive: true }, (mkdirErr) => {
-					callback(mkdirErr ?? undefined);
+			const targets = ['index.js', 'index.js.map'];
+			let remaining = targets.length;
+			let firstErr: NodeJS.ErrnoException | null = null;
+			for (const name of targets) {
+				fs.rm(path.join(outputPath, name), { force: true }, (err) => {
+					if (err && !firstErr) firstErr = err;
+					if (--remaining === 0) callback(firstErr ?? undefined);
 				});
-			});
+			}
 		});
 	}
 }
