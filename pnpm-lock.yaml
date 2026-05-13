@@ -20,9 +20,6 @@ importers:
       '@toreda/fate':
         specifier: ^0.7.0
         version: 0.7.0
-      '@toreda/strong-types':
-        specifier: ^0.28.5
-        version: 0.28.5
       '@toreda/verify':
         specifier: ^0.12.3
         version: 0.12.3(big.js@6.2.2)
@@ -730,14 +727,8 @@ packages:
   '@toreda/fate@0.7.0':
     resolution: {integrity: sha512-EIHjLuXDnS7G4z3jgnPuDfXpLHfmU0U5QxRRyMPVblFbk6x0IAwWV6Su2stXR9uFgqtR402XNmmVy880VF2DfQ==}
 
-  '@toreda/log@0.6.16':
-    resolution: {integrity: sha512-H/Q5wP6PXginemsBdZFwqi6l4Ul4j3i3VO8XRj4PWq+bm89+vfy74gHCY70778R+V9WCSnZmBw7+nrh2NPeYlw==}
-
   '@toreda/prettier-config@1.0.1':
     resolution: {integrity: sha512-YE13umi84GlKSOVPAEN1WRsoAGPjT3C3VmOGORtQAeZm5bqayL7XRHQM/ifXaF1ZWSkzeEAXYEnFflmIen/4kw==}
-
-  '@toreda/strong-types@0.28.5':
-    resolution: {integrity: sha512-l6yUw1kaQP/lM2z8O5qr7XNDRI3ik1X874uBdKML164H42AIyyw8i69LV9ecd0xLGeMsLzzWJ4bjUDqYcQfmvQ==}
 
   '@toreda/verify@0.12.3':
     resolution: {integrity: sha512-4wT7jydr0lFKWiByq31qVc6Zwa3nNsPq2JRPswCBtbSHdaU+7bxlVT+egzH31q4+D/p9ZYDW1N9sMBHybJ5IWQ==}
@@ -3712,14 +3703,7 @@ snapshots:
 
   '@toreda/fate@0.7.0': {}
 
-  '@toreda/log@0.6.16': {}
-
   '@toreda/prettier-config@1.0.1': {}
-
-  '@toreda/strong-types@0.28.5':
-    dependencies:
-      '@toreda/log': 0.6.16
-      big.js: 6.2.2
 
   '@toreda/verify@0.12.3(big.js@6.2.2)':
     dependencies:

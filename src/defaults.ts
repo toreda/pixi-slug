@@ -81,6 +81,7 @@ export class Defaults {
 		TextJustify: 'inter-word' as 'inter-word' | 'inter-character',
 		WordWrap: false as const,
 		WordWrapWidth: 0 as const,
+		BreakWords: false as const,
 		/**
 		 * When a font is passed to `SlugText` by URL/name and is not yet
 		 * loaded, render using the `SlugFonts` fallback font while the

@@ -25,7 +25,6 @@ import {
 } from './style/decoration';
 import type {SlugTextDirection} from './style/direction';
 import type {SlugStrokeAlphaMode} from './style/stroke/alpha/mode';
-import {booleanValue, numberValue, stringValue} from '@toreda/strong-types';
 
 /**
  * Minimal Container shape — the subset of PixiJS Container that
@@ -167,12 +166,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		 * Subclass must call rebuild() separately after version-specific init.
 		 */
 		public initBase(init: SlugTextInit): void {
-			this._text = stringValue(init.text, Defaults.SlugText.Text);
+			this._text = typeof init.text === 'string' ? init.text : Defaults.SlugText.Text;
 
-			const fallbackWhileLoading = booleanValue(
-				init.fallbackWhileLoading,
-				Defaults.SlugText.FallbackWhileLoading
-			);
+			const fallbackWhileLoading = typeof init.fallbackWhileLoading === 'boolean' ? init.fallbackWhileLoading : Defaults.SlugText.FallbackWhileLoading;
 
 			const policy: SlugFontErrorPolicy = {
 				...Defaults.SlugText.ErrorPolicy,
@@ -194,7 +190,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 					}
 				});
 			}
-			this._fontSize = numberValue(init.options?.fontSize, Defaults.SlugText.FontSize);
+			this._fontSize = typeof init.options?.fontSize === 'number' ? init.options.fontSize : Defaults.SlugText.FontSize;
 			// `init.options.fill` is widened to `SlugTextFill` (color | gradient
 			// | texture). The resolver folds invalid input back to the default
 			// solid color and emits provenance flags consumed by decoration
@@ -204,11 +200,11 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 				Defaults.SlugText.FillColor
 			);
 			this._color = slugFillRepresentativeColor(this._fill);
-			this._supersampling = booleanValue(init.supersampling, Defaults.SlugText.Supersampling);
-			this._supersampleCount = numberValue(init.supersampleCount, Defaults.SlugText.SupersampleCount);
-			this._wordWrap = booleanValue(init.options?.wordWrap, Defaults.SlugText.WordWrap);
-			this._wordWrapWidth = numberValue(init.options?.wordWrapWidth, Defaults.SlugText.WordWrapWidth);
-			this._breakWords = booleanValue(init.options?.breakWords, false);
+			this._supersampling = typeof init.supersampling === 'boolean' ? init.supersampling : Defaults.SlugText.Supersampling;
+			this._supersampleCount = typeof init.supersampleCount === 'number' ? init.supersampleCount : Defaults.SlugText.SupersampleCount;
+			this._wordWrap = typeof init.options?.wordWrap === 'boolean' ? init.options.wordWrap : Defaults.SlugText.WordWrap;
+			this._wordWrapWidth = typeof init.options?.wordWrapWidth === 'number' ? init.options.wordWrapWidth : Defaults.SlugText.WordWrapWidth;
+			this._breakWords = typeof init.options?.breakWords === 'boolean' ? init.options.breakWords : Defaults.SlugText.BreakWords;
 			this._direction = init.options?.direction === 'rtl' ? 'rtl' : Defaults.SlugText.Direction;
 			this._align = resolveAlignInput(init.options?.align);
 			this._textJustify = resolveTextJustifyInput(init.options?.textJustify);
@@ -225,21 +221,21 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 			// Stroke
 			const stroke = init.options?.stroke;
-			this._strokeWidth = numberValue(stroke?.width, Defaults.SlugText.StrokeWidth);
+			this._strokeWidth = typeof stroke?.width === 'number' ? stroke.width : Defaults.SlugText.StrokeWidth;
 			this._strokeColor = slugTextColorToRgba(stroke?.color, Defaults.SlugText.StrokeColor);
 			this._strokeAlphaMode = stroke?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
-			this._strokeAlphaStart = numberValue(stroke?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
-			this._strokeAlphaRate = numberValue(stroke?.alphaRate, Defaults.SlugText.StrokeAlphaRate);
+			this._strokeAlphaStart = typeof stroke?.alphaStart === 'number' ? stroke.alphaStart : Defaults.SlugText.StrokeAlphaStart;
+			this._strokeAlphaRate = typeof stroke?.alphaRate === 'number' ? stroke.alphaRate : Defaults.SlugText.StrokeAlphaRate;
 
 			// Drop shadow — presence of the object enables it
 			const ds = init.options?.dropShadow;
 			if (ds) {
 				this._dropShadow = {
-					alpha: numberValue(ds.alpha, Defaults.SlugText.DropShadowAlpha),
-					angle: numberValue(ds.angle, Defaults.SlugText.DropShadowAngle),
-					blur: numberValue(ds.blur, Defaults.SlugText.DropShadowBlur),
+					alpha: typeof ds.alpha === 'number' ? ds.alpha : Defaults.SlugText.DropShadowAlpha,
+					angle: typeof ds.angle === 'number' ? ds.angle : Defaults.SlugText.DropShadowAngle,
+					blur: typeof ds.blur === 'number' ? ds.blur : Defaults.SlugText.DropShadowBlur,
 					color: slugTextColorToRgba(ds.color, Defaults.SlugText.DropShadowColor),
-					distance: numberValue(ds.distance, Defaults.SlugText.DropShadowDistance)
+					distance: typeof ds.distance === 'number' ? ds.distance : Defaults.SlugText.DropShadowDistance
 				};
 			} else {
 				this._dropShadow = null;
@@ -767,7 +763,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		}
 
 		public set stroke(value: SlugStroke | null) {
-			const newWidth = numberValue(value?.width, 0);
+			const newWidth = typeof value?.width === 'number' ? value.width : Defaults.SlugText.StrokeWidth;
 			// Color defaults to the static stroke default when stroke itself is
 			// being disabled/unset; otherwise preserves the current _strokeColor
 			// so 3-element / 6-digit hex inputs keep the existing alpha.
@@ -776,8 +772,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 				: (Defaults.SlugText.StrokeColor as RgbaReadonly);
 			const newColor = slugTextColorToRgba(value?.color, colorBase);
 			const newAlphaMode = value?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
-			const newAlphaStart = numberValue(value?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
-			const newAlphaRate = numberValue(value?.alphaRate, Defaults.SlugText.StrokeAlphaRate);
+			const newAlphaStart = typeof value?.alphaStart === 'number' ? value.alphaStart : Defaults.SlugText.StrokeAlphaStart;
+			const newAlphaRate = typeof value?.alphaRate === 'number' ? value.alphaRate : Defaults.SlugText.StrokeAlphaRate;
 			const widthChanged = this._strokeWidth !== newWidth;
 			const colorChanged =
 				this._strokeColor[0] !== newColor[0] ||
@@ -843,11 +839,11 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 				? prev.color
 				: (Defaults.SlugText.DropShadowColor as RgbaReadonly);
 			const next: SlugDropShadowResolved = {
-				alpha: numberValue(value.alpha, Defaults.SlugText.DropShadowAlpha),
-				angle: numberValue(value.angle, Defaults.SlugText.DropShadowAngle),
-				blur: numberValue(value.blur, Defaults.SlugText.DropShadowBlur),
+				alpha: typeof value.alpha === 'number' ? value.alpha : Defaults.SlugText.DropShadowAlpha,
+				angle: typeof value.angle === 'number' ? value.angle : Defaults.SlugText.DropShadowAngle,
+				blur: typeof value.blur === 'number' ? value.blur : Defaults.SlugText.DropShadowBlur,
 				color: slugTextColorToRgba(value.color, colorBase),
-				distance: numberValue(value.distance, Defaults.SlugText.DropShadowDistance)
+				distance: typeof value.distance === 'number' ? value.distance : Defaults.SlugText.DropShadowDistance
 			};
 			this._dropShadow = next;
 			// Enabling a previously-disabled shadow → pass-shape change →

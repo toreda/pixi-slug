@@ -1,4 +1,3 @@
-import {booleanValue} from '@toreda/strong-types';
 import {Constants} from '../../constants';
 import {Defaults} from '../../defaults';
 import {SlugFont} from './font';
@@ -411,7 +410,7 @@ export class SlugFonts {
 		options?: SlugFontsAttachTickerOptions
 	): void {
 		const reg = SlugFonts._reg();
-		const forceFlag = booleanValue(options?.force, false);
+		const forceFlag = options?.force === true ? true : false;
 
 		if (reg.tickerDetach) {
 			// Same subscribe reference → no-op, policy does not fire.

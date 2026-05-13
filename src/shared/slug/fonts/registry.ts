@@ -1,4 +1,4 @@
-import {booleanValue, numberValue, swapPop} from '@toreda/strong-types';
+import {swapPop} from '../../array/swap/pop';
 import {Defaults} from '../../../defaults';
 import {SlugFont} from '../font';
 import {isSlugFontErrorMode} from './error';
@@ -112,21 +112,25 @@ export class SlugFontsRegistry {
 		this.fallback = null;
 		this.fallbackOverridden = false;
 
-		this.autoDestroyUnused = booleanValue(
-			options?.autoDestroyUnused,
-			Defaults.Registry.AutoDestroyUnused
-		);
+		this.autoDestroyUnused = typeof options?.autoDestroyUnused === 'boolean'
+			? options.autoDestroyUnused
+			: Defaults.Registry.AutoDestroyUnused;
 
-		const delaySec = numberValue(options?.autoDestroyDelay, Defaults.Registry.AutoDestroyDelay);
+		const delaySec = typeof options?.autoDestroyDelay === 'number'
+			? options.autoDestroyDelay
+			: Defaults.Registry.AutoDestroyDelay;
 		this.autoDestroyDelayMs = Math.max(0, delaySec) * 1000;
-		this.autoAttachTicker = booleanValue(options?.autoAttachTicker, Defaults.Registry.AutoAttachTicker);
-		this.updateRate = Math.max(0, numberValue(options?.updateRate, Defaults.Registry.UpdateRate));
+		this.autoAttachTicker = typeof options?.autoAttachTicker === 'boolean'
+			? options.autoAttachTicker
+			: Defaults.Registry.AutoAttachTicker;
+		this.updateRate = Math.max(0, typeof options?.updateRate === 'number'
+			? options.updateRate
+			: Defaults.Registry.UpdateRate);
 		this.lastUpdate = 0;
 		this.reattachPolicy = resolveErrorMode(options?.reattachPolicy, Defaults.Registry.ReattachPolicy);
-		this.parallelShaderCompile = booleanValue(
-			options?.parallelShaderCompile,
-			Defaults.Registry.ParallelShaderCompile
-		);
+		this.parallelShaderCompile = typeof options?.parallelShaderCompile === 'boolean'
+			? options.parallelShaderCompile
+			: Defaults.Registry.ParallelShaderCompile;
 
 		this.tickerDetach = null;
 		this.tickerSubscribe = null;

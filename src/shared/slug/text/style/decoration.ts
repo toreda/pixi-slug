@@ -1,7 +1,6 @@
 import {slugResolvePhysicalAlign, type SlugTextStyleAlign, type SlugTextStylePhysicalAlign} from './align';
 import {slugTextColorParse, type SlugTextColor, type SlugTextColorRgba} from './color';
 import type {SlugTextDirection} from './direction';
-import {numberValue} from '@toreda/strong-types';
 
 /**
  * Logical alignment for a length-restricted decoration line. Reuses
@@ -255,10 +254,10 @@ export function slugResolveDecoration(input: SlugTextDecorationInput | undefined
 	}
 	const thickness = input.thickness === null || input.thickness === undefined
 		? null
-		: numberValue(input.thickness, 0);
+		: typeof input.thickness === 'number' ? input.thickness : 0;
 	const rawLength = input.length === null || input.length === undefined
 		? 1
-		: numberValue(input.length, 1);
+		: typeof input.length === 'number' ? input.length : 1;
 	const length = Math.min(Math.max(rawLength, 0), 1);
 	const align: SlugTextDecorationAlign =
 		input.align === 'center' ||

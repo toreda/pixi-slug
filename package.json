@@ -137,7 +137,6 @@
 	},
 	"dependencies": {
 		"@toreda/fate": "^0.7.0",
-		"@toreda/strong-types": "^0.28.5",
 		"@toreda/verify": "^0.12.3",
 		"opentype.js": "^1.3.4",
 		"woff2-encoder": "^2.0.0"
