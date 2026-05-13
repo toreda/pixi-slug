@@ -7,7 +7,6 @@ import {
 	Mesh,
 	Rectangle,
 	RendererType,
-	Shader,
 	UniformGroup
 } from 'pixi.js';
 import type {Renderer, WebGLRenderer} from 'pixi.js';
@@ -25,6 +24,8 @@ import {slugFontGpuV8, type SlugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
+import type {SlugTextRebuildKind} from '../../shared/slug/text/rebuild/kind';
+import type {SlugMeshSlot} from './mesh/slot';
 import type {SlugFont} from '../../shared/slug/font';
 import type {SlugFontEnsureResult} from '../../shared/slug/font';
 import {Constants} from '../../constants';
@@ -58,6 +59,13 @@ interface SlugTextRenderPlan {
 	shadowOffsetX: number;
 	shadowOffsetY: number;
 	strokeQuads: SlugGlyphQuads | null;
+	/**
+	 * Rebuild kind for this plan, read from the base mixin's
+	 * `_consumePendingKind()` at the top of `rebuild()`. Stored on the
+	 * plan so the GPU-attach phase (which may run a frame later) honors
+	 * the same kind the geometry phase decided on.
+	 */
+	kind: SlugTextRebuildKind;
 }
 
 /**
@@ -66,6 +74,25 @@ interface SlugTextRenderPlan {
  * only supported V8 this would be `extends Container` instead.
  */
 const SlugTextV8Base = SlugTextMixin(Container);
+
+/** Initial capacity floor — small enough that single-glyph labels don't waste much,
+ *  large enough to cover most short axis labels without an early grow. */
+const SLOT_MIN_INITIAL_QUADS = 8;
+
+/** Round `n` up to a sensible buffer-capacity quad count.
+ *  Allocates `max(n * 1.5, MIN)` rounded up to the next multiple of 4 — keeps
+ *  small reserves predictable without burning memory on tiny labels.
+ *  See `_specs/features/incremental-mesh-rebuild.md` §4.4. */
+function planCapacityQuads(n: number): number {
+	const target = Math.max(Math.ceil(n * 1.5), SLOT_MIN_INITIAL_QUADS);
+	return Math.ceil(target / 4) * 4;
+}
+
+/** Growth target for capacity-grow: max(new * 1.5, current * 2), aligned to 4 quads. */
+function growCapacityQuads(newCount: number, currentCapacity: number): number {
+	const target = Math.max(Math.ceil(newCount * 1.5), currentCapacity * 2);
+	return Math.ceil(target / 4) * 4;
+}
 
 /**
  * Renderable text element using the Slug algorithm for PixiJS v8.
@@ -78,36 +105,45 @@ const SlugTextV8Base = SlugTextMixin(Container);
  *
  * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
  * and shared across all SlugText instances using the same font.
+ *
+ * Slot-based mesh reuse: `_shadowSlot`, `_strokeSlot`, and `_fillSlot`
+ * survive across rebuilds. The incremental rebuild path rewrites the
+ * underlying GL buffers and uniforms in place via `setDataWithSize`
+ * (`shrinkToFit: false`) rather than allocating fresh PIXI objects. The
+ * full path destroys and recreates them as before. See
+ * `_specs/features/incremental-mesh-rebuild.md` for the design and
+ * verified PIXI v8 contracts.
  */
 export class SlugText extends SlugTextV8Base {
-	/** All meshes for the current text (shadow + stroke + fill). */
-	private _meshes: Mesh<Geometry, Shader>[];
+	/** Drop-shadow render-pass slot. `null` when no shadow is configured. */
+	private _shadowSlot: SlugMeshSlot | null;
+	/** Stroke render-pass slot. `null` when stroke width is 0. */
+	private _strokeSlot: SlugMeshSlot | null;
+	/** Fill render-pass slot. `null` when text is empty or no font is resolved. */
+	private _fillSlot: SlugMeshSlot | null;
+
 	/** Graphics child for underline/strikethrough/overline decorations. */
 	private _decorations: Graphics | null;
-	/**
-	 * Per-instance GPU resources derived from `_fill` (gradient LUT
-	 * texture, wrapped fill texture, mode index, transform). Disposed
-	 * on every rebuild before being replaced — the new fill state owns
-	 * a fresh LUT.
-	 */
-	private _fillGpu: SlugFillGpuV8 | null;
+
 	/**
 	 * Previous attach state held over while a rebuild is in flight.
-	 * Old meshes / decorations / fillGpu stay on the display list
-	 * (so the user keeps seeing the old text) until the next
-	 * `_buildAndAttachMeshes` lands, at which point the swap is
-	 * atomic and these are flushed. Eliminates the one-frame blank
-	 * gap on every property mutation, and the multi-frame stall on
-	 * the parallel-compile slow path.
+	 * Old meshes / decorations stay on the display list (so the user
+	 * keeps seeing the old text) until the next `_buildAndAttachMeshes`
+	 * lands, at which point the swap is atomic and these are flushed.
+	 * Eliminates the one-frame blank gap on every property mutation,
+	 * and the multi-frame stall on the parallel-compile slow path.
 	 *
-	 * Setters that iterate `_meshes` for per-frame uniform writes
-	 * (supersampling) keep the same "empty between rebuild and
-	 * attach" contract — the old references live here, not on
-	 * `_meshes`, so writes harmlessly target the empty array.
+	 * On the **incremental** rebuild path the swap is atomic in place —
+	 * no old state is moved here and no flush is needed. These slots
+	 * stay empty for the steady-state hot loop.
+	 *
+	 * Old per-pass slots are stored as a single array (oldest first)
+	 * because the order doesn't matter for disposal and the count can
+	 * be 0–3.
 	 */
-	private _oldMeshes: Mesh<Geometry, Shader>[];
+	private _oldSlots: SlugMeshSlot[];
 	private _oldDecorations: Graphics | null;
-	private _oldFillGpu: SlugFillGpuV8 | null;
+
 	/**
 	 * Computed by {@link rebuild} (geometry phase) and consumed by
 	 * {@link _attachGpu} (GPU phase) on the next `onRender` tick.
@@ -142,12 +178,12 @@ export class SlugText extends SlugTextV8Base {
 	constructor(init: SlugTextInit) {
 		super();
 		this.initBase(init);
-		this._meshes = [];
+		this._shadowSlot = null;
+		this._strokeSlot = null;
+		this._fillSlot = null;
 		this._decorations = null;
-		this._fillGpu = null;
-		this._oldMeshes = [];
+		this._oldSlots = [];
 		this._oldDecorations = null;
-		this._oldFillGpu = null;
 		this._pendingPlan = null;
 		this._attachToken = 0;
 		this._programReadyCache = null;
@@ -166,39 +202,41 @@ export class SlugText extends SlugTextV8Base {
 		this.rebuild();
 	}
 
+	/**
+	 * Iterate all live slots that currently have a `shader`. Used by
+	 * per-frame uniform setters (supersampling) that must reach every
+	 * active pass.
+	 */
+	private _forEachLiveSlot(fn: (slot: SlugMeshSlot) => void): void {
+		if (this._shadowSlot) fn(this._shadowSlot);
+		if (this._strokeSlot) fn(this._strokeSlot);
+		if (this._fillSlot) fn(this._fillSlot);
+	}
+
 	public onSupersamplingChanged(): void {
 		const value = this._supersampling ? this._supersampleCount : 0;
-		for (const mesh of this._meshes) {
-			if (!mesh.shader) {
-				continue;
-			}
-
-			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
+		this._forEachLiveSlot((slot) => {
+			const group = (slot.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
 			group.uniforms.uSupersampleCount = value;
-		}
+		});
 	}
 
 	public onSupersampleCountChanged(): void {
 		if (!this._supersampling) {
 			return;
 		}
-
-		for (const mesh of this._meshes) {
-			if (!mesh.shader) {
-				continue;
-			}
-
-			const group = (mesh.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
+		this._forEachLiveSlot((slot) => {
+			const group = (slot.shader.resources as Record<string, UniformGroup>).uSupersamplingGroup;
 			group.uniforms.uSupersampleCount = this._supersampleCount;
-		}
+		});
 	}
 
 	/**
-	 * Build a Mesh from quad data with optional stroke expansion. The
-	 * `fillGpu` argument selects the fill mode and supplies the fill
-	 * sampler bindings (gradient LUT or user texture). Pass-specific
-	 * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
-	 * the caller doesn't repeat the pattern across shadow / stroke / fill.
+	 * Allocate a fresh slot for a pass with `shrinkToFit: false`
+	 * vertex / index buffers sized to a capacity reserve. The slot's
+	 * typed arrays are sized to the same capacity so live data can be
+	 * copied in via `.set()` and `setDataWithSize` issues a
+	 * `bufferSubData` against the pre-allocated GL buffer.
 	 *
 	 * Hit-testing note: the geometry below uses a Slug-specific attribute
 	 * layout (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
@@ -207,22 +245,38 @@ export class SlugText extends SlugTextV8Base {
 	 * crashes on this geometry, which is why the parent SlugText
 	 * disables hit-testing in its constructor (`eventMode = 'none'`,
 	 * `interactiveChildren = false`). Anything that flips those back on
-	 * needs a custom `containsPoint` or a separate hit-test rectangle
-	 * — do not assume PIXI's default works on these meshes.
+	 * needs a custom `containsPoint` or a separate hit-test rectangle —
+	 * do not assume PIXI's default works on these meshes.
 	 */
-	private _buildMesh(
+	private _allocSlot(
 		quads: SlugGlyphQuads,
 		gpu: ReturnType<typeof slugFontGpuV8>,
 		fillGpu: SlugFillGpuV8,
 		fillBounds: [number, number, number, number],
 		strokeExpand: number = 0
-	): {mesh: Mesh<Geometry, Shader>; uniforms: UniformGroup; shader: Shader} {
+	): SlugMeshSlot {
 		const stride = Constants.FLOATS_PER_VERTEX * Constants.BYTES_PER_FLOAT;
 		const vec4Bytes = Constants.FLOATS_PER_VEC4 * Constants.BYTES_PER_FLOAT;
+		const capacityQuads = planCapacityQuads(quads.quadCount);
+		const vertexFloats = capacityQuads * Constants.FLOATS_PER_QUAD;
+		const indexUints = capacityQuads * Constants.INDICES_PER_QUAD;
+
+		const vertices = new Float32Array(vertexFloats);
+		vertices.set(quads.vertices);
+		const indices = new Uint32Array(indexUints);
+		indices.set(quads.indices);
+
 		const vertexBuffer = new Buffer({
-			data: quads.vertices,
+			data: vertices,
 			label: 'slug-vertex-buffer',
-			usage: BufferUsage.VERTEX
+			usage: BufferUsage.VERTEX,
+			shrinkToFit: false
+		});
+		const indexBuffer = new Buffer({
+			data: indices,
+			label: 'slug-index-buffer',
+			usage: BufferUsage.INDEX,
+			shrinkToFit: false
 		});
 
 		const geometry = new Geometry({
@@ -233,7 +287,7 @@ export class SlugText extends SlugTextV8Base {
 				aBanding: {buffer: vertexBuffer, format: 'float32x4', stride, offset: vec4Bytes * 3},
 				aColor: {buffer: vertexBuffer, format: 'float32x4', stride, offset: vec4Bytes * 4}
 			},
-			indexBuffer: quads.indices
+			indexBuffer: indexBuffer
 		});
 
 		const {shader, uniforms} = slugShader(
@@ -242,17 +296,170 @@ export class SlugText extends SlugTextV8Base {
 			gpu.bandTexture,
 			gpu.fallbackWhite
 		);
+
+		const slot: SlugMeshSlot = {
+			mesh: new Mesh({geometry, shader}),
+			geometry,
+			shader,
+			uniforms,
+			vertexBuffer,
+			indexBuffer,
+			vertices,
+			indices,
+			vertexCapacityQuads: capacityQuads,
+			indexCapacityQuads: capacityQuads,
+			fillGpu: null,
+			fillMode: 0
+		};
+
+		// Tell PIXI the live data size is what `quads` carries, not the
+		// allocated capacity — `gl.drawElements` defaults to the live
+		// index buffer length (verified A4 in
+		// `_specs/features/incremental-mesh-rebuild.md`).
+		vertexBuffer.setDataWithSize(vertices, quads.vertices.length, true);
+		indexBuffer.setDataWithSize(indices, quads.indices.length, true);
+
+		this._writePassUniforms(slot, fillGpu, fillBounds, strokeExpand);
+		this._writeFillSamplers(slot, fillGpu);
+		return slot;
+	}
+
+	/**
+	 * Rewrite a slot's vertex / index data in place. When the new quad
+	 * count fits the slot's current capacity this is the steady-state
+	 * incremental path (no PIXI object allocation, only `bufferSubData`
+	 * on the GL side). When the new quad count exceeds capacity the
+	 * slot's buffers are replaced with larger ones via the
+	 * capacity-grow path — `Geometry`, `Shader`, and `Mesh` are reused
+	 * either way.
+	 *
+	 * Always rewrites uniforms and (for the fill slot) rebinds samplers
+	 * if the fill mode changed.
+	 */
+	private _updateSlot(
+		slot: SlugMeshSlot,
+		quads: SlugGlyphQuads,
+		fillGpu: SlugFillGpuV8,
+		fillBounds: [number, number, number, number],
+		strokeExpand: number = 0
+	): void {
+		const vertexFloatsNeeded = quads.vertices.length;
+		const indexUintsNeeded = quads.indices.length;
+
+		if (
+			quads.quadCount > slot.vertexCapacityQuads ||
+			quads.quadCount > slot.indexCapacityQuads
+		) {
+			this._growSlot(slot, quads.quadCount);
+		}
+
+		slot.vertices.set(quads.vertices);
+		slot.indices.set(quads.indices);
+
+		// `setDataWithSize` with `shrinkToFit: false` on the underlying
+		// `Buffer` keeps the GL buffer at its allocated capacity even
+		// when the live data shrinks, so the next upload stays on
+		// `bufferSubData`. Verified A11.
+		slot.vertexBuffer.setDataWithSize(slot.vertices, vertexFloatsNeeded, true);
+		slot.indexBuffer.setDataWithSize(slot.indices, indexUintsNeeded, true);
+
+		this._writePassUniforms(slot, fillGpu, fillBounds, strokeExpand);
+		this._writeFillSamplers(slot, fillGpu);
+	}
+
+	/**
+	 * Replace a slot's vertex and index buffers with larger ones while
+	 * keeping the `Geometry`, `Shader`, and `Mesh` instances. The
+	 * existing `Buffer` instances are destroyed because their underlying
+	 * GL buffers can't be enlarged in place.
+	 *
+	 * Why we don't keep the same `Buffer` objects: PIXI's `Buffer.update`
+	 * does reallocate the GL buffer internally when data grows beyond
+	 * capacity (A2 in the spec), but the JS typed-array slot is fixed
+	 * at construction. We need a larger typed array to host the new
+	 * data, which means a new `Buffer` wrapper too.
+	 */
+	private _growSlot(slot: SlugMeshSlot, newQuadCount: number): void {
+		const newCapacity = growCapacityQuads(
+			newQuadCount,
+			Math.max(slot.vertexCapacityQuads, slot.indexCapacityQuads)
+		);
+		const stride = Constants.FLOATS_PER_VERTEX * Constants.BYTES_PER_FLOAT;
+		const vec4Bytes = Constants.FLOATS_PER_VEC4 * Constants.BYTES_PER_FLOAT;
+		const vertexFloats = newCapacity * Constants.FLOATS_PER_QUAD;
+		const indexUints = newCapacity * Constants.INDICES_PER_QUAD;
+
+		const oldVertexBuffer = slot.vertexBuffer;
+		const oldIndexBuffer = slot.indexBuffer;
+
+		slot.vertices = new Float32Array(vertexFloats);
+		slot.indices = new Uint32Array(indexUints);
+		slot.vertexBuffer = new Buffer({
+			data: slot.vertices,
+			label: 'slug-vertex-buffer',
+			usage: BufferUsage.VERTEX,
+			shrinkToFit: false
+		});
+		slot.indexBuffer = new Buffer({
+			data: slot.indices,
+			label: 'slug-index-buffer',
+			usage: BufferUsage.INDEX,
+			shrinkToFit: false
+		});
+		slot.vertexCapacityQuads = newCapacity;
+		slot.indexCapacityQuads = newCapacity;
+
+		// Re-bind the geometry's attribute buffers to the new vertex
+		// buffer. The attribute records reference the buffer by object
+		// identity, so we have to point them at the replacement before
+		// the next draw.
+		slot.geometry.attributes.aPositionNormal.buffer = slot.vertexBuffer;
+		slot.geometry.attributes.aTexcoord.buffer = slot.vertexBuffer;
+		slot.geometry.attributes.aJacobian.buffer = slot.vertexBuffer;
+		slot.geometry.attributes.aBanding.buffer = slot.vertexBuffer;
+		slot.geometry.attributes.aColor.buffer = slot.vertexBuffer;
+		// `Geometry.indexBuffer` is read by the renderer at draw time
+		// and is a writable field — swap it directly.
+		(slot.geometry as unknown as {indexBuffer: Buffer}).indexBuffer = slot.indexBuffer;
+		// Re-attribute the new attribute offsets (same stride / offsets
+		// as the original allocation — those don't change when capacity
+		// grows).
+		slot.geometry.attributes.aPositionNormal.stride = stride;
+		slot.geometry.attributes.aPositionNormal.offset = 0;
+		slot.geometry.attributes.aTexcoord.stride = stride;
+		slot.geometry.attributes.aTexcoord.offset = vec4Bytes;
+		slot.geometry.attributes.aJacobian.stride = stride;
+		slot.geometry.attributes.aJacobian.offset = vec4Bytes * 2;
+		slot.geometry.attributes.aBanding.stride = stride;
+		slot.geometry.attributes.aBanding.offset = vec4Bytes * 3;
+		slot.geometry.attributes.aColor.stride = stride;
+		slot.geometry.attributes.aColor.offset = vec4Bytes * 4;
+
+		oldVertexBuffer.destroy();
+		oldIndexBuffer.destroy();
+	}
+
+	/**
+	 * Write per-pass uniforms to the slot's uniform group. The values
+	 * mirror the ones today's `_buildMesh` writes — split out so the
+	 * alloc and update paths share it.
+	 */
+	private _writePassUniforms(
+		slot: SlugMeshSlot,
+		fillGpu: SlugFillGpuV8,
+		fillBounds: [number, number, number, number],
+		strokeExpand: number
+	): void {
+		const uniforms = slot.uniforms;
 		uniforms.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		uniforms.uniforms.uStrokeExpand = strokeExpand;
 		uniforms.uniforms.uFillMode = fillGpu.mode;
 		uniforms.uniforms.uFillTextureFit = fillGpu.textureFit;
 		// Mutate the typed-array slots in place rather than allocating
 		// fresh `Float32Array`s. PIXI v8's WebGL uniform sync compares
-		// element-wise against a cached snapshot (see
-		// `generateUniformsSyncTypes.UNIFORM_TO_SINGLE_SETTERS`), so
-		// changing the buffer contents is detected and pushed to the
-		// GPU on the next draw — no `update()` call needed. Avoids ~5
-		// short-lived typed arrays per pass × up to 3 passes per rebuild.
+		// element-wise against a cached snapshot, so changing the buffer
+		// contents is detected and pushed to the GPU on the next draw —
+		// no `update()` call needed. Verified A10.
 		const boundsBuf = uniforms.uniforms.uFillBoundsPx as Float32Array;
 		boundsBuf[0] = fillBounds[0];
 		boundsBuf[1] = fillBounds[1];
@@ -272,18 +479,44 @@ export class SlugText extends SlugTextV8Base {
 		const texOffsetBuf = uniforms.uniforms.uFillTextureOffset as Float32Array;
 		texOffsetBuf[0] = fillGpu.textureOffset[0];
 		texOffsetBuf[1] = fillGpu.textureOffset[1];
+	}
 
-		// Bind the fill samplers. When the fill is solid both stay on
-		// fallbackWhite (already bound by slugShader); otherwise swap in
+	/**
+	 * Rebind the slot's gradient / texture samplers from a freshly
+	 * resolved `SlugFillGpuV8`. Reading or assigning `shader.resources`
+	 * does NOT trigger a re-link (verified A7); the swapped texture is
+	 * picked up fresh on the next draw (verified A8).
+	 *
+	 * For the fill slot we also dispose the previously-owned
+	 * `SlugFillGpuV8` (gradient LUT texture, wrapped fill texture) if
+	 * the new GPU record is different.
+	 */
+	private _writeFillSamplers(slot: SlugMeshSlot, fillGpu: SlugFillGpuV8): void {
+		// Bind whichever fill resource the resolved mode wants. When the
+		// fill is solid both stay on the font's fallbackWhite (already
+		// bound by slugShader at slot construction); otherwise swap in
 		// the gradient LUT or user texture.
 		if (fillGpu.gradient) {
-			(shader.resources as Record<string, unknown>).uFillGradient = fillGpu.gradient.source;
+			(slot.shader.resources as Record<string, unknown>).uFillGradient = fillGpu.gradient.source;
 		}
 		if (fillGpu.texture) {
-			(shader.resources as Record<string, unknown>).uFillTexture = fillGpu.texture.source;
+			(slot.shader.resources as Record<string, unknown>).uFillTexture = fillGpu.texture.source;
 		}
 
-		return {mesh: new Mesh({geometry, shader}), uniforms, shader};
+		// Lifecycle: only the fill slot owns a `fillGpu` record. Shadow
+		// and stroke slots pass synthetic solid `fillGpu` instances that
+		// the caller does not retain — we leave `slot.fillGpu` untouched
+		// for those.
+		if (fillGpu.mode === 0 && !fillGpu.gradient && !fillGpu.texture) {
+			// Synthetic solid (shadow / stroke pass). Don't take
+			// ownership.
+			return;
+		}
+		if (slot.fillGpu && slot.fillGpu !== fillGpu) {
+			slot.fillGpu.dispose();
+		}
+		slot.fillGpu = fillGpu;
+		slot.fillMode = fillGpu.mode;
 	}
 
 	/**
@@ -334,13 +567,11 @@ export class SlugText extends SlugTextV8Base {
 	 * parallel-compile path (see
 	 * `_specs/features/parallel_shader_compile.md` §5.5).
 	 *
-	 * Tearing down the previous frame's meshes / decorations / fill GPU
-	 * resources still happens here so observers checking `this.children`
-	 * mid-rebuild see the same "removed before added" behavior they used
-	 * to. Setters that mutate per-frame uniforms (e.g. supersampling)
-	 * iterate `_meshes` — when the array is empty (pending attach) they
-	 * naturally no-op and the next `_buildMesh` call picks up the
-	 * latest values.
+	 * On the **incremental** rebuild path no old slots are moved to
+	 * `_oldSlots`; the swap happens atomically in place when
+	 * `_attachGpu` runs. On the **full** path the current slots are
+	 * moved aside so the next attach can drop them after the new ones
+	 * are on the display list, preserving the no-blank-frame contract.
 	 */
 	public rebuild(): void {
 		// Async font-resolve callbacks can fire after the SlugText has
@@ -352,32 +583,35 @@ export class SlugText extends SlugTextV8Base {
 		this._rebuildCount++;
 		this._attachToken++;
 
-		// Move the currently-attached state into the held-over slots
-		// instead of tearing it down now. The old meshes / decorations /
-		// fillGpu stay on the display list (and rendering) until the
-		// next `_buildAndAttachMeshes` lands, at which point the swap
-		// is atomic — no one-frame blank gap, no multi-frame stall on
-		// the parallel-compile slow path.
-		//
-		// If a previous rebuild's old state is still pending (rapid
-		// mutations before any attach), `_meshes` is already empty
-		// (nothing from the previous rebuild attached yet), so the
-		// move is a no-op and `_oldMeshes` keeps holding the genuinely
-		// on-screen meshes from the last successful attach.
-		if (this._meshes.length > 0) {
-			for (const mesh of this._meshes) this._oldMeshes.push(mesh);
-			this._meshes.length = 0;
-		}
-		if (this._decorations) {
-			this._oldDecorations = this._decorations;
-			this._decorations = null;
-		}
-		if (this._fillGpu) {
-			this._oldFillGpu = this._fillGpu;
-			this._fillGpu = null;
+		const kind = this._consumePendingKind();
+
+		// `_consumePendingKind` returns `'full'` for any rebuild not
+		// driven through `_requestRebuild` (constructor's initial call,
+		// font-resolve async path, setters that still call this.rebuild()
+		// directly). For the full path we move old state into the
+		// held-over slots; for incremental kinds the existing slots will
+		// be updated in place by `_attachGpu` and there is nothing to
+		// hold over.
+		if (kind === 'full') {
+			if (this._shadowSlot) {
+				this._oldSlots.push(this._shadowSlot);
+				this._shadowSlot = null;
+			}
+			if (this._strokeSlot) {
+				this._oldSlots.push(this._strokeSlot);
+				this._strokeSlot = null;
+			}
+			if (this._fillSlot) {
+				this._oldSlots.push(this._fillSlot);
+				this._fillSlot = null;
+			}
+			if (this._decorations) {
+				this._oldDecorations = this._decorations;
+				this._decorations = null;
+			}
 		}
 
-		const plan = this._buildPlan();
+		const plan = this._buildPlan(kind);
 		this._pendingPlan = plan;
 
 		// Publish bounds synchronously from the plan so `width` / `height`
@@ -402,6 +636,27 @@ export class SlugText extends SlugTextV8Base {
 		if (plan) {
 			this.onRender = this._onRenderHandler;
 		} else {
+			// No plan to attach — there's nothing left for the deferred
+			// attach to do, so dispose any currently-active slots
+			// directly (incremental path may have left them in place
+			// when the rebuild started) and flush the held-over state.
+			if (this._shadowSlot) {
+				this._disposeSlot(this._shadowSlot);
+				this._shadowSlot = null;
+			}
+			if (this._strokeSlot) {
+				this._disposeSlot(this._strokeSlot);
+				this._strokeSlot = null;
+			}
+			if (this._fillSlot) {
+				this._disposeSlot(this._fillSlot);
+				this._fillSlot = null;
+			}
+			if (this._decorations) {
+				this.removeChild(this._decorations);
+				this._decorations.destroy();
+				this._decorations = null;
+			}
 			this._flushOldAttachState();
 			this.onRender = null;
 		}
@@ -415,23 +670,31 @@ export class SlugText extends SlugTextV8Base {
 	 * {@link destroy}.
 	 */
 	private _flushOldAttachState(): void {
-		for (let i = this._oldMeshes.length - 1; i >= 0; i--) {
-			const mesh = this._oldMeshes[i];
-			this.removeChild(mesh);
-			mesh.geometry.destroy(true);
-			mesh.shader?.destroy();
-			mesh.destroy();
+		for (let i = this._oldSlots.length - 1; i >= 0; i--) {
+			this._disposeSlot(this._oldSlots[i]);
 		}
-		this._oldMeshes.length = 0;
+		this._oldSlots.length = 0;
 
 		if (this._oldDecorations) {
 			this.removeChild(this._oldDecorations);
 			this._oldDecorations.destroy();
 			this._oldDecorations = null;
 		}
-		if (this._oldFillGpu) {
-			this._oldFillGpu.dispose();
-			this._oldFillGpu = null;
+	}
+
+	/**
+	 * Tear down a single slot — remove its mesh from the display list,
+	 * destroy the geometry (and the underlying GL buffers), destroy the
+	 * shader and mesh, and dispose any owned fill-GPU record.
+	 */
+	private _disposeSlot(slot: SlugMeshSlot): void {
+		this.removeChild(slot.mesh);
+		slot.geometry.destroy(true);
+		slot.shader.destroy();
+		slot.mesh.destroy();
+		if (slot.fillGpu) {
+			slot.fillGpu.dispose();
+			slot.fillGpu = null;
 		}
 	}
 
@@ -443,7 +706,7 @@ export class SlugText extends SlugTextV8Base {
 	 * the plan — `ensureGlyphs` only appends, never mutates existing
 	 * glyph entries.
 	 */
-	private _buildPlan(): SlugTextRenderPlan | null {
+	private _buildPlan(kind: SlugTextRebuildKind): SlugTextRenderPlan | null {
 		const font = this._fontRef?.deref();
 		if (!font || this._text.length === 0 || font.unitsPerEm === 0) {
 			return null;
@@ -602,7 +865,8 @@ export class SlugText extends SlugTextV8Base {
 			shadowAlpha,
 			shadowOffsetX,
 			shadowOffsetY,
-			strokeQuads
+			strokeQuads,
+			kind
 		};
 	}
 
@@ -674,14 +938,18 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	/**
-	 * Construct Mesh/Geometry/Shader objects from a finalized plan and
-	 * attach them to the display list. Also builds the decoration
-	 * Graphics (which doesn't use the Slug shader and is cheap, but is
-	 * grouped here so a single attach pass covers all child additions).
+	 * Construct or reuse slot meshes from a finalized plan and attach
+	 * them to the display list. On the incremental path the existing
+	 * slots are updated in place; on the full path fresh slots are
+	 * allocated and the old ones flushed.
+	 *
+	 * Also builds (or rebuilds) the decoration `Graphics`. The Graphics
+	 * is reused via `clear()` + re-issue when it already exists, since
+	 * the alternative is destroying and recreating a child node every
+	 * rebuild — see A12 in `_specs/features/incremental-mesh-rebuild.md`
+	 * (display-list churn avoided; internal GPU batches still rebuild).
 	 */
 	private _buildAndAttachMeshes(plan: SlugTextRenderPlan, gpu: SlugFontGpuV8): void {
-		this._fillGpu = slugBuildFillGpuV8(this._fill);
-
 		// --- Drop shadow pass (always solid color, mode 0) ---
 		if (plan.shadowQuads !== null) {
 			const solidGpu = slugBuildFillGpuV8({
@@ -690,21 +958,35 @@ export class SlugText extends SlugTextV8Base {
 				rgbProvided: true,
 				alphaProvided: true
 			});
-			const {mesh, uniforms: shadowUniforms} = this._buildMesh(
-				plan.shadowQuads,
-				gpu,
-				solidGpu,
-				plan.fillBounds,
-				plan.shadowBlur
-			);
-			if (plan.shadowBlur > 0) {
-				shadowUniforms.uniforms.uStrokeAlphaStart = plan.shadowAlpha;
-				shadowUniforms.uniforms.uStrokeAlphaRate = -plan.shadowAlpha / plan.shadowBlur;
+			if (this._shadowSlot) {
+				this._updateSlot(
+					this._shadowSlot,
+					plan.shadowQuads,
+					solidGpu,
+					plan.fillBounds,
+					plan.shadowBlur
+				);
+			} else {
+				this._shadowSlot = this._allocSlot(
+					plan.shadowQuads,
+					gpu,
+					solidGpu,
+					plan.fillBounds,
+					plan.shadowBlur
+				);
+				this.addChild(this._shadowSlot.mesh);
 			}
-			mesh.x = plan.shadowOffsetX;
-			mesh.y = plan.shadowOffsetY;
-			this.addChild(mesh);
-			this._meshes.push(mesh);
+			if (plan.shadowBlur > 0) {
+				this._shadowSlot.uniforms.uniforms.uStrokeAlphaStart = plan.shadowAlpha;
+				this._shadowSlot.uniforms.uniforms.uStrokeAlphaRate =
+					-plan.shadowAlpha / plan.shadowBlur;
+			}
+			this._shadowSlot.mesh.x = plan.shadowOffsetX;
+			this._shadowSlot.mesh.y = plan.shadowOffsetY;
+		} else if (this._shadowSlot) {
+			// Drop-shadow disabled between rebuilds — release the slot.
+			this._disposeSlot(this._shadowSlot);
+			this._shadowSlot = null;
 		}
 
 		// --- Stroke pass (always solid color, mode 0) ---
@@ -715,28 +997,46 @@ export class SlugText extends SlugTextV8Base {
 				rgbProvided: true,
 				alphaProvided: true
 			});
-			const {mesh, uniforms: strokeUniforms} = this._buildMesh(
-				plan.strokeQuads,
-				gpu,
-				solidGpu,
-				plan.fillBounds,
-				this._strokeWidth
-			);
-			strokeUniforms.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
-			strokeUniforms.uniforms.uStrokeAlphaRate =
+			if (this._strokeSlot) {
+				this._updateSlot(
+					this._strokeSlot,
+					plan.strokeQuads,
+					solidGpu,
+					plan.fillBounds,
+					this._strokeWidth
+				);
+			} else {
+				this._strokeSlot = this._allocSlot(
+					plan.strokeQuads,
+					gpu,
+					solidGpu,
+					plan.fillBounds,
+					this._strokeWidth
+				);
+				this.addChild(this._strokeSlot.mesh);
+			}
+			this._strokeSlot.uniforms.uniforms.uStrokeAlphaStart = this._strokeAlphaStart;
+			this._strokeSlot.uniforms.uniforms.uStrokeAlphaRate =
 				this._strokeAlphaMode === 'gradient' ? this._strokeAlphaRate : 0;
-			this.addChild(mesh);
-			this._meshes.push(mesh);
+		} else if (this._strokeSlot) {
+			this._disposeSlot(this._strokeSlot);
+			this._strokeSlot = null;
 		}
 
 		// --- Fill pass (uses the resolved fill mode) ---
 		if (plan.fillQuads !== null) {
-			const {mesh} = this._buildMesh(plan.fillQuads, gpu, this._fillGpu, plan.fillBounds);
-			this.addChild(mesh);
-			this._meshes.push(mesh);
-
+			const fillGpu = slugBuildFillGpuV8(this._fill);
+			if (this._fillSlot) {
+				this._updateSlot(this._fillSlot, plan.fillQuads, fillGpu, plan.fillBounds);
+			} else {
+				this._fillSlot = this._allocSlot(plan.fillQuads, gpu, fillGpu, plan.fillBounds);
+				this.addChild(this._fillSlot.mesh);
+			}
 			this._vertexBytes = plan.fillQuads.vertices.byteLength;
 			this._indexBytes = plan.fillQuads.indices.byteLength;
+		} else if (this._fillSlot) {
+			this._disposeSlot(this._fillSlot);
+			this._fillSlot = null;
 		}
 
 		this._buildDecorations(plan);
@@ -762,12 +1062,24 @@ export class SlugText extends SlugTextV8Base {
 	 * glyphs. The decoration's resolved alpha (which honors per-channel
 	 * sticky overrides) multiplies onto the PIXI fill via
 	 * `Graphics.fill({fill, alpha})`.
+	 *
+	 * Reuses the existing `_decorations` Graphics across rebuilds when
+	 * possible — `clear()` wipes prior geometry without destroying the
+	 * child (A12).
 	 */
 	private _buildDecorations(plan: SlugTextRenderPlan): void {
 		const ul = this._underlineDraw,
 			st = this._strikethroughDraw,
 			ol = this._overlineDraw;
-		if (!(ul.enabled || st.enabled || ol.enabled)) return;
+		if (!(ul.enabled || st.enabled || ol.enabled)) {
+			// Decorations turned off. Drop the existing Graphics if any.
+			if (this._decorations) {
+				this.removeChild(this._decorations);
+				this._decorations.destroy();
+				this._decorations = null;
+			}
+			return;
+		}
 
 		const {font, lines, scale, layout, fillBounds} = plan;
 		const lineHeight = (font.ascender - font.descender) * scale;
@@ -798,7 +1110,16 @@ export class SlugText extends SlugTextV8Base {
 			? slugBuildDecorationFill(this._fill, fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3])
 			: null;
 
-		const gfx = new Graphics();
+		// Reuse the existing Graphics if we have one; otherwise create
+		// fresh. `clear()` wipes the prior instructions without
+		// destroying the child (A12).
+		let gfx: Graphics;
+		if (this._decorations) {
+			gfx = this._decorations;
+			gfx.clear();
+		} else {
+			gfx = new Graphics();
+		}
 
 		// Inner offset for a length-restricted decoration within its
 		// line box. `align` here is the decoration's own physical
@@ -876,8 +1197,10 @@ export class SlugText extends SlugTextV8Base {
 			}
 		}
 
-		this._decorations = gfx;
-		this.addChild(gfx);
+		if (this._decorations !== gfx) {
+			this._decorations = gfx;
+			this.addChild(gfx);
+		}
 	}
 
 	override destroy(): void {
@@ -888,19 +1211,21 @@ export class SlugText extends SlugTextV8Base {
 		this._attachToken++;
 		this.onRender = null;
 		this._pendingPlan = null;
-		for (const mesh of this._meshes) {
-			mesh.geometry.destroy(true);
-			mesh.shader?.destroy();
-			mesh.destroy();
+		if (this._shadowSlot) {
+			this._disposeSlot(this._shadowSlot);
+			this._shadowSlot = null;
 		}
-		this._meshes = [];
+		if (this._strokeSlot) {
+			this._disposeSlot(this._strokeSlot);
+			this._strokeSlot = null;
+		}
+		if (this._fillSlot) {
+			this._disposeSlot(this._fillSlot);
+			this._fillSlot = null;
+		}
 		if (this._decorations) {
 			this._decorations.destroy();
 			this._decorations = null;
-		}
-		if (this._fillGpu) {
-			this._fillGpu.dispose();
-			this._fillGpu = null;
 		}
 		// A rebuild may have moved the previously-attached state into
 		// the held-over slots without the next attach landing yet.

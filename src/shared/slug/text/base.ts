@@ -6,6 +6,7 @@ import {SlugFonts} from '../fonts';
 
 import {slugResolveFontInput, slugTryResolveFontInputSync} from '../fonts/resolve';
 import type {SlugDropShadow, SlugDropShadowResolved, SlugStroke, SlugTextInit} from './init';
+import type {SlugTextRebuildKind} from './rebuild/kind';
 import type {SlugTextStyleAlign} from './style/align';
 import {slugTextColorToRgba, type SlugTextColor} from './style/color';
 import type {SlugTextFill} from './style/fill';
@@ -128,6 +129,26 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_indexBytes!: number;
 		_rebuildCount!: number;
 
+		/**
+		 * Rebuild-kind hint recorded by `_requestRebuild` and consumed by
+		 * the version-specific `rebuild()` via `_consumePendingKind()`.
+		 *
+		 * Strict-kind merge contract: once set to `'full'` for the
+		 * current pending rebuild, it cannot be narrowed by a later
+		 * setter in the same frame. Setters that can statically prove a
+		 * narrower kind is safe call `_requestRebuild(kind)`; setters
+		 * that cannot, or pre-incremental setters that still call
+		 * `this.rebuild()` directly, leave the field at `'full'`. The
+		 * field is reset to `'full'` every time `_consumePendingKind()`
+		 * is called so the next batch starts clean.
+		 *
+		 * v6 / v7 ignore this field entirely — their `rebuild()`
+		 * implementations always take the full path.
+		 *
+		 * See `_specs/features/incremental-mesh-rebuild.md` §4.2.
+		 */
+		_pendingKind!: SlugTextRebuildKind;
+
 		// Stroke state (enabled when _strokeWidth > 0)
 		_strokeWidth!: number;
 		_strokeColor!: Rgba;
@@ -200,6 +221,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._vertexBytes = 0;
 			this._indexBytes = 0;
 			this._rebuildCount = 0;
+			this._pendingKind = 'full';
 
 			// Stroke
 			const stroke = init.options?.stroke;
@@ -276,6 +298,61 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public abstract rebuild(): void;
 
 		/**
+		 * Setter-facing entry point: record the rebuild kind requested
+		 * for the change being applied, then trigger `rebuild()`. The
+		 * version-specific implementation reads the kind via
+		 * `_consumePendingKind()` and decides whether to take an
+		 * incremental path or fall through to a full rebuild.
+		 *
+		 * Strict-kind merge: if multiple setters fire within the same
+		 * frame (before `rebuild()` consumes the kind), the strictest
+		 * kind among them wins. `'full'` is the strictest. The current
+		 * implementation only narrows from `'full'` to a more specific
+		 * kind when a setter explicitly opts in — any setter that calls
+		 * this with `'full'` (or any setter that still calls
+		 * `this.rebuild()` directly without going through this method)
+		 * forces the batched rebuild to the full path.
+		 *
+		 * Setters that have not yet been audited still call
+		 * `this.rebuild()` directly. That path leaves `_pendingKind`
+		 * untouched at its initial `'full'` value, so behavior is
+		 * unchanged until each setter is migrated.
+		 */
+		public _requestRebuild(kind: SlugTextRebuildKind): void {
+			if (kind !== 'full' && this._pendingKind !== 'full') {
+				// Both are narrower than 'full'. If they disagree, upgrade to
+				// 'full' — combining e.g. fillVisual + shadowVisual in the
+				// same frame is not currently a supported incremental path,
+				// so the safe combine is the full path. This is the place to
+				// loosen later if we add a multi-pass incremental.
+				if (this._pendingKind !== kind) {
+					this._pendingKind = 'full';
+				}
+			} else if (kind === 'full') {
+				this._pendingKind = 'full';
+			} else {
+				// _pendingKind was 'full' (initial / post-consume state) and
+				// the caller is opting in to a narrower kind. Adopt it.
+				this._pendingKind = kind;
+			}
+			this.rebuild();
+		}
+
+		/**
+		 * Version-specific `rebuild()` implementations call this once at
+		 * the top of their body to read the current pending kind and
+		 * reset the field to `'full'` for the next batch. Returns `'full'`
+		 * for any rebuild not driven through `_requestRebuild` — which
+		 * preserves today's behavior for setters that haven't been
+		 * migrated yet, and for the constructor's initial rebuild.
+		 */
+		public _consumePendingKind(): SlugTextRebuildKind {
+			const kind = this._pendingKind;
+			this._pendingKind = 'full';
+			return kind;
+		}
+
+		/**
 		 * Called when supersampling is toggled. Override to update shader
 		 * uniforms without a full rebuild.
 		 */
@@ -296,7 +373,12 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set text(value: string) {
 			if (this._text === value) return;
 			this._text = value;
-			this.rebuild();
+			// Text content can always go through the incremental path
+			// in v8 — the slot's `_updateSlot` covers both capacity-fit
+			// (steady state) and capacity-grow (one-time buffer
+			// replacement keeping geometry/shader/mesh). No pass shape
+			// changes from text content alone.
+			this._requestRebuild('content');
 		}
 
 		/**
@@ -338,7 +420,12 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 			this._setFontRef(value);
 			this._resolveDecorations();
-			this.rebuild();
+			// Font swap changes glyph maps and GPU bindings — must take
+			// the full path. `_requestRebuild('full')` mirrors today's
+			// plain `this.rebuild()`, but routes through the strict-kind
+			// merge so a same-frame setter combination still resolves
+			// correctly.
+			this._requestRebuild('full');
 		}
 
 		/**
@@ -393,7 +480,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._fontSize === value) return;
 			this._fontSize = value;
 			this._resolveDecorations();
-			this.rebuild();
+			// fontSize changes every glyph's scale, line height, advance
+			// width — full geometry regen required.
+			this._requestRebuild('full');
 		}
 
 		public get color(): Rgba {
@@ -401,9 +490,10 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		}
 
 		public set color(value: SlugTextColor) {
+			const prevFillKind = this._fill.kind;
 			const next = slugTextColorToRgba(value, this._color);
 			const sameAsCurrent =
-				this._fill.kind === 'solid' &&
+				prevFillKind === 'solid' &&
 				this._color[0] === next[0] &&
 				this._color[1] === next[1] &&
 				this._color[2] === next[2] &&
@@ -416,7 +506,14 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._color = slugFillRepresentativeColor(resolved);
 			this._applyFillToDecorations(resolved.rgbProvided, resolved.alphaProvided);
 			this._resolveDecorations();
-			this.rebuild();
+			// Solid→solid color swap can ride the incremental fill path
+			// (re-resolve glyph quads with the new color into the same
+			// slot). Crossing solid↔non-solid requires the fill sampler
+			// bindings to flip, which `_writeFillSamplers` handles
+			// in-place — still incremental. The shadow / stroke vertex
+			// colors are unrelated, so a fill-only color change is
+			// always `'fillVisual'`.
+			this._requestRebuild('fillVisual');
 		}
 
 		/**
@@ -434,7 +531,10 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._color = slugFillRepresentativeColor(resolved);
 			this._applyFillToDecorations(resolved.rgbProvided, resolved.alphaProvided);
 			this._resolveDecorations();
-			this.rebuild();
+			// Fill swap (any direction) is incremental — `_writeFillSamplers`
+			// rebinds the gradient/texture sampler on the existing shader
+			// (A7-A9) and disposes the previous fill GPU record.
+			this._requestRebuild('fillVisual');
 		}
 
 		public get wordWrap(): boolean {
@@ -444,7 +544,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set wordWrap(value: boolean) {
 			if (this._wordWrap === value) return;
 			this._wordWrap = value;
-			this.rebuild();
+			// Wrap toggle can flip line count → vertex positions change
+			// across every line → full rebuild.
+			this._requestRebuild('full');
 		}
 
 		public get wordWrapWidth(): number {
@@ -454,7 +556,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set wordWrapWidth(value: number) {
 			if (this._wordWrapWidth === value) return;
 			this._wordWrapWidth = value;
-			this.rebuild();
+			this._requestRebuild('full');
 		}
 
 		public get breakWords(): boolean {
@@ -464,7 +566,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set breakWords(value: boolean) {
 			if (this._breakWords === value) return;
 			this._breakWords = value;
-			if (this._wordWrap) this.rebuild();
+			if (this._wordWrap) this._requestRebuild('full');
 		}
 
 		public get direction(): SlugTextDirection {
@@ -476,7 +578,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			if (this._direction === next) return;
 			this._direction = next;
 			this._resolveDecorations();
-			this.rebuild();
+			// LTR↔RTL flip changes per-line physical alignment and
+			// decoration positioning across the whole geometry.
+			this._requestRebuild('full');
 		}
 
 		/**
@@ -492,7 +596,8 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			const next = resolveAlignInput(value);
 			if (this._align === next) return;
 			this._align = next;
-			this.rebuild();
+			// Per-line offset changes → vertex X positions change.
+			this._requestRebuild('full');
 		}
 
 		/**
@@ -510,7 +615,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._textJustify = next;
 			// No effect when align !== 'justify'; rebuild() is cheap
 			// enough to skip the conditional.
-			if (this._align === 'justify') this.rebuild();
+			if (this._align === 'justify') this._requestRebuild('full');
 		}
 
 		public get underline(): SlugTextDecorationResolved {
@@ -520,9 +625,26 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set underline(value: SlugTextDecorationInput) {
 			const next = slugResolveDecoration(value);
 			if (decorationsEqual(this._underline, next)) return;
+			const prevEnabled = this._underline.enabled;
+			const prevLength = this._underline.length;
 			this._underline = next;
 			this._resolveDecorations();
-			this.rebuild();
+			// Enabling / disabling the decoration changes child count
+			// on the display list (add / remove Graphics) — that's not
+			// a clean incremental swap, route through full. A length
+			// change shifts decoration rect width, also full. Pure
+			// color / thickness / alpha changes can take the decoration
+			// incremental path — v8's `_buildDecorations` uses
+			// `Graphics.clear() + re-issue` regardless of kind, so the
+			// only thing the kind controls today is whether old slots
+			// are parked. Glyph passes are untouched either way, so
+			// `'decorationVisual'` is safe for any case that doesn't
+			// flip enabled or length.
+			if (prevEnabled !== next.enabled || prevLength !== next.length) {
+				this._requestRebuild('full');
+			} else {
+				this._requestRebuild('decorationVisual');
+			}
 		}
 
 		public get strikethrough(): SlugTextDecorationResolved {
@@ -532,9 +654,15 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set strikethrough(value: SlugTextDecorationInput) {
 			const next = slugResolveDecoration(value);
 			if (decorationsEqual(this._strikethrough, next)) return;
+			const prevEnabled = this._strikethrough.enabled;
+			const prevLength = this._strikethrough.length;
 			this._strikethrough = next;
 			this._resolveDecorations();
-			this.rebuild();
+			if (prevEnabled !== next.enabled || prevLength !== next.length) {
+				this._requestRebuild('full');
+			} else {
+				this._requestRebuild('decorationVisual');
+			}
 		}
 
 		public get overline(): SlugTextDecorationResolved {
@@ -544,9 +672,15 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set overline(value: SlugTextDecorationInput) {
 			const next = slugResolveDecoration(value);
 			if (decorationsEqual(this._overline, next)) return;
+			const prevEnabled = this._overline.enabled;
+			const prevLength = this._overline.length;
 			this._overline = next;
 			this._resolveDecorations();
-			this.rebuild();
+			if (prevEnabled !== next.enabled || prevLength !== next.length) {
+				this._requestRebuild('full');
+			} else {
+				this._requestRebuild('decorationVisual');
+			}
 		}
 
 		// --- Stroke ---
@@ -559,7 +693,11 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set strokeWidth(value: number) {
 			if (this._strokeWidth === value) return;
 			this._strokeWidth = value;
-			this.rebuild();
+			// Width affects per-vertex normal expansion (dilation);
+			// every stroke vertex moves. Crossing zero also changes
+			// whether the stroke pass exists at all — both cases need
+			// the full path.
+			this._requestRebuild('full');
 		}
 
 		/** Stroke color as [r, g, b, a] in 0-1 range. */
@@ -569,7 +707,11 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 
 		public set strokeColor(value: SlugTextColor) {
 			this._strokeColor = slugTextColorToRgba(value, this._strokeColor);
-			if (this._strokeWidth > 0) this.rebuild();
+			// Stroke pass uses solid fill mode; only `aColor` per-vertex
+			// changes when the color updates. The planner regenerates
+			// the stroke quads with the new color and `_updateSlot`
+			// rewrites the buffer in place.
+			if (this._strokeWidth > 0) this._requestRebuild('fillVisual');
 		}
 
 		/** Stroke alpha mode: 'uniform' for uniform, 'gradient' for per-pixel fade. */
@@ -580,7 +722,10 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set strokeAlphaMode(value: SlugStrokeAlphaMode) {
 			if (this._strokeAlphaMode === value) return;
 			this._strokeAlphaMode = value;
-			if (this._strokeWidth > 0) this.rebuild();
+			// Alpha mode only flips the uniform write rule (uniform=0
+			// for 'uniform', actual rate for 'gradient'). Geometry
+			// unchanged.
+			if (this._strokeWidth > 0) this._requestRebuild('strokeAlphaVisual');
 		}
 
 		/** Starting alpha for gradient mode (innermost stroke pixel). */
@@ -591,7 +736,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set strokeAlphaStart(value: number) {
 			if (this._strokeAlphaStart === value) return;
 			this._strokeAlphaStart = value;
-			if (this._strokeWidth > 0 && this._strokeAlphaMode === 'gradient') this.rebuild();
+			if (this._strokeWidth > 0 && this._strokeAlphaMode === 'gradient') {
+				this._requestRebuild('strokeAlphaVisual');
+			}
 		}
 
 		/** Alpha change per pixel outward in gradient mode. */
@@ -602,7 +749,9 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set strokeAlphaRate(value: number) {
 			if (this._strokeAlphaRate === value) return;
 			this._strokeAlphaRate = value;
-			if (this._strokeWidth > 0 && this._strokeAlphaMode === 'gradient') this.rebuild();
+			if (this._strokeWidth > 0 && this._strokeAlphaMode === 'gradient') {
+				this._requestRebuild('strokeAlphaVisual');
+			}
 		}
 
 		/** Stroke configuration object, or null if disabled. */
@@ -629,21 +778,40 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			const newAlphaMode = value?.alphaMode ?? Defaults.SlugText.StrokeAlphaMode;
 			const newAlphaStart = numberValue(value?.alphaStart, Defaults.SlugText.StrokeAlphaStart);
 			const newAlphaRate = numberValue(value?.alphaRate, Defaults.SlugText.StrokeAlphaRate);
-			const changed =
-				this._strokeWidth !== newWidth ||
+			const widthChanged = this._strokeWidth !== newWidth;
+			const colorChanged =
 				this._strokeColor[0] !== newColor[0] ||
 				this._strokeColor[1] !== newColor[1] ||
 				this._strokeColor[2] !== newColor[2] ||
-				this._strokeColor[3] !== newColor[3] ||
+				this._strokeColor[3] !== newColor[3];
+			const alphaChanged =
 				this._strokeAlphaMode !== newAlphaMode ||
 				this._strokeAlphaStart !== newAlphaStart ||
 				this._strokeAlphaRate !== newAlphaRate;
+			const changed = widthChanged || colorChanged || alphaChanged;
 			this._strokeWidth = newWidth;
 			this._strokeColor = newColor;
 			this._strokeAlphaMode = newAlphaMode;
 			this._strokeAlphaStart = newAlphaStart;
 			this._strokeAlphaRate = newAlphaRate;
-			if (changed) this.rebuild();
+			if (!changed) return;
+			// Aggregate stroke setter — degrade to the strictest sub-kind
+			// among the fields that actually changed. Width crossing zero
+			// (or any width change) forces full per §6; otherwise the
+			// strict-kind merge in `_requestRebuild` combines color
+			// (fillVisual) and alpha (strokeAlphaVisual) into 'full' if
+			// both fired, which is correct — they touch different uniform
+			// sets and the current incremental machinery handles only one
+			// kind narrowing per batch.
+			if (widthChanged) {
+				this._requestRebuild('full');
+			} else if (colorChanged && alphaChanged) {
+				this._requestRebuild('full');
+			} else if (colorChanged) {
+				this._requestRebuild('fillVisual');
+			} else {
+				this._requestRebuild('strokeAlphaVisual');
+			}
 		}
 
 		// --- Drop shadow ---
@@ -658,26 +826,45 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		}
 
 		public set dropShadow(value: SlugDropShadow | null) {
+			const prev = this._dropShadow;
 			if (value === null) {
-				if (this._dropShadow === null) return;
+				if (prev === null) return;
 				this._dropShadow = null;
-			} else {
-				// `_dropShadow.color` is already a concrete RGBA tuple, so
-				// we can feed it back in as colorBase directly — the new
-				// value keeps the current alpha when the input omits color
-				// or uses a 6-digit / 3-element form.
-				const colorBase = this._dropShadow
-					? this._dropShadow.color
-					: (Defaults.SlugText.DropShadowColor as RgbaReadonly);
-				this._dropShadow = {
-					alpha: numberValue(value.alpha, Defaults.SlugText.DropShadowAlpha),
-					angle: numberValue(value.angle, Defaults.SlugText.DropShadowAngle),
-					blur: numberValue(value.blur, Defaults.SlugText.DropShadowBlur),
-					color: slugTextColorToRgba(value.color, colorBase),
-					distance: numberValue(value.distance, Defaults.SlugText.DropShadowDistance)
-				};
+				// Disabling shadow removes the shadow pass entirely →
+				// pass-shape change → full.
+				this._requestRebuild('full');
+				return;
 			}
-			this.rebuild();
+			// `_dropShadow.color` is already a concrete RGBA tuple, so
+			// we can feed it back in as colorBase directly — the new
+			// value keeps the current alpha when the input omits color
+			// or uses a 6-digit / 3-element form.
+			const colorBase = prev
+				? prev.color
+				: (Defaults.SlugText.DropShadowColor as RgbaReadonly);
+			const next: SlugDropShadowResolved = {
+				alpha: numberValue(value.alpha, Defaults.SlugText.DropShadowAlpha),
+				angle: numberValue(value.angle, Defaults.SlugText.DropShadowAngle),
+				blur: numberValue(value.blur, Defaults.SlugText.DropShadowBlur),
+				color: slugTextColorToRgba(value.color, colorBase),
+				distance: numberValue(value.distance, Defaults.SlugText.DropShadowDistance)
+			};
+			this._dropShadow = next;
+			// Enabling a previously-disabled shadow → pass-shape change →
+			// full. Blur / distance / angle changes alter per-vertex
+			// dilation or mesh offset and need at minimum the planner
+			// to regenerate shadow quads — also full. Only color / alpha
+			// can ride the `'shadowVisual'` path.
+			if (
+				prev === null ||
+				prev.blur !== next.blur ||
+				prev.distance !== next.distance ||
+				prev.angle !== next.angle
+			) {
+				this._requestRebuild('full');
+			} else {
+				this._requestRebuild('shadowVisual');
+			}
 		}
 
 		// --- Supersampling ---

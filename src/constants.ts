@@ -18,6 +18,14 @@ export class Constants {
 	/** Number of vertices per glyph quad (one quad = 4 corners). */
 	public static readonly VERTICES_PER_QUAD = 4 as const;
 
+	/**
+	 * Number of floats per glyph quad in the interleaved vertex buffer.
+	 * `FLOATS_PER_VERTEX × VERTICES_PER_QUAD` = 20 × 4 = 80. Used by the
+	 * slot allocator to size capacity-aware typed arrays without
+	 * recomputing the product at every call site.
+	 */
+	public static readonly FLOATS_PER_QUAD = 80 as const;
+
 	/** Number of indices per glyph quad (two triangles × 3 indices). */
 	public static readonly INDICES_PER_QUAD = 6 as const;
 

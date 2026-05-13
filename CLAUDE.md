@@ -32,6 +32,13 @@ This file serves as a quick reference to project knowledge and documentation. Fo
 - **[_docs/port_risks.md](_docs/port_risks.md)** - Port risks: HLSL→GLSL and C++→JavaScript
   *21 risks across two sections. "Port from HLSL to GLSL" (14 risks): matrix order, negative zero sign bit, div-by-zero undefined, RGBA16→32 format change, missing usampler2D, saturate(), flat provoking vertex, dFdx/dFdy spec, texelFetch OOB, integer precision, #version, precision qualifiers, ternary logic, loop limits. "Port to JavaScript" (7 risks): band float64/float32 mismatch, uint32-as-float32, NaN packing, cubic approximation, alpha premultiply, WebGL2, mobile derivatives.*
 
+### Feature Specs
+- **[_specs/features/incremental-mesh-rebuild.md](_specs/features/incremental-mesh-rebuild.md)** - Incremental mesh rebuild (v8)
+  *Slot-based PIXI object reuse on `SlugText` mutation. §5 verified-assumption table for pixi.js 8.17.1 (dated re-verification policy). §6 setter→rebuild-kind matrix. §11 estimated 6–10× CPU speedup on the chart-axis hot path. Targets workloads with high SlugText count and rapid updates — no impact on static text.*
+
+- **[_specs/features/parallel_shader_compile.md](_specs/features/parallel_shader_compile.md)** - Parallel shader compile + prewarming
+  *Eliminates the ~500 ms main-thread freeze on first SlugText render via `KHR_parallel_shader_compile`. Shipped end-to-end across v6/v7/v8.*
+
 ### Reference Materials
 - **[_references/EXTRACTED_SUMMARY.md](_references/EXTRACTED_SUMMARY.md)** - Full technical synthesis from PDFs
   *Comprehensive details extracted from all three reference papers*

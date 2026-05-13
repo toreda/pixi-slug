@@ -49,11 +49,29 @@ jest.mock('pixi.js', () => {
 		}
 	}
 	class FakeBuffer {
-		constructor(public opts: unknown) {}
+		public data: unknown;
+		public byteLength: number;
+		constructor(public opts: {data?: ArrayBufferView; usage?: string; label?: string; shrinkToFit?: boolean}) {
+			this.data = opts.data ?? null;
+			this.byteLength = opts.data ? opts.data.byteLength : 0;
+		}
+		setDataWithSize(data: ArrayBufferView, _size: number, _syncGPU: boolean): void {
+			this.data = data;
+		}
+		update(_size?: number): void {}
+		destroy(): void {}
 	}
 	class FakeGeometry {
-		constructor(public opts: unknown) {}
-		destroy(): void {}
+		public attributes: Record<string, {buffer: FakeBuffer; format: string; stride: number; offset: number}>;
+		public indexBuffer: FakeBuffer | ArrayBufferView | null;
+		constructor(public opts: {
+			attributes?: Record<string, {buffer: FakeBuffer; format: string; stride: number; offset: number}>;
+			indexBuffer?: FakeBuffer | ArrayBufferView;
+		}) {
+			this.attributes = opts.attributes ?? {};
+			this.indexBuffer = opts.indexBuffer ?? null;
+		}
+		destroy(_destroyBuffers?: boolean): void {}
 	}
 	class FakeShader {
 		public resources: Record<string, unknown> = {};
@@ -76,6 +94,9 @@ jest.mock('pixi.js', () => {
 			return this;
 		}
 		fill(): this {
+			return this;
+		}
+		clear(): this {
 			return this;
 		}
 		destroy(): void {}
