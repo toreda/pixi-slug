@@ -24,18 +24,23 @@
 			"default": "./dist/v6/index.js"
 		}
 	},
+	"sideEffects": [
+		"./dist/v6/index.js",
+		"./dist/v7/index.js",
+		"./dist/v8/index.js"
+	],
 	"publishConfig": {
 		"access": "public"
 	},
 	"scripts": {
-		"build:v6:dev": "webpack --env version=v6 --env target=dev && tsc -p tsconfig.v6.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
-		"build:v6:prod": "webpack --env version=v6 --env target=prod && tsc -p tsconfig.v6.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
-		"build:v7:dev": "webpack --env version=v7 --env target=dev && tsc -p tsconfig.v7.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
-		"build:v7:prod": "webpack --env version=v7 --env target=prod && tsc -p tsconfig.v7.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
-		"build:v8:dev": "webpack --env version=v8 --env target=dev && tsc -p tsconfig.v8.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
-		"build:v8:prod": "webpack --env version=v8 --env target=prod && tsc -p tsconfig.v8.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
-		"build:all:dev": "webpack --env version=all --env target=dev && pnpm run build:types",
-		"build:all:prod": "webpack --env version=all --env target=prod && pnpm run build:types",
+		"build:v6:dev": "pnpm run build:fonts && webpack --env version=v6 --env target=dev && tsc -p tsconfig.v6.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
+		"build:v6:prod": "pnpm run build:fonts && webpack --env version=v6 --env target=prod && tsc -p tsconfig.v6.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
+		"build:v7:dev": "pnpm run build:fonts && webpack --env version=v7 --env target=dev && tsc -p tsconfig.v7.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
+		"build:v7:prod": "pnpm run build:fonts && webpack --env version=v7 --env target=prod && tsc -p tsconfig.v7.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
+		"build:v8:dev": "pnpm run build:fonts && webpack --env version=v8 --env target=dev && tsc -p tsconfig.v8.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
+		"build:v8:prod": "pnpm run build:fonts && webpack --env version=v8 --env target=prod && tsc -p tsconfig.v8.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
+		"build:all:dev": "pnpm run build:fonts && webpack --env version=all --env target=dev && pnpm run build:types",
+		"build:all:prod": "pnpm run build:fonts && webpack --env version=all --env target=prod && pnpm run build:types",
 		"build:v6": "pnpm run build:v6:prod",
 		"build:v7": "pnpm run build:v7:prod",
 		"build:v8": "pnpm run build:v8:prod",
@@ -44,12 +49,14 @@
 		"build:docs": "node scripts/build-docs.js",
 		"build:docs:no-build": "node scripts/build-docs.js --no-build",
 		"build:fallback-font": "node scripts/build-fallback-font.mjs",
+		"build:math-fallback-font": "node scripts/build-math-fallback-font.mjs",
+		"build:fonts": "pnpm run build:fallback-font && pnpm run build:math-fallback-font",
 		"build:types": "tsc -p tsconfig.v8.json --emitDeclarationOnly && tsc -p tsconfig.v7.json --emitDeclarationOnly && tsc -p tsconfig.v6.json --emitDeclarationOnly && node scripts/flatten-types.mjs",
 		"test": "cross-env COVERAGE=full jest --coverage",
 		"test:ci": "cross-env COVERAGE=full jest --ci --coverage --maxWorkers=50% --reporters=default --reporters=jest-junit",
 		"test:fast": "cross-env COVERAGE=summary jest --bail --coverage",
 		"examples": "serve . -l 3000 --cors --no-clipboard",
-		"examples:watch": "webpack --watch --env version=all --env target=dev & serve . -l 3000 --cors --no-clipboard",
+		"examples:watch": "pnpm run build:fonts && webpack --watch --env version=all --env target=dev & serve . -l 3000 --cors --no-clipboard",
 		"release:prepare": "node scripts/prepare-changelog-release.mjs",
 		"release:notes": "node scripts/extract-changelog-section.mjs",
 		"release:package": "node scripts/package-release-zips.mjs"
@@ -136,8 +143,6 @@
 		"webpack-cli": "^7.0.2"
 	},
 	"dependencies": {
-		"@toreda/fate": "^0.7.0",
-		"@toreda/verify": "^0.12.3",
 		"opentype.js": "^1.3.4",
 		"woff2-encoder": "^2.0.0"
 	},
@@ -149,7 +154,8 @@
 			"uuid": ">=14.0.0",
 			"picomatch@2": "2.3.2",
 			"picomatch@>=3": ">=4.0.4",
-			"tmp": ">=0.2.4"
+			"tmp": ">=0.2.4",
+			"fast-uri": ">=3.1.2"
 		},
 		"onlyBuiltDependencies": [
 			"@swc/core"

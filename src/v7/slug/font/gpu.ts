@@ -45,6 +45,16 @@ export interface SlugFontGpuV7 {
 	 */
 	programReady?: Promise<boolean>;
 	/**
+	 * Bumped every time `curveTexture` or `bandTexture` is replaced
+	 * (i.e. a buffer grow forced a `Texture.destroy()` + recreate).
+	 * See `SlugFontGpuV8.generation` for full rationale — same bug,
+	 * same fix shape. Every `SlugMeshSlotV7` records the generation it
+	 * was last bound to; on every `_attachGpu` pass the slot checks
+	 * this counter and rebinds its shader's curve/band sampler
+	 * resources when the font has moved past it.
+	 */
+	generation: number;
+	/**
 	 * Reference to the `Float32Array` currently owned by the curve
 	 * texture. When `font.curveData` no longer matches this reference,
 	 * the buffer was reallocated by an `ensureGlyphs` grow and the
@@ -113,22 +123,29 @@ export function slugFontGpuV7(
 			cached.curveTexture.destroy(true);
 			cached.curveTexture = makeCurveTexture(font);
 			cached._curveBuffer = font.curveData;
+			cached.generation++;
 			curveChanged = true;
 		}
 		if (cached._bandBuffer.buffer !== bandView.buffer) {
 			cached.bandTexture.destroy(true);
 			cached.bandTexture = makeBandTexture(font, bandView);
 			cached._bandBuffer = bandView;
+			cached.generation++;
 			bandChanged = true;
 		}
 
-		// Same buffer reference + new data appended → reupload via update().
-		// PIXI v7's BaseTexture.update() bumps the dirty counter and the
-		// texture system re-uploads the resource on next bind.
-		if (!curveChanged && ensureResult?.addedAny) {
+		// Same buffer reference. Mark dirty unconditionally on cache hit
+		// because another SlugText sharing this font may have written
+		// new glyph bytes since the last `_render` — and our caller's
+		// own `ensureGlyphs` may have hit all-cached (`addedAny=false`)
+		// yet still need to render a glyph the OTHER SlugText just
+		// appended. PIXI v7's `BaseTexture.update()` bumps a dirty
+		// counter; the texture system dedupes per frame, so the extra
+		// call when nothing actually changed costs only one event hop.
+		if (!curveChanged) {
 			cached.curveTexture.baseTexture.update();
 		}
-		if (!bandChanged && ensureResult?.addedAny) {
+		if (!bandChanged) {
 			cached.bandTexture.baseTexture.update();
 		}
 
@@ -145,6 +162,7 @@ export function slugFontGpuV7(
 		bandTexture,
 		fallbackWhite: Texture.WHITE,
 		program,
+		generation: 0,
 		_curveBuffer: font.curveData,
 		_bandBuffer: bandView
 	};

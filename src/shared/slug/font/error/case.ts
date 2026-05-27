@@ -8,4 +8,3 @@ export type SlugFontErrorCase =
 	| 'aliasNotFound'
 	| 'aliasCollision'
 	| 'emptyInput';
-

@@ -29,6 +29,26 @@
 		'Roboto WOFF2':          '/assets/fonts/roboto-fallback.woff2'
 	};
 
+	// Defaults that mirror src/defaults.ts (Defaults.SlugText). Used to
+	// drop keys whose current value matches the documented default — the
+	// snippet stays minimal and idiomatic. Defined at module scope so
+	// `wireCodePanel`'s initial-open refresh path can read it before
+	// `start()`'s body finishes initializing.
+	var SNIPPET_DEFAULTS = {
+		fontSize:       24,
+		fill:           [1, 1, 1, 1],
+		direction:      'ltr',
+		align:          'start',
+		textJustify:    'inter-word',
+		wordWrap:       false,
+		wordWrapWidth:  0,
+		breakWords:     false,
+		underline:      false,
+		strikethrough:  false,
+		overline:       false
+		// stroke / dropShadow have no default — absence == disabled.
+	};
+
 	function hexToRGBA(hex, alpha) {
 		var r = parseInt(hex.slice(1, 3), 16) / 255;
 		var g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -63,9 +83,17 @@
 	// that property. Hiding (vs. disabling) keeps the UI honest — an
 	// absent section reads as "not in this version" rather than
 	// "broken right now".
+	// Sentinel keys not backed by a SlugText property — these groups are
+	// owned by a separate wirer (e.g. `runMathText` handles 'mathText')
+	// and pruned by that wirer's own gating logic, not by SlugText
+	// feature detection. Without this skip, the SlugText prune pass
+	// would delete the group before its real owner could inspect it.
+	var PRUNE_SKIP = {mathText: true};
+
 	function pruneUnsupported(sidebar, slugText) {
 		sidebar.querySelectorAll('[data-requires]').forEach(function (el) {
 			var prop = el.getAttribute('data-requires');
+			if (PRUNE_SKIP[prop]) return;
 			if (!(prop in slugText)) el.remove();
 		});
 	}
@@ -216,6 +244,11 @@
 					});
 					addToStage(slugText);
 
+					// Expose the live instance + font URL for any sibling
+					// helpers (e.g. runMathText) that need to track the
+					// SlugText for layout sync. Updated on every font swap.
+					window.SlugExample._current = {slugText: slugText, fontUrl: url};
+
 					// Prune unsupported sections once we have a real instance
 					// to feature-detect against. Only happens on the first
 					// successful load; subsequent font swaps reuse the same
@@ -232,6 +265,7 @@
 					applyDecoration('underline');
 					applyDecoration('strikethrough');
 					applyDecoration('overline');
+					applyRotation();
 
 					fontStatus.style.color = '#4ab07a';
 					fontStatus.textContent = 'Loaded ' + url;
@@ -514,6 +548,25 @@
 			document.getElementById('ctrlBreakWords').onchange = applyWordWrap;
 			linkSlider('ctrlWrapWidth', 'ctrlWrapWidthVal', applyWordWrap);
 
+			function applyRotation() {
+				if (!slugText) return;
+				var deg = parseFloat(document.getElementById('ctrlRotation').value) || 0;
+				slugText.rotation = deg * Math.PI / 180;
+			}
+			linkSlider('ctrlRotation', 'ctrlRotationVal', applyRotation);
+			var rotationResetBtn = document.getElementById('ctrlRotationReset');
+			if (rotationResetBtn) {
+				rotationResetBtn.onclick = function () {
+					var slider = document.getElementById('ctrlRotation');
+					var input = document.getElementById('ctrlRotationVal');
+					slider.value = 0;
+					input.value = 0;
+					applyRotation();
+					// Fire input/change so the code panel listener re-renders the snippet.
+					slider.dispatchEvent(new Event('input', {bubbles: true}));
+				};
+			}
+
 			var directionEl = document.getElementById('ctrlDirection');
 			if (directionEl) {
 				directionEl.onchange = function () {
@@ -571,10 +624,655 @@
 			document.getElementById('ctrlShadowColor').oninput = debounce(applyShadow);
 
 			wireCollapsibles();
+			injectCodePanel();
+			wireCodePanel();
 
 			await loadFont(fontSelect.value);
+
+			// Inject the second-sidebar code panel and the in-sidebar trigger
+			// row that opens it. Idempotent — safe to call more than once.
+			//
+			// The panel is added as a sibling of #app inside #main so it
+			// participates in the flex layout. When `data-code-open="true"`
+			// is set on #main the panel is visible and #app naturally narrows
+			// to make room. PIXI's ResizeObserver / resizeTo handles the
+			// canvas rescale automatically.
+			function injectCodePanel() {
+				if (document.getElementById('codePanel')) return;
+
+				// highlight.js (CDN) + a dark theme matching the page palette.
+				var hljsCss = document.createElement('link');
+				hljsCss.rel = 'stylesheet';
+				hljsCss.href = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
+				document.head.appendChild(hljsCss);
+				var hljsScript = document.createElement('script');
+				hljsScript.src = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js';
+				hljsScript.async = false;
+				document.head.appendChild(hljsScript);
+				var hljsTs = document.createElement('script');
+				hljsTs.src = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/typescript.min.js';
+				hljsTs.async = false;
+				document.head.appendChild(hljsTs);
+
+				// In-sidebar trigger row — appended after the last control group.
+				var sidebar = document.getElementById('sidebar');
+				if (sidebar) {
+					var triggerHost = document.createElement('div');
+					triggerHost.innerHTML = (
+						'<div class="ctrl-group code-trigger-group">' +
+						'<button type="button" id="codeToggle" class="code-toggle">' +
+						'<span class="code-toggle-icon">&lt;/&gt;</span>' +
+						'<span class="code-toggle-label">Show code</span>' +
+						'</button></div>'
+					);
+					while (triggerHost.firstChild) sidebar.appendChild(triggerHost.firstChild);
+				}
+
+				// Code panel docks at the bottom of the canvas area (not full
+				// page width — sidebar stays untouched on the left). Layout:
+				//
+				//   #main (flex row)
+				//     #sidebar
+				//     .main-right (flex column)
+				//       #app
+				//       #codePanel
+				//
+				// To get there we wrap the existing #app in a .main-right
+				// container and append #codePanel as the column's second child.
+				var main = document.getElementById('main');
+				var app  = document.getElementById('app');
+				if (main && app) {
+					// Default to closed so the panel is hidden until wireCodePanel
+					// reads the persisted state and updates this attribute.
+					if (!main.hasAttribute('data-code-open')) {
+						main.setAttribute('data-code-open', 'false');
+					}
+
+					// Wrap #app in .main-right so #app and #codePanel can stack
+					// vertically without disturbing the sidebar's row layout.
+					var rightStack = document.querySelector('.main-right');
+					if (!rightStack) {
+						rightStack = document.createElement('div');
+						rightStack.className = 'main-right';
+						main.insertBefore(rightStack, app);
+						rightStack.appendChild(app);
+					}
+
+					var panelHost = document.createElement('div');
+					panelHost.innerHTML = (
+						'<aside id="codePanel" class="code-panel" aria-label="Construction code">' +
+						'<div class="code-resize-handle" id="codeResizeHandle" aria-label="Resize" role="separator"></div>' +
+						'<div class="code-header">' +
+						'<div class="code-tabs" role="tablist">' +
+						'<button type="button" class="code-tab" role="tab" data-lang="js" aria-selected="true">JavaScript</button>' +
+						'<button type="button" class="code-tab" role="tab" data-lang="ts" aria-selected="false">TypeScript</button>' +
+						'</div>' +
+						'<div class="code-actions">' +
+						'<button type="button" id="codeCopy">Copy</button>' +
+						'<button type="button" id="codeClose" class="code-close" aria-label="Close">×</button>' +
+						'</div></div>' +
+						'<pre class="code-pre"><code id="codeBlock" class="hljs"></code></pre>' +
+						'</aside>'
+					);
+					rightStack.appendChild(panelHost.firstChild);
+				}
+			}
+
+			// --- Code panel wiring ---
+			//
+			// The panel lives next to #app in the flex layout. Visibility is
+			// driven by `data-code-open="true|false"` on #main; CSS hides
+			// the panel when false and shows it (with width set via inline
+			// `--code-w`) when true.
+			//
+			// Three pieces of persisted state via localStorage:
+			//   - slugExample.codeOpen  — '1' / '0'
+			//   - slugExample.codeLang  — 'js' / 'ts'
+			//   - slugExample.codeWidth — pixel width of the panel
+			//
+			// Live updates: while open, every sidebar input/change re-renders
+			// the snippet. While closed, no listeners fire.
+			function wireCodePanel() {
+				var main       = document.getElementById('main');
+				var trigger    = document.getElementById('codeToggle');
+				var triggerLbl = trigger ? trigger.querySelector('.code-toggle-label') : null;
+				var panel      = document.getElementById('codePanel');
+				var copyBtn    = document.getElementById('codeCopy');
+				var closeBtn   = document.getElementById('codeClose');
+				var codeEl     = document.getElementById('codeBlock');
+				var handle     = document.getElementById('codeResizeHandle');
+				var tabs       = panel ? panel.querySelectorAll('.code-tab') : [];
+				if (!main || !trigger || !panel || !codeEl) return;
+
+				function readPref(key, fallback) {
+					try {
+						var v = localStorage.getItem(key);
+						return v === null ? fallback : v;
+					} catch (_) { return fallback; }
+				}
+				function writePref(key, value) {
+					try { localStorage.setItem(key, value); } catch (_) {}
+				}
+
+				var activeLang = readPref('slugExample.codeLang', 'js');
+				var openState  = readPref('slugExample.codeOpen', '0') === '1';
+				var height     = parseInt(readPref('slugExample.codeHeight', '280'), 10);
+				if (isNaN(height)) height = 280;
+				height = Math.max(120, Math.min(height, 800));
+				panel.style.setProperty('--code-h', height + 'px');
+
+				function isOpen() { return main.getAttribute('data-code-open') === 'true'; }
+
+				function refresh() {
+					if (!isOpen()) return;
+					codeEl.textContent = buildSnippet(activeLang);
+					codeEl.className = 'hljs language-' + (activeLang === 'ts' ? 'typescript' : 'javascript');
+					if (window.hljs && typeof window.hljs.highlightElement === 'function') {
+						codeEl.removeAttribute('data-highlighted');
+						window.hljs.highlightElement(codeEl);
+					}
+				}
+
+				function setOpen(open) {
+					main.setAttribute('data-code-open', open ? 'true' : 'false');
+					writePref('slugExample.codeOpen', open ? '1' : '0');
+					if (triggerLbl) triggerLbl.textContent = open ? 'Hide code' : 'Show code';
+					trigger.setAttribute('aria-pressed', open ? 'true' : 'false');
+					if (open) refresh();
+				}
+
+				function setActiveTab(lang) {
+					activeLang = lang;
+					writePref('slugExample.codeLang', lang);
+					tabs.forEach(function (t) {
+						t.setAttribute('aria-selected',
+							t.getAttribute('data-lang') === lang ? 'true' : 'false');
+					});
+					refresh();
+				}
+
+				// --- Initial state ---
+				tabs.forEach(function (t) {
+					t.setAttribute('aria-selected',
+						t.getAttribute('data-lang') === activeLang ? 'true' : 'false');
+				});
+				setOpen(openState);
+
+				// --- Wiring ---
+				trigger.addEventListener('click', function () { setOpen(!isOpen()); });
+				if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false); });
+				tabs.forEach(function (t) {
+					t.addEventListener('click', function () {
+						setActiveTab(t.getAttribute('data-lang'));
+					});
+				});
+
+				// Live updates from any sidebar control (no-op while closed).
+				var sidebar = document.getElementById('sidebar');
+				if (sidebar) {
+					var refreshIfOpen = function () { if (isOpen()) refresh(); };
+					sidebar.addEventListener('input', refreshIfOpen);
+					sidebar.addEventListener('change', refreshIfOpen);
+				}
+
+				// --- Resize handle ---
+				if (handle) {
+					var dragStartY = 0;
+					var dragStartH = 0;
+					function onMove(e) {
+						// Handle is on the TOP edge of the panel; dragging up
+						// grows the panel (and shrinks the canvas above it).
+						var dy = e.clientY - dragStartY;
+						var h = Math.max(120, Math.min(dragStartH - dy, 800));
+						panel.style.setProperty('--code-h', h + 'px');
+					}
+					function onUp() {
+						document.removeEventListener('mousemove', onMove);
+						document.removeEventListener('mouseup', onUp);
+						document.body.style.cursor = '';
+						document.body.style.userSelect = '';
+						var final = parseInt(panel.style.getPropertyValue('--code-h'), 10);
+						if (!isNaN(final)) writePref('slugExample.codeHeight', String(final));
+					}
+					handle.addEventListener('mousedown', function (e) {
+						e.preventDefault();
+						dragStartY = e.clientY;
+						dragStartH = parseInt(panel.style.getPropertyValue('--code-h'), 10) || height;
+						document.addEventListener('mousemove', onMove);
+						document.addEventListener('mouseup', onUp);
+						document.body.style.cursor = 'row-resize';
+						document.body.style.userSelect = 'none';
+					});
+				}
+
+				// --- Copy ---
+				if (copyBtn) {
+					copyBtn.addEventListener('click', function () {
+						var text = codeEl.textContent || '';
+						var done = function () {
+							copyBtn.classList.add('copied');
+							copyBtn.textContent = 'Copied';
+							setTimeout(function () {
+								copyBtn.classList.remove('copied');
+								copyBtn.textContent = 'Copy';
+							}, 1500);
+						};
+						if (navigator.clipboard && navigator.clipboard.writeText) {
+							navigator.clipboard.writeText(text).then(done, fallbackCopy);
+						} else {
+							fallbackCopy();
+						}
+						function fallbackCopy() {
+							var ta = document.createElement('textarea');
+							ta.value = text;
+							ta.style.position = 'fixed';
+							ta.style.opacity = '0';
+							document.body.appendChild(ta);
+							ta.select();
+							try { document.execCommand('copy'); done(); }
+							finally { document.body.removeChild(ta); }
+						}
+					});
+				}
+			}
+
+			// --- Snippet generator ---
+			//
+			// Emits a SlugText construction snippet matching the current
+			// sidebar state. Strategy:
+			//
+			//   1. Walk every control and build a plain JS `options` object
+			//      mirroring the SlugTextStyleOptions API surface.
+			//   2. Strip every key whose value matches the documented default
+			//      (DEFAULTS table below — kept in sync with src/defaults.ts).
+			//   3. Pretty-print as a single `new SlugText({...})` call. No
+			//      post-construction assignments — every UI-controlled field
+			//      lives in the constructor's `options` block.
+			//
+			// Per-version differences (v6/v7 lack decorations, fill, etc.) are
+			// handled by (a) reading from controls that may not exist and (b)
+			// feature-detecting against the live `slugText` for shape decisions.
+
+			// SNIPPET_DEFAULTS is module-scoped (above) so it's defined even
+			// when the code panel's initial `setOpen(openState)` runs before
+			// this point in `start()`. The previous `var` declaration here
+			// was hoisted but not initialized, so any code-panel-open
+			// localStorage pref caused a TypeError on first refresh.
+
+			function snippetIndent(s, n) {
+				var pad = new Array(n + 1).join('\t');
+				return s.split('\n').map(function (line) {
+					return line.length ? pad + line : line;
+				}).join('\n');
+			}
+
+			// Deep equality for default-comparison. Handles primitives, arrays,
+			// and plain objects — enough for the small value space we deal with.
+			function deepEqual(a, b) {
+				if (a === b) return true;
+				if (a === null || b === null) return false;
+				if (typeof a !== typeof b) return false;
+				if (Array.isArray(a)) {
+					if (!Array.isArray(b) || a.length !== b.length) return false;
+					for (var i = 0; i < a.length; i++) {
+						if (!deepEqual(a[i], b[i])) return false;
+					}
+					return true;
+				}
+				if (typeof a === 'object') {
+					var ak = Object.keys(a), bk = Object.keys(b);
+					if (ak.length !== bk.length) return false;
+					for (var j = 0; j < ak.length; j++) {
+						if (!deepEqual(a[ak[j]], b[ak[j]])) return false;
+					}
+					return true;
+				}
+				return false;
+			}
+
+			function fmtValue(value) {
+				if (value === null) return 'null';
+				if (value === undefined) return 'undefined';
+				if (typeof value === 'boolean' || typeof value === 'number') return String(value);
+				if (typeof value === 'string') return JSON.stringify(value);
+				if (Array.isArray(value)) {
+					var allPrimitive = value.every(function (v) {
+						return v === null || typeof v !== 'object';
+					});
+					if (allPrimitive) {
+						return '[' + value.map(fmtValue).join(', ') + ']';
+					}
+					var arrLines = value.map(function (v) {
+						return snippetIndent(fmtValue(v), 1);
+					});
+					return '[\n' + arrLines.join(',\n') + '\n]';
+				}
+				if (typeof value === 'object') {
+					var keys = Object.keys(value);
+					if (keys.length === 0) return '{}';
+					var lines = keys.map(function (k) {
+						return snippetIndent(k + ': ' + fmtValue(value[k]), 1);
+					});
+					return '{\n' + lines.join(',\n') + '\n}';
+				}
+				return String(value);
+			}
+
+			// fill values may carry a PIXI.Texture under `source` — replace
+			// it with an identifier reference so the snippet doesn't try to
+			// stringify the live object.
+			function fmtFillValue(fill) {
+				if (fill && typeof fill === 'object' && !Array.isArray(fill) && fill.type === 'texture') {
+					var clone = {};
+					Object.keys(fill).forEach(function (k) {
+						clone[k] = (k === 'source') ? '__TEXTURE__' : fill[k];
+					});
+					return fmtValue(clone).replace(/"__TEXTURE__"/, '/* PIXI.Texture */ texture');
+				}
+				return fmtValue(fill);
+			}
+
+			// Build the decoration value from sidebar controls. Returns the
+			// same shape applyDecoration() builds and feeds to SlugText:
+			// `false` (disabled), `true` (enabled with all defaults), or a
+			// config object with overrides.
+			function readDecoration(name) {
+				var cap = name.charAt(0).toUpperCase() + name.slice(1);
+				var enableEl = document.getElementById('ctrl' + cap);
+				if (!enableEl) return null;
+				if (!enableEl.checked) return false;
+				var colorAuto = document.getElementById('ctrl' + cap + 'ColorAuto').checked;
+				var thicknessAuto = document.getElementById('ctrl' + cap + 'ThicknessAuto').checked;
+				var length = parseFloat(document.getElementById('ctrl' + cap + 'Length').value);
+				if (isNaN(length)) length = 1;
+				var align = document.getElementById('ctrl' + cap + 'Align').value;
+				if (colorAuto && thicknessAuto && length === 1 && align === 'start') return true;
+				var cfg = {};
+				if (!colorAuto) cfg.color = hexToRGBA(document.getElementById('ctrl' + cap + 'Color').value);
+				if (!thicknessAuto) cfg.thickness = parseFloat(document.getElementById('ctrl' + cap + 'Thickness').value) || 1;
+				if (length !== 1) cfg.length = length;
+				if (align !== 'start') cfg.align = align;
+				return cfg;
+			}
+
+			function readStroke() {
+				if (!document.getElementById('ctrlStroke').checked) return null;
+				var stroke = {
+					width: parseFloat(document.getElementById('ctrlStrokeWidth').value) || 0
+				};
+				var color = hexToRGBA(document.getElementById('ctrlStrokeColor').value);
+				if (!deepEqual(color, [0, 0, 0, 1])) stroke.color = color;
+				var alphaMode = document.getElementById('ctrlStrokeAlphaMode').value;
+				if (alphaMode !== 'uniform') {
+					stroke.alphaMode = alphaMode;
+					var alphaStart = parseFloat(document.getElementById('ctrlStrokeAlphaStart').value);
+					if (alphaStart !== 1) stroke.alphaStart = alphaStart;
+					var alphaRate = parseFloat(document.getElementById('ctrlStrokeAlphaRate').value);
+					if (alphaRate !== 0) stroke.alphaRate = alphaRate;
+				}
+				return stroke;
+			}
+
+			function readDropShadow() {
+				if (!document.getElementById('ctrlShadow').checked) return null;
+				var shadow = {};
+				var distance = parseFloat(document.getElementById('ctrlShadowDist').value);
+				if (distance !== 5) shadow.distance = distance;
+				var angle = (parseFloat(document.getElementById('ctrlShadowAngle').value) || 0) * Math.PI / 180;
+				if (Math.abs(angle - Math.PI / 6) > 1e-9) shadow.angle = angle;
+				var color = hexToRGBA(document.getElementById('ctrlShadowColor').value);
+				if (!deepEqual(color, [0, 0, 0, 1])) shadow.color = color;
+				var alpha = parseFloat(document.getElementById('ctrlShadowAlpha').value);
+				if (alpha !== 1) shadow.alpha = alpha;
+				var blur = parseFloat(document.getElementById('ctrlShadowBlur').value);
+				if (blur !== 0) shadow.blur = blur;
+				return shadow; // may be empty == "use all defaults"
+			}
+
+			// Collect every UI-controlled options field as a plain object,
+			// then strip keys whose value matches SNIPPET_DEFAULTS.
+			function buildOptionsObject() {
+				var raw = {};
+
+				var fontSize = parseInt(document.getElementById('ctrlFontSize').value, 10);
+				if (!isNaN(fontSize)) raw.fontSize = fontSize;
+
+				raw.fill = buildFillInput();
+
+				var directionEl = document.getElementById('ctrlDirection');
+				if (directionEl) raw.direction = directionEl.value;
+
+				var alignEl = document.getElementById('ctrlAlign');
+				if (alignEl) raw.align = alignEl.value;
+
+				var textJustifyEl = document.getElementById('ctrlTextJustify');
+				// Only relevant when align === 'justify'; skip otherwise.
+				if (textJustifyEl && raw.align === 'justify') {
+					raw.textJustify = textJustifyEl.value;
+				}
+
+				raw.wordWrap = document.getElementById('ctrlWordWrap').checked;
+				if (raw.wordWrap) {
+					raw.wordWrapWidth = parseFloat(document.getElementById('ctrlWrapWidth').value) || 400;
+					raw.breakWords = document.getElementById('ctrlBreakWords').checked;
+				}
+
+				// Decorations — only on versions that expose them.
+				['underline', 'strikethrough', 'overline'].forEach(function (name) {
+					if (slugText && !(name in slugText)) return;
+					var v = readDecoration(name);
+					if (v === null) return; // control absent on this version
+					raw[name] = v;
+				});
+
+				var stroke = readStroke();
+				if (stroke) raw.stroke = stroke;
+
+				var dropShadow = readDropShadow();
+				if (dropShadow) raw.dropShadow = dropShadow;
+
+				// Drop keys matching documented defaults.
+				var trimmed = {};
+				Object.keys(raw).forEach(function (k) {
+					if (k in SNIPPET_DEFAULTS && deepEqual(raw[k], SNIPPET_DEFAULTS[k])) return;
+					trimmed[k] = raw[k];
+				});
+				return trimmed;
+			}
+
+			// Pretty-print options. Only `fill` needs special handling for
+			// the texture placeholder; everything else routes through fmtValue.
+			function fmtOptions(opts) {
+				var keys = Object.keys(opts);
+				if (keys.length === 0) return '{}';
+				var lines = keys.map(function (k) {
+					var v = (k === 'fill') ? fmtFillValue(opts[k]) : fmtValue(opts[k]);
+					return snippetIndent(k + ': ' + v, 1);
+				});
+				return '{\n' + lines.join(',\n') + '\n}';
+			}
+
+			// Render the snippet for the requested language. JS uses the
+			// `pixiSlug.SlugText` global form (matches what the example page
+			// itself does); TS adds an import line and uses the bare class.
+			function buildSnippet(lang) {
+				var fontUrl = (document.getElementById('ctrlFont') || {}).value || 'font.ttf';
+				var text    = document.getElementById('ctrlText').value;
+				var opts    = buildOptionsObject();
+
+				var ctor = {text: text, font: fontUrl};
+				if (Object.keys(opts).length > 0) ctor.options = opts;
+
+				var ctorKeys = Object.keys(ctor);
+				var ctorLines = ctorKeys.map(function (k) {
+					var v = (k === 'options') ? fmtOptions(ctor[k]) : fmtValue(ctor[k]);
+					return snippetIndent(k + ': ' + v, 1);
+				});
+				var ctorStr = '{\n' + ctorLines.join(',\n') + '\n}';
+
+				var rotationDeg = parseFloat(document.getElementById('ctrlRotation').value) || 0;
+				var tail = 'slugText.position.set(10, 10);';
+				if (rotationDeg !== 0) {
+					tail += '\nslugText.rotation = ' + rotationDeg + ' * Math.PI / 180;';
+				}
+
+				if (lang === 'ts') {
+					return (
+						"import {SlugText} from 'pixi-slug';\n" +
+						'\n' +
+						'const slugText = new SlugText(' + ctorStr + ');\n' +
+						tail
+					);
+				}
+				return (
+					'const slugText = new pixiSlug.SlugText(' + ctorStr + ');\n' +
+					tail
+				);
+			}
 		}
 	}
 
-	window.SlugExample = {run: run};
+	/**
+	 * Construct one MathText below the existing SlugText on the example
+	 * page and bind the sidebar's Math group to it.
+	 *
+	 * `opts.MathText` and `opts.mathBuilder` must come from the
+	 * version-specific bundle (`pixiSlug.MathText`, `pixiSlug.mathBuilder`
+	 * on v8 — undefined on v6/v7 until those ports land). `opts.addToStage`
+	 * / `opts.removeFromStage` mirror the SlugText callbacks. Returns the
+	 * constructed MathText, or `null` when MathText is unavailable on this
+	 * version (graceful no-op for v6/v7 pages).
+	 */
+	function runMathText(opts) {
+		var MathText = opts.MathText;
+		var mathBuilder = opts.mathBuilder;
+		if (!MathText || !mathBuilder) {
+			document.querySelectorAll('[data-requires="mathText"]').forEach(function (el) {
+				el.remove();
+			});
+			return null;
+		}
+
+		// The sidebar is fetched async by `run()`; runMathText is usually
+		// invoked synchronously right after `run()` so its controls may
+		// not be in the DOM yet. Wait for them to appear before wiring.
+		var presetEl = document.getElementById('ctrlMathPreset');
+		if (!presetEl) {
+			var waited = 0;
+			var timer = setInterval(function () {
+				if (document.getElementById('ctrlMathPreset')) {
+					clearInterval(timer);
+					runMathText(opts);
+				} else if ((waited += 50) > 5000) {
+					clearInterval(timer);
+					console.warn('[SlugExample.runMathText] sidebar Math group never appeared');
+				}
+			}, 50);
+			return null;
+		}
+
+		var addToStage = opts.addToStage;
+		var removeFromStage = opts.removeFromStage;
+		var getFontUrl = opts.getFontUrl || function () { return null; };
+		var getSlugText = opts.getSlugText || function () { return null; };
+		var presets = window.SlugMathPresets || {};
+
+		var sizeEl   = document.getElementById('ctrlMathSize');
+		var alignEl  = document.getElementById('ctrlMathAlign');
+		var lineEl   = document.getElementById('ctrlMathLineSpacing');
+		var useBodyEl = document.getElementById('ctrlMathUseBodyFont');
+		var fillEl   = document.getElementById('ctrlMathFill');
+
+		if (!sizeEl || !alignEl) return null;
+
+		var mathText = null;
+
+		function fillRgba() {
+			return hexToRGBA(fillEl ? fillEl.value : '#ffffff');
+		}
+
+		function buildFormula(name) {
+			var fn = presets[name] || presets.quadratic;
+			return MathText.build(fn);
+		}
+
+		function construct() {
+			if (mathText && !mathText.destroyed) {
+				removeFromStage(mathText);
+				mathText.destroy();
+			}
+			var fontUrl = useBodyEl && useBodyEl.checked ? getFontUrl() : null;
+			mathText = new MathText({
+				formula: buildFormula(presetEl.value),
+				font: fontUrl,
+				fontSize: parseFloat(sizeEl.value) || 48,
+				options: {fill: fillRgba()},
+				align: alignEl.value,
+				lineSpacing: parseFloat(lineEl.value) || 1.2
+			});
+			addToStage(mathText);
+			placeBelowSlugText();
+		}
+
+		function placeBelowSlugText() {
+			if (!mathText || mathText.destroyed) return;
+			var st = getSlugText();
+			// Fallback when the SlugText isn't constructed yet (font still
+			// loading): drop the math below where a default-size SlugText
+			// would sit, so the formula is visible immediately on first
+			// page load.
+			if (!st) {
+				mathText.position.set(10, 200);
+				return;
+			}
+			var baseX = st.x || 10;
+			var stH = (st.height && st.height > 1) ? st.height : (st.fontSize || 120) * 1.2;
+			var baseY = (st.y || 10) + stH + 32;
+			mathText.position.set(baseX, baseY);
+		}
+
+		function applyAll() {
+			if (!mathText) return;
+			mathText.fontSize = parseFloat(sizeEl.value) || 48;
+			mathText.align = alignEl.value;
+			mathText.lineSpacing = parseFloat(lineEl.value) || 1.2;
+			mathText.fill = fillRgba();
+			placeBelowSlugText();
+		}
+
+		presetEl.onchange = function () {
+			mathText.formula = buildFormula(presetEl.value);
+			placeBelowSlugText();
+		};
+		linkSlider('ctrlMathSize', 'ctrlMathSizeVal', function () { applyAll(); });
+		linkSlider('ctrlMathLineSpacing', 'ctrlMathLineSpacingVal', function () { applyAll(); });
+		alignEl.onchange = applyAll;
+		if (fillEl) fillEl.oninput = applyAll;
+		if (useBodyEl) useBodyEl.onchange = construct;
+
+		construct();
+
+		// Keep the math text glued to the bottom of the SlugText as the
+		// SlugText resizes via sidebar controls. Polling each frame is
+		// cheap; alternative would be to expose a "bbox changed" signal
+		// on SlugText, which doesn't exist today. Also re-construct
+		// once when the SlugText's font URL first becomes available so
+		// MathText picks up the body font (the initial construct() ran
+		// before `loadFont` resolved).
+		var lastFontUrl = getFontUrl();
+		var raf = function () {
+			var cur = getFontUrl();
+			if (useBodyEl && useBodyEl.checked && cur && cur !== lastFontUrl) {
+				lastFontUrl = cur;
+				construct();
+			}
+			placeBelowSlugText();
+			requestAnimationFrame(raf);
+		};
+		requestAnimationFrame(raf);
+
+		return mathText;
+	}
+
+	window.SlugExample = {run: run, runMathText: runMathText, _current: null};
 })();

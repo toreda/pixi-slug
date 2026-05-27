@@ -28,6 +28,7 @@
 	<script src="../../dist/v8/index.js"></script>
 
 	<!-- Shared sidebar wiring -->
+	<script src="/examples/_shared/mathPresets.js"></script>
 	<script src="/examples/_shared/wire.js"></script>
 
 	<script>
@@ -82,6 +83,23 @@
 				addToStage: function (slugText) { app.stage.addChild(slugText); },
 				removeFromStage: function (slugText) { app.stage.removeChild(slugText); },
 				loadTexture: function (url) { return PIXI.Assets.load(url); }
+			});
+
+			// Mount MathText below the SlugText. Driven by the new "Math"
+			// sidebar group. The wire helper polls SlugExample._current
+			// each RAF so the math text re-positions when SlugText
+			// changes size.
+			window.SlugExample.runMathText({
+				MathText: pixiSlug.MathText,
+				mathBuilder: pixiSlug.mathBuilder,
+				addToStage: function (mt) { app.stage.addChild(mt); },
+				removeFromStage: function (mt) { app.stage.removeChild(mt); },
+				getSlugText: function () {
+					return window.SlugExample._current && window.SlugExample._current.slugText;
+				},
+				getFontUrl: function () {
+					return window.SlugExample._current && window.SlugExample._current.fontUrl;
+				}
 			});
 		})();
 	</script>

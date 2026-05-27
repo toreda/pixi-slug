@@ -55,4 +55,16 @@ export interface SlugMeshSlot {
 	 * `fillGpu` is present; for shadow/stroke slots stays at `0`.
 	 */
 	fillMode: 0 | 1 | 2 | 3;
+	/**
+	 * Generation counter from {@link SlugFontGpuV8.generation} captured
+	 * when this slot's shader was last bound to the font's curve/band
+	 * texture sources. The slot's `_attachGpu` path compares this
+	 * against the font's current generation on every pass — when they
+	 * differ, the font's GPU cache replaced (and destroyed) the texture
+	 * sources this slot's shader still points at, and the shader's
+	 * `uCurveTexture` / `uBandTexture` resources must be rebound to the
+	 * new sources. Drives the "stationary SlugText that another
+	 * SlugText grew the font for" rebinding path.
+	 */
+	_gpuGeneration: number;
 }

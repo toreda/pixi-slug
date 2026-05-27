@@ -5,6 +5,7 @@ import {isSlugFontErrorMode} from './fonts/error';
 import {robotoFallbackBytes} from './fonts/fallback/roboto';
 import {slugFontRunPreload, type SlugFontPreloadOptions} from './fonts/preload';
 import {SlugFontsRegistry} from './fonts/registry';
+import {type SlugFontsRegistryOptions} from './fonts/registry/options';
 import {type SlugFontsRegistryStat} from './fonts/registry/stat';
 import {SlugFontsRegistryEntry} from './fonts/registry/entry';
 import {type SlugFontsRemoveResult} from './fonts/remove';
@@ -65,16 +66,62 @@ export class SlugFonts {
 	 * Return the registry singleton. If a prior copy of this module
 	 * created one on `globalThis`, reuse it so duplicate bundles still
 	 * share the same cache.
+	 *
+	 * `options` is consulted **only on first construction**. Subsequent
+	 * calls return the already-constructed registry with its locked-in
+	 * options, regardless of what's passed here — registry options are
+	 * immutable for the registry's lifetime.
+	 *
+	 * Call sites that need to influence the construction-time options
+	 * (e.g. the prewarm API entry points passing
+	 * `{parallelShaderCompile: true}`) must run **before** any other
+	 * `SlugFonts.*` operation in the application — otherwise the
+	 * registry is already constructed and the options are silently
+	 * discarded. The prewarm APIs detect that case and surface a
+	 * `console.warn` so the misordering is observable.
 	 */
-	private static _reg(): SlugFontsRegistry {
+	private static _reg(options?: Partial<SlugFontsRegistryOptions>): SlugFontsRegistry {
 		const g = globalThis as Record<string, unknown>;
 		let reg = g[Defaults.GLOBAL_KEY] as SlugFontsRegistry | undefined;
 		if (!reg) {
-			reg = new SlugFontsRegistry();
+			reg = new SlugFontsRegistry(options);
 			g[Defaults.GLOBAL_KEY] = reg;
+			// Apply any hooks installed before the registry existed. The
+			// version-specific entry point modules (`prewarm-install.ts`)
+			// run at JS module load — BEFORE any consumer code — and
+			// install hooks via `_installPrewarmHook` /
+			// `_installContextPrewarmHook`. Those installs must not
+			// auto-construct the registry, because doing so would lock the
+			// registry into non-prewarm mode and defeat the prewarm-API
+			// opt-in. So the install methods buffer the hooks here, and
+			// we transfer them onto the registry the moment it's actually
+			// constructed.
+			if (SlugFonts._pendingPrewarmHook !== undefined) {
+				reg.prewarmHook = SlugFonts._pendingPrewarmHook;
+			}
+			if (SlugFonts._pendingContextPrewarmHook !== undefined) {
+				reg.contextPrewarmHook = SlugFonts._pendingContextPrewarmHook;
+			}
 		}
 		return reg;
 	}
+
+	/**
+	 * Buffer slot for the renderer-prewarm hook installed before the
+	 * registry exists. `undefined` means "no install has happened yet";
+	 * `null` means "install was called with null (clear)". The marker
+	 * distinguishes "leave the registry's default null alone" from
+	 * "actively reset to null" — both end up null on the registry but
+	 * the install-tracking matters for diagnostics.
+	 */
+	private static _pendingPrewarmHook: ((renderer: unknown) => Promise<boolean>) | null | undefined =
+		undefined;
+
+	/** Same shape as {@link _pendingPrewarmHook} for the context-prewarm hook. */
+	private static _pendingContextPrewarmHook:
+		| ((gl: WebGL2RenderingContext) => Promise<boolean>)
+		| null
+		| undefined = undefined;
 
 	/**
 	 * Resolve any supported font input to a loaded `SlugFont`.
@@ -457,15 +504,19 @@ export class SlugFonts {
 	}
 
 	/**
-	 * Whether the GPU layer attempts a `KHR_parallel_shader_compile`
-	 * compile before falling back to PIXI's synchronous path.
+	 * Whether the registry is in "prewarm mode" — i.e. whether the
+	 * `KHR_parallel_shader_compile` path is active library-wide. True
+	 * when the consumer's first `SlugFonts.*` operation was a prewarm
+	 * API call ({@link prewarmContext} or {@link attachRenderer}); false
+	 * otherwise.
 	 *
-	 * **Read-only after startup.** The Slug shader is compiled exactly
-	 * once per page and the value is locked in at that point. To
-	 * override the default, construct the registry with
-	 * `parallelShaderCompile: false` (or set
-	 * `Defaults.Registry.ParallelShaderCompile = false` before the
-	 * first font load). Mutating after first compile has no effect.
+	 * **Read-only and immutable for the registry's lifetime.** Locked in
+	 * at construction. To opt into prewarm mode, call a prewarm API
+	 * before any other `SlugFonts.*` operation — see {@link prewarmContext}
+	 * for the contract.
+	 *
+	 * Mostly useful for diagnostics and assertions in tests. Production
+	 * code rarely reads this directly.
 	 */
 	public static get parallelShaderCompile(): boolean {
 		return SlugFonts._reg().parallelShaderCompile;
@@ -482,21 +533,35 @@ export class SlugFonts {
 
 	/**
 	 * Register the renderer the registry should target for shader
-	 * prewarming. Idempotent for the same renderer reference. Re-attach
-	 * with a different renderer detaches the old (programs are not
-	 * portable across GL contexts) before storing the new one.
+	 * prewarming, and **opt the registry into prewarm mode**. Idempotent
+	 * for the same renderer reference. Re-attach with a different
+	 * renderer detaches the old (programs are not portable across GL
+	 * contexts) before storing the new one.
 	 *
-	 * When a version-specific prewarm hook is installed (v8 sets it from
-	 * its entry point), `attachRenderer` immediately kicks off a compile
-	 * for the new renderer. The hook dedupes per renderer so calling
-	 * this with the same renderer twice does not double-compile.
+	 * **Call order matters.** This is a prewarm-API entry point: calling
+	 * it constructs the global registry with `parallelShaderCompile:
+	 * true` if no registry exists yet. If the registry was already
+	 * constructed by an earlier `SlugFonts.*` call (font load, alias
+	 * registration, etc.), its options are locked in and this call
+	 * cannot retroactively flip it into prewarm mode — a
+	 * `console.warn` surfaces the misordering and the renderer is still
+	 * registered (so `detachRenderer` / lifecycle hooks still work),
+	 * but the prewarm hook does not fire and `parallelShaderCompile`
+	 * remains false. To use prewarm mode, call this (or
+	 * {@link prewarmContext}) before any other `SlugFonts.*` operation.
+	 *
+	 * When the registry is in prewarm mode and a version-specific
+	 * prewarm hook is installed (v8 sets it from its entry point), this
+	 * immediately kicks off a compile for the new renderer. The hook
+	 * dedupes per renderer so calling this with the same renderer twice
+	 * does not double-compile.
 	 *
 	 * No-op when `renderer` is null/undefined — that case is reserved
 	 * for {@link detachRenderer}.
 	 */
 	public static attachRenderer(renderer: unknown): void {
 		if (!renderer) return;
-		const reg = SlugFonts._reg();
+		const reg = SlugFonts._reg({parallelShaderCompile: true});
 		if (reg.renderer === renderer) return;
 
 		// Different renderer — clear the previous slot first so callers
@@ -505,6 +570,11 @@ export class SlugFonts {
 			reg.renderer = null;
 		}
 		reg.renderer = renderer;
+
+		if (!reg.parallelShaderCompile) {
+			SlugFonts._warnPrewarmTooLate('attachRenderer');
+			return;
+		}
 
 		if (reg.prewarmHook) {
 			// Fire-and-forget: the hook owns the in-flight cache so
@@ -515,6 +585,28 @@ export class SlugFonts {
 				/* swallowed; falls back to PIXI sync compile on first draw */
 			});
 		}
+	}
+
+	/**
+	 * Surface a one-time `console.warn` when a prewarm API is called
+	 * after the registry was already constructed in non-prewarm mode.
+	 * Deduped per registry+api-name so consumers don't get spammed if
+	 * the misordered call sits inside a frequently-invoked path. The
+	 * library cannot rescue the consumer at this point — the registry's
+	 * options are locked — so the warning is the only useful signal.
+	 */
+	private static _warnPrewarmTooLate(apiName: string): void {
+		const reg = SlugFonts._reg();
+		const regWithWarned = reg as unknown as {_warnedPrewarmTooLate?: Set<string>};
+		const warned = regWithWarned._warnedPrewarmTooLate ?? new Set<string>();
+		if (warned.has(apiName)) return;
+		warned.add(apiName);
+		regWithWarned._warnedPrewarmTooLate = warned;
+		console.warn(
+			`[SlugFonts] ${apiName}() was called after the registry was already constructed in non-prewarm mode. ` +
+				`Prewarm-mode opt-in must happen before any other SlugFonts operation; this call cannot retroactively ` +
+				`enable parallel-compile. Behavior falls back to the synchronous PIXI compile path.`
+		);
 	}
 
 	/**
@@ -555,6 +647,57 @@ export class SlugFonts {
 	}
 
 	/**
+	 * Compile + link the Slug shader against a user-supplied WebGL2
+	 * context **before** any PIXI renderer wraps it, then have the
+	 * later `attachRenderer` step adopt the prewarmed program into PIXI's
+	 * renderer cache without recompiling. This is the **context-first
+	 * prewarm path** — the primary way to maximize parallel-compile
+	 * benefit, since the 500ms link runs concurrently with everything
+	 * the host does between context creation and first render.
+	 *
+	 * **Call order matters.** Like {@link attachRenderer}, this is a
+	 * prewarm-API entry point: calling it constructs the global registry
+	 * with `parallelShaderCompile: true` if no registry exists yet. If
+	 * the registry was already constructed by an earlier `SlugFonts.*`
+	 * call, this call surfaces a `console.warn` and returns
+	 * `Promise.resolve(false)` — it cannot retroactively flip the
+	 * registry into prewarm mode. To use prewarm mode, call this (or
+	 * `attachRenderer`) before any other `SlugFonts.*` operation.
+	 *
+	 * Typical v8 flow:
+	 *
+	 * ```js
+	 * const canvas = document.createElement('canvas');
+	 * const gl = canvas.getContext('webgl2', {...});
+	 * SlugFonts.prewarmContext(gl);   // fire-and-forget; compile starts now
+	 *
+	 * const app = new PIXI.Application();
+	 * await app.init({context: gl, ...});  // PIXI adopts our context
+	 *
+	 * PIXI.extensions.add(SlugApplicationPluginV8);
+	 * // Plugin's init runs attachRenderer(app.renderer) → finds our
+	 * // prewarmed gl on the renderer → adopts the linked program.
+	 * ```
+	 *
+	 * Returns `true` on a successful compile + link + program-data build.
+	 * `false` on any short-circuit (registry already in non-prewarm mode,
+	 * missing `KHR_parallel_shader_compile`, link error, prewarm hook
+	 * not installed — i.e. caller is on v6/v7).
+	 *
+	 * `null`/`undefined` `gl` resolves to `false` immediately.
+	 */
+	public static prewarmContext(gl: WebGL2RenderingContext | null | undefined): Promise<boolean> {
+		if (!gl) return Promise.resolve(false);
+		const reg = SlugFonts._reg({parallelShaderCompile: true});
+		if (!reg.parallelShaderCompile) {
+			SlugFonts._warnPrewarmTooLate('prewarmContext');
+			return Promise.resolve(false);
+		}
+		if (!reg.contextPrewarmHook) return Promise.resolve(false);
+		return reg.contextPrewarmHook(gl);
+	}
+
+	/**
 	 * Install the version-specific shader prewarm hook on the registry.
 	 * Public-but-underscore-prefixed to signal "version entry point use
 	 * only" — typical user code never calls this. v8's entry point
@@ -563,11 +706,66 @@ export class SlugFonts {
 	 *
 	 * Calling with `null` clears the hook (used by tests; production
 	 * code never needs to clear).
+	 *
+	 * Does **not** trigger registry construction. When called before the
+	 * registry exists (the v8 module-load path), the hook is buffered
+	 * and applied at the moment of first construction. This is essential
+	 * for the prewarm-mode opt-in contract: installing a hook is a
+	 * library-internal setup step, not a consumer signal to opt into
+	 * prewarm mode.
 	 */
 	public static _installPrewarmHook(
 		hook: ((renderer: unknown) => Promise<boolean>) | null
 	): void {
-		SlugFonts._reg().prewarmHook = hook;
+		const g = globalThis as Record<string, unknown>;
+		const reg = g[Defaults.GLOBAL_KEY] as SlugFontsRegistry | undefined;
+		if (reg) {
+			reg.prewarmHook = hook;
+		} else {
+			SlugFonts._pendingPrewarmHook = hook;
+		}
+	}
+
+	/**
+	 * Install the version-specific context-prewarm hook on the registry.
+	 * Companion to {@link _installPrewarmHook} for the context-first
+	 * path. v8's entry point wires `slugPrewarmContext` here; v6/v7
+	 * leave it null and {@link prewarmContext} resolves to `false`.
+	 *
+	 * Calling with `null` clears the hook (used by tests).
+	 *
+	 * Does **not** trigger registry construction; buffers the hook for
+	 * application at first construction if no registry exists yet. See
+	 * {@link _installPrewarmHook} for the rationale.
+	 */
+	public static _installContextPrewarmHook(
+		hook: ((gl: WebGL2RenderingContext) => Promise<boolean>) | null
+	): void {
+		const g = globalThis as Record<string, unknown>;
+		const reg = g[Defaults.GLOBAL_KEY] as SlugFontsRegistry | undefined;
+		if (reg) {
+			reg.contextPrewarmHook = hook;
+		} else {
+			SlugFonts._pendingContextPrewarmHook = hook;
+		}
+	}
+
+	/**
+	 * Drop the global registry singleton so the next operation
+	 * constructs a fresh one. Test-only — registry options are immutable
+	 * for the registry's lifetime, so production code never needs to
+	 * reset; consumers either get the mode they construct with or live
+	 * with the misordering warning.
+	 *
+	 * Tests that need to exercise different `parallelShaderCompile`
+	 * states across test cases call this in `beforeEach` to ensure the
+	 * next `_reg(options)` call honors the options passed.
+	 */
+	public static _resetRegistry(): void {
+		const g = globalThis as Record<string, unknown>;
+		delete g[Defaults.GLOBAL_KEY];
+		SlugFonts._pendingPrewarmHook = undefined;
+		SlugFonts._pendingContextPrewarmHook = undefined;
 	}
 
 	/**

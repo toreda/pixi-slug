@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-13
+
+### Added
+* Incremental mesh rebuilding which significantly improves performance when only some of the characters in a `SlugText` string change, e.g. `12:01` -> `12:02`. The mesh is now only rebuilt for the changed characters instead of the full text object on change. Mesh rebuild behavior is unchanged when all characters change, e.g. `AAAA` -> `BBBB`.
+  The interactive examples now have a live JS snippet that shows the actual code properties of the canvas text on screen.
+* The demo pages now show a live code snippet preview that contains all the settings needed to recreate the text shown on screen including all styles. 
+
+### Changed
+* Reduced output bundle size from ~1200kb to ~900kb by removing `@toreda/strong-types` and `@toreda/verify`. Functions from both packages were either inlined or simple versions of used helpers were added to this project to eliminate the imports.
+* Added `"fast-uri": ">=3.1.2"` to pnpm `overrides` to resolve `CVE-2026-6322`. `fast-uri` version `3.1.0` was pulled in as a transitive dependency by dev dependencies, butnever included in the output bundle and never used at runtime. 
+* Refactored renderer `prewarm` init flow for `v8`. 
+
+### Fixed
+* Refactored several version specific files that were incorrectly shared between `v6` and `v7`, causing mixed version files in both `v6` and `v7` output bundles. Files importing version-specific PIXI code can't go in `shared` without those imports leaking into other version bundles. Some of the shared code which was imported between `v6` and `v7` was duplicated to maintain version isolation.
+
 ## [0.3.4] - 2026-05-07
 
 ### Fixed

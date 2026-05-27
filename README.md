@@ -38,7 +38,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 | `subscript`                            |  ❌  |  ❌  |  ❌  |
 | `WebGL1` support                      |  ❌  |  ❌  |  ❌  |
 | `WebGL2` support                      |  ✅  |  ✅  |  ✅  |
-
+| WebGL Prewarm & Parallel Shader Compile  |  ✅  |  ❌  |  ❌  |
 
 &nbsp;
 ## Fonts
@@ -64,11 +64,12 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 | Text decoration: `underline`         |  ✅  |  ✅  |  ✅  |
 | Text decoration: `strikethrough`     |  ✅  |  ✅  |  ✅  |
 | Text decoration: `overline`          |  ✅  |  ✅  |  ✅  |
-| Fill: Directional Gradient      |  ✅  |  ✅  |  ✅  |
-| Fill: Radial Gradient           |  ✅  |  ✅  |  ✅  |
-| Fill: `Texture`                  |  ✅  |  ✅  |  ✅  |
+| Text Fill: Directional Gradient      |  ✅  |  ✅  |  ✅  |
+| Text Fill: Radial Gradient           |  ✅  |  ✅  |  ✅  |
+| Text Fill: `Texture`                  |  ✅  |  ✅  |  ✅  |
 | `text-align`                           |  ✅  |  ✅  |  ✅  |
 | `text-justify`                         |  ✅  |  ✅  |  ✅  |
+| Dropshadow                |  ✅  |  ✅  |  ✅  |
 
 &nbsp;
 # FAQ
@@ -122,11 +123,33 @@ Advantages depend on use case. This package probably won't benefit you if:
 
 <p align="center">· · ·</p>
 
+## What is renderer "prewarming"?
+
+**Prewarming** starts the renderer earlier than normal so the Slug shader compiles and links on a background thread — using the `KHR_parallel_shader_compile` WebGL extension — while the rest of your app is still loading. By the time the first `SlugText` actually renders, the linked program is already cached and the draw runs immediately.
+
+There are two ways to enable it, both v8-only:
+
+- **Context-first** — `SlugFonts.prewarmContext(gl)`. You create the WebGL2 context yourself and pass it to both pixi-slug and PIXI. Compile starts the instant the context exists, running concurrently with `Application.init()` itself. Maximum parallelism, slightly more setup code.
+- **Renderer-first** — register `SlugApplicationPluginV8` before `app.init()`. The plugin calls `SlugFonts.attachRenderer(app.renderer)` during PIXI's plugin chain init. Compile starts after PIXI's renderer setup completes, running concurrently with whatever your app does between `app.init()` resolving and first render. Less setup, slightly later start.
+
+**Prewarming is off by default.** You opt in by calling one of the two APIs as the first `SlugFonts.*` operation in your app. When the `KHR_parallel_shader_compile` extension is unavailable, prewarm transparently falls back to PIXI's synchronous compile path — no regression vs. the no-prewarm behavior.
+
+See [the prewarm section below](#shader-prewarm-v8) for code examples, and [_specs/features/parallel_shader_compile.md](_specs/features/parallel_shader_compile.md) for the full design.
+
+<p align="center">· · ·</p>
+
+## Why is renderer prewarming only support for PIXI v8?
+
+The API for PIXI v6 and v7 don't support renderer prewarming.
+
+<p align="center">· · ·</p>
+
 ## What font formats does it support?
 `pixi-slug` supports stand web font formats: `ttf`, `otf`, `woff`, and `woff2`.
 
 
 <p align="center">· · ·</p>
+
 
 ## What version of WebGL does pixi-slug require?
 
@@ -463,6 +486,70 @@ Application.registerPlugin(SlugApplicationPluginV6);
 **Conflict behavior:** both paths call `SlugFonts.attachTicker` under the hood. If one is already active and another tries to attach, `SlugFonts.reattachPolicy` decides what happens — `'throw'` by default, or `'error'` / `'warn'` / `'silent'`. Change it with `SlugFonts.setReattachPolicy('warn')` (validated — invalid modes are rejected and logged). Pass `{force: true}` as the second arg to `attachTicker` to replace silently. Full details in [_features/application_plugin.md](_features/application_plugin.md).
 
 &nbsp;
+## Shader prewarm (v8)
+
+Prewarm uses `KHR_parallel_shader_compile` to move the Slug shader's compile + link work off the main thread, running in parallel with the rest of your app's load. **Off by default** — opt in by calling a prewarm API as the first `SlugFonts.*` operation in your app. v8-only; see the [FAQ entry above](#what-is-renderer-prewarming) for background.
+
+### Context-first prewarm — maximum parallelism
+
+The earliest possible prewarm. Create the WebGL2 context yourself, fire `prewarmContext(gl)` immediately, then pass the same context into `Application.init({context: gl})`. The compile runs concurrently with `autoDetectRenderer`, plugin chain init, font loading, scene construction — everything else your app does between context creation and first render.
+
+```typescript
+const {Application, extensions} = require('pixi.js');
+const {SlugFonts, SlugApplicationPluginV8, SlugText} = require('pixi-slug');
+
+// 1. Create the canvas + WebGL2 context yourself.
+const canvas = document.createElement('canvas');
+const gl = canvas.getContext('webgl2', {antialias: true});
+
+// 2. Fire prewarm. MUST be the first SlugFonts.* call.
+SlugFonts.prewarmContext(gl);   // fire-and-forget; compile starts now
+
+// 3. Build the Application around the same context. PIXI v8 accepts
+//    `context` in ApplicationOptions and uses our context instead of
+//    creating one.
+SlugFonts.detachTicker();   // plugin re-attaches to app.ticker below
+extensions.add(SlugApplicationPluginV8);
+
+const app = new Application();
+await app.init({context: gl, canvas, width: 800, height: 600});
+// Plugin's init runs SlugFonts.attachRenderer(app.renderer), which
+// finds the prewarmed gl on renderer.gl and adopts the linked program
+// into PIXI's cache — no recompile.
+
+document.body.appendChild(app.canvas);
+app.stage.addChild(new SlugText({text: 'Hello', font: '...'}));
+```
+
+### Renderer-first prewarm — minimal code change
+
+Simpler but starts later. Skip the manual canvas creation and just register the plugin; the plugin's `init` hook calls `attachRenderer(app.renderer)` after PIXI's renderer setup completes. The compile runs concurrently with whatever your app does between `app.init()` resolving and first render.
+
+```typescript
+const {Application, extensions} = require('pixi.js');
+const {SlugFonts, SlugApplicationPluginV8, SlugText} = require('pixi-slug');
+
+SlugFonts.detachTicker();   // plugin re-attaches to app.ticker
+extensions.add(SlugApplicationPluginV8);
+
+const app = new Application();
+await app.init({width: 800, height: 600});
+// Plugin's init calls SlugFonts.attachRenderer(app.renderer) → prewarm kicks off here.
+```
+
+### Call-order contract
+
+Prewarm-mode opt-in **must happen before any other `SlugFonts.*` operation**. The first call wins: whichever API touches the registry first locks its mode in for the registry's lifetime. If `prewarmContext` or `attachRenderer` is called after the registry was already constructed in non-prewarm mode (e.g. a font was loaded first), the library logs a one-time `console.warn` and the call has no effect — the registry cannot be hot-swapped into prewarm mode.
+
+### Fallback behavior
+
+When `KHR_parallel_shader_compile` is unavailable, prewarm gracefully falls back to PIXI's synchronous compile on first draw — identical to today's no-prewarm behavior. No regression. Full design in [_specs/features/parallel_shader_compile.md](_specs/features/parallel_shader_compile.md).
+
+### v6 / v7
+
+Prewarm is v8-only. `SlugFonts.prewarmContext` is callable in v6/v7 too but resolves to `false` immediately — safe to leave in code that targets multiple versions.
+
+&nbsp;
 ## Changelog
 
 Release history and unreleased changes are tracked in [CHANGELOG.md](CHANGELOG.md).
@@ -475,9 +562,9 @@ Release history and unreleased changes are tracked in [CHANGELOG.md](CHANGELOG.m
 &nbsp;
 ## Legal
 
-Eric Lengyel created the patented slug algorithm in 2016. He graciously released it into the public domain for free in 2026. [`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is a TypeScript port of his work to add gpu-based font rendering to [pixi.js](https://pixijs.com/).
+Eric Lengyel created the patented slug algorithm in 2016. He graciously released it into the public domain in 2026. [`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is a TypeScript port of his work to add gpu-based font rendering to [pixi.js](https://pixijs.com/).
 
-[`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is not affiliated with, or endorsed by Eric Lengyel.
+*[`pixi-slug`](https://www.npmjs.com/package/pixi-slug) is not affiliated with, or endorsed by Eric Lengyel.*
 
 &nbsp;
 ## License

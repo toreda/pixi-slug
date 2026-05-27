@@ -101,6 +101,16 @@ export class SlugText extends SlugTextV7Base {
 	 * `null` only when the SlugText has never seen a ready signal yet.
 	 */
 	private _programReadyCache: SlugFontGpuV7 | null;
+	/**
+	 * Font GPU generation counter captured the last time this SlugText
+	 * bound its meshes' shaders to the font's curve/band textures.
+	 * Compared to `font.gpuCache.generation` on every `_render` to
+	 * detect when another SlugText sharing the same font has grown the
+	 * font's buffers (destroying the old textures we still reference).
+	 * `-1` means "no meshes attached yet"; set to the live generation
+	 * by `_buildAndAttachMeshes`.
+	 */
+	private _attachedGeneration: number;
 
 	constructor(init: SlugTextInit) {
 		super();
@@ -111,6 +121,7 @@ export class SlugText extends SlugTextV7Base {
 		this._pendingPlan = null;
 		this._attachToken = 0;
 		this._programReadyCache = null;
+		this._attachedGeneration = -1;
 
 		// Opt the whole subtree out of hit-testing by default. The
 		// internal meshes use a custom geometry so PIXI's
@@ -428,7 +439,38 @@ export class SlugText extends SlugTextV7Base {
 	 */
 	protected override _render(renderer: Renderer): void {
 		const plan = this._pendingPlan;
-		if (!plan) return;
+
+		// Pull-on-draw rebind path (multi-font audit option A2). When no
+		// rebuild is pending, still check whether another SlugText
+		// sharing the same font grew the font's curve/band buffers since
+		// our last attach. That grow destroys the font's previous
+		// `curveTexture` / `bandTexture` and replaces them — leaving
+		// every `Shader` already bound to the old textures pointing at
+		// invalid (destroyed) PIXI resources. Symptom: stationary
+		// SlugTexts that share a font with a just-grown SlugText render
+		// blank or garbled glyphs.
+		//
+		// v7 doesn't use the v8 slot model — it manages a flat
+		// `_meshes` array. The per-SlugText `_attachedGeneration` field
+		// records the font generation we last bound to; when the font
+		// has moved past it we rebind every mesh's shader to the font's
+		// current curve/band textures. Cheap no-op in the steady state
+		// (one int compare).
+		if (!plan) {
+			const font = this._fontRef?.deref();
+			if (!font) return;
+			const gpuCache = font.gpuCache as SlugFontGpuV7 | null;
+			if (!gpuCache) return;
+			if (this._attachedGeneration !== gpuCache.generation) {
+				for (const mesh of this._meshes) {
+					const u = mesh.shader.uniforms as Record<string, unknown>;
+					u.uCurveTexture = gpuCache.curveTexture;
+					u.uBandTexture = gpuCache.bandTexture;
+				}
+				this._attachedGeneration = gpuCache.generation;
+			}
+			return;
+		}
 
 		const gpu = slugFontGpuV7(plan.font, plan.ensureResult, renderer);
 
@@ -452,6 +494,7 @@ export class SlugText extends SlugTextV7Base {
 
 		this._buildAndAttachMeshes(plan, gpu);
 		this._pendingPlan = null;
+		this._attachedGeneration = gpu.generation;
 	}
 
 	private _buildAndAttachMeshes(plan: SlugTextRenderPlan, gpu: SlugFontGpuV7): void {

@@ -1,5535 +1,10 @@
-!function(root,factory){"object"==typeof exports&&"object"==typeof module?module.exports=factory(require("pixi.js")):"function"==typeof define&&define.amd?define([],factory):"object"==typeof exports?exports.pixiSlug=factory(require("pixi.js")):root.pixiSlug=factory(root.PIXI)}(this,__WEBPACK_EXTERNAL_MODULE__3000__=>/******/(()=>{// webpackBootstrap
+!function(root,factory){"object"==typeof exports&&"object"==typeof module?module.exports=factory(require("pixi.js")):"function"==typeof define&&define.amd?define([],factory):"object"==typeof exports?exports.pixiSlug=factory(require("pixi.js")):root.pixiSlug=factory(root.PIXI)}(this,__WEBPACK_EXTERNAL_MODULE__0__=>/******/(()=>{// webpackBootstrap
 /******/var __webpack_modules__={
-/***/9452(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.archAliases=void 0,
-/**
- * Common architecture aliases mappe dto full arch IDs.
- *
- * @category System Info
- */
-exports.archAliases={
-/** BSD & Some linux distributions refer to arm64 as aarch64. */
-aarch64:"arm64",
-/** Specifically the instruction set for arm64, but sometimes used coloqualiiy */
-a64:"arm64",
-/** Some Windows versions and Linux distributions identify both AMD64 and Intel 64 as 'amd64'. */
-/** Hyphen vs underscore in x86_64 varies by implementation. Strong Types
-     * supports x86_64 as the arch type, but includes this alias to support
-     * mapping it on systems which use the hyphen. */
-"x86-64":"x86_64",
-/** Technically valid architecture identifier on its own, but commonly used to shorthand x86_64.*/
-x64:"x86_64"}},
-/***/4488(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.archSet=void 0,
-/**
- * All supported target architecture keys. This is not an
- * exhaustive list, only those currently supported.
- *
- * @category System Info
- */
-exports.archSet=new Set(["arc","arm","arm64","itanium","mips","powerpc","sparc","x86_64","x86"])},
-/***/5106(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.archValid=void 0;const set_1=__webpack_require__(4488);
-/**
- * Check whether provided key identifies a supported architecture.
- * @param value
- * @returns
- *
- * @category System Info
- */exports.archValid=function(key){return!!key&&set_1.archSet.has(key)}},
-/***/1411(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.arrayMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938);exports.arrayMake=
-/**
- *
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Collections
- */
-function(fallback,initial){const rules=new rules_1.Rules;rules.add().must.match.type.array();const value=void 0!==initial?initial:[];return(0,type_1.createType)(fallback,value,rules,"Array")}},
-/***/7962(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.arrayNullValue=void 0,exports.arrayNullValue=
-/**
- * Check if `value` is an array and return it when true. Otherwise returns
- * `fallback`. Guarantees return type without additional checks.
- *
- * @param value			`value` to validate as an Array.
- * @param fallback		Returned when `value` not an Array.
- * @returns				`value` if it's an Array, otherwise `fallback`.
- *
- * @category Collections
- */
-function(value,fallback){return Array.isArray(value)?value:fallback}},
-/***/5084(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.arrayValue=void 0,exports.arrayValue=
-/**
- * Check whether provided `value` is an Array and return it if so,
- * otherwise return provided `fallback`.
- * @param value			`value` to validate as an Array.
- * @param fallback		Returned when `value` is not an Array.
- * @returns				`value` if it's an Array, otherwise `fallback`.
- *
- * @category Collections
- */
-function(value,fallback){return Array.isArray(value)?value:fallback}},
-/***/5143(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.awsArnMake=void 0;const make_1=__webpack_require__(275);
-/**
- * Make an Amazon Resource Name ID.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Unique Identifiers
- */exports.awsArnMake=function(fallback,value){
-// Length constants specified at: https://docs.aws.amazon.com/IAM/latest/APIReference/API_Policy.html
-return(0,make_1.idMake)(fallback,value,{minLength:20,maxLength:2048,contains:["arn::"],typeId:"AwsArn"})}},
-/***/4546(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.bigMake=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369);exports.bigMake=
-/**
- * Wraps Big object creation with try/catch and returns null when
- * Big constructor throws. Performs no validation on value.
- * @param value
- *
- * @category Maths
- */
-function(value){if(null==value)return null;if((0,match_1.typeMatch)(value,big_js_1.default))return value;let result=null;try{result=(0,big_js_1.default)(value)}catch(e){console.error(`Bad bigMake: ${e}.`),result=null}return result}},
-/***/4356(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.boolMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.boolMake=
-/**
- * Factory function to create a StrongType Bool object.
- * @param fallback
- * @param value
- * @returns
- *
- * @category Bool
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.boolean(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Bool")}},
-/***/669(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.booleanNullValue=void 0;const value_1=__webpack_require__(9501);
-/**
- * Check if `value` is a valid boolean and return it if so, otherwise
- * returns `fallback`.
- * @param value
- * @param fallback
- * @returns
- *
- * @category Bool
- */exports.booleanNullValue=function(value,fallback){return(0,value_1.typeValue)("boolean",value,fallback)}},
-/***/1825(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.booleanValue=void 0;const value_1=__webpack_require__(9501);
-/**
- * Return `value` if it's a valid boolean, otherwise returns `fallback`.
- *
- * @param value
- * @param fallback
- * @returns
- *
- * @category Bool
- */exports.booleanValue=function(value,fallback){return(0,value_1.typeValue)("boolean",value,fallback)}},
-/***/4125(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.canConvertFromBig=void 0;
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */
-const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369),BIG_MAX_SAFE_INT=(0,big_js_1.default)(Number.MAX_SAFE_INTEGER),BIG_MIN_SAFE_INT=(0,big_js_1.default)(Number.MIN_SAFE_INTEGER);exports.canConvertFromBig=
-/**
- * Convert from common numeric types to the `Big` data type.
- * @param value
- * @returns
- *
- * @category Strong Helpers
- */
-function(value){return null!=value&&(!!(0,match_1.typeMatch)(value,big_js_1.default)&&(!value.gt(BIG_MAX_SAFE_INT)&&!value.lt(BIG_MIN_SAFE_INT)))}},
-/***/5938(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.createType=void 0;const data_1=__webpack_require__(2503);
-/**
- * Create a StrongType.
- * @param fallbackArg
- * @param initial
- * @param rules
- * @returns
- *
- * @category Core
- */exports.createType=function(fallbackDefault,initial,rules,typeId){const instance=new data_1.StrongData(fallbackDefault,initial,rules,typeId);return Object.assign(value=>(void 0!==value&&instance.set(value),instance.get(instance.fallbackDefault)),{
-/**
-         * Get current value and return provided fallback if
-         * @param fallback
-         * @returns
-         */
-get:fallback=>instance.get(fallback),
-/**
-         * Get current value, or null if there isn't one.
-         * @returns		Current value when set, otherwise null.
-         */
-getNull:()=>instance.getNull(),
-/**
-         * Reset instance properties to their starting values.
-         */
-reset:()=>{instance.reset(),void 0!==initial&&instance.set(initial)},
-/**
-         * Read-only check to determine if provided value passes
-         * rule validation for this instance.
-         * @param value
-         * @returns
-         */
-check:target=>instance.check(target),typeId,baseType:"StrongType",_data:instance})}},
-/***/9446(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.CSSFont=void 0;const defaults_1=__webpack_require__(7141),rules_1=__webpack_require__(3756),map_1=__webpack_require__(5753),make_1=__webpack_require__(1293),make_2=__webpack_require__(9853);
-/**
- * @category CSS
- */
-class CSSFont extends map_1.StrongMap{constructor(){super();(new rules_1.Rules).add().must.match.pattern.hexColor(),this.color=(0,make_1.hexColorCodeMake)(defaults_1.Defaults.CSS.Font.Color),this.family=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Family),this.lineHeight=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.LineHeight),this.size=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Size),this.stretch=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Stretch),this.variant=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Variant),this.weight=(0,make_2.strongMake)(defaults_1.Defaults.CSS.Font.Weight)}reset(){this.color.reset(),this.family.reset(),this.lineHeight.reset(),this.size.reset(),this.stretch.reset(),this.variant.reset(),this.weight.reset()}}exports.CSSFont=CSSFont},
-/***/6980(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.CSSText=void 0;const map_1=__webpack_require__(5753),make_1=__webpack_require__(4837);
-/**
- * @category CSS
- */
-class CSSText extends map_1.StrongMap{constructor(){super(),this.decoration=(0,make_1.textMake)("none"),this.shadow=(0,make_1.textMake)("0")}reset(){this.decoration.reset(),this.shadow.reset()}}exports.CSSText=CSSText},
-/***/3366(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.dblMake=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),big_1=__webpack_require__(518),float_1=__webpack_require__(6255),BIG_ZERO=(0,big_js_1.default)(0),BIG_ONE=(0,big_js_1.default)(1);exports.dblMake=
-/**
- * Make instance of arbitrary precision decimal type.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Maths
- */
-function(fallback,initial){const rules=new rules_1.Rules;rules.add().must.match.type.big();const bigFallback=(0,big_1.toDblBig)(fallback),bigInitial=(0,big_1.toDblBig)(initial),strong=(0,type_1.createType)(null!=bigFallback?bigFallback:BIG_ZERO,bigInitial,rules,"Dbl");return Object.assign(strong,{increment:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.add(BIG_ONE);return strong._data.set(result)?result:null},decrement:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.minus((0,big_js_1.default)(1));return strong._data.set(result)?result:null},mul:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toDblBig)(input);if(null===value)return null;const result=curr.mul(value);return strong._data.set(result)?result:null},pow:exponent=>{const curr=strong._data.getNull(),value=(0,float_1.toFloat)(exponent);if(null===curr||null===value)return null;const result=curr.pow(value);return strong._data.set(result)?result:null},div:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toDblBig)(input);if(null===curr||null===value)return null;if(value===BIG_ZERO||curr===BIG_ZERO)return null;const result=curr.div(value);return strong._data.set(result)?result:null},add:input=>{const value=(0,big_1.toDblBig)(input),curr=strong.getNull();if(null===value)return null;if(null===curr)return null;const result=curr.add(value);return strong._data.set(result)?result:null},sub:input=>{const value=(0,big_1.toDblBig)(input),curr=strong.getNull();if(null===value||null===curr)return null;const result=curr.minus(value);return strong._data.set(result)?result:null}})}},
-/***/7141(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Defaults=void 0;
-/**
- * Default values used across the library.
- *
- * @category Core
- */
-class Defaults{}exports.Defaults=Defaults,Defaults.Vec={X:0,Y:0,Z:0,W:0},Defaults.CSS={Font:{Color:"#FFFFFF",Size:"12px",Family:"sans-serif",Weight:"normal",Stretch:"normal",Variant:"normal",LineHeight:"normal"}}},
-/***/5748(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2010 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.emailMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.emailMake=
-/**
- * Create Strong Email object with fallback and optional initial value.
- * @param fallback	Value returned when none is set.
- * @param initial	Starting value.
- * @returns			New strong Email object.
- *
- * @category Email
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.email(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Email")}},
-/***/5582(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.floatMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.floatMake=
-/**
- *
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Maths
- */
-function(fallback,value){const rules=new rules_1.Rules;rules.add().must.match.type.float();const strong=(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Float");return Object.assign(strong,{increment:()=>strong._data.add(1),decrement:()=>{const curr=strong._data.getNull();return null===curr||0===curr?null:strong._data.add(-1)},mul:amt=>strong._data.mul(amt),pow:exponent=>strong._data.pow(exponent),div:amt=>strong._data.div(amt),add:amt=>strong._data.add(amt),sub:amt=>strong._data.add(-1*amt)})}},
-/***/5678(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasCharMake=exports.hasChar=void 0;const node_1=__webpack_require__(8248),text_1=__webpack_require__(3841);
-/**
- *
- * @param text
- * @param char
- * @returns
- *
- * @category Validators
- */
-function hasChar(text,char){return"string"==typeof text&&"string"==typeof char&&(0!==text.length&&0!==char.length&&(1===char.length&&(0,text_1.hasText)(text,char)))}exports.hasChar=hasChar,exports.hasCharMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_CHAR",1/* CMP */,curr=>hasChar(curr,target),mods);return rule.add(node),caller}}},
-/***/3387(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasCharTimesMake=exports.hasCharTimes=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param text
- * @param char
- * @param count
- * @returns
- *
- * @category Validators
- */function hasCharTimes(text,targetChar,count){if("string"!=typeof text||"string"!=typeof targetChar)return!1;if(!text.length||!targetChar.length)return!1;if(1!==targetChar.length)return!1;if(count<0)return!1;let findCount=0;
-// O(n) search for matching characters. Doesn't work for greater
-for(const char of text)char===targetChar&&findCount++;return findCount>=count}exports.hasCharTimes=hasCharTimes,exports.hasCharTimesMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return(char,count)=>{const node=new node_1.RuleNode("HAS_CHAR_TIMES",1/* CMP */,curr=>hasCharTimes(curr,char,count),mods);return rule.add(node),caller}}},
-/***/2477(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthEqualMake=exports.hasLengthEqual=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param value
- * @param target
- * @returns
- *
- * @category Validators
- */function hasLengthEqual(value,target){if(null==value)return!1;if("number"!=typeof target)return!1;if("string"==typeof value)return value.length===target;if(Array.isArray(value))return value.length===target;const obj=value;return"number"==typeof obj.length&&obj.length===target}exports.hasLengthEqual=hasLengthEqual,exports.hasLengthEqualMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_EQ",1/* CMP */,curr=>hasLengthEqual(curr,target),mods);return rule.add(node),caller}}},
-/***/5078(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthGTMake=exports.hasLengthGreaterThan=void 0;const node_1=__webpack_require__(8248),gt_1=__webpack_require__(6041);
-/**
- *
- * @param curr
- * @param target
- * @returns
- *
- * @category Validators
- */
-function hasLengthGreaterThan(curr,target){return"number"==typeof curr.length&&(!(curr.length<0)&&(0,gt_1.isGT)(curr.length,target))}exports.hasLengthGreaterThan=hasLengthGreaterThan,exports.hasLengthGTMake=
-/**
- * Create hasLengthGT validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_GT",1/* CMP */,curr=>hasLengthGreaterThan(curr,target),mods);return rule.add(node),caller}}},
-/***/2751(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthGTEMake=exports.hasLengthGTE=void 0;const node_1=__webpack_require__(8248),gte_1=__webpack_require__(3994);
-/**
- *
- * @param curr
- * @param target
- * @returns
- *
- * @category Validators
- */
-function hasLengthGTE(value,target){return"number"==typeof value.length&&(!(value.length<0)&&(0,gte_1.isGTE)(value.length,target))}exports.hasLengthGTE=hasLengthGTE,exports.hasLengthGTEMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_GRT_OR_EQL",1/* CMP */,curr=>hasLengthGTE(curr,target),mods);return rule.add(node),caller}}},
-/***/5193(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- *
- * CSS Property descriptions from w3 schools:
- * https://www.w3schools.com/cssref/pr_pos_clip.asp
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthLTMake=exports.hasLengthLT=void 0;const node_1=__webpack_require__(8248),lt_1=__webpack_require__(3622);
-/**
- *
- * @param curr
- * @param target
- * @returns
- *
- * @category Validators
- */
-function hasLengthLT(curr,target){return"number"==typeof curr.length&&(!(curr.length<0)&&(0,lt_1.isLT)(curr.length,target))}exports.hasLengthLT=hasLengthLT,exports.hasLengthLTMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_LT",1/* CMP */,curr=>hasLengthLT(curr,target),mods);return rule.add(node),caller}}},
-/***/8042(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- *
- * CSS Property descriptions from w3 schools:
- * https://www.w3schools.com/cssref/pr_pos_clip.asp
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasLengthLTEMake=exports.hasLengthLTE=void 0;const node_1=__webpack_require__(8248),lte_1=__webpack_require__(5727);
-/**
- *
- * @param curr
- * @param target
- * @returns
- *
- * @category Validators
- */
-function hasLengthLTE(value,target){return"number"==typeof value.length&&(!(value.length<0)&&(0,lte_1.isLTE)(value.length,target))}exports.hasLengthLTE=hasLengthLTE,exports.hasLengthLTEMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_LENGTH_LTE",1/* CMP */,curr=>hasLengthLTE(curr,target),mods);return rule.add(node),caller}}},
-/***/5105(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasPropertyWithTypeMake=exports.hasPropertyWithType=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param o
- * @param propName
- * @param typeName
- * @returns
- *
- * @category Validators
- */function hasPropertyWithType(o,propName,typeName){if("string"!=typeof propName||"string"!==typeName)return!1;if(null==o)return!1;if(!propName.trim()||!typeName.trim())return!1;const obj=o;return!("function"!=typeof obj.hasOwnProperty||!obj.hasOwnProperty(propName))&&typeof obj[propName]===typeName}exports.hasPropertyWithType=hasPropertyWithType,exports.hasPropertyWithTypeMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return(propName,typeName)=>{const node=new node_1.RuleNode("HAS_PROP_W_TYPE",1/* CMP */,obj=>hasPropertyWithType(obj,propName,typeName),mods);return rule.add(node),caller}}},
-/***/7199(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasPropertyMake=exports.hasProperty=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param o
- * @param propName
- * @returns
- *
- * @category Validators
- */function hasProperty(o,propName){if(null==o)return!1;return void 0!==o[propName]}exports.hasProperty=hasProperty,exports.hasPropertyMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return propName=>{const node=new node_1.RuleNode("HAS_PROPERTY",1/* CMP */,obj=>hasProperty(obj,propName),mods);return rule.add(node),caller}}},
-/***/3841(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasTextMake=exports.hasText=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param data
- * @param target
- * @returns
- *
- * @category Validators
- */function hasText(value,target){let mustMatch;if("string"!=typeof value||""===value)return!1;if(mustMatch=Array.isArray(target)?target:"string"==typeof target?[target]:[],0===mustMatch.length)return!1;let matches=0;for(const match of mustMatch)-1!==value.indexOf(match)&&matches++;
-// All substrings in target must be present.
-return matches===mustMatch.length}exports.hasText=hasText,exports.hasTextMake=
-/**
- *
- * @param caller
- * @param data
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("HAS_TEXT",1/* CMP */,value=>hasText(value,target),mods);return rule.add(node),caller}}},
-/***/7768(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hasTextTimesMake=exports.hasTextTimes=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param curr
- * @param target
- * @param count
- * @returns
- *
- * @category Validators
- */exports.hasTextTimes=(curr,target,count)=>"string"==typeof curr&&"string"==typeof target&&curr.includes(target),exports.hasTextTimesMake=
-/**
- *
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return(target,count)=>{const node=new node_1.RuleNode("HAS_TEXT_TIMES",1/* CMP */,curr=>(0,exports.hasTextTimes)(curr,target,count),mods);return rule.add(node),caller}}},
-/***/1293(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.hexColorCodeMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.hexColorCodeMake=
-/**
- * Create new strong hex color code object.
- * @param fallback
- * @param initial
- * @returns
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.hexColorCode(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"HexColorCode")}},
-/***/5159(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpAuthHeaderValid=void 0;const headers_1=__webpack_require__(6341);
-/**
- * Check whether provided string identifies a supported HTTP
- * Auth header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpAuthHeaderValid=function(key){return"string"==typeof key&&headers_1.httpAuthHeaders.has(key)}},
-/***/6341(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpAuthHeaders=void 0,
-/**
- * Header set used to identify valid HTTP Auth header keys.
- *
- * @category HTTP
- */
-exports.httpAuthHeaders=new Set(["WWW-Authenticate","Authorization","Proxy-Authenticate","Proxy-Authorization"])},
-/***/2925(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCacheHeaderValid=void 0;const headers_1=__webpack_require__(8571);
-/**
- * Check whether provided string identifies a supported HTTP
- * Cache header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpCacheHeaderValid=function(key){return"string"==typeof key&&headers_1.httpCacheHeaders.has(key)}},
-/***/8571(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCacheHeaders=void 0,
-/**
- * Set used to check & validate Http Cache header keys.
- *
- * @category HTTP
- */
-exports.httpCacheHeaders=new Set(["Age","Cache-Control","Clear-Site-Data","Expires","Pragma","Warning"])},
-/***/2318(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCorsHeaderValid=void 0;const headers_1=__webpack_require__(5870);
-/**
- * Check whether provided string identifies a supported HTTP
- * CORS header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpCorsHeaderValid=function(key){return"string"==typeof key&&headers_1.httpCorsHeaders.has(key)}},
-/***/5870(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpCorsHeaders=void 0,
-/**
- * Set used to check & validate HTTP CORS header keys.
- *
- * @category HTTP
- */
-exports.httpCorsHeaders=new Set(["Access-Control-Allow-Origin","Access-Control-Allow-Credentials","Access-Control-Allow-Headers","Access-Control-Allow-Methods","Access-Control-Expose-Headers","Access-Control-Max-Age","Access-Control-Request-Headers","Access-Control-Request-Method","Origin","Timing-Allow-Origin"])},
-/***/3675(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpFetchHeaderValid=void 0;const headers_1=__webpack_require__(5057);
-/**
- * Check whether provided string identifies a supported HTTP
- * fetch header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpFetchHeaderValid=function(key){return"string"==typeof key&&headers_1.httpFetchHeaders.has(key)}},
-/***/5057(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpFetchHeaders=void 0,
-/**
- * Set used to check & validate HTTP Fetch header keys.
- *
- * @category HTTP
- */
-exports.httpFetchHeaders=new Set(["Sec-Fetch-Site","Sec-Fetch-Mode","Sec-Fetch-User","Sec-Fetch-Dest"])},
-/***/1130(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpMethodValid=void 0;const methods_1=__webpack_require__(8178);
-/**
- * Check whether provided string is a supported HTTP request method.
- * @param method
- * @returns
- *
- * @category HTTP
- */exports.httpMethodValid=function(method){return!!method&&("string"==typeof method&&methods_1.httpMethods.has(method))}},
-/***/8178(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpMethods=void 0,
-/**
- * Set of supported HTTP request methods.
- *
- * @category HTTP
- */
-exports.httpMethods=new Set(["CONNECT","DELETE","GET","HEAD","OPTIONS","PATCH","POST","PUT","TRACE"])},
-/***/4531(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpProxyHeaderValid=void 0;const headers_1=__webpack_require__(5465);
-/**
- * Check whether provided string identifies a supported HTTP
- * proxy header name.w
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpProxyHeaderValid=function(key){return"string"==typeof key&&headers_1.httpProxyHeaders.has(key)}},
-/***/5465(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpProxyHeaders=void 0,
-/**
- * Set used to check & validate HTTP Proxy header keys.
- *
- * @category HTTP
- */
-exports.httpProxyHeaders=new Set(["Forwarded","X-Forwarded-For","X-Forwarded-Host","X-Forwarded-Proto","Via"])},
-/***/7644(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpRequestHeaderValid=void 0;const headers_1=__webpack_require__(3692);
-/**
- * Check whether provided string identifies a Valid HTTP
- * Request header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpRequestHeaderValid=function(key){return"string"==typeof key&&headers_1.httpRequestHeaders.has(key)}},
-/***/3692(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpRequestHeaders=void 0,
-/**
- * Set used to check & validate common HTTP Request header keys.
- *
- * @category HTTP
- */
-exports.httpRequestHeaders=new Set(["Accept-Encoding","Accept-Language","Accept","Cache-Control","Connection","Host","If-Modified-Since","If-None-Match","Referer","Upgrade-Insecure-Requests","User-Agent"])},
-/***/1120(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpResponseHeaderValid=void 0;const headers_1=__webpack_require__(3976);
-/**
- * Check whether provided string identifies a Valid HTTP
- * Response header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpResponseHeaderValid=function(key){return"string"==typeof key&&headers_1.httpResponseHeaders.has(key)}},
-/***/3976(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpResponseHeaders=void 0,
-/**
- * Set used to check & validate common HTTP Request header keys.
- *
- * @category HTTP
- */
-exports.httpResponseHeaders=new Set(["Access-Control-Allow-Origin","Connection","Content-Encoding","Content-Type","Date","ETag","Keep-Alive","Last-Modified","Server","Set-Cookie","Transfer-Encoding","Vary","X-Backend-Server","X-Cache-Info","X-kuma-revision","x-frame-options"])},
-/***/4507(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpSecurityHeaderValid=void 0;const headers_1=__webpack_require__(4801);
-/**
- * Check whether provided string identifies a valid HTTP
- * Security header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpSecurityHeaderValid=function(key){return"string"==typeof key&&headers_1.httpSecurityHeaders.has(key)}},
-/***/4801(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpSecurityHeaders=void 0,
-/**
- * Set used to check & validate HTTP Security header keys.
- *
- * @category HTTP
- */
-exports.httpSecurityHeaders=new Set(["Content-Security-Policy-Report-Only","Content-Security-Policy","Cross-Origin-Embedder-Policy","Cross-Origin-Opener-Policy","Cross-Origin-Resource-Policy","Expect-CT","Feature-Policy","Origin-Isolation","Strict-Transport-Security","Upgrade-Insecure-Requests","X-Content-Type-Options","X-Download-Options","X-Frame-Options","X-Permitted-Cross-Domain-Policies","X-Powered-By","X-XSS-Protection"])},
-/***/4453(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpWebsocketHeaderValid=void 0;const headers_1=__webpack_require__(474);
-/**
- * Check whether provided string identifies a valid HTTP
- * Websocket header name.
- * @param key
- * @returns
- *
- * @category HTTP
- */exports.httpWebsocketHeaderValid=function(key){return"string"==typeof key&&headers_1.httpWebsocketHeaders.has(key)}},
-/***/474(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.httpWebsocketHeaders=void 0,
-/**
- * Set used to check & validate HTTP Websocket header keys.
- *
- * @category HTTP
- */
-exports.httpWebsocketHeaders=new Set(["Sec-WebSocket-Key","Sec-WebSocket-Extensions","Sec-WebSocket-Accept","Sec-WebSocket-Protocol","Sec-WebSocket-Version"])},
-/***/275(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.idMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.idMake=
-/**
- * Create a Strong Id type.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Strings
- */
-function(fallback,value,options){const rules=new rules_1.Rules;options&&("number"==typeof options.maxLength&&rules.add().must.have.length.lessThanOrEqualTo(options.maxLength),"number"==typeof options.minLength&&rules.add().must.have.length.greaterThanOrEqualTo(options.minLength),("string"==typeof options.contains||Array.isArray(options.contains))&&rules.add().must.contain.text(options.contains)),rules.add().must.match.type.string();const typeId=options&&"string"==typeof options.typeId?options.typeId:"Id";return(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,typeId)}},
-/***/6859(__unused_webpack_module,exports,__webpack_require__){"use strict";exports.fd=void 0,exports.r$=exports.Vg=exports.eC=void 0;var set_1=__webpack_require__(4488);var valid_1=__webpack_require__(5106);var aliases_1=__webpack_require__(9452);var set_2=__webpack_require__(3758);var valid_2=__webpack_require__(8144);var big_1=__webpack_require__(4125);var make_1=__webpack_require__(4546);var make_2=__webpack_require__(9853);var type_1=__webpack_require__(5938);var data_1=__webpack_require__(2503);var match_1=__webpack_require__(2369);
-// General Types
-var make_3=__webpack_require__(1411);var make_4=__webpack_require__(4356);var make_5=__webpack_require__(3366);var make_6=__webpack_require__(5748);var make_7=__webpack_require__(5582);var make_8=__webpack_require__(275);var make_9=__webpack_require__(1167);var make_10=__webpack_require__(6834);var make_11=__webpack_require__(4837);var make_12=__webpack_require__(884);var make_13=__webpack_require__(6047);var make_14=__webpack_require__(5143);var font_1=__webpack_require__(9446);var text_1=__webpack_require__(6980);var headers_1=__webpack_require__(6341);var valid_3=__webpack_require__(5159);var headers_2=__webpack_require__(8571);var valid_4=__webpack_require__(2925);var headers_3=__webpack_require__(5870);var valid_5=__webpack_require__(2318);var headers_4=__webpack_require__(5057);var valid_6=__webpack_require__(3675);var methods_1=__webpack_require__(8178);var valid_7=__webpack_require__(1130);var headers_5=__webpack_require__(5465);var valid_8=__webpack_require__(4531);var headers_6=__webpack_require__(3692);var valid_9=__webpack_require__(7644);var headers_7=__webpack_require__(3976);var valid_10=__webpack_require__(1120);var headers_8=__webpack_require__(4801);var valid_11=__webpack_require__(4507);var headers_9=__webpack_require__(474);var valid_12=__webpack_require__(4453);
-// Map
-var map_1=__webpack_require__(5753);var jsonifier_1=__webpack_require__(4909);var parser_1=__webpack_require__(6267);var state_1=__webpack_require__(3269);var range_1=__webpack_require__(8862);var size_1=__webpack_require__(8954);var vec1_1=__webpack_require__(2858);var vec2_1=__webpack_require__(4311);var vec3_1=__webpack_require__(4592);var vec4_1=__webpack_require__(8389);var pop_1=__webpack_require__(9168);Object.defineProperty(exports,"fd",{enumerable:!0,get:function(){return pop_1.swapPop}});
-// Validator functions for is & has
-var equal_1=__webpack_require__(2477);var gte_1=__webpack_require__(2751);var char_1=__webpack_require__(5678);var times_1=__webpack_require__(3387);var gt_1=__webpack_require__(5078);var lt_1=__webpack_require__(5193);var lte_1=__webpack_require__(8042);var property_1=__webpack_require__(7199);var property_with_type_1=__webpack_require__(5105);var text_2=__webpack_require__(3841);var times_2=__webpack_require__(7768);var array_1=__webpack_require__(1841);var boolean_1=__webpack_require__(964);var date_1=__webpack_require__(3298);var time_1=__webpack_require__(4288);var dbl_1=__webpack_require__(7646);var float_1=__webpack_require__(5190);var email_1=__webpack_require__(5308);var empty_1=__webpack_require__(4897);var equal_2=__webpack_require__(7364);var gt_2=__webpack_require__(6041);var gte_2=__webpack_require__(3994);var big_2=__webpack_require__(8442);var big_int_1=__webpack_require__(5046);var hex_color_code_1=__webpack_require__(6489);var int_1=__webpack_require__(9001);var addr_1=__webpack_require__(5979);var make_15=__webpack_require__(7232);var make_16=__webpack_require__(2046);var addr_2=__webpack_require__(6957);var length_1=__webpack_require__(5526);var lt_2=__webpack_require__(3622);var lte_2=__webpack_require__(5727);var null_1=__webpack_require__(6483);var port_1=__webpack_require__(105);var port_2=__webpack_require__(7213);var text_3=__webpack_require__(6105);var time_2=__webpack_require__(731);var undefined_1=__webpack_require__(5576);var url_1=__webpack_require__(1113);var uint_1=__webpack_require__(1562);var float_2=__webpack_require__(6255);var big_3=__webpack_require__(518);var big_4=__webpack_require__(8301);var number_1=__webpack_require__(4046);
-// Patterns
-var pattern_1=__webpack_require__(8317);var make_17=__webpack_require__(6377);var make_18=__webpack_require__(2283);
-// Rules
-var rule_1=__webpack_require__(521);var a_1=__webpack_require__(2137);var be_1=__webpack_require__(6749);var contains_1=__webpack_require__(7725);var have_1=__webpack_require__(2678);var length_2=__webpack_require__(7576);var match_2=__webpack_require__(515);var must_1=__webpack_require__(7029);var node_1=__webpack_require__(8248);var type_2=__webpack_require__(8211);var not_1=__webpack_require__(7419);var or_1=__webpack_require__(29);var rules_1=__webpack_require__(3756);var type_3=__webpack_require__(2528);var value_1=__webpack_require__(5084);var value_2=__webpack_require__(7962);var value_3=__webpack_require__(1825);Object.defineProperty(exports,"eC",{enumerable:!0,get:function(){return value_3.booleanValue}});var value_4=__webpack_require__(669);var value_5=__webpack_require__(8376);Object.defineProperty(exports,"Vg",{enumerable:!0,get:function(){return value_5.numberValue}});var value_6=__webpack_require__(8934);var value_7=__webpack_require__(6984);Object.defineProperty(exports,"r$",{enumerable:!0,get:function(){return value_7.stringValue}});var value_8=__webpack_require__(9254);var value_9=__webpack_require__(9501);
-// Transforms
-var transform_1=__webpack_require__(667);var nb_1=__webpack_require__(7542);var transforms_1=__webpack_require__(5406);var make_19=__webpack_require__(8583);var make_20=__webpack_require__(8383)},
-/***/3369(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.initialValue=void 0,exports.initialValue=function(initial){return void 0!==initial?initial:null}},
-/***/1167(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.intMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.intMake=
-/**
- *
- * @param fallback
- * @param value
- * @returns
- *
- * @category Maths
- */
-function(fallback,value){const rules=new rules_1.Rules;rules.add().must.match.type.int();const strong=(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Int");return Object.assign(strong,{increment:()=>strong._data.add(1),decrement:()=>strong._data.add(-1),mul:amt=>strong._data.mul(amt),pow:exponent=>strong._data.pow(exponent),div:amt=>strong._data.div(amt),add:amt=>strong._data.add(amt),sub:amt=>strong._data.add(-1*amt)})}},
-/***/1841(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isArrayMake=void 0;const node_1=__webpack_require__(8248);
-/**
- * Factory to create isArray validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */exports.isArrayMake=function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_ARRAY",1/* CMP */,curr=>Array.isArray(curr),mods);return rule.add(node),caller}}},
-/***/5046(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isBigIntMake=exports.isBigInt=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether provided value is a valid bigint, and if so
- * whether it's an integer.
- * @param value		Number to check
- * @returns
- *
- * @category Validators
- */function isBigInt(target){return"bigint"==typeof target}exports.isBigInt=isBigInt,exports.isBigIntMake=
-/**
- * Factory function to create isInteger validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_BIG_INT",1/* CMP */,value=>isBigInt(value),mods);return rule.add(node),caller}}},
-/***/8442(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.isBigMake=exports.isBig=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),node_1=__webpack_require__(8248),match_1=__webpack_require__(2369);
-/**
- * Check if provided value is a valid Big.
- *
- * @param value		Number to check
- * @returns
- *
- * @category Validators
- */
-function isBig(target){return(0,match_1.typeMatch)(target,big_js_1.default)}exports.isBig=isBig,exports.isBigMake=
-/**
- * Factory function to create isBig validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_BIG",1/* CMP */,value=>isBig(value),mods);return rule.add(node),caller}}},
-/***/964(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isBooleanMake=exports.isBoolean=void 0;const node_1=__webpack_require__(8248);
-/**
- * Determine if provided value is a boolean with strict true or
- * false value. All non-booleans return false, regardless of truthyness.
- * @param value
- * @returns
- *
- * @category Validators
- */function isBoolean(value){return!0===value||!1===value}exports.isBoolean=isBoolean,exports.isBooleanMake=
-/**
- * Factory to create isBoolean validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_BOOLEAN",1/* CMP */,value=>isBoolean(value),mods);return rule.add(node),caller}}},
-/***/3298(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isDateMake=exports.isDate=void 0;const node_1=__webpack_require__(8248);
-// eslint-disable-next-line
-/**
- * Check if provided value is a valid Date string. Accepts most ISO
- * Date strings as valid.
- * @param value
- * @returns
- *
- * @category Validators
- */
-function isDate(value){if("string"!=typeof value)return!1;const result=Date.parse(value);return!(isNaN(result)||value.match("T([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]")||value.match("T([01]?[0-9]|2[0-3]):[0-5][0-9]")||value.match("T([01]?[0-9]|2[0-3])"))}exports.isDate=isDate,exports.isDateMake=
-/**
- * Factory function to create isDate validator function. Once created, the validator function can
- * be invoked with a value.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_DATE",1/* CMP */,curr=>isDate(curr),mods);return rule.add(node),caller}}},
-/***/4288(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isDateTimeMake=exports.isDateTime=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param value
- * @returns
- *
- * @category Date & Time Validators
- */function isDateTime(value){if("string"!=typeof value)return!1;if(!value.trim())return!1;if(value.includes("T")&&!value.includes("GMT")){const pieces=value.split("T");if(2!==pieces.length)return!1;const date=pieces[0].split("-"),time=pieces[1].split(":");if(3!==date.length)return!1;if(time.length>=4)return!1}if(!value.includes("T")){const segments=value.split(/(\s+)/);if(3!==segments.length)return!1;const dateSeg=segments[0].split("."),emptySeg=segments[1].trim(),timeSeg=segments[2].split(":");if(3!==dateSeg.length)return!1;if(""!==emptySeg)return!1;if(timeSeg.length>=4)return!1}if(value.includes("GMT")){const section=value.split("GMT");if(section.length>=3)return!1;if(9!==section[0].toString().trim().split(/(\s+)/).length)return!1}return!0}exports.isDateTime=isDateTime,exports.isDateTimeMake=
-/**
- * Factory to create isDatetTime validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_DATE_TIME",1/* CMP */,curr=>isDateTime(curr),mods);return rule.add(node),caller}}},
-/***/7646(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isDblMake=exports.isDbl=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether value is a valid Double.
- *
- * @category Validators
- */function isDbl(value){return"number"==typeof value&&!isNaN(value)}exports.isDbl=isDbl,exports.isDblMake=
-/**
- * Factory to create isDbl validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_DBL",1/* CMP */,value=>isDbl(value),mods);return rule.add(node),caller}}},
-/***/5308(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isEmailMake=exports.isEmail=void 0;const node_1=__webpack_require__(8248);
-/**
- * Determine if provided value is a validly formatted email address.
- * @param value
- * @returns
- *
- * @category Email Validators
- */function isEmail(value){if("string"!=typeof value)return!1;if(!value.trim())return!1;const pieces=value.split("@");if(2!==pieces.length)return!1;const name=pieces[0],domain=pieces[1];return-1!==domain.indexOf(".")&&(!(domain.length>252)&&(!!name.trim()&&(!(name.length>64)&&!(name.length+domain.length+1>254))))}exports.isEmail=isEmail,exports.isEmailMake=
-/**
- * Factory to create isEmail validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_EMAIL",1/* CMP */,curr=>isEmail(curr),mods);return rule.add(node),caller}}},
-/***/4897(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isEmptyMake=exports.isEmpty=void 0;const node_1=__webpack_require__(8248);
-/**
- * Determine if value is an empty array or empty string. Arrays & strings with
- * length > 0 and all other types return false.
- * @param value		Array or string to validate.
- * @returns			true	-	value is an empty string or empty array.
- *					false	-	value is either not a string, not an array,
- *								or not not empty.
- *
- * @category Validators
- */function isEmpty(value){return!(!Array.isArray(value)&&"string"!=typeof value)&&("string"==typeof value?""===value:0===value.length)}exports.isEmpty=isEmpty,exports.isEmptyMake=
-/**
- * Factory to create isEmpty validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_EMPTY",1/* CMP */,curr=>isEmpty(curr),mods);return rule.add(node),caller}}},
-/***/7364(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isEqualMake=exports.isEqual=void 0;const node_1=__webpack_require__(8248);
-/**
- *
- * @param curr
- * @param target
- * @returns
- *
- * @category Validators
- */function isEqual(value,target){if(void 0===target||void 0===value)return!1;if(Array.isArray(value)&&Array.isArray(target)){if(value.length!==target.length)return!1;
-// Naive check for equality. Will produce false negative
-// if the arrays have the same contents in a different order.
-for(let i=0;i<value.length;i++)if(value[i]!==target[i])return!1;return!0}return value===target}exports.isEqual=isEqual,exports.isEqualMake=
-/**
- * Factory to create isEqual validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_EQ",1/* CMP */,value=>isEqual(value,target),mods);return rule.add(node),caller}}},
-/***/5190(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isFloatMake=exports.isFloat=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether value is a valid Double.
- *
- * @category Validators
- */function isFloat(value){return"number"==typeof value&&!isNaN(value)}exports.isFloat=isFloat,exports.isFloatMake=
-/**
- * Factory to create isFloat validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_FLOAT",1/* CMP */,value=>isFloat(value),mods);return rule.add(node),caller}}},
-/***/6041(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isGTMake=exports.isGT=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check if target number is strictly greater than value.
- * @param value
- * @param target
- * @returns
- *
- * @category Validators
- */function isGT(value,target){return"number"==typeof value&&"number"==typeof target&&value>target}exports.isGT=isGT,exports.isGTMake=
-/**
- * Factory function to create an isGT validation function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_GT",1/* CMP */,curr=>isGT(curr,target),mods);return rule.add(node),caller}}},
-/***/3994(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isGTEMake=exports.isGTE=void 0;const node_1=__webpack_require__(8248);
-/**
- * Validate whether target number is greater than or equal to current value.
- * @param value
- * @param target
- * @returns
- *
- * @category Validators
- */function isGTE(value,target){return"number"==typeof value&&"number"==typeof target&&value>=target}exports.isGTE=isGTE,exports.isGTEMake=
-/**
- * Factory function to create a greaterThanorEqual validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_GTE",1/* CMP */,curr=>isGTE(curr,target),mods);return rule.add(node),caller}}},
-/***/6489(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isHexColorCodeMake=exports.isHexColorFn=exports.isHexColorCodeStr=exports.isHexColorCode=void 0;const node_1=__webpack_require__(8248);
-/**
- * Accepts a number value and returns whether value is
- * a valid hex color code value.
- * @param value
- * @returns
- *
- * @category Validators
- */
-function isHexColorCode(value){return!isNaN(value)&&(value>=0&&value<=16777215)}
-/**
- * Accepts a string value and returns whether value is
- * a valid hex color code string.
- * @param value
- * @returns
- *
- * @category Validators
- */
-function isHexColorCodeStr(value){if("string"!=typeof value)return!1;
-// Necessary trim to guarantee the # character check
-// succeeds if present.
-const trimmed=value.trim().toLowerCase();if(!trimmed)return!1;if(value.length>=9)return!1;
-// Remove first character when it's #, usually do to string values like #FF0000.
-const cleaned="#"===trimmed[0]?trimmed.substring(1):trimmed;let hexStr;return hexStr=cleaned.startsWith("0x")?cleaned:`0x${cleaned}`,isHexColorCode(Number(hexStr))}
-/**
- * Accepts a string or number value and returns whether provided
- * value is a valid hex color code.
- * @param curr
- * @returns
- *
- * @category Validators
- */
-function isHexColorFn(curr){return"string"==typeof curr?isHexColorCodeStr(curr):"number"==typeof curr&&isHexColorCode(curr)}exports.isHexColorCode=isHexColorCode,exports.isHexColorCodeStr=isHexColorCodeStr,exports.isHexColorFn=isHexColorFn,exports.isHexColorCodeMake=
-/**
- * Factory to create isHexColorCode validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_HEX_COLOR_CODE",1/* CMP */,curr=>isHexColorFn(curr),mods);return rule.add(node),caller}}},
-/***/9001(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIntMake=exports.isInt=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether provided value is a valid number, and if so
- * whether it's an integer.
- * @param value		Number to check
- * @returns
- *
- * @category Validators
- */function isInt(target){return"number"==typeof target&&(!isNaN(target)&&Math.floor(target)===target)}exports.isInt=isInt,exports.isIntMake=
-/**
- * Factory function to create isInteger validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_INT",1/* CMP */,value=>isInt(value),mods);return rule.add(node),caller}}},
-/***/5979(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIpv4Addr=void 0,exports.isIpv4Addr=function(addr){
-//Always a string.
-if("string"!=typeof addr)return!1;
-//Is valid if it has whitespace which can be trimmed with .trim()
-//Invalid if it contains any other whitespace which cannot be trimmed with .trim()
-const pieces=addr.trim().split(".");
-//Always has exactly four quads, and 3 periods.
-if(4!==pieces.length)return!1;const firstQuad=parseInt(pieces[0]),secondQuad=parseInt(pieces[1]),thirdQuad=parseInt(pieces[2]),fourthQuad=parseInt(pieces[3]);
-//The first quad must be an integer between 1  and 255  (cannot be 0)
-//All other quads must be an integer between 0 and 255
-//Integers cannot have leading 0s
-return!(firstQuad<=0||firstQuad>255)&&!(secondQuad<0||secondQuad>255||thirdQuad<0||thirdQuad>255||fourthQuad<0||firstQuad>255)}},
-/***/7232(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIpv4AddrMake=void 0;const addr_1=__webpack_require__(5979),node_1=__webpack_require__(8248);exports.isIpv4AddrMake=
-/**
- * Factory to create isIpv4Addr validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_IPV4_ADDR",1/* CMP */,curr=>(0,addr_1.isIpv4Addr)(curr),mods);return rule.add(node),caller}}},
-/***/6957(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isValidSegment=exports.isIpv6Addr=void 0,exports.isIpv6Addr=function(current){if("string"!=typeof current)return!1;const trimmed=current.trim();if(!trimmed)return!1;const sections=trimmed.split(":"),doubleColonSegment=trimmed.split("::");if(!sections.length)return!1;if(sections.length>8)return!1;const validatedSegment=sections.every(exports.isValidSegment);return!(8===sections.length&&!validatedSegment&&current.includes("::"))&&!(sections.length<=7&&!validatedSegment&&doubleColonSegment.length>=3)};exports.isValidSegment=segment=>{if("string"!=typeof segment)return!1;const hex=parseInt(segment,16);return!isNaN(hex)&&(hex>=0&&hex<=65535)}},
-/***/2046(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.isIpv6AddrMake=void 0;const addr_1=__webpack_require__(6957),node_1=__webpack_require__(8248);exports.isIpv6AddrMake=
-/**
- * Factory to create isIpv6Addr validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_IPV6_ADDR",1/* CMP */,curr=>(0,addr_1.isIpv6Addr)(curr),mods);return rule.add(node),caller}}},
-/***/5526(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isLengthMake=exports.isLength=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether current value is a string or array matching target length.
- * @param value
- * @param expectedLength
- * @returns
- *
- * @category Validators
- */function isLength(value,expectedLength){return!(!Array.isArray(value)&&"number"!=typeof value&&"string"!=typeof value)&&("string"==typeof value?value.length===expectedLength:"number"==typeof value?value===expectedLength:value.length===expectedLength)}exports.isLength=isLength,exports.isLengthMake=
-/**
- * Factory to create isLength validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return expectedLength=>{const node=new node_1.RuleNode("IS_LENGTH",1/* CMP */,curr=>isLength(curr,expectedLength),mods);return rule.add(node),caller}}},
-/***/3622(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isLTMake=exports.isLT=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether target number is strictly less than value.
- * @param value
- * @param target
- * @returns
- *
- * @category Validators
- */function isLT(value,target){return"number"==typeof value&&("number"==typeof target&&value<target)}exports.isLT=isLT,exports.isLTMake=
-/**
- * Factory to create isLT validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_LT",1/* CMP */,curr=>isLT(curr,target),mods);return rule.add(node),caller}}},
-/***/5727(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isLTEMake=exports.isLTE=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether target number is less than or equal to current value.
- * @param value		Strong Type's current value.
- * @param target	Target number to compare.
- * @returns
- *
- * @category Validators
- */function isLTE(value,target){return"number"==typeof value&&"number"==typeof target&&value<=target}exports.isLTE=isLTE,exports.isLTEMake=
-/**
- * Factory to create a isLTE validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return target=>{const node=new node_1.RuleNode("IS_LT_OR_EQT",1/* CMP */,curr=>isLTE(curr,target),mods);return rule.add(node),caller}}},
-/***/6483(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isNullMake=exports.isNull=void 0;const node_1=__webpack_require__(8248);
-/**
- * Determine if value is strictly null.
- * @param value
- * @returns
- *
- * @category Validators
- */exports.isNull=function(value){return null===value},exports.isNullMake=
-/**
- * Factory to create isNull validator function used in rule chains.
- * @param caller		Rule node calling this function.
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_NULL",1/* CMP */,curr=>null===curr,mods);return rule.add(node),caller}}},
-/***/105(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isPortMake=exports.isPort=void 0;const node_1=__webpack_require__(8248),int_1=__webpack_require__(9001);
-/**
- * Check if provided value is a valid port number. Does not differentiate
- * between reserved system ports (root only)and non-reserved ports, only that
- * the port is in the valid port range.
- * @param value
- * @returns
- *
- * @category System Info Validators
- */
-function isPort(value){return"number"==typeof value&&(!(value<0)&&(!(value>65353)&&(0,int_1.isInt)(value)))}exports.isPort=isPort,exports.isPortMake=
-//Must be an unsigned int (whole number).
-//Must be from 0 to 65353 .
-//port > 65353 is invalid.
-//port < 0 is invalid.
-/**
- * Factory to create isPort validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_PORT",1/* CMP */,curr=>isPort(curr),mods);return rule.add(node),caller}}},
-/***/6828(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.isSafeMoney=void 0,exports.isSafeMoney=function(o){return null!=o&&"SafeMoney"===o.typeId}},
-/***/7213(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isSystemPortMake=exports.isSystemPort=void 0;const node_1=__webpack_require__(8248),port_1=__webpack_require__(105);
-/**
- * Check if provided value is a valid port system port number in the
- * range of 1 - 1024 which requires root/admin access to use.
- * @param value
- * @returns
- *
- * @category System Info Validators
- */
-function isSystemPort(value){return!!(0,port_1.isPort)(value)&&value<1024}exports.isSystemPort=isSystemPort,exports.isSystemPortMake=
-/**
- * Factory to create isSystemPort validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_SYS_PORT",1/* CMP */,curr=>isSystemPort(curr),mods);return rule.add(node),caller}}},
-/***/6105(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isTextMake=void 0;const node_1=__webpack_require__(8248);
-/**
- * Factory to create isString validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */exports.isTextMake=function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_STR",1/* CMP */,value=>"string"==typeof value,mods);return rule.add(node),caller}}},
-/***/731(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isTimeMake=exports.isTime=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether `value` is a valid time string.
- * @param value
- * @returns
- *
- * @category Date & Time Validators
- */
-function isTime(value){return"string"==typeof value&&!value.match("^([12]d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]d|3[01]))T([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")&&!value.match("^([12]d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]d|3[01]))$")&&("string"!=typeof value||!(!value.match("^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$")&&!value.match("^([01]?[0-9]|2[0-3]):[0-5][0-9]$")))}exports.isTime=isTime,exports.isTimeMake=
-/**
- * Factory to create isTime validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Date & Time Validators
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_TIME",1/* CMP */,curr=>isTime(curr),mods);return rule.add(node),caller}}},
-/***/1562(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isUIntMake=exports.isUInt=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check whether provided value is a valid number, and if so
- * whether it's an unsigned integer.
- * @param value		Number to check
- * @returns
- *
- * @category Validators
- */function isUInt(value){return"number"==typeof value&&(!isNaN(value)&&(!(value<0)&&Math.floor(value)===value))}exports.isUInt=isUInt,exports.isUIntMake=
-/**
- * Factory function to create isInteger validator function.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_U_INT",1/* CMP */,value=>isUInt(value),mods);return rule.add(node),caller}}},
-/***/5576(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isUndefinedMake=exports.isUndefined=void 0;const node_1=__webpack_require__(8248);
-/**
- * Check if provided value is undefined.
- * @param value
- * @returns
- *
- * @category Validators
- */function isUndefined(value){return void 0===value}exports.isUndefined=isUndefined,exports.isUndefinedMake=
-/**
- * Factory to create isUndefined validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_T_UNDEFINED",1/* CMP */,curr=>isUndefined(curr),mods);return rule.add(node),caller}}},
-/***/1113(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isUrlMake=exports.isUrl=void 0;const node_1=__webpack_require__(8248),url_1=__webpack_require__(8835);
-/**
- * Check whether value is a valid URL.
- *
- * @category Validators
- */
-function isUrl(value){if("string"!=typeof value)return!1;const pieces=value.split("http://"),segment=value.split("https://");if(""===pieces[1]||""===segment[1])return!1;let result=!1;try{new url_1.URL(value);result=!0}catch(e){result=!1}return result}exports.isUrl=isUrl,exports.isUrlMake=
-/**
- * Factory to create isUrl validator function used in rule chains.
- * @param caller
- * @param rule
- * @param mods
- * @returns
- *
- * @category Validator Factory Functions
- */
-function(caller,rule,mods){return()=>{const node=new node_1.RuleNode("IS_URL",1/* CMP */,curr=>isUrl(curr),mods);return rule.add(node),caller}}},
-/***/5753(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.StrongMap=void 0;const jsonifier_1=__webpack_require__(4909),parser_1=__webpack_require__(6267);exports.StrongMap=
-/**
- * Map data structure for Strong Types. Supports recursive parsing of
- * JSON objects into the map, with property type matching and conversion
- * from Strong Map to json object.
- *
- * @category Strong Map
- */
-class{constructor(){this.typeId="StrongMap",this.baseType="StrongMap"}parse(data){if(!data)return;(new parser_1.MapParser).parse(this,data)}jsonify(){return(new jsonifier_1.MapJsonifier).jsonify(this)}}},
-/***/4909(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.MapJsonifier=void 0;const map_1=__webpack_require__(5753);
-/**
- * @category Strong Map
- */exports.MapJsonifier=class{jsonify(map){if(!map)throw Error("Bad MapJsonifier.jsonify attempt - map arg missing.");return this.jsonifyMap(map)}jsonifyMap(map){var _a;const result={},keys=Object.keys(map);for(const keyName of keys){const child=map[keyName];void 0!==child&&(null===child?result[keyName]=null:child instanceof map_1.StrongMap?result[keyName]=this.jsonifyMap(child):"StrongType"===child.baseType||"object"!=typeof child||Array.isArray(child)||null!=(null===(_a=child)||void 0===_a?void 0:_a.nodeType)?result[keyName]=this.jsonifyKey(child):result[keyName]=this.jsonifyMap(child))}return result}jsonifyKey(key){if(void 0===key)return;if(null===key)return null;const assumeKeyIsStrongType=key;return"StrongType"===(null==assumeKeyIsStrongType?void 0:assumeKeyIsStrongType.baseType)?assumeKeyIsStrongType():key}}},
-/***/6267(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.MapParser=void 0;const map_1=__webpack_require__(5753),state_1=__webpack_require__(3269);exports.MapParser=
-/**
- * Recursively parse provided object properties.
- *
- * @category Strong Map
- */
-class{parse(map,data,options){if(!map)return!1;if(!data)return!1;const parseState=new state_1.MapParserState(options);return this.parseMap(map,data,parseState)}parseStrongKey(key,value,_parseState){if(!key||void 0===value)return;if("StrongType"!==key.baseType)return;const strongValue=value;
-// When value is also a StrongType invoke it to get its value. Otherwise set
-// the strong key with value.
-null!=strongValue&&"StrongType"===strongValue.baseType?key(strongValue()):key(value)}parseKey(map,keyName,value,_parseState){if(!map)return!1;if(void 0===value)return!1;if("string"!=typeof keyName||!keyName)return!1;if(null===value)return map[keyName]=null,!0;let result;const strongValue=value;return result=strongValue.hasOwnProperty("typeId")&&"StrongType"===strongValue.baseType?strongValue():value,typeof map[keyName]==typeof result&&(map[keyName]=result,!0)}
-/**
-     * Recursively parse map and children.
-     * @param map			Map to match properties against and store parsed values.
-     * @param json			Object to parse into map.
-     * @param parseState	Internal state for current parse.
-     * @returns				Boolean indicating success or failure.
-     *						true	- 	Map parse successful.
-     *						false	-	Map parse not successful.
-     */parseMap(map,data,parseState){var _a;if(!map)return!1;if(void 0===data||data==={})return!1;const keys=Object.keys(map);for(const keyName of keys){const child=map[keyName],keyValue=data[keyName];
-// Skip built-in properties.
-map.hasOwnProperty(keyName)&&(
-// Child is also a StrongMap. Parse it recursively.
-child instanceof map_1.StrongMap?this.parseMap(child,keyValue,parseState):"StrongType"===(null===(_a=child)||void 0===_a?void 0:_a.baseType)?
-// Child is a StrongType.
-this.parseStrongKey(child,keyValue,parseState):"object"!=typeof child&&
-// Child is not a StrongType and not an object.
-this.parseKey(map,keyName,keyValue,parseState))}return!0}}},
-/***/3269(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.MapParserState=void 0;exports.MapParserState=
-/**
- * Internal state used while parsing.
- *
- * @category Strong Map
- */
-class{constructor(_options){
-// empty constructor
-}}},
-/***/8934(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.numberNullValue=void 0;const value_1=__webpack_require__(9501);
-/**
- * Check if `value` is a valid number or null and return if true. Otherwise
- * returns `fallback`.
- * @param value
- * @param fallback
- * @returns
- *
- * @category Numbers
- */exports.numberNullValue=function(value,fallback){return(0,value_1.typeValue)("number",value,fallback)}},
-/***/8376(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.numberValue=void 0;const value_1=__webpack_require__(9501);
-/**
- * Test and return value if it's number, otherwise return fallback.
- * Guarantees number return type without additional checks.
- * @param value
- * @param fallback
- * @returns
- *
- * @category Numbers
- */exports.numberValue=function(value,fallback){return(0,value_1.typeValue)("number",value,fallback)}},
-/***/3758(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.osSet=void 0,
-/**
- * @category System Info
- */
-exports.osSet=new Set(["android","darwin","linux","windows","all","none"])},
-/***/8144(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.osValid=void 0;const set_1=__webpack_require__(3758);
-/**
- * Check whether target key identifies a supported OS.
- * @param value
- * @returns
- *
- * @category System Info
- */exports.osValid=function(key){return!!key&&set_1.osSet.has(key)}},
-/***/8317(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Pattern=void 0;const hex_color_code_1=__webpack_require__(6489);
-/**
- * @category Rules
- */exports.Pattern=class{constructor(rule,mods){this.hexColor=(0,hex_color_code_1.isHexColorCodeMake)(this,rule,mods)}}},
-/***/6377(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.portMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.portMake=
-/**
- *
- * @param fallback
- * @param initial
- * @returns
- *
- * @category System Info
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.int(),rules.add().must.be.lessThanOrEqual(65535),rules.add().must.be.greaterThanOrEqual(1),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Port")}},
-/***/8862(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Range=void 0;const map_1=__webpack_require__(5753),make_1=__webpack_require__(5582);
-/**
- * General numeric range with min and max value.
- *
- * @category Maths
- */
-class Range extends map_1.StrongMap{constructor(defaultMin,defaultMax){super(),this.min=(0,make_1.floatMake)("number"==typeof defaultMin?defaultMin:0),this.max=(0,make_1.floatMake)("number"==typeof defaultMax?defaultMax:0),this.typeId="Range"}
-/**
-     * Check if provided value exists between min and max range values (inclusive).
-     * @param value
-     * @returns
-     */in(value,exclusive){return"number"==typeof value&&(
-// Value must be strict greater than range min and strictly less than the
-// range max in exclusive mode.
-!0===exclusive?value>this.min()&&value<this.max():value>=this.min()&&value<=this.max())}
-/**
-     * Reset min and max to initial values.
-     */reset(){this.max.reset(),this.min.reset()}}exports.Range=Range},
-/***/521(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Rule=void 0;exports.Rule=
-/**
- * Single rule applied to a node. Can be modified by other rules, matches,
- * specifiers, and flags such as invert.
- *
- * @category Rules
- */
-class{constructor(){this.nodes=[]}add(node){1/* CMP */===node.type&&this.nodes.push(node)}run(value){if(!this.nodes.length)return!1;let trueCount=0;for(const node of this.nodes){node.execute(value)&&trueCount++}
-// Require at least comparison in set of
-// OR operators to be true.
-return trueCount>0}reset(){this.nodes.length=0}}},
-/***/2137(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleA=void 0;exports.RuleA=
-/**
- * @category Rules
- */
-class{}},
-/***/6749(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleBe=void 0;const date_1=__webpack_require__(3298),time_1=__webpack_require__(4288),email_1=__webpack_require__(5308),empty_1=__webpack_require__(4897),equal_1=__webpack_require__(7364),gt_1=__webpack_require__(6041),gte_1=__webpack_require__(3994),hex_color_code_1=__webpack_require__(6489),lt_1=__webpack_require__(3622),lte_1=__webpack_require__(5727),null_1=__webpack_require__(6483),port_1=__webpack_require__(105),port_2=__webpack_require__(7213),time_2=__webpack_require__(731),undefined_1=__webpack_require__(5576),url_1=__webpack_require__(1113),make_1=__webpack_require__(7232),make_2=__webpack_require__(2046);exports.RuleBe=
-/**
- * Rule chain matcher node with equality and type validation operations
- *
- * @category Rules
- */
-class{constructor(rule,mods){this.greaterThan=(0,gt_1.isGTMake)(this,rule,mods),this.greaterThanOrEqual=(0,gte_1.isGTEMake)(this,rule,mods),this.lessThan=(0,lt_1.isLTMake)(this,rule,mods),this.lessThanOrEqual=(0,lte_1.isLTEMake)(this,rule,mods),this.equalTo=(0,equal_1.isEqualMake)(this,rule,mods),this.undefined=(0,undefined_1.isUndefinedMake)(this,rule,mods),this.null=(0,null_1.isNullMake)(this,rule,mods),this.empty=(0,empty_1.isEmptyMake)(this,rule,mods),this.date=(0,date_1.isDateMake)(this,rule,mods),this.time=(0,time_2.isTimeMake)(this,rule,mods),this.hexColorCode=(0,hex_color_code_1.isHexColorCodeMake)(this,rule,mods),this.email=(0,email_1.isEmailMake)(this,rule,mods),this.url=(0,url_1.isUrlMake)(this,rule,mods),this.dateTime=(0,time_1.isDateTimeMake)(this,rule,mods),this.portNumber=(0,port_1.isPortMake)(this,rule,mods),this.systemPortNumber=(0,port_2.isSystemPortMake)(this,rule,mods),this.ipv4Addr=(0,make_1.isIpv4AddrMake)(this,rule,mods),this.ipv6Addr=(0,make_2.isIpv6AddrMake)(this,rule,mods)}}},
-/***/7725(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleContains=void 0;const char_1=__webpack_require__(5678),times_1=__webpack_require__(3387),text_1=__webpack_require__(3841),times_2=__webpack_require__(7768);exports.RuleContains=
-/**
- * @category Rules
- */
-class{constructor(rule,mods){this.text=(0,text_1.hasTextMake)(this,rule,mods),this.textTimes=(0,times_2.hasTextTimesMake)(this,rule,mods),this.char=(0,char_1.hasCharMake)(this,rule,mods),this.charTimes=(0,times_1.hasCharTimesMake)(this,rule,mods)}}},
-/***/2678(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleHave=void 0;const property_1=__webpack_require__(7199),text_1=__webpack_require__(3841),times_1=__webpack_require__(7768),length_1=__webpack_require__(7576);exports.RuleHave=
-/**
- * @category Rules
- */
-class{constructor(rule,mods){this.length=new length_1.RuleLength(rule,mods),this.property=(0,property_1.hasPropertyMake)(this,rule,mods),this.text=(0,text_1.hasTextMake)(this,rule,mods),this.textTimes=(0,times_1.hasTextTimesMake)(this,rule,mods)}}},
-/***/7576(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleLength=void 0;const equal_1=__webpack_require__(2477),gt_1=__webpack_require__(5078),gte_1=__webpack_require__(2751),lt_1=__webpack_require__(5193),lte_1=__webpack_require__(8042);exports.RuleLength=
-/**
- * @category Rules
- */
-class{constructor(rule,mods){this.equalTo=(0,equal_1.hasLengthEqualMake)(this,rule,mods),this.greaterThan=(0,gt_1.hasLengthGTMake)(this,rule,mods),this.greaterThanOrEqualTo=(0,gte_1.hasLengthGTEMake)(this,rule,mods),this.lessThan=(0,lt_1.hasLengthLTMake)(this,rule,mods),this.lessThanOrEqualTo=(0,lte_1.hasLengthLTEMake)(this,rule,mods)}}},
-/***/515(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleMatch=void 0;const pattern_1=__webpack_require__(8317),or_1=__webpack_require__(29),type_1=__webpack_require__(2528);exports.RuleMatch=
-/**
- * Source must match the comparator immediately following a match.
- *
- * @category Rules
- */
-class{constructor(rule,parentMods){const mods={invert:parentMods.invert,target:parentMods.target};this.or=new or_1.RuleOr(rule,mods),this.type=new type_1.RuleType(rule,mods),this.pattern=new pattern_1.Pattern(rule,mods)}}},
-/***/7029(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleMust=void 0;const equal_1=__webpack_require__(7364),rule_1=__webpack_require__(521),be_1=__webpack_require__(6749),contains_1=__webpack_require__(7725),have_1=__webpack_require__(2678),match_1=__webpack_require__(515),not_1=__webpack_require__(7419);exports.RuleMust=
-/**
- * Begins a new statement within a rule.
- *
- * @category Rules
- */
-class{constructor(rules,parentRule){const rule=parentRule||new rule_1.Rule;parentRule||rules.push(rule);
-// Each must begins a new rule and resets all preceding mods.
-const mods={invert:!1,target:"value"};this.be=new be_1.RuleBe(rule,mods),this.have=new have_1.RuleHave(rule,mods),this.not=new not_1.RuleNot(rule,mods),this.equal=(0,equal_1.isEqualMake)(this,rule,mods),this.match=new match_1.RuleMatch(rule,mods),this.contain=new contains_1.RuleContains(rule,mods)}}},
-/***/8248(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleNode=void 0;exports.RuleNode=
-/**
- * @category Rules
- */
-class{constructor(id,type,fn,mods){if(this.id=id,"function"!=typeof fn)throw new Error("Bad rule init - fn arg is not a function.");this.type=type,this.children=[],this.fn=fn,this.target=mods.target,this.invertResult=!0===mods.invert}execute(value){const result=this.fn(value);return this.invertResult?!result:result}}},
-/***/8211(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleNodeType=void 0,function(RuleNodeType){RuleNodeType[RuleNodeType.OP=0]="OP",RuleNodeType[RuleNodeType.CMP=1]="CMP"}(exports.RuleNodeType||(exports.RuleNodeType={}))},
-/***/7419(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleNot=void 0;const equal_1=__webpack_require__(7364),be_1=__webpack_require__(6749),contains_1=__webpack_require__(7725);exports.RuleNot=
-/**
- * Inverts the operation immediately following it.
- *
- * @category Rules
- */
-class{constructor(rule,parentMods){const mods={invert:!parentMods.invert,target:parentMods.target};this.be=new be_1.RuleBe(rule,mods),this.contain=new contains_1.RuleContains(rule,mods),this.equalTo=(0,equal_1.isEqualMake)(this,rule,mods)}}},
-/***/29(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleOr=void 0;const type_1=__webpack_require__(2528);
-/**
- * Rule chain operator which requires either the proceeding or following
- * operation node return true.
- *
- * @category Rules
- */exports.RuleOr=class{constructor(rule,parentMods){this.type=new type_1.RuleType(rule,parentMods)}}},
-/***/2528(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.RuleType=void 0;const array_1=__webpack_require__(1841),big_1=__webpack_require__(8442),big_int_1=__webpack_require__(5046),boolean_1=__webpack_require__(964),dbl_1=__webpack_require__(7646),float_1=__webpack_require__(5190),int_1=__webpack_require__(9001),null_1=__webpack_require__(6483),text_1=__webpack_require__(6105),uint_1=__webpack_require__(1562);exports.RuleType=
-/**
- * @category Rules
- */
-class{constructor(rule,mods){this.array=(0,array_1.isArrayMake)(this,rule,mods),this.big=(0,big_1.isBigMake)(this,rule,mods),this.bigInt=(0,big_int_1.isBigIntMake)(this,rule,mods),this.boolean=(0,boolean_1.isBooleanMake)(this,rule,mods),this.dbl=(0,dbl_1.isDblMake)(this,rule,mods),this.float=(0,float_1.isFloatMake)(this,rule,mods),this.int=(0,int_1.isIntMake)(this,rule,mods),this.null=(0,null_1.isNullMake)(this,rule,mods),this.string=(0,text_1.isTextMake)(this,rule,mods),this.text=(0,text_1.isTextMake)(this,rule,mods),this.uint=(0,uint_1.isUIntMake)(this,rule,mods)}}},
-/***/3756(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Rules=void 0;const must_1=__webpack_require__(7029);
-/**
- * Container for rules applied to a node.
- *
- * @category Rules
- */exports.Rules=class{constructor(){this.rules=[]}add(){return{must:new must_1.RuleMust(this.rules,null)}}run(value){if(!this.rules||!this.rules.length)return!0;for(const rule of this.rules)if(!rule.run(value))return!1;return!0}}},
-/***/6834(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.safeMoneyMake=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),big_1=__webpack_require__(9046),BIG_ZERO=(0,big_js_1.default)(0),BIG_ONE=(0,big_js_1.default)(1);exports.safeMoneyMake=
-/**
- *
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Maths
- */
-function(fallback,initial){const rules=new rules_1.Rules;rules.add().must.match.type.big();const bigFallback=(0,big_1.toSafeMoneyBig)(fallback),bigInitial=(0,big_1.toSafeMoneyBig)(initial),strong=(0,type_1.createType)(null!=bigFallback?bigFallback:BIG_ZERO,bigInitial,rules,"SafeMoney");return Object.assign(strong,{increment:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.add(BIG_ONE);return strong._data.set(result)?result:null},decrement:()=>{const value=strong._data.getNull();if(null===value)return null;const result=value.minus(BIG_ONE);return strong._data.set(result)?result:null},mul:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toSafeMoneyBig)(input);if(null===value||null===curr)return null;const result=curr.mul(value);return strong._data.set(result)?result:null},pow:exponent=>{const curr=strong._data.getNull(),value=(0,big_1.toSafeMoneyBig)(exponent);if(null===curr||null===value)return null;const result=curr.pow(value.toNumber());return strong._data.set(result)?result:null},div:input=>{const curr=strong.get(BIG_ZERO),value=(0,big_1.toSafeMoneyBig)(input);if(null===curr||null===value)return null;if(value===BIG_ZERO||curr===BIG_ZERO)return null;const result=curr.div(value);return strong._data.set(result)?result:null},add:input=>{const value=(0,big_1.toSafeMoneyBig)(input),curr=strong.getNull();if(null===value||null===curr)return null;const result=curr.add(value);return strong._data.set(result)?result:null},sub:input=>{const value=(0,big_1.toSafeMoneyBig)(input),curr=strong.getNull();if(null===value||null===curr)return null;const result=curr.minus(value);return strong._data.set(result)?result:null},round:_input=>null,typeId:"SafeMoney",baseType:"StrongType"})}},
-/***/6047(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.semVerMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.semVerMake=
-/**
- * Create new strong hex color code object.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Strings
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.contain.charTimes(".",3),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"SemVer")}},
-/***/8954(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Size=void 0;const map_1=__webpack_require__(5753),make_1=__webpack_require__(5582);
-/**
- * Size object containing width & height properties as strong doubles.
- *
- * @category Maths
- */
-class Size extends map_1.StrongMap{constructor(defaultWidth,defaultHeight){super(),this.width=(0,make_1.floatMake)("number"==typeof defaultWidth?defaultWidth:0),this.height=(0,make_1.floatMake)("number"==typeof defaultHeight?defaultHeight:0),this.typeId="Size",this.baseType="StrongMap"}}exports.Size=Size},
-/***/9254(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.stringNullValue=void 0;const value_1=__webpack_require__(9501);
-/**
- * Check if `value` is a valid string and return it if so, otherwise
- * returns `fallback`.
- * @param value
- * @param fallback
- * @returns
- *
- * @category Strings
- */exports.stringNullValue=function(value,fallback){return(0,value_1.typeValue)("string",value,fallback)}},
-/***/6984(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.stringValue=void 0;const value_1=__webpack_require__(9501);
-/**
- * Check if `value` is a valid string and return it if so, otherwise
- * returns `fallback`.
- * @param value
- * @param fallback
- * @returns
- *
- * @category Strings
- */exports.stringValue=function(value,fallback){return(0,value_1.typeValue)("string",value,fallback)}},
-/***/2503(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.StrongData=void 0;const transforms_1=__webpack_require__(5406);
-/**
- * @category Core
- */exports.StrongData=class{constructor(fallbackDefault,value,rules,typeId){this.value=null,this.fallbackDefault=fallbackDefault,this.transforms=new transforms_1.Transforms(fallbackDefault),this.rules=rules,this.typeId=typeId,this.baseType="StrongData",this.initial=value,this.set(value)}
-/**
-     * Check if value passes this instance's rule validation.
-     * @param value
-     * @returns
-     */check(value){return void 0!==value&&this.rules.run(value)}get(fallback){return null===this.value?null==fallback?this.fallbackDefault:fallback:this.value}set(value){if(void 0===value)return!1;if(null===value)return this.value=null,!0;const transformed=value;return!!this.check(value)&&(this.value=transformed,!0)}getNull(){return void 0===this.value||null===this.value?null:this.value}reset(){this.value=this.initial}
-/**
-     * Divide current `value` by `divisor`. Result is zero when
-     * `divisor` or `value` are zero.
-     * @param divisor
-     * @returns
-     */div(divisor){const curr=this.getNull();if("number"!=typeof divisor||"number"!=typeof curr)return null;if(0===divisor||0===curr)return this.set(0),0;const result=curr/divisor;return isNaN(result)?null:(this.set(result),result)}mul(value){const curr=this.getNull();if("number"!=typeof value||"number"!=typeof curr)return null;if(0===value||0===curr)return this.set(0),0;const result=value*curr;return this.set(result)?result:null}
-/**
-     *
-     * @param exponent
-     * @returns
-     */pow(exponent){const curr=this.getNull();if("number"!=typeof curr||null===curr)return null;const result=Math.pow(curr,exponent);return isNaN(result)||result>=Number.MAX_SAFE_INTEGER?null:(this.set(result),result)}
-/**
-     * Add value to Strong Type's current value, if it is a numeric type. Operation
-     * ignored for non-numeric types.
-     * @param value
-     * @returns
-     */add(value){const curr=this.getNull();if("number"!=typeof value||"number"!=typeof curr)return null;const result=value+curr;return isNaN(result)||result<Number.MIN_SAFE_INTEGER||result>Number.MAX_SAFE_INTEGER?null:this.set(result)?result:null}}},
-/***/9853(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.strongMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.strongMake=
-/**
- * Create Strong object using provided arguments. Should generally be called
- * by helper functions or factories which create the desired type and pass in
- * type rules consistently.
- * @param fallback		Value returned when type's current `value` is null.
- * @param initial		(Optional) Initial value for type. When not provided, type's
- *						initial value is `fallback` instead. When reset is called, value
- *						is automatically set to initial if it was provided, or fallback if not.
- * @param rules			Automatic type validation rules applied to any value used with `set`.
- * @returns
- *
- * @category Core
- */
-function(fallback,initial,rules){const rulesValue=rules instanceof rules_1.Rules?rules:new rules_1.Rules;return(0,type_1.createType)(fallback,(0,value_1.initialValue)(initial),rulesValue,"StrongType")}},
-/***/9168(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.swapPop=void 0,exports.swapPop=
-/**
- * Remove an array element in O(1) time if element ndx is known.
- * Works only with unordered arrays.
- * @param array
- * @param ndx
- *
- * @category Collections
- */
-function(array,ndx){if(!array.length)
-// pop always returns a value if the length is greater
-// than zero. This check prevents pop from returning a
-// value of undefined.
-return null;if(ndx>=array.length||ndx<0)return null;if(1===array.length||ndx===array.length-1){const result=array.pop();return void 0===result?null:result}
-// Save the element at ndx in the array to
-// keep it safe while we overwrite the slot.
-const element=array[ndx];
-// Move the last element into ndx slot.
-return array[ndx]=array[array.length-1],
-// Pop the last element off the array
-array.pop(),element}},
-/***/2283(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.systemPortMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.systemPortMake=
-/**
- *
- * @param fallback
- * @param initial
- * @returns
- *
- * @category System Info
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.int(),rules.add().must.be.systemPortNumber(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"SystemPort")}},
-/***/4837(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.textMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.textMake=
-/**
- *
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Strings
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Text")}},
-/***/8583(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.timeMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.timeMake=
-/**
- * ISO Time string.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Date & Time
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.time(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Time")}},
-/***/518(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toDblBig=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),make_1=__webpack_require__(4546),match_1=__webpack_require__(2369);exports.toDblBig=
-/**
- * Convert from common numeric types to the `Big` data type.
- * @param value
- * @returns
- *
- * @category Strong Helpers
- */
-function(value){return null==value?null:
-// No conversion needed if type is already a Big.
-(0,match_1.typeMatch)(value,big_js_1.default)?value:"string"==typeof value?(0,make_1.bigMake)(value):
-// All other accepted types have been processed. If type is not number,
-// value type cannot be handled.
-"number"!=typeof value||isNaN(value)||value>=Number.POSITIVE_INFINITY||value<=Number.NEGATIVE_INFINITY||value>Number.MAX_SAFE_INTEGER||value<Number.MIN_SAFE_INTEGER?null:(0,make_1.bigMake)(value)}},
-/***/6255(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toFloat=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369);
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */exports.toFloat=
-/**
- * Convert a Big, string, or number to standard float (`number`). Returns `null` when
- * input value is `undefined`, `null`, or a `Big` value which cannot be safely converted
- * to `number`. Useful for working with `Big` values but small types, such as a small exponent,
- * which must be in number form to use with a `Big`.
- * @param value
- * @returns
- *
- * @category Strong Helpers
- */
-function(value){if(null==value)return null;if((0,match_1.typeMatch)(value,big_js_1.default))return value.gt(Number.MAX_SAFE_INTEGER)||value.lt(Number.MIN_SAFE_INTEGER)?null:value.toNumber();if("string"==typeof value){const result=parseFloat(value);return!isNaN(result)&&isFinite(result)?result:null}return value}},
-/***/8301(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toIntBig=void 0;const big_js_1=__importDefault(__webpack_require__(9900)),make_1=__webpack_require__(4546),match_1=__webpack_require__(2369);exports.toIntBig=
-/**
- * Convert from common numeric types to the `Big` data type.
- * @param value
- * @returns
- *
- * @category Strong Helpers
- */
-function(value){try{if(null==value)return null;if((0,match_1.typeMatch)(value,big_js_1.default))return value;if("string"==typeof value){const result=(0,make_1.bigMake)(value);if(null===result)return null;
-// String values converted to Big can be larger than JavaScript `number`,
-// meaning common JavaScript math functions cannot be used to check result.
-// Values with decimal values are rejected.
-const rounded=result.round(4);return isNaN(rounded.cmp(result))?null:rounded}
-// All other supported types have been processed. If value is not
-// a number, we don't support it. Bail out.
-if("number"!=typeof value)return null;if(isNaN(value)||value>=Number.POSITIVE_INFINITY||value<=Number.NEGATIVE_INFINITY)return null;if(value>Number.MAX_SAFE_INTEGER||value<Number.MIN_SAFE_INTEGER)return null;if(Math.floor(value)!==value)return null}catch(e){}return(0,make_1.bigMake)(value)}},
-/***/4046(__unused_webpack_module,exports,__webpack_require__){"use strict";var __importDefault=this&&this.__importDefault||function(mod){return mod&&mod.__esModule?mod:{default:mod}};Object.defineProperty(exports,"__esModule",{value:!0}),exports.toIntNumber=void 0;
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */
-const big_js_1=__importDefault(__webpack_require__(9900)),match_1=__webpack_require__(2369);exports.toIntNumber=
-/**
- * Convert from common numeric types to JavaScript `number` type.
- * @param value
- * @returns
- *
- * @category Strong Helpers
- */
-function(value){if(null==value)return null;let result;
-// Converting Big -> number is generally as precision may be lost.
-// Support for Big values is provided for ease of use in cases where
-// the caller would have to convert input before calling.
-if((0,match_1.typeMatch)(value,big_js_1.default))
-// Throws when Big value will not fit in number.
-try{result=value.toNumber()}catch(e){result=null}else result="string"==typeof value?parseFloat(value):"number"==typeof value?value:null;return null===result||isNaN(result)||result>=Number.POSITIVE_INFINITY||result<=Number.NEGATIVE_INFINITY||result<Number.MIN_SAFE_INTEGER||result>Number.MAX_SAFE_INTEGER||Math.floor(result)!==result?null:result}},
-/***/9046(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.toSafeMoneyBig=void 0;const money_1=__webpack_require__(6828),big_1=__webpack_require__(518);exports.toSafeMoneyBig=
-/**
- * Convert from common numeric types to the `Big` data type.
- * @param value
- * @returns
- *
- * @category Strong Helpers
- */
-function(input){if(null==input)return null;let value=null;if((0,money_1.isSafeMoney)(input)){const sm=input;value="function"==typeof sm.getNull?sm.getNull():null}else value=input;return(0,big_1.toDblBig)(value)}},
-/***/667(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Transform=void 0;exports.Transform=
-/**
- * @category Transforms
- */
-class{constructor(fn,options){if(!fn)throw new Error("Bad Transform init - fn arg missing.");this.fn=fn,this.id=options&&"string"==typeof options.id?options.id:"tf",this.label=`filter_${this.id}`}run(value){let result=value;try{result=this.fn(value)}catch(e){console.error(`[${this.label}]`)}return result}}},
-/***/7542(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.TransformNB=void 0;exports.TransformNB=
-/**
- * @category Transforms
- */
-class{constructor(fn,options){if(!fn)throw new Error("Bad TransformNB init - fn arg missing.");this.fn=fn,this.id=options&&"string"==typeof options.id?options.id:"tf",this.label=`filter_${this.id}`}run(value){let result=value;try{result=this.fn(value)}catch(e){console.error(`[${this.label}]`)}return result}}},
-/***/5406(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Transforms=void 0;exports.Transforms=
-/**
- * Container holding the transform function chain used to transform
- * values before saving. Transforms are applied in the order they are
- * stored in the transforms or transformsNB array.
- *
- * @category Transforms
- */
-class{constructor(fallbackDefault){this.transforms=[],this.transformsNB=[],this.fallbackDefault=fallbackDefault}
-/**
-     * Add nullable transform function to chain.
-     * @param transform		Nullable transform fn to be added to chain.
-     * @returns				Boolean indicating add success or failure.
-     *						true	-	Transform fn added to chain successfully.
-     *						false	-	Transform fn not added to chain.
-     */addNB(transform){return!!transform&&(this.transformsNB.push(transform),!0)}
-/**
-     * Add transform function to chain.
-     * @param transform		Transform fn to be added to chain.
-     * @returns				Boolean indicating add success or failure.
-     *						true	-	Transform fn added to chain successfully.
-     *						false	-	Transform fn not added to chain.
-     */add(transform){return!!transform&&(
-// todo: add sorted insert here based on filter.sortOrder
-this.transforms.push(transform),!0)}
-/**
-     * Run transform chain, applying each transforms once the order added to
-     * the chain.
-     * @param value
-     * @returns
-     */run(value){if(null==value)return this.fallbackDefault;let transformed=value;const transforms=this.transforms;for(const transform of transforms){const input=transformed;transformed=transform.run(input)}return transformed}
-/**
-     * Run transform chain, applying each transforms once the order added to
-     * the chain.
-     * @param value
-     * @returns
-     */runNB(value){if(null==value)return null;let transformed=value;const transformsNB=this.transformsNB;for(const transform of transformsNB){const input=transformed;transformed=transform.run(input)}return transformed}
-/**
-     * Remove all transform functions from chain. Fallback value
-     * remains the same.
-     */reset(){this.transforms.length=0,this.transformsNB.length=0}}},
-/***/2369(__unused_webpack_module,exports){"use strict";
-/**
- * Determine whether object is an instance of provided type or className.
- * @param o
- * @param className
- * @returns
- *
- * @category Validators
- */
-function typeMatch(o,className){return"string"==typeof className?typeof o===className:o instanceof className}Object.defineProperty(exports,"__esModule",{value:!0}),exports.isType=exports.typeMatch=void 0,exports.typeMatch=typeMatch,
-/**
- * Alias for typeMatch for backwards compat.
- *
- * @category Validators
- */
-exports.isType=typeMatch},
-/***/9501(__unused_webpack_module,exports){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.typeValue=void 0,exports.typeValue=
-/**
- * Validate `value` a valid type_T and return it if valid, otherwise
- * return `fallback`. Quick and easy way to validate configs, maps, and
- * other objects with a guaranteed return type.
- * @param typeName		JavaScript type name for expected type.
- * @param value			Value to be validated as `typeName`.
- * @param fallback		Value returned when `value` is not a valid type_T.
- * @returns
- *
- * @category Core
- */
-function(typeName,value,fallback){return typeof value!==typeName?fallback:value}},
-/***/884(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.uIntMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.uIntMake=
-/**
- * Create new strong unsigned integer.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Maths
- */
-function(fallback,value){const rules=new rules_1.Rules;rules.add().must.match.type.int(),rules.add().must.be.greaterThanOrEqual(0);const strong=(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"UInt");return Object.assign(strong,{increment:()=>strong._data.add(1),decrement:()=>strong._data.add(-1),mul:amt=>strong._data.mul(amt),pow:exponent=>strong._data.pow(exponent),div:amt=>strong._data.div(amt),add:amt=>strong._data.add(amt),sub:amt=>strong._data.add(-1*amt)})}},
-/***/8383(__unused_webpack_module,exports,__webpack_require__){"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.urlMake=void 0;const rules_1=__webpack_require__(3756),type_1=__webpack_require__(5938),value_1=__webpack_require__(3369);exports.urlMake=
-/**
- * Create new strong Url object. Only valid Urls can be set.
- * @param fallback
- * @param initial
- * @returns
- *
- * @category Strings
- */
-function(fallback,value){const rules=new rules_1.Rules;return rules.add().must.match.type.string(),rules.add().must.be.url(),(0,type_1.createType)(fallback,(0,value_1.initialValue)(value),rules,"Url")}},
-/***/2858(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec1=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec1=
-/**
- * Map for passing coodinates in 1-dimensional
- * coordinate systems.
- *
- * @category Maths
- */
-class{constructor(x){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x)}
-/**
-     * Reset all coordinate properties to default values.
-     */reset(){this.x.reset()}}},
-/***/4311(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec2=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec2=
-/**
- * Map for passing coodinates in 2-dimensional
- * coordinate systems.
- *
- * @category Maths
- */
-class{constructor(x,y){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x),this.y=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Y,y)}
-/**
-     * Reset all coordinate properties to default values.
-     */reset(){this.x.reset(),this.y.reset()}}},
-/***/4592(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec3=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec3=
-/**
- * Map for passing coodinates in 3-dimensional
- * coordinate systems.
- *
- * @category Maths
- */
-class{constructor(x,y,z){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x),this.y=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Y,y),this.z=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Z,z)}
-/**
-     * Reset all coordinate properties to default values.
-     */reset(){this.x.reset(),this.y.reset(),this.z.reset()}}},
-/***/8389(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2021 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.Vec4=void 0;const defaults_1=__webpack_require__(7141),make_1=__webpack_require__(5582);exports.Vec4=
-/**
- * Map for passing coodinates in 4-dimensional
- * coordinate systems.
- *
- * @category Maths
- */
-class{constructor(x,y,z,w){this.x=(0,make_1.floatMake)(defaults_1.Defaults.Vec.X,x),this.y=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Y,y),this.z=(0,make_1.floatMake)(defaults_1.Defaults.Vec.Z,z),this.w=(0,make_1.floatMake)(defaults_1.Defaults.Vec.W,w)}
-/**
-     * Reset all coordinate properties to default values.
-     */reset(){this.x.reset(),this.y.reset(),this.z.reset(),this.w.reset()}}},
-/***/1655(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2025 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isInt=
-/**
- *
- * @param 			value
- *
- * @category  Matcher Predicate Functions
- */
-function(value){if(!(0,finite_1.isNumberFinite)(value))return!1;return Math.floor(value)===value}
-/***/;const finite_1=__webpack_require__(2811)},
-/***/1330(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2025 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */
-exports.A=
-/**
- * Determine if value arg is a positive integer, but does not provide any additional
- * guarantees about value other than it is, or is not a positive integer.
- * @param value		Target value to be tested.
- * @returns			true	-	value is a positive integer.
- *					false	-	value is not a positive integer, but does not indicate what value is.
- *
- * @category Matcher Predicate Functions
- */
-function(value){if(!(0,int_1.isInt)(value))return!1;return value>=0}
-/***/;const int_1=__webpack_require__(1655)},
-/***/537(__unused_webpack_module,exports){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2025 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isNumber=
-/**
- * Determine if value is a primitive 'number' type.
- * @param			value
- * @returns 		`true` 	`value` is a valid JavaScript number primitive including infinite and NaN.
- *					`false`	`value` is not a valid JavaScript number primitive.
- *
- * @category Matcher Predicate Functions
- */
-function(value){return"number"==typeof value}
-/***/},
-/***/2811(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/**
- *	MIT License
- *
- *	Copyright (c) 2019 - 2025 Toreda, Inc.
- *
- *	Permission is hereby granted, free of charge, to any person obtaining a copy
- *	of this software and associated documentation files (the "Software"), to deal
- *	in the Software without restriction, including without limitation the rights
- *	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *	copies of the Software, and to permit persons to whom the Software is
- *	furnished to do so, subject to the following conditions:
-
- * 	The above copyright notice and this permission notice shall be included in all
- * 	copies or substantial portions of the Software.
- *
- * 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * 	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * 	SOFTWARE.
- *
- */Object.defineProperty(exports,"__esModule",{value:!0}),exports.isNumberFinite=
-/**
- * @param value
- *
- * @category Matcher Predicate Functions
- */
-function(value){if(!(0,number_1.isNumber)(value))return!1;return Number.isFinite(value)}
-/***/;const number_1=__webpack_require__(537)},
-/***/9900(module,exports,__webpack_require__){var __WEBPACK_AMD_DEFINE_RESULT__;
-/*
- *  big.js v6.2.2
- *  A small, fast, easy-to-use library for arbitrary-precision decimal arithmetic.
- *  Copyright (c) 2024 Michael Mclaughlin
- *  https://github.com/MikeMcl/big.js/LICENCE.md
- */!function(){"use strict";var Big,// true or false
-/**************************************************************************************************/
-// Error messages.
-NAME="[big.js] ",INVALID=NAME+"Invalid ",INVALID_DP=INVALID+"decimal places",INVALID_RM=INVALID+"rounding mode",DIV_BY_ZERO=NAME+"Division by zero",
-// The shared prototype object.
-P={},NUMERIC=/^-?(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i;
-/*
-   * Create and return a Big constructor.
-   */
-/*
-   * Round Big x to a maximum of sd significant digits using rounding mode rm.
-   *
-   * x {Big} The Big to round.
-   * sd {number} Significant digits: integer, 0 to MAX_DP inclusive.
-   * rm {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
-   * [more] {boolean} Whether the result of division was truncated.
-   */
-function round(x,sd,rm,more){var xc=x.c;if(void 0===rm&&(rm=x.constructor.RM),0!==rm&&1!==rm&&2!==rm&&3!==rm)throw Error(INVALID_RM);if(sd<1)more=3===rm&&(more||!!xc[0])||0===sd&&(1===rm&&xc[0]>=5||2===rm&&(xc[0]>5||5===xc[0]&&(more||void 0!==xc[1]))),xc.length=1,more?(
-// 1, 0.1, 0.01, 0.001, 0.0001 etc.
-x.e=x.e-sd+1,xc[0]=1):
-// Zero.
-xc[0]=x.e=0;else if(sd<xc.length){
-// Round up?
-if(
-// xc[sd] is the digit after the digit that may be rounded up.
-more=1===rm&&xc[sd]>=5||2===rm&&(xc[sd]>5||5===xc[sd]&&(more||void 0!==xc[sd+1]||1&xc[sd-1]))||3===rm&&(more||!!xc[0]),
-// Remove any digits after the required precision.
-xc.length=sd,more)
-// Rounding up may mean the previous digit has to be rounded up.
-for(;++xc[--sd]>9;)if(xc[sd]=0,0===sd){++x.e,xc.unshift(1);break}
-// Remove trailing zeros.
-for(sd=xc.length;!xc[--sd];)xc.pop()}return x}
-/*
-   * Return a string representing the value of Big x in normal or exponential notation.
-   * Handles P.toExponential, P.toFixed, P.toJSON, P.toPrecision, P.toString and P.valueOf.
-   */function stringify(x,doExponential,isNonzero){var e=x.e,s=x.c.join(""),n=s.length;
-// Exponential notation?
-if(doExponential)s=s.charAt(0)+(n>1?"."+s.slice(1):"")+(e<0?"e":"e+")+e;
-// Normal notation.
-else if(e<0){for(;++e;)s="0"+s;s="0."+s}else if(e>0)if(++e>n)for(e-=n;e--;)s+="0";else e<n&&(s=s.slice(0,e)+"."+s.slice(e));else n>1&&(s=s.charAt(0)+"."+s.slice(1));return x.s<0&&isNonzero?"-"+s:s}
-// Prototype/instance methods
-/*
-   * Return a new Big whose value is the absolute value of this Big.
-   */P.abs=function(){var x=new this.constructor(this);return x.s=1,x},
-/*
-   * Return 1 if the value of this Big is greater than the value of Big y,
-   *       -1 if the value of this Big is less than the value of Big y, or
-   *        0 if they have the same value.
-   */
-P.cmp=function(y){var isneg,x=this,xc=x.c,yc=(y=new x.constructor(y)).c,i=x.s,j=y.s,k=x.e,l=y.e;
-// Either zero?
-if(!xc[0]||!yc[0])return xc[0]?i:yc[0]?-j:0;
-// Signs differ?
-if(i!=j)return i;
-// Compare exponents.
-if(isneg=i<0,k!=l)return k>l^isneg?1:-1;
-// Compare digit by digit.
-for(j=(k=xc.length)<(l=yc.length)?k:l,i=-1;++i<j;)if(xc[i]!=yc[i])return xc[i]>yc[i]^isneg?1:-1;
-// Compare lengths.
-return k==l?0:k>l^isneg?1:-1},
-/*
-   * Return a new Big whose value is the value of this Big divided by the value of Big y, rounded,
-   * if necessary, to a maximum of Big.DP decimal places using rounding mode Big.RM.
-   */
-P.div=function(y){var x=this,Big=x.constructor,a=x.c,// dividend
-b=(y=new Big(y)).c,// divisor
-k=x.s==y.s?1:-1,dp=Big.DP;if(dp!==~~dp||dp<0||dp>1e6)throw Error(INVALID_DP);
-// Divisor is zero?
-if(!b[0])throw Error(DIV_BY_ZERO);
-// Dividend is 0? Return +-0.
-if(!a[0])return y.s=k,y.c=[y.e=0],y;var bl,bt,n,cmp,ri,bz=b.slice(),ai=bl=b.length,al=a.length,r=a.slice(0,bl),// remainder
-rl=r.length,q=y,// quotient
-qc=q.c=[],qi=0,p=dp+(q.e=x.e-y.e)+1;// precision of the result
-// Add zeros to make remainder as long as divisor.
-for(q.s=k,k=p<0?0:p,
-// Create version of divisor with leading zero.
-bz.unshift(0);rl++<bl;)r.push(0);do{
-// n is how many times the divisor goes into current remainder.
-for(n=0;n<10;n++){
-// Compare divisor and remainder.
-if(bl!=(rl=r.length))cmp=bl>rl?1:-1;else for(ri=-1,cmp=0;++ri<bl;)if(b[ri]!=r[ri]){cmp=b[ri]>r[ri]?1:-1;break}
-// If divisor < remainder, subtract divisor from remainder.
-if(!(cmp<0))break;
-// Remainder can't be more than 1 digit longer than divisor.
-// Equalise lengths using divisor with extra leading zero?
-for(bt=rl==bl?b:bz;rl;){if(r[--rl]<bt[rl]){for(ri=rl;ri&&!r[--ri];)r[ri]=9;--r[ri],r[rl]+=10}r[rl]-=bt[rl]}for(;!r[0];)r.shift()}
-// Add the digit n to the result array.
-qc[qi++]=cmp?n:++n,
-// Update the remainder.
-r[0]&&cmp?r[rl]=a[ai]||0:r=[a[ai]]}while((ai++<al||void 0!==r[0])&&k--);
-// Leading zero? Do not remove if result is simply zero (qi == 1).
-return qc[0]||1==qi||(
-// There can't be more than one zero.
-qc.shift(),q.e--,p--),
-// Round?
-qi>p&&round(q,p,Big.RM,void 0!==r[0]),q},
-/*
-   * Return true if the value of this Big is equal to the value of Big y, otherwise return false.
-   */
-P.eq=function(y){return 0===this.cmp(y)},
-/*
-   * Return true if the value of this Big is greater than the value of Big y, otherwise return
-   * false.
-   */
-P.gt=function(y){return this.cmp(y)>0},
-/*
-   * Return true if the value of this Big is greater than or equal to the value of Big y, otherwise
-   * return false.
-   */
-P.gte=function(y){return this.cmp(y)>-1},
-/*
-   * Return true if the value of this Big is less than the value of Big y, otherwise return false.
-   */
-P.lt=function(y){return this.cmp(y)<0},
-/*
-   * Return true if the value of this Big is less than or equal to the value of Big y, otherwise
-   * return false.
-   */
-P.lte=function(y){return this.cmp(y)<1},
-/*
-   * Return a new Big whose value is the value of this Big minus the value of Big y.
-   */
-P.minus=P.sub=function(y){var i,j,t,xlty,x=this,Big=x.constructor,a=x.s,b=(y=new Big(y)).s;
-// Signs differ?
-if(a!=b)return y.s=-b,x.plus(y);var xc=x.c.slice(),xe=x.e,yc=y.c,ye=y.e;
-// Either zero?
-if(!xc[0]||!yc[0])return yc[0]?y.s=-b:xc[0]?y=new Big(x):y.s=1,y;
-// Determine which is the bigger number. Prepend zeros to equalise exponents.
-if(a=xe-ye){for((xlty=a<0)?(a=-a,t=xc):(ye=xe,t=yc),t.reverse(),b=a;b--;)t.push(0);t.reverse()}else for(
-// Exponents equal. Check digit by digit.
-j=((xlty=xc.length<yc.length)?xc:yc).length,a=b=0;b<j;b++)if(xc[b]!=yc[b]){xlty=xc[b]<yc[b];break}
-// x < y? Point xc to the array of the bigger number.
-/*
-     * Append zeros to xc if shorter. No need to add zeros to yc if shorter as subtraction only
-     * needs to start at yc.length.
-     */
-if(xlty&&(t=xc,xc=yc,yc=t,y.s=-y.s),(b=(j=yc.length)-(i=xc.length))>0)for(;b--;)xc[i++]=0;
-// Subtract yc from xc.
-for(b=i;j>a;){if(xc[--j]<yc[j]){for(i=j;i&&!xc[--i];)xc[i]=9;--xc[i],xc[j]+=10}xc[j]-=yc[j]}
-// Remove trailing zeros.
-for(;0===xc[--b];)xc.pop();
-// Remove leading zeros and adjust exponent accordingly.
-for(;0===xc[0];)xc.shift(),--ye;return xc[0]||(
-// n - n = +0
-y.s=1,
-// Result must be zero.
-xc=[ye=0]),y.c=xc,y.e=ye,y},
-/*
-   * Return a new Big whose value is the value of this Big modulo the value of Big y.
-   */
-P.mod=function(y){var ygtx,x=this,Big=x.constructor,a=x.s,b=(y=new Big(y)).s;if(!y.c[0])throw Error(DIV_BY_ZERO);return x.s=y.s=1,ygtx=1==y.cmp(x),x.s=a,y.s=b,ygtx?new Big(x):(a=Big.DP,b=Big.RM,Big.DP=Big.RM=0,x=x.div(y),Big.DP=a,Big.RM=b,this.minus(x.times(y)))},
-/*
-   * Return a new Big whose value is the value of this Big negated.
-   */
-P.neg=function(){var x=new this.constructor(this);return x.s=-x.s,x},
-/*
-   * Return a new Big whose value is the value of this Big plus the value of Big y.
-   */
-P.plus=P.add=function(y){var e,k,t,x=this,Big=x.constructor;
-// Signs differ?
-if(y=new Big(y),x.s!=y.s)return y.s=-y.s,x.minus(y);var xe=x.e,xc=x.c,ye=y.e,yc=y.c;
-// Either zero?
-if(!xc[0]||!yc[0])return yc[0]||(xc[0]?y=new Big(x):y.s=x.s),y;
-// Prepend zeros to equalise exponents.
-// Note: reverse faster than unshifts.
-if(xc=xc.slice(),e=xe-ye){for(e>0?(ye=xe,t=yc):(e=-e,t=xc),t.reverse();e--;)t.push(0);t.reverse()}
-// Point xc to the longer array.
-// Only start adding at yc.length - 1 as the further digits of xc can be left as they are.
-for(xc.length-yc.length<0&&(t=yc,yc=xc,xc=t),e=yc.length,k=0;e;xc[e]%=10)k=(xc[--e]=xc[e]+yc[e]+k)/10|0;
-// No need to check for zero, as +x + +y != 0 && -x + -y != 0
-// Remove trailing zeros.
-for(k&&(xc.unshift(k),++ye),e=xc.length;0===xc[--e];)xc.pop();return y.c=xc,y.e=ye,y},
-/*
-   * Return a Big whose value is the value of this Big raised to the power n.
-   * If n is negative, round to a maximum of Big.DP decimal places using rounding
-   * mode Big.RM.
-   *
-   * n {number} Integer, -MAX_POWER to MAX_POWER inclusive.
-   */
-P.pow=function(n){var x=this,one=new x.constructor("1"),y=one,isneg=n<0;if(n!==~~n||n<-1e6||n>1e6)throw Error(INVALID+"exponent");for(isneg&&(n=-n);1&n&&(y=y.times(x)),n>>=1;)x=x.times(x);return isneg?one.div(y):y},
-/*
-   * Return a new Big whose value is the value of this Big rounded to a maximum precision of sd
-   * significant digits using rounding mode rm, or Big.RM if rm is not specified.
-   *
-   * sd {number} Significant digits: integer, 1 to MAX_DP inclusive.
-   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
-   */
-P.prec=function(sd,rm){if(sd!==~~sd||sd<1||sd>1e6)throw Error(INVALID+"precision");return round(new this.constructor(this),sd,rm)},
-/*
-   * Return a new Big whose value is the value of this Big rounded to a maximum of dp decimal places
-   * using rounding mode rm, or Big.RM if rm is not specified.
-   * If dp is negative, round to an integer which is a multiple of 10**-dp.
-   * If dp is not specified, round to 0 decimal places.
-   *
-   * dp? {number} Integer, -MAX_DP to MAX_DP inclusive.
-   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
-   */
-P.round=function(dp,rm){if(void 0===dp)dp=0;else if(dp!==~~dp||dp<-1e6||dp>1e6)throw Error(INVALID_DP);return round(new this.constructor(this),dp+this.e+1,rm)},
-/*
-   * Return a new Big whose value is the square root of the value of this Big, rounded, if
-   * necessary, to a maximum of Big.DP decimal places using rounding mode Big.RM.
-   */
-P.sqrt=function(){var r,c,t,x=this,Big=x.constructor,s=x.s,e=x.e,half=new Big("0.5");
-// Zero?
-if(!x.c[0])return new Big(x);
-// Negative?
-if(s<0)throw Error(NAME+"No square root");
-// Estimate.
-// Math.sqrt underflow/overflow?
-// Re-estimate: pass x coefficient to Math.sqrt as integer, then adjust the result exponent.
-0===(s=Math.sqrt(+stringify(x,!0,!0)))||s===1/0?((c=x.c.join("")).length+e&1||(c+="0"),e=((e+1)/2|0)-(e<0||1&e),r=new Big(((s=Math.sqrt(c))==1/0?"5e":(s=s.toExponential()).slice(0,s.indexOf("e")+1))+e)):r=new Big(s+""),e=r.e+(Big.DP+=4);
-// Newton-Raphson iteration.
-do{t=r,r=half.times(t.plus(x.div(t)))}while(t.c.slice(0,e).join("")!==r.c.slice(0,e).join(""));return round(r,(Big.DP-=4)+r.e+1,Big.RM)},
-/*
-   * Return a new Big whose value is the value of this Big times the value of Big y.
-   */
-P.times=P.mul=function(y){var c,x=this,Big=x.constructor,xc=x.c,yc=(y=new Big(y)).c,a=xc.length,b=yc.length,i=x.e,j=y.e;
-// Determine sign of result.
-// Return signed 0 if either 0.
-if(y.s=x.s==y.s?1:-1,!xc[0]||!yc[0])return y.c=[y.e=0],y;
-// Initialise exponent of result as x.e + y.e.
-// Initialise coefficient array of result with zeros.
-for(y.e=i+j,
-// If array xc has fewer digits than yc, swap xc and yc, and lengths.
-a<b&&(c=xc,xc=yc,yc=c,j=a,a=b,b=j),c=new Array(j=a+b);j--;)c[j]=0;
-// Multiply.
-// i is initially xc.length.
-for(i=b;i--;){
-// a is yc.length.
-for(b=0,j=a+i;j>i;)
-// Current sum of products at this digit position, plus carry.
-b=c[j]+yc[i]*xc[j-i-1]+b,c[j--]=b%10,
-// carry
-b=b/10|0;c[j]=b}
-// Increment result exponent if there is a final carry, otherwise remove leading zero.
-// Remove trailing zeros.
-for(b?++y.e:c.shift(),i=c.length;!c[--i];)c.pop();return y.c=c,y},
-/*
-   * Return a string representing the value of this Big in exponential notation rounded to dp fixed
-   * decimal places using rounding mode rm, or Big.RM if rm is not specified.
-   *
-   * dp? {number} Decimal places: integer, 0 to MAX_DP inclusive.
-   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
-   */
-P.toExponential=function(dp,rm){var x=this,n=x.c[0];if(void 0!==dp){if(dp!==~~dp||dp<0||dp>1e6)throw Error(INVALID_DP);for(x=round(new x.constructor(x),++dp,rm);x.c.length<dp;)x.c.push(0)}return stringify(x,!0,!!n)},
-/*
-   * Return a string representing the value of this Big in normal notation rounded to dp fixed
-   * decimal places using rounding mode rm, or Big.RM if rm is not specified.
-   *
-   * dp? {number} Decimal places: integer, 0 to MAX_DP inclusive.
-   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
-   *
-   * (-0).toFixed(0) is '0', but (-0.1).toFixed(0) is '-0'.
-   * (-0).toFixed(1) is '0.0', but (-0.01).toFixed(1) is '-0.0'.
-   */
-P.toFixed=function(dp,rm){var x=this,n=x.c[0];if(void 0!==dp){if(dp!==~~dp||dp<0||dp>1e6)throw Error(INVALID_DP);
-// x.e may have changed if the value is rounded up.
-for(dp=dp+(x=round(new x.constructor(x),dp+x.e+1,rm)).e+1;x.c.length<dp;)x.c.push(0)}return stringify(x,!1,!!n)},
-/*
-   * Return a string representing the value of this Big.
-   * Return exponential notation if this Big has a positive exponent equal to or greater than
-   * Big.PE, or a negative exponent equal to or less than Big.NE.
-   * Omit the sign for negative zero.
-   */
-P.toJSON=P.toString=function(){var x=this,Big=x.constructor;return stringify(x,x.e<=Big.NE||x.e>=Big.PE,!!x.c[0])},
-/*
-   * Return the value of this Big as a primitve number.
-   */
-P.toNumber=function(){var n=+stringify(this,!0,!0);if(!0===this.constructor.strict&&!this.eq(n.toString()))throw Error(NAME+"Imprecise conversion");return n},
-/*
-   * Return a string representing the value of this Big rounded to sd significant digits using
-   * rounding mode rm, or Big.RM if rm is not specified.
-   * Use exponential notation if sd is less than the number of digits necessary to represent
-   * the integer part of the value in normal notation.
-   *
-   * sd {number} Significant digits: integer, 1 to MAX_DP inclusive.
-   * rm? {number} Rounding mode: 0 (down), 1 (half-up), 2 (half-even) or 3 (up).
-   */
-P.toPrecision=function(sd,rm){var x=this,Big=x.constructor,n=x.c[0];if(void 0!==sd){if(sd!==~~sd||sd<1||sd>1e6)throw Error(INVALID+"precision");for(x=round(new Big(x),sd,rm);x.c.length<sd;)x.c.push(0)}return stringify(x,sd<=x.e||x.e<=Big.NE||x.e>=Big.PE,!!n)},
-/*
-   * Return a string representing the value of this Big.
-   * Return exponential notation if this Big has a positive exponent equal to or greater than
-   * Big.PE, or a negative exponent equal to or less than Big.NE.
-   * Include the sign for negative zero.
-   */
-P.valueOf=function(){var x=this,Big=x.constructor;if(!0===Big.strict)throw Error(NAME+"valueOf disallowed");return stringify(x,x.e<=Big.NE||x.e>=Big.PE,!0)},
-// Export
-Big=function _Big_(){
-/*
-     * The Big constructor and exported function.
-     * Create and return a new instance of a Big number object.
-     *
-     * n {number|string|Big} A numeric value.
-     */
-function Big(n){var x=this;
-// Enable constructor usage without new.
-if(!(x instanceof Big))return void 0===n?_Big_():new Big(n);
-// Duplicate.
-if(n instanceof Big)x.s=n.s,x.e=n.e,x.c=n.c.slice();else{if("string"!=typeof n){if(!0===Big.strict&&"bigint"!=typeof n)throw TypeError(INVALID+"value");
-// Minus zero?
-n=0===n&&1/n<0?"-0":String(n)}!
-/*
-   * Parse the number or string value passed to a Big constructor.
-   *
-   * x {Big} A Big number instance.
-   * n {number|string} A numeric value.
-   */
-function(x,n){var e,i,nl;if(!NUMERIC.test(n))throw Error(INVALID+"number");
-// Determine sign.
-// Decimal point?
-x.s="-"==n.charAt(0)?(n=n.slice(1),-1):1,(e=n.indexOf("."))>-1&&(n=n.replace(".",""));
-// Exponential form?
-(i=n.search(/e/i))>0?(
-// Determine exponent.
-e<0&&(e=i),e+=+n.slice(i+1),n=n.substring(0,i)):e<0&&(
-// Integer.
-e=n.length);
-// Determine leading zeros.
-for(nl=n.length,i=0;i<nl&&"0"==n.charAt(i);)++i;if(i==nl)
-// Zero.
-x.c=[x.e=0];else{
-// Determine trailing zeros.
-for(;nl>0&&"0"==n.charAt(--nl););
-// Convert string to array of digits without leading/trailing zeros.
-for(x.e=e-i-1,x.c=[],e=0;i<=nl;)x.c[e++]=+n.charAt(i++)}}(x,n)}
-// Retain a reference to this Big constructor.
-// Shadow Big.prototype.constructor which points to Object.
-x.constructor=Big}return Big.prototype=P,Big.DP=20,Big.RM=1,Big.NE=-7,Big.PE=21,Big.strict=false,Big.roundDown=0,Big.roundHalfUp=1,Big.roundHalfEven=2,Big.roundUp=3,Big}(),Big.default=Big.Big=Big,void 0===(__WEBPACK_AMD_DEFINE_RESULT__=function(){return Big}.call(exports,__webpack_require__,exports,module))||(module.exports=__WEBPACK_AMD_DEFINE_RESULT__)}()},
-/***/3144(module,__unused_webpack_exports,__webpack_require__){"use strict";var bind=__webpack_require__(6743),$apply=__webpack_require__(1002),$call=__webpack_require__(76),$reflectApply=__webpack_require__(7119);
-/** @type {import('./actualApply')} */
-module.exports=$reflectApply||bind.call($call,$apply)},
-/***/1002(module){"use strict";
-/** @type {import('./functionApply')} */module.exports=Function.prototype.apply},
-/***/76(module){"use strict";
-/** @type {import('./functionCall')} */module.exports=Function.prototype.call},
-/***/3126(module,__unused_webpack_exports,__webpack_require__){"use strict";var bind=__webpack_require__(6743),$TypeError=__webpack_require__(9675),$call=__webpack_require__(76),$actualApply=__webpack_require__(3144);
-/** @type {(args: [Function, thisArg?: unknown, ...args: unknown[]]) => Function} TODO FIXME, find a way to use import('.') */
-module.exports=function(args){if(args.length<1||"function"!=typeof args[0])throw new $TypeError("a function is required");return $actualApply(bind,$call,args)}},
-/***/7119(module){"use strict";
-/** @type {import('./reflectApply')} */module.exports="undefined"!=typeof Reflect&&Reflect&&Reflect.apply},
-/***/6556(module,__unused_webpack_exports,__webpack_require__){"use strict";var GetIntrinsic=__webpack_require__(453),callBindBasic=__webpack_require__(3126),$indexOf=callBindBasic([GetIntrinsic("%String.prototype.indexOf%")]);
-/** @type {import('.')} */
-module.exports=function(name,allowMissing){
-/* eslint no-extra-parens: 0 */
-var intrinsic=/** @type {(this: unknown, ...args: unknown[]) => unknown} */GetIntrinsic(name,!!allowMissing);return"function"==typeof intrinsic&&$indexOf(name,".prototype.")>-1?callBindBasic(/** @type {const} */[intrinsic]):intrinsic}},
-/***/7176(module,__unused_webpack_exports,__webpack_require__){"use strict";var hasProtoAccessor,callBind=__webpack_require__(3126),gOPD=__webpack_require__(5795);try{
-// eslint-disable-next-line no-extra-parens, no-proto
-hasProtoAccessor=/** @type {{ __proto__?: typeof Array.prototype }} */[].__proto__===Array.prototype}catch(e){if(!e||"object"!=typeof e||!("code"in e)||"ERR_PROTO_ACCESS"!==e.code)throw e}
-// eslint-disable-next-line no-extra-parens
-var desc=!!hasProtoAccessor&&gOPD&&gOPD(Object.prototype,/** @type {keyof typeof Object.prototype} */"__proto__"),$Object=Object,$getPrototypeOf=$Object.getPrototypeOf;
-/** @type {import('./get')} */
-module.exports=desc&&"function"==typeof desc.get?callBind([desc.get]):"function"==typeof $getPrototypeOf&&/** @type {import('./get')} */function(value){
-// eslint-disable-next-line eqeqeq
-return $getPrototypeOf(null==value?value:$Object(value))}},
-/***/655(module){"use strict";
-/** @type {import('.')} */var $defineProperty=Object.defineProperty||!1;if($defineProperty)try{$defineProperty({},"a",{value:1})}catch(e){
-// IE 8 has a broken defineProperty
-$defineProperty=!1}module.exports=$defineProperty},
-/***/1237(module){"use strict";
-/** @type {import('./eval')} */module.exports=EvalError},
-/***/9383(module){"use strict";
-/** @type {import('.')} */module.exports=Error},
-/***/9290(module){"use strict";
-/** @type {import('./range')} */module.exports=RangeError},
-/***/9538(module){"use strict";
-/** @type {import('./ref')} */module.exports=ReferenceError},
-/***/8068(module){"use strict";
-/** @type {import('./syntax')} */module.exports=SyntaxError},
-/***/9675(module){"use strict";
-/** @type {import('./type')} */module.exports=TypeError},
-/***/5345(module){"use strict";
-/** @type {import('./uri')} */module.exports=URIError},
-/***/9612(module){"use strict";
-/** @type {import('.')} */module.exports=Object},
-/***/9353(module){"use strict";
-/* eslint no-invalid-this: 1 */var toStr=Object.prototype.toString,max=Math.max,concatty=function(a,b){for(var arr=[],i=0;i<a.length;i+=1)arr[i]=a[i];for(var j=0;j<b.length;j+=1)arr[j+a.length]=b[j];return arr};module.exports=function(that){var target=this;if("function"!=typeof target||"[object Function]"!==toStr.apply(target))throw new TypeError("Function.prototype.bind called on incompatible "+target);for(var bound,args=function(arrLike,offset){for(var arr=[],i=offset||0,j=0;i<arrLike.length;i+=1,j+=1)arr[j]=arrLike[i];return arr}(arguments,1),boundLength=max(0,target.length-args.length),boundArgs=[],i=0;i<boundLength;i++)boundArgs[i]="$"+i;if(bound=Function("binder","return function ("+function(arr,joiner){for(var str="",i=0;i<arr.length;i+=1)str+=arr[i],i+1<arr.length&&(str+=joiner);return str}(boundArgs,",")+"){ return binder.apply(this,arguments); }")(function(){if(this instanceof bound){var result=target.apply(this,concatty(args,arguments));return Object(result)===result?result:this}return target.apply(that,concatty(args,arguments))}),target.prototype){var Empty=function(){};Empty.prototype=target.prototype,bound.prototype=new Empty,Empty.prototype=null}return bound}},
-/***/6743(module,__unused_webpack_exports,__webpack_require__){"use strict";var implementation=__webpack_require__(9353);module.exports=Function.prototype.bind||implementation},
-/***/453(module,__unused_webpack_exports,__webpack_require__){"use strict";var $Object=__webpack_require__(9612),$Error=__webpack_require__(9383),$EvalError=__webpack_require__(1237),$RangeError=__webpack_require__(9290),$ReferenceError=__webpack_require__(9538),$SyntaxError=__webpack_require__(8068),$TypeError=__webpack_require__(9675),$URIError=__webpack_require__(5345),abs=__webpack_require__(1514),floor=__webpack_require__(8968),max=__webpack_require__(6188),min=__webpack_require__(8002),pow=__webpack_require__(5880),round=__webpack_require__(414),sign=__webpack_require__(3093),$Function=Function,getEvalledConstructor=function(expressionSyntax){try{return $Function('"use strict"; return ('+expressionSyntax+").constructor;")()}catch(e){}},$gOPD=__webpack_require__(5795),$defineProperty=__webpack_require__(655),throwTypeError=function(){throw new $TypeError},ThrowTypeError=$gOPD?function(){try{// IE 8 does not throw here
-return throwTypeError}catch(calleeThrows){try{
-// IE 8 throws on Object.getOwnPropertyDescriptor(arguments, '')
-return $gOPD(arguments,"callee").get}catch(gOPDthrows){return throwTypeError}}}():throwTypeError,hasSymbols=__webpack_require__(4039)(),getProto=__webpack_require__(3628),$ObjectGPO=__webpack_require__(1064),$ReflectGPO=__webpack_require__(8648),$apply=__webpack_require__(1002),$call=__webpack_require__(76),needsEval={},TypedArray="undefined"!=typeof Uint8Array&&getProto?getProto(Uint8Array):void 0,INTRINSICS={__proto__:null,"%AggregateError%":"undefined"==typeof AggregateError?void 0:AggregateError,"%Array%":Array,"%ArrayBuffer%":"undefined"==typeof ArrayBuffer?void 0:ArrayBuffer,"%ArrayIteratorPrototype%":hasSymbols&&getProto?getProto([][Symbol.iterator]()):void 0,"%AsyncFromSyncIteratorPrototype%":void 0,"%AsyncFunction%":needsEval,"%AsyncGenerator%":needsEval,"%AsyncGeneratorFunction%":needsEval,"%AsyncIteratorPrototype%":needsEval,"%Atomics%":"undefined"==typeof Atomics?void 0:Atomics,"%BigInt%":"undefined"==typeof BigInt?void 0:BigInt,"%BigInt64Array%":"undefined"==typeof BigInt64Array?void 0:BigInt64Array,"%BigUint64Array%":"undefined"==typeof BigUint64Array?void 0:BigUint64Array,"%Boolean%":Boolean,"%DataView%":"undefined"==typeof DataView?void 0:DataView,"%Date%":Date,"%decodeURI%":decodeURI,"%decodeURIComponent%":decodeURIComponent,"%encodeURI%":encodeURI,"%encodeURIComponent%":encodeURIComponent,"%Error%":$Error,"%eval%":eval,// eslint-disable-line no-eval
-"%EvalError%":$EvalError,"%Float16Array%":"undefined"==typeof Float16Array?void 0:Float16Array,"%Float32Array%":"undefined"==typeof Float32Array?void 0:Float32Array,"%Float64Array%":"undefined"==typeof Float64Array?void 0:Float64Array,"%FinalizationRegistry%":"undefined"==typeof FinalizationRegistry?void 0:FinalizationRegistry,"%Function%":$Function,"%GeneratorFunction%":needsEval,"%Int8Array%":"undefined"==typeof Int8Array?void 0:Int8Array,"%Int16Array%":"undefined"==typeof Int16Array?void 0:Int16Array,"%Int32Array%":"undefined"==typeof Int32Array?void 0:Int32Array,"%isFinite%":isFinite,"%isNaN%":isNaN,"%IteratorPrototype%":hasSymbols&&getProto?getProto(getProto([][Symbol.iterator]())):void 0,"%JSON%":"object"==typeof JSON?JSON:void 0,"%Map%":"undefined"==typeof Map?void 0:Map,"%MapIteratorPrototype%":"undefined"!=typeof Map&&hasSymbols&&getProto?getProto((new Map)[Symbol.iterator]()):void 0,"%Math%":Math,"%Number%":Number,"%Object%":$Object,"%Object.getOwnPropertyDescriptor%":$gOPD,"%parseFloat%":parseFloat,"%parseInt%":parseInt,"%Promise%":"undefined"==typeof Promise?void 0:Promise,"%Proxy%":"undefined"==typeof Proxy?void 0:Proxy,"%RangeError%":$RangeError,"%ReferenceError%":$ReferenceError,"%Reflect%":"undefined"==typeof Reflect?void 0:Reflect,"%RegExp%":RegExp,"%Set%":"undefined"==typeof Set?void 0:Set,"%SetIteratorPrototype%":"undefined"!=typeof Set&&hasSymbols&&getProto?getProto((new Set)[Symbol.iterator]()):void 0,"%SharedArrayBuffer%":"undefined"==typeof SharedArrayBuffer?void 0:SharedArrayBuffer,"%String%":String,"%StringIteratorPrototype%":hasSymbols&&getProto?getProto(""[Symbol.iterator]()):void 0,"%Symbol%":hasSymbols?Symbol:void 0,"%SyntaxError%":$SyntaxError,"%ThrowTypeError%":ThrowTypeError,"%TypedArray%":TypedArray,"%TypeError%":$TypeError,"%Uint8Array%":"undefined"==typeof Uint8Array?void 0:Uint8Array,"%Uint8ClampedArray%":"undefined"==typeof Uint8ClampedArray?void 0:Uint8ClampedArray,"%Uint16Array%":"undefined"==typeof Uint16Array?void 0:Uint16Array,"%Uint32Array%":"undefined"==typeof Uint32Array?void 0:Uint32Array,"%URIError%":$URIError,"%WeakMap%":"undefined"==typeof WeakMap?void 0:WeakMap,"%WeakRef%":"undefined"==typeof WeakRef?void 0:WeakRef,"%WeakSet%":"undefined"==typeof WeakSet?void 0:WeakSet,"%Function.prototype.call%":$call,"%Function.prototype.apply%":$apply,"%Object.defineProperty%":$defineProperty,"%Object.getPrototypeOf%":$ObjectGPO,"%Math.abs%":abs,"%Math.floor%":floor,"%Math.max%":max,"%Math.min%":min,"%Math.pow%":pow,"%Math.round%":round,"%Math.sign%":sign,"%Reflect.getPrototypeOf%":$ReflectGPO};if(getProto)try{null.error;// eslint-disable-line no-unused-expressions
-}catch(e){
-// https://github.com/tc39/proposal-shadowrealm/pull/384#issuecomment-1364264229
-var errorProto=getProto(getProto(e));INTRINSICS["%Error.prototype%"]=errorProto}var doEval=function doEval(name){var value;if("%AsyncFunction%"===name)value=getEvalledConstructor("async function () {}");else if("%GeneratorFunction%"===name)value=getEvalledConstructor("function* () {}");else if("%AsyncGeneratorFunction%"===name)value=getEvalledConstructor("async function* () {}");else if("%AsyncGenerator%"===name){var fn=doEval("%AsyncGeneratorFunction%");fn&&(value=fn.prototype)}else if("%AsyncIteratorPrototype%"===name){var gen=doEval("%AsyncGenerator%");gen&&getProto&&(value=getProto(gen.prototype))}return INTRINSICS[name]=value,value},LEGACY_ALIASES={__proto__:null,"%ArrayBufferPrototype%":["ArrayBuffer","prototype"],"%ArrayPrototype%":["Array","prototype"],"%ArrayProto_entries%":["Array","prototype","entries"],"%ArrayProto_forEach%":["Array","prototype","forEach"],"%ArrayProto_keys%":["Array","prototype","keys"],"%ArrayProto_values%":["Array","prototype","values"],"%AsyncFunctionPrototype%":["AsyncFunction","prototype"],"%AsyncGenerator%":["AsyncGeneratorFunction","prototype"],"%AsyncGeneratorPrototype%":["AsyncGeneratorFunction","prototype","prototype"],"%BooleanPrototype%":["Boolean","prototype"],"%DataViewPrototype%":["DataView","prototype"],"%DatePrototype%":["Date","prototype"],"%ErrorPrototype%":["Error","prototype"],"%EvalErrorPrototype%":["EvalError","prototype"],"%Float32ArrayPrototype%":["Float32Array","prototype"],"%Float64ArrayPrototype%":["Float64Array","prototype"],"%FunctionPrototype%":["Function","prototype"],"%Generator%":["GeneratorFunction","prototype"],"%GeneratorPrototype%":["GeneratorFunction","prototype","prototype"],"%Int8ArrayPrototype%":["Int8Array","prototype"],"%Int16ArrayPrototype%":["Int16Array","prototype"],"%Int32ArrayPrototype%":["Int32Array","prototype"],"%JSONParse%":["JSON","parse"],"%JSONStringify%":["JSON","stringify"],"%MapPrototype%":["Map","prototype"],"%NumberPrototype%":["Number","prototype"],"%ObjectPrototype%":["Object","prototype"],"%ObjProto_toString%":["Object","prototype","toString"],"%ObjProto_valueOf%":["Object","prototype","valueOf"],"%PromisePrototype%":["Promise","prototype"],"%PromiseProto_then%":["Promise","prototype","then"],"%Promise_all%":["Promise","all"],"%Promise_reject%":["Promise","reject"],"%Promise_resolve%":["Promise","resolve"],"%RangeErrorPrototype%":["RangeError","prototype"],"%ReferenceErrorPrototype%":["ReferenceError","prototype"],"%RegExpPrototype%":["RegExp","prototype"],"%SetPrototype%":["Set","prototype"],"%SharedArrayBufferPrototype%":["SharedArrayBuffer","prototype"],"%StringPrototype%":["String","prototype"],"%SymbolPrototype%":["Symbol","prototype"],"%SyntaxErrorPrototype%":["SyntaxError","prototype"],"%TypedArrayPrototype%":["TypedArray","prototype"],"%TypeErrorPrototype%":["TypeError","prototype"],"%Uint8ArrayPrototype%":["Uint8Array","prototype"],"%Uint8ClampedArrayPrototype%":["Uint8ClampedArray","prototype"],"%Uint16ArrayPrototype%":["Uint16Array","prototype"],"%Uint32ArrayPrototype%":["Uint32Array","prototype"],"%URIErrorPrototype%":["URIError","prototype"],"%WeakMapPrototype%":["WeakMap","prototype"],"%WeakSetPrototype%":["WeakSet","prototype"]},bind=__webpack_require__(6743),hasOwn=__webpack_require__(9957),$concat=bind.call($call,Array.prototype.concat),$spliceApply=bind.call($apply,Array.prototype.splice),$replace=bind.call($call,String.prototype.replace),$strSlice=bind.call($call,String.prototype.slice),$exec=bind.call($call,RegExp.prototype.exec),rePropName=/[^%.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|%$))/g,reEscapeChar=/\\(\\)?/g,getBaseIntrinsic=function(name,allowMissing){var alias,intrinsicName=name;if(hasOwn(LEGACY_ALIASES,intrinsicName)&&(intrinsicName="%"+(alias=LEGACY_ALIASES[intrinsicName])[0]+"%"),hasOwn(INTRINSICS,intrinsicName)){var value=INTRINSICS[intrinsicName];if(value===needsEval&&(value=doEval(intrinsicName)),void 0===value&&!allowMissing)throw new $TypeError("intrinsic "+name+" exists, but is not available. Please file an issue!");return{alias,name:intrinsicName,value}}throw new $SyntaxError("intrinsic "+name+" does not exist!")};module.exports=function(name,allowMissing){if("string"!=typeof name||0===name.length)throw new $TypeError("intrinsic name must be a non-empty string");if(arguments.length>1&&"boolean"!=typeof allowMissing)throw new $TypeError('"allowMissing" argument must be a boolean');if(null===$exec(/^%?[^%]*%?$/,name))throw new $SyntaxError("`%` may not be present anywhere but at the beginning and end of the intrinsic name");var parts=function(string){var first=$strSlice(string,0,1),last=$strSlice(string,-1);if("%"===first&&"%"!==last)throw new $SyntaxError("invalid intrinsic syntax, expected closing `%`");if("%"===last&&"%"!==first)throw new $SyntaxError("invalid intrinsic syntax, expected opening `%`");var result=[];return $replace(string,rePropName,function(match,number,quote,subString){result[result.length]=quote?$replace(subString,reEscapeChar,"$1"):number||match}),result}(name),intrinsicBaseName=parts.length>0?parts[0]:"",intrinsic=getBaseIntrinsic("%"+intrinsicBaseName+"%",allowMissing),intrinsicRealName=intrinsic.name,value=intrinsic.value,skipFurtherCaching=!1,alias=intrinsic.alias;alias&&(intrinsicBaseName=alias[0],$spliceApply(parts,$concat([0,1],alias)));for(var i=1,isOwn=!0;i<parts.length;i+=1){var part=parts[i],first=$strSlice(part,0,1),last=$strSlice(part,-1);if(('"'===first||"'"===first||"`"===first||'"'===last||"'"===last||"`"===last)&&first!==last)throw new $SyntaxError("property names with quotes must have matching quotes");if("constructor"!==part&&isOwn||(skipFurtherCaching=!0),hasOwn(INTRINSICS,intrinsicRealName="%"+(intrinsicBaseName+="."+part)+"%"))value=INTRINSICS[intrinsicRealName];else if(null!=value){if(!(part in value)){if(!allowMissing)throw new $TypeError("base intrinsic for "+name+" exists, but the property is not available.");return}if($gOPD&&i+1>=parts.length){var desc=$gOPD(value,part);
-// By convention, when a data property is converted to an accessor
-// property to emulate a data property that does not suffer from
-// the override mistake, that accessor's getter is marked with
-// an `originalValue` property. Here, when we detect this, we
-// uphold the illusion by pretending to see that original data
-// property, i.e., returning the value rather than the getter
-// itself.
-value=(isOwn=!!desc)&&"get"in desc&&!("originalValue"in desc.get)?desc.get:value[part]}else isOwn=hasOwn(value,part),value=value[part];isOwn&&!skipFurtherCaching&&(INTRINSICS[intrinsicRealName]=value)}}return value}},
-/***/1064(module,__unused_webpack_exports,__webpack_require__){"use strict";var $Object=__webpack_require__(9612);
-/** @type {import('./Object.getPrototypeOf')} */module.exports=$Object.getPrototypeOf||null},
-/***/8648(module){"use strict";
-/** @type {import('./Reflect.getPrototypeOf')} */module.exports="undefined"!=typeof Reflect&&Reflect.getPrototypeOf||null},
-/***/3628(module,__unused_webpack_exports,__webpack_require__){"use strict";var reflectGetProto=__webpack_require__(8648),originalGetProto=__webpack_require__(1064),getDunderProto=__webpack_require__(7176);
-/** @type {import('.')} */
-module.exports=reflectGetProto?function(O){
-// @ts-expect-error TS can't narrow inside a closure, for some reason
-return reflectGetProto(O)}:originalGetProto?function(O){if(!O||"object"!=typeof O&&"function"!=typeof O)throw new TypeError("getProto: not an object");
-// @ts-expect-error TS can't narrow inside a closure, for some reason
-return originalGetProto(O)}:getDunderProto?function(O){
-// @ts-expect-error TS can't narrow inside a closure, for some reason
-return getDunderProto(O)}:null},
-/***/6549(module){"use strict";
-/** @type {import('./gOPD')} */module.exports=Object.getOwnPropertyDescriptor},
-/***/5795(module,__unused_webpack_exports,__webpack_require__){"use strict";
-/** @type {import('.')} */var $gOPD=__webpack_require__(6549);if($gOPD)try{$gOPD([],"length")}catch(e){
-// IE 8 has a broken gOPD
-$gOPD=null}module.exports=$gOPD},
-/***/4039(module,__unused_webpack_exports,__webpack_require__){"use strict";var origSymbol="undefined"!=typeof Symbol&&Symbol,hasSymbolSham=__webpack_require__(1333);
-/** @type {import('.')} */
-module.exports=function(){return"function"==typeof origSymbol&&("function"==typeof Symbol&&("symbol"==typeof origSymbol("foo")&&("symbol"==typeof Symbol("bar")&&hasSymbolSham())))}},
-/***/1333(module){"use strict";
-/** @type {import('./shams')} */
-/* eslint complexity: [2, 18], max-statements: [2, 33] */module.exports=function(){if("function"!=typeof Symbol||"function"!=typeof Object.getOwnPropertySymbols)return!1;if("symbol"==typeof Symbol.iterator)return!0;
-/** @type {{ [k in symbol]?: unknown }} */var obj={},sym=Symbol("test"),symObj=Object(sym);if("string"==typeof sym)return!1;if("[object Symbol]"!==Object.prototype.toString.call(sym))return!1;if("[object Symbol]"!==Object.prototype.toString.call(symObj))return!1;
-// temp disabled per https://github.com/ljharb/object.assign/issues/17
-// if (sym instanceof Symbol) { return false; }
-// temp disabled per https://github.com/WebReflection/get-own-property-symbols/issues/4
-// if (!(symObj instanceof Symbol)) { return false; }
-// if (typeof Symbol.prototype.toString !== 'function') { return false; }
-// if (String(sym) !== Symbol.prototype.toString.call(sym)) { return false; }
-for(var _ in obj[sym]=42,obj)return!1;// eslint-disable-line no-restricted-syntax, no-unreachable-loop
-if("function"==typeof Object.keys&&0!==Object.keys(obj).length)return!1;if("function"==typeof Object.getOwnPropertyNames&&0!==Object.getOwnPropertyNames(obj).length)return!1;var syms=Object.getOwnPropertySymbols(obj);if(1!==syms.length||syms[0]!==sym)return!1;if(!Object.prototype.propertyIsEnumerable.call(obj,sym))return!1;if("function"==typeof Object.getOwnPropertyDescriptor){
-// eslint-disable-next-line no-extra-parens
-var descriptor=/** @type {PropertyDescriptor} */Object.getOwnPropertyDescriptor(obj,sym);if(42!==descriptor.value||!0!==descriptor.enumerable)return!1}return!0}},
-/***/9957(module,__unused_webpack_exports,__webpack_require__){"use strict";var call=Function.prototype.call,$hasOwn=Object.prototype.hasOwnProperty,bind=__webpack_require__(6743);
-/** @type {import('.')} */
-module.exports=bind.call(call,$hasOwn)},
-/***/1514(module){"use strict";
-/** @type {import('./abs')} */module.exports=Math.abs},
-/***/8968(module){"use strict";
-/** @type {import('./floor')} */module.exports=Math.floor},
-/***/4459(module){"use strict";
-/** @type {import('./isNaN')} */module.exports=Number.isNaN||function(a){return a!=a}},
-/***/6188(module){"use strict";
-/** @type {import('./max')} */module.exports=Math.max},
-/***/8002(module){"use strict";
-/** @type {import('./min')} */module.exports=Math.min},
-/***/5880(module){"use strict";
-/** @type {import('./pow')} */module.exports=Math.pow},
-/***/414(module){"use strict";
-/** @type {import('./round')} */module.exports=Math.round},
-/***/3093(module,__unused_webpack_exports,__webpack_require__){"use strict";var $isNaN=__webpack_require__(4459);
-/** @type {import('./sign')} */module.exports=function(number){return $isNaN(number)||0===number?number:number<0?-1:1}},
-/***/8859(module,__unused_webpack_exports,__webpack_require__){var hasMap="function"==typeof Map&&Map.prototype,mapSizeDescriptor=Object.getOwnPropertyDescriptor&&hasMap?Object.getOwnPropertyDescriptor(Map.prototype,"size"):null,mapSize=hasMap&&mapSizeDescriptor&&"function"==typeof mapSizeDescriptor.get?mapSizeDescriptor.get:null,mapForEach=hasMap&&Map.prototype.forEach,hasSet="function"==typeof Set&&Set.prototype,setSizeDescriptor=Object.getOwnPropertyDescriptor&&hasSet?Object.getOwnPropertyDescriptor(Set.prototype,"size"):null,setSize=hasSet&&setSizeDescriptor&&"function"==typeof setSizeDescriptor.get?setSizeDescriptor.get:null,setForEach=hasSet&&Set.prototype.forEach,weakMapHas="function"==typeof WeakMap&&WeakMap.prototype?WeakMap.prototype.has:null,weakSetHas="function"==typeof WeakSet&&WeakSet.prototype?WeakSet.prototype.has:null,weakRefDeref="function"==typeof WeakRef&&WeakRef.prototype?WeakRef.prototype.deref:null,booleanValueOf=Boolean.prototype.valueOf,objectToString=Object.prototype.toString,functionToString=Function.prototype.toString,$match=String.prototype.match,$slice=String.prototype.slice,$replace=String.prototype.replace,$toUpperCase=String.prototype.toUpperCase,$toLowerCase=String.prototype.toLowerCase,$test=RegExp.prototype.test,$concat=Array.prototype.concat,$join=Array.prototype.join,$arrSlice=Array.prototype.slice,$floor=Math.floor,bigIntValueOf="function"==typeof BigInt?BigInt.prototype.valueOf:null,gOPS=Object.getOwnPropertySymbols,symToString="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?Symbol.prototype.toString:null,hasShammedSymbols="function"==typeof Symbol&&"object"==typeof Symbol.iterator,toStringTag="function"==typeof Symbol&&Symbol.toStringTag&&(typeof Symbol.toStringTag===hasShammedSymbols||"symbol")?Symbol.toStringTag:null,isEnumerable=Object.prototype.propertyIsEnumerable,gPO=("function"==typeof Reflect?Reflect.getPrototypeOf:Object.getPrototypeOf)||([].__proto__===Array.prototype?function(O){return O.__proto__;// eslint-disable-line no-proto
-}:null);function addNumericSeparator(num,str){if(num===1/0||num===-1/0||num!=num||num&&num>-1e3&&num<1e3||$test.call(/e/,str))return str;var sepRegex=/[0-9](?=(?:[0-9]{3})+(?![0-9]))/g;if("number"==typeof num){var int=num<0?-$floor(-num):$floor(num);// trunc(num)
-if(int!==num){var intStr=String(int),dec=$slice.call(str,intStr.length+1);return $replace.call(intStr,sepRegex,"$&_")+"."+$replace.call($replace.call(dec,/([0-9]{3})/g,"$&_"),/_$/,"")}}return $replace.call(str,sepRegex,"$&_")}var utilInspect=__webpack_require__(2634),inspectCustom=utilInspect.custom,inspectSymbol=isSymbol(inspectCustom)?inspectCustom:null,quotes={__proto__:null,double:'"',single:"'"},quoteREs={__proto__:null,double:/(["\\])/g,single:/(['\\])/g};function wrapQuotes(s,defaultStyle,opts){var style=opts.quoteStyle||defaultStyle,quoteChar=quotes[style];return quoteChar+s+quoteChar}function quote(s){return $replace.call(String(s),/"/g,"&quot;")}function canTrustToString(obj){return!toStringTag||!("object"==typeof obj&&(toStringTag in obj||void 0!==obj[toStringTag]))}function isArray(obj){return"[object Array]"===toStr(obj)&&canTrustToString(obj)}function isRegExp(obj){return"[object RegExp]"===toStr(obj)&&canTrustToString(obj)}
-// Symbol and BigInt do have Symbol.toStringTag by spec, so that can't be used to eliminate false positives
-function isSymbol(obj){if(hasShammedSymbols)return obj&&"object"==typeof obj&&obj instanceof Symbol;if("symbol"==typeof obj)return!0;if(!obj||"object"!=typeof obj||!symToString)return!1;try{return symToString.call(obj),!0}catch(e){}return!1}module.exports=function inspect_(obj,options,depth,seen){var opts=options||{};if(has(opts,"quoteStyle")&&!has(quotes,opts.quoteStyle))throw new TypeError('option "quoteStyle" must be "single" or "double"');if(has(opts,"maxStringLength")&&("number"==typeof opts.maxStringLength?opts.maxStringLength<0&&opts.maxStringLength!==1/0:null!==opts.maxStringLength))throw new TypeError('option "maxStringLength", if provided, must be a positive integer, Infinity, or `null`');var customInspect=!has(opts,"customInspect")||opts.customInspect;if("boolean"!=typeof customInspect&&"symbol"!==customInspect)throw new TypeError("option \"customInspect\", if provided, must be `true`, `false`, or `'symbol'`");if(has(opts,"indent")&&null!==opts.indent&&"\t"!==opts.indent&&!(parseInt(opts.indent,10)===opts.indent&&opts.indent>0))throw new TypeError('option "indent" must be "\\t", an integer > 0, or `null`');if(has(opts,"numericSeparator")&&"boolean"!=typeof opts.numericSeparator)throw new TypeError('option "numericSeparator", if provided, must be `true` or `false`');var numericSeparator=opts.numericSeparator;if(void 0===obj)return"undefined";if(null===obj)return"null";if("boolean"==typeof obj)return obj?"true":"false";if("string"==typeof obj)return inspectString(obj,opts);if("number"==typeof obj){if(0===obj)return 1/0/obj>0?"0":"-0";var str=String(obj);return numericSeparator?addNumericSeparator(obj,str):str}if("bigint"==typeof obj){var bigIntStr=String(obj)+"n";return numericSeparator?addNumericSeparator(obj,bigIntStr):bigIntStr}var maxDepth=void 0===opts.depth?5:opts.depth;if(void 0===depth&&(depth=0),depth>=maxDepth&&maxDepth>0&&"object"==typeof obj)return isArray(obj)?"[Array]":"[Object]";var indent=function(opts,depth){var baseIndent;if("\t"===opts.indent)baseIndent="\t";else{if(!("number"==typeof opts.indent&&opts.indent>0))return null;baseIndent=$join.call(Array(opts.indent+1)," ")}return{base:baseIndent,prev:$join.call(Array(depth+1),baseIndent)}}(opts,depth);if(void 0===seen)seen=[];else if(indexOf(seen,obj)>=0)return"[Circular]";function inspect(value,from,noIndent){if(from&&(seen=$arrSlice.call(seen)).push(from),noIndent){var newOpts={depth:opts.depth};return has(opts,"quoteStyle")&&(newOpts.quoteStyle=opts.quoteStyle),inspect_(value,newOpts,depth+1,seen)}return inspect_(value,opts,depth+1,seen)}if("function"==typeof obj&&!isRegExp(obj)){// in older engines, regexes are callable
-var name=function(f){if(f.name)return f.name;var m=$match.call(functionToString.call(f),/^function\s*([\w$]+)/);if(m)return m[1];return null}(obj),keys=arrObjKeys(obj,inspect);return"[Function"+(name?": "+name:" (anonymous)")+"]"+(keys.length>0?" { "+$join.call(keys,", ")+" }":"")}if(isSymbol(obj)){var symString=hasShammedSymbols?$replace.call(String(obj),/^(Symbol\(.*\))_[^)]*$/,"$1"):symToString.call(obj);return"object"!=typeof obj||hasShammedSymbols?symString:markBoxed(symString)}if(function(x){if(!x||"object"!=typeof x)return!1;if("undefined"!=typeof HTMLElement&&x instanceof HTMLElement)return!0;return"string"==typeof x.nodeName&&"function"==typeof x.getAttribute}(obj)){for(var s="<"+$toLowerCase.call(String(obj.nodeName)),attrs=obj.attributes||[],i=0;i<attrs.length;i++)s+=" "+attrs[i].name+"="+wrapQuotes(quote(attrs[i].value),"double",opts);return s+=">",obj.childNodes&&obj.childNodes.length&&(s+="..."),s+="</"+$toLowerCase.call(String(obj.nodeName))+">"}if(isArray(obj)){if(0===obj.length)return"[]";var xs=arrObjKeys(obj,inspect);return indent&&!function(xs){for(var i=0;i<xs.length;i++)if(indexOf(xs[i],"\n")>=0)return!1;return!0}(xs)?"["+indentedJoin(xs,indent)+"]":"[ "+$join.call(xs,", ")+" ]"}if(function(obj){return"[object Error]"===toStr(obj)&&canTrustToString(obj)}(obj)){var parts=arrObjKeys(obj,inspect);return"cause"in Error.prototype||!("cause"in obj)||isEnumerable.call(obj,"cause")?0===parts.length?"["+String(obj)+"]":"{ ["+String(obj)+"] "+$join.call(parts,", ")+" }":"{ ["+String(obj)+"] "+$join.call($concat.call("[cause]: "+inspect(obj.cause),parts),", ")+" }"}if("object"==typeof obj&&customInspect){if(inspectSymbol&&"function"==typeof obj[inspectSymbol]&&utilInspect)return utilInspect(obj,{depth:maxDepth-depth});if("symbol"!==customInspect&&"function"==typeof obj.inspect)return obj.inspect()}if(function(x){if(!mapSize||!x||"object"!=typeof x)return!1;try{mapSize.call(x);try{setSize.call(x)}catch(s){return!0}return x instanceof Map;// core-js workaround, pre-v2.5.0
-}catch(e){}return!1}(obj)){var mapParts=[];return mapForEach&&mapForEach.call(obj,function(value,key){mapParts.push(inspect(key,obj,!0)+" => "+inspect(value,obj))}),collectionOf("Map",mapSize.call(obj),mapParts,indent)}if(function(x){if(!setSize||!x||"object"!=typeof x)return!1;try{setSize.call(x);try{mapSize.call(x)}catch(m){return!0}return x instanceof Set;// core-js workaround, pre-v2.5.0
-}catch(e){}return!1}(obj)){var setParts=[];return setForEach&&setForEach.call(obj,function(value){setParts.push(inspect(value,obj))}),collectionOf("Set",setSize.call(obj),setParts,indent)}if(function(x){if(!weakMapHas||!x||"object"!=typeof x)return!1;try{weakMapHas.call(x,weakMapHas);try{weakSetHas.call(x,weakSetHas)}catch(s){return!0}return x instanceof WeakMap;// core-js workaround, pre-v2.5.0
-}catch(e){}return!1}(obj))return weakCollectionOf("WeakMap");if(function(x){if(!weakSetHas||!x||"object"!=typeof x)return!1;try{weakSetHas.call(x,weakSetHas);try{weakMapHas.call(x,weakMapHas)}catch(s){return!0}return x instanceof WeakSet;// core-js workaround, pre-v2.5.0
-}catch(e){}return!1}(obj))return weakCollectionOf("WeakSet");if(function(x){if(!weakRefDeref||!x||"object"!=typeof x)return!1;try{return weakRefDeref.call(x),!0}catch(e){}return!1}(obj))return weakCollectionOf("WeakRef");if(function(obj){return"[object Number]"===toStr(obj)&&canTrustToString(obj)}(obj))return markBoxed(inspect(Number(obj)));if(function(obj){if(!obj||"object"!=typeof obj||!bigIntValueOf)return!1;try{return bigIntValueOf.call(obj),!0}catch(e){}return!1}(obj))return markBoxed(inspect(bigIntValueOf.call(obj)));if(function(obj){return"[object Boolean]"===toStr(obj)&&canTrustToString(obj)}(obj))return markBoxed(booleanValueOf.call(obj));if(function(obj){return"[object String]"===toStr(obj)&&canTrustToString(obj)}(obj))return markBoxed(inspect(String(obj)));
-// note: in IE 8, sometimes `global !== window` but both are the prototypes of each other
-/* eslint-env browser */if("undefined"!=typeof window&&obj===window)return"{ [object Window] }";if("undefined"!=typeof globalThis&&obj===globalThis||void 0!==__webpack_require__.g&&obj===__webpack_require__.g)return"{ [object globalThis] }";if(!function(obj){return"[object Date]"===toStr(obj)&&canTrustToString(obj)}(obj)&&!isRegExp(obj)){var ys=arrObjKeys(obj,inspect),isPlainObject=gPO?gPO(obj)===Object.prototype:obj instanceof Object||obj.constructor===Object,protoTag=obj instanceof Object?"":"null prototype",stringTag=!isPlainObject&&toStringTag&&Object(obj)===obj&&toStringTag in obj?$slice.call(toStr(obj),8,-1):protoTag?"Object":"",tag=(isPlainObject||"function"!=typeof obj.constructor?"":obj.constructor.name?obj.constructor.name+" ":"")+(stringTag||protoTag?"["+$join.call($concat.call([],stringTag||[],protoTag||[]),": ")+"] ":"");return 0===ys.length?tag+"{}":indent?tag+"{"+indentedJoin(ys,indent)+"}":tag+"{ "+$join.call(ys,", ")+" }"}return String(obj)};var hasOwn=Object.prototype.hasOwnProperty||function(key){return key in this};function has(obj,key){return hasOwn.call(obj,key)}function toStr(obj){return objectToString.call(obj)}function indexOf(xs,x){if(xs.indexOf)return xs.indexOf(x);for(var i=0,l=xs.length;i<l;i++)if(xs[i]===x)return i;return-1}function inspectString(str,opts){if(str.length>opts.maxStringLength){var remaining=str.length-opts.maxStringLength,trailer="... "+remaining+" more character"+(remaining>1?"s":"");return inspectString($slice.call(str,0,opts.maxStringLength),opts)+trailer}var quoteRE=quoteREs[opts.quoteStyle||"single"];return quoteRE.lastIndex=0,wrapQuotes($replace.call($replace.call(str,quoteRE,"\\$1"),/[\x00-\x1f]/g,lowbyte),"single",opts)}function lowbyte(c){var n=c.charCodeAt(0),x={8:"b",9:"t",10:"n",12:"f",13:"r"}[n];return x?"\\"+x:"\\x"+(n<16?"0":"")+$toUpperCase.call(n.toString(16))}function markBoxed(str){return"Object("+str+")"}function weakCollectionOf(type){return type+" { ? }"}function collectionOf(type,size,entries,indent){return type+" ("+size+") {"+(indent?indentedJoin(entries,indent):$join.call(entries,", "))+"}"}function indentedJoin(xs,indent){if(0===xs.length)return"";var lineJoiner="\n"+indent.prev+indent.base;return lineJoiner+$join.call(xs,","+lineJoiner)+"\n"+indent.prev}function arrObjKeys(obj,inspect){var isArr=isArray(obj),xs=[];if(isArr){xs.length=obj.length;for(var i=0;i<obj.length;i++)xs[i]=has(obj,i)?inspect(obj[i],obj):""}var symMap,syms="function"==typeof gOPS?gOPS(obj):[];if(hasShammedSymbols){symMap={};for(var k=0;k<syms.length;k++)symMap["$"+syms[k]]=syms[k]}for(var key in obj)// eslint-disable-line no-restricted-syntax
-has(obj,key)&&(// eslint-disable-line no-restricted-syntax, no-continue
-isArr&&String(Number(key))===key&&key<obj.length||hasShammedSymbols&&symMap["$"+key]instanceof Symbol||($test.call(/[^\w$]/,key)?xs.push(inspect(key,obj)+": "+inspect(obj[key],obj)):xs.push(key+": "+inspect(obj[key],obj))));if("function"==typeof gOPS)for(var j=0;j<syms.length;j++)isEnumerable.call(obj,syms[j])&&xs.push("["+inspect(syms[j])+"]: "+inspect(obj[syms[j]],obj));return xs}
-/***/},
-/***/4765(module){"use strict";var replace=String.prototype.replace,percentTwenties=/%20/g,Format_RFC1738="RFC1738",Format_RFC3986="RFC3986";module.exports={default:Format_RFC3986,formatters:{RFC1738:function(value){return replace.call(value,percentTwenties,"+")},RFC3986:function(value){return String(value)}},RFC1738:Format_RFC1738,RFC3986:Format_RFC3986}},
-/***/5373(module,__unused_webpack_exports,__webpack_require__){"use strict";var stringify=__webpack_require__(8636),parse=__webpack_require__(2642),formats=__webpack_require__(4765);module.exports={formats,parse,stringify}},
-/***/2642(module,__unused_webpack_exports,__webpack_require__){"use strict";var utils=__webpack_require__(7720),has=Object.prototype.hasOwnProperty,isArray=Array.isArray,defaults={allowDots:!1,allowEmptyArrays:!1,allowPrototypes:!1,allowSparse:!1,arrayLimit:20,charset:"utf-8",charsetSentinel:!1,comma:!1,decodeDotInKeys:!1,decoder:utils.decode,delimiter:"&",depth:5,duplicates:"combine",ignoreQueryPrefix:!1,interpretNumericEntities:!1,parameterLimit:1e3,parseArrays:!0,plainObjects:!1,strictDepth:!1,strictMerge:!0,strictNullHandling:!1,throwOnLimitExceeded:!1},interpretNumericEntities=function(str){return str.replace(/&#(\d+);/g,function($0,numberStr){return String.fromCharCode(parseInt(numberStr,10))})},parseArrayValue=function(val,options,currentArrayLength){if(val&&"string"==typeof val&&options.comma&&val.indexOf(",")>-1)return val.split(",");if(options.throwOnLimitExceeded&&currentArrayLength>=options.arrayLimit)throw new RangeError("Array limit exceeded. Only "+options.arrayLimit+" element"+(1===options.arrayLimit?"":"s")+" allowed in an array.");return val},parseKeys=function(givenKey,val,options,valuesParsed){if(givenKey){var keys=function(givenKey,options){var key=options.allowDots?givenKey.replace(/\.([^.[]+)/g,"[$1]"):givenKey;if(options.depth<=0){if(!options.plainObjects&&has.call(Object.prototype,key)&&!options.allowPrototypes)return;return[key]}var child=/(\[[^[\]]*])/g,segment=/(\[[^[\]]*])/.exec(key),parent=segment?key.slice(0,segment.index):key,keys=[];if(parent){if(!options.plainObjects&&has.call(Object.prototype,parent)&&!options.allowPrototypes)return;keys[keys.length]=parent}for(var i=0;null!==(segment=child.exec(key))&&i<options.depth;){i+=1;var segmentContent=segment[1].slice(1,-1);if(!options.plainObjects&&has.call(Object.prototype,segmentContent)&&!options.allowPrototypes)return;keys[keys.length]=segment[1]}if(segment){if(!0===options.strictDepth)throw new RangeError("Input depth exceeded depth option of "+options.depth+" and strictDepth is true");keys[keys.length]="["+key.slice(segment.index)+"]"}return keys}(givenKey,options);if(keys)return function(chain,val,options,valuesParsed){var currentArrayLength=0;if(chain.length>0&&"[]"===chain[chain.length-1]){var parentKey=chain.slice(0,-1).join("");currentArrayLength=Array.isArray(val)&&val[parentKey]?val[parentKey].length:0}for(var leaf=valuesParsed?val:parseArrayValue(val,options,currentArrayLength),i=chain.length-1;i>=0;--i){var obj,root=chain[i];if("[]"===root&&options.parseArrays)
-// leaf is already an overflow object, preserve it
-obj=utils.isOverflow(leaf)?leaf:options.allowEmptyArrays&&(""===leaf||options.strictNullHandling&&null===leaf)?[]:utils.combine([],leaf,options.arrayLimit,options.plainObjects);else{obj=options.plainObjects?{__proto__:null}:{};var cleanRoot="["===root.charAt(0)&&"]"===root.charAt(root.length-1)?root.slice(1,-1):root,decodedRoot=options.decodeDotInKeys?cleanRoot.replace(/%2E/g,"."):cleanRoot,index=parseInt(decodedRoot,10),isValidArrayIndex=!isNaN(index)&&root!==decodedRoot&&String(index)===decodedRoot&&index>=0&&options.parseArrays;if(options.parseArrays||""!==decodedRoot)if(isValidArrayIndex&&index<options.arrayLimit)(obj=[])[index]=leaf;else{if(isValidArrayIndex&&options.throwOnLimitExceeded)throw new RangeError("Array limit exceeded. Only "+options.arrayLimit+" element"+(1===options.arrayLimit?"":"s")+" allowed in an array.");isValidArrayIndex?(obj[index]=leaf,utils.markOverflow(obj,index)):"__proto__"!==decodedRoot&&(obj[decodedRoot]=leaf)}else obj={0:leaf}}leaf=obj}return leaf}(keys,val,options,valuesParsed)}};module.exports=function(str,opts){var options=function(opts){if(!opts)return defaults;if(void 0!==opts.allowEmptyArrays&&"boolean"!=typeof opts.allowEmptyArrays)throw new TypeError("`allowEmptyArrays` option can only be `true` or `false`, when provided");if(void 0!==opts.decodeDotInKeys&&"boolean"!=typeof opts.decodeDotInKeys)throw new TypeError("`decodeDotInKeys` option can only be `true` or `false`, when provided");if(null!==opts.decoder&&void 0!==opts.decoder&&"function"!=typeof opts.decoder)throw new TypeError("Decoder has to be a function.");if(void 0!==opts.charset&&"utf-8"!==opts.charset&&"iso-8859-1"!==opts.charset)throw new TypeError("The charset option must be either utf-8, iso-8859-1, or undefined");if(void 0!==opts.throwOnLimitExceeded&&"boolean"!=typeof opts.throwOnLimitExceeded)throw new TypeError("`throwOnLimitExceeded` option must be a boolean");var charset=void 0===opts.charset?defaults.charset:opts.charset,duplicates=void 0===opts.duplicates?defaults.duplicates:opts.duplicates;if("combine"!==duplicates&&"first"!==duplicates&&"last"!==duplicates)throw new TypeError("The duplicates option must be either combine, first, or last");return{allowDots:void 0===opts.allowDots?!0===opts.decodeDotInKeys||defaults.allowDots:!!opts.allowDots,allowEmptyArrays:"boolean"==typeof opts.allowEmptyArrays?!!opts.allowEmptyArrays:defaults.allowEmptyArrays,allowPrototypes:"boolean"==typeof opts.allowPrototypes?opts.allowPrototypes:defaults.allowPrototypes,allowSparse:"boolean"==typeof opts.allowSparse?opts.allowSparse:defaults.allowSparse,arrayLimit:"number"==typeof opts.arrayLimit?opts.arrayLimit:defaults.arrayLimit,charset,charsetSentinel:"boolean"==typeof opts.charsetSentinel?opts.charsetSentinel:defaults.charsetSentinel,comma:"boolean"==typeof opts.comma?opts.comma:defaults.comma,decodeDotInKeys:"boolean"==typeof opts.decodeDotInKeys?opts.decodeDotInKeys:defaults.decodeDotInKeys,decoder:"function"==typeof opts.decoder?opts.decoder:defaults.decoder,delimiter:"string"==typeof opts.delimiter||utils.isRegExp(opts.delimiter)?opts.delimiter:defaults.delimiter,
-// eslint-disable-next-line no-implicit-coercion, no-extra-parens
-depth:"number"==typeof opts.depth||!1===opts.depth?+opts.depth:defaults.depth,duplicates,ignoreQueryPrefix:!0===opts.ignoreQueryPrefix,interpretNumericEntities:"boolean"==typeof opts.interpretNumericEntities?opts.interpretNumericEntities:defaults.interpretNumericEntities,parameterLimit:"number"==typeof opts.parameterLimit?opts.parameterLimit:defaults.parameterLimit,parseArrays:!1!==opts.parseArrays,plainObjects:"boolean"==typeof opts.plainObjects?opts.plainObjects:defaults.plainObjects,strictDepth:"boolean"==typeof opts.strictDepth?!!opts.strictDepth:defaults.strictDepth,strictMerge:"boolean"==typeof opts.strictMerge?!!opts.strictMerge:defaults.strictMerge,strictNullHandling:"boolean"==typeof opts.strictNullHandling?opts.strictNullHandling:defaults.strictNullHandling,throwOnLimitExceeded:"boolean"==typeof opts.throwOnLimitExceeded&&opts.throwOnLimitExceeded}}(opts);if(""===str||null==str)return options.plainObjects?{__proto__:null}:{};for(var tempObj="string"==typeof str?function(str,options){var obj={__proto__:null},cleanStr=options.ignoreQueryPrefix?str.replace(/^\?/,""):str;cleanStr=cleanStr.replace(/%5B/gi,"[").replace(/%5D/gi,"]");var limit=options.parameterLimit===1/0?void 0:options.parameterLimit,parts=cleanStr.split(options.delimiter,options.throwOnLimitExceeded?limit+1:limit);if(options.throwOnLimitExceeded&&parts.length>limit)throw new RangeError("Parameter limit exceeded. Only "+limit+" parameter"+(1===limit?"":"s")+" allowed.");var i,skipIndex=-1,charset=options.charset;// Keep track of where the utf8 sentinel was found
-if(options.charsetSentinel)for(i=0;i<parts.length;++i)0===parts[i].indexOf("utf8=")&&("utf8=%E2%9C%93"===parts[i]?charset="utf-8":"utf8=%26%2310003%3B"===parts[i]&&(charset="iso-8859-1"),skipIndex=i,i=parts.length);for(i=0;i<parts.length;++i)if(i!==skipIndex){var key,val,part=parts[i],bracketEqualsPos=part.indexOf("]="),pos=-1===bracketEqualsPos?part.indexOf("="):bracketEqualsPos+1;if(-1===pos?(key=options.decoder(part,defaults.decoder,charset,"key"),val=options.strictNullHandling?null:""):null!==(key=options.decoder(part.slice(0,pos),defaults.decoder,charset,"key"))&&(val=utils.maybeMap(parseArrayValue(part.slice(pos+1),options,isArray(obj[key])?obj[key].length:0),function(encodedVal){return options.decoder(encodedVal,defaults.decoder,charset,"value")})),val&&options.interpretNumericEntities&&"iso-8859-1"===charset&&(val=interpretNumericEntities(String(val))),part.indexOf("[]=")>-1&&(val=isArray(val)?[val]:val),options.comma&&isArray(val)&&val.length>options.arrayLimit){if(options.throwOnLimitExceeded)throw new RangeError("Array limit exceeded. Only "+options.arrayLimit+" element"+(1===options.arrayLimit?"":"s")+" allowed in an array.");val=utils.combine([],val,options.arrayLimit,options.plainObjects)}if(null!==key){var existing=has.call(obj,key);existing&&("combine"===options.duplicates||part.indexOf("[]=")>-1)?obj[key]=utils.combine(obj[key],val,options.arrayLimit,options.plainObjects):existing&&"last"!==options.duplicates||(obj[key]=val)}}return obj}(str,options):str,obj=options.plainObjects?{__proto__:null}:{},keys=Object.keys(tempObj),i=0;i<keys.length;++i){var key=keys[i],newObj=parseKeys(key,tempObj[key],options,"string"==typeof str);obj=utils.merge(obj,newObj,options)}return!0===options.allowSparse?obj:utils.compact(obj)}},
-/***/8636(module,__unused_webpack_exports,__webpack_require__){"use strict";var getSideChannel=__webpack_require__(920),utils=__webpack_require__(7720),formats=__webpack_require__(4765),has=Object.prototype.hasOwnProperty,arrayPrefixGenerators={brackets:function(prefix){return prefix+"[]"},comma:"comma",indices:function(prefix,key){return prefix+"["+key+"]"},repeat:function(prefix){return prefix}},isArray=Array.isArray,push=Array.prototype.push,pushToArray=function(arr,valueOrArray){push.apply(arr,isArray(valueOrArray)?valueOrArray:[valueOrArray])},toISO=Date.prototype.toISOString,defaultFormat=formats.default,defaults={addQueryPrefix:!1,allowDots:!1,allowEmptyArrays:!1,arrayFormat:"indices",charset:"utf-8",charsetSentinel:!1,commaRoundTrip:!1,delimiter:"&",encode:!0,encodeDotInKeys:!1,encoder:utils.encode,encodeValuesOnly:!1,filter:void 0,format:defaultFormat,formatter:formats.formatters[defaultFormat],
-// deprecated
-indices:!1,serializeDate:function(date){return toISO.call(date)},skipNulls:!1,strictNullHandling:!1},sentinel={},stringify=function stringify(object,prefix,generateArrayPrefix,commaRoundTrip,allowEmptyArrays,strictNullHandling,skipNulls,encodeDotInKeys,encoder,filter,sort,allowDots,serializeDate,format,formatter,encodeValuesOnly,charset,sideChannel){for(var v,obj=object,tmpSc=sideChannel,step=0,findFlag=!1;void 0!==(tmpSc=tmpSc.get(sentinel))&&!findFlag;){
-// Where object last appeared in the ref tree
-var pos=tmpSc.get(object);if(step+=1,void 0!==pos){if(pos===step)throw new RangeError("Cyclic object value");findFlag=!0}void 0===tmpSc.get(sentinel)&&(step=0)}if("function"==typeof filter?obj=filter(prefix,obj):obj instanceof Date?obj=serializeDate(obj):"comma"===generateArrayPrefix&&isArray(obj)&&(obj=utils.maybeMap(obj,function(value){return value instanceof Date?serializeDate(value):value})),null===obj){if(strictNullHandling)return encoder&&!encodeValuesOnly?encoder(prefix,defaults.encoder,charset,"key",format):prefix;obj=""}if("string"==typeof(v=obj)||"number"==typeof v||"boolean"==typeof v||"symbol"==typeof v||"bigint"==typeof v||utils.isBuffer(obj))return encoder?[formatter(encodeValuesOnly?prefix:encoder(prefix,defaults.encoder,charset,"key",format))+"="+formatter(encoder(obj,defaults.encoder,charset,"value",format))]:[formatter(prefix)+"="+formatter(String(obj))];var objKeys,values=[];if(void 0===obj)return values;if("comma"===generateArrayPrefix&&isArray(obj))
-// we need to join elements in
-encodeValuesOnly&&encoder&&(obj=utils.maybeMap(obj,encoder)),objKeys=[{value:obj.length>0?obj.join(",")||null:void 0}];else if(isArray(filter))objKeys=filter;else{var keys=Object.keys(obj);objKeys=sort?keys.sort(sort):keys}var encodedPrefix=encodeDotInKeys?String(prefix).replace(/\./g,"%2E"):String(prefix),adjustedPrefix=commaRoundTrip&&isArray(obj)&&1===obj.length?encodedPrefix+"[]":encodedPrefix;if(allowEmptyArrays&&isArray(obj)&&0===obj.length)return adjustedPrefix+"[]";for(var j=0;j<objKeys.length;++j){var key=objKeys[j],value="object"==typeof key&&key&&void 0!==key.value?key.value:obj[key];if(!skipNulls||null!==value){var encodedKey=allowDots&&encodeDotInKeys?String(key).replace(/\./g,"%2E"):String(key),keyPrefix=isArray(obj)?"function"==typeof generateArrayPrefix?generateArrayPrefix(adjustedPrefix,encodedKey):adjustedPrefix:adjustedPrefix+(allowDots?"."+encodedKey:"["+encodedKey+"]");sideChannel.set(object,step);var valueSideChannel=getSideChannel();valueSideChannel.set(sentinel,sideChannel),pushToArray(values,stringify(value,keyPrefix,generateArrayPrefix,commaRoundTrip,allowEmptyArrays,strictNullHandling,skipNulls,encodeDotInKeys,"comma"===generateArrayPrefix&&encodeValuesOnly&&isArray(obj)?null:encoder,filter,sort,allowDots,serializeDate,format,formatter,encodeValuesOnly,charset,valueSideChannel))}}return values};module.exports=function(object,opts){var objKeys,obj=object,options=function(opts){if(!opts)return defaults;if(void 0!==opts.allowEmptyArrays&&"boolean"!=typeof opts.allowEmptyArrays)throw new TypeError("`allowEmptyArrays` option can only be `true` or `false`, when provided");if(void 0!==opts.encodeDotInKeys&&"boolean"!=typeof opts.encodeDotInKeys)throw new TypeError("`encodeDotInKeys` option can only be `true` or `false`, when provided");if(null!==opts.encoder&&void 0!==opts.encoder&&"function"!=typeof opts.encoder)throw new TypeError("Encoder has to be a function.");var charset=opts.charset||defaults.charset;if(void 0!==opts.charset&&"utf-8"!==opts.charset&&"iso-8859-1"!==opts.charset)throw new TypeError("The charset option must be either utf-8, iso-8859-1, or undefined");var format=formats.default;if(void 0!==opts.format){if(!has.call(formats.formatters,opts.format))throw new TypeError("Unknown format option provided.");format=opts.format}var arrayFormat,formatter=formats.formatters[format],filter=defaults.filter;if(("function"==typeof opts.filter||isArray(opts.filter))&&(filter=opts.filter),arrayFormat=opts.arrayFormat in arrayPrefixGenerators?opts.arrayFormat:"indices"in opts?opts.indices?"indices":"repeat":defaults.arrayFormat,"commaRoundTrip"in opts&&"boolean"!=typeof opts.commaRoundTrip)throw new TypeError("`commaRoundTrip` must be a boolean, or absent");var allowDots=void 0===opts.allowDots?!0===opts.encodeDotInKeys||defaults.allowDots:!!opts.allowDots;return{addQueryPrefix:"boolean"==typeof opts.addQueryPrefix?opts.addQueryPrefix:defaults.addQueryPrefix,allowDots,allowEmptyArrays:"boolean"==typeof opts.allowEmptyArrays?!!opts.allowEmptyArrays:defaults.allowEmptyArrays,arrayFormat,charset,charsetSentinel:"boolean"==typeof opts.charsetSentinel?opts.charsetSentinel:defaults.charsetSentinel,commaRoundTrip:!!opts.commaRoundTrip,delimiter:void 0===opts.delimiter?defaults.delimiter:opts.delimiter,encode:"boolean"==typeof opts.encode?opts.encode:defaults.encode,encodeDotInKeys:"boolean"==typeof opts.encodeDotInKeys?opts.encodeDotInKeys:defaults.encodeDotInKeys,encoder:"function"==typeof opts.encoder?opts.encoder:defaults.encoder,encodeValuesOnly:"boolean"==typeof opts.encodeValuesOnly?opts.encodeValuesOnly:defaults.encodeValuesOnly,filter,format,formatter,serializeDate:"function"==typeof opts.serializeDate?opts.serializeDate:defaults.serializeDate,skipNulls:"boolean"==typeof opts.skipNulls?opts.skipNulls:defaults.skipNulls,sort:"function"==typeof opts.sort?opts.sort:null,strictNullHandling:"boolean"==typeof opts.strictNullHandling?opts.strictNullHandling:defaults.strictNullHandling}}(opts);"function"==typeof options.filter?obj=(0,options.filter)("",obj):isArray(options.filter)&&(objKeys=options.filter);var keys=[];if("object"!=typeof obj||null===obj)return"";var generateArrayPrefix=arrayPrefixGenerators[options.arrayFormat],commaRoundTrip="comma"===generateArrayPrefix&&options.commaRoundTrip;objKeys||(objKeys=Object.keys(obj)),options.sort&&objKeys.sort(options.sort);for(var sideChannel=getSideChannel(),i=0;i<objKeys.length;++i){var key=objKeys[i],value=obj[key];options.skipNulls&&null===value||pushToArray(keys,stringify(value,key,generateArrayPrefix,commaRoundTrip,options.allowEmptyArrays,options.strictNullHandling,options.skipNulls,options.encodeDotInKeys,options.encode?options.encoder:null,options.filter,options.sort,options.allowDots,options.serializeDate,options.format,options.formatter,options.encodeValuesOnly,options.charset,sideChannel))}var joined=keys.join(options.delimiter),prefix=!0===options.addQueryPrefix?"?":"";return options.charsetSentinel&&("iso-8859-1"===options.charset?
-// encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
-prefix+="utf8=%26%2310003%3B&":
-// encodeURIComponent('✓')
-prefix+="utf8=%E2%9C%93&"),joined.length>0?prefix+joined:""}},
-/***/7720(module,__unused_webpack_exports,__webpack_require__){"use strict";var formats=__webpack_require__(4765),getSideChannel=__webpack_require__(920),has=Object.prototype.hasOwnProperty,isArray=Array.isArray,overflowChannel=getSideChannel(),markOverflow=function(obj,maxIndex){return overflowChannel.set(obj,maxIndex),obj},isOverflow=function(obj){return overflowChannel.has(obj)},getMaxIndex=function(obj){return overflowChannel.get(obj)},setMaxIndex=function(obj,maxIndex){overflowChannel.set(obj,maxIndex)},hexTable=function(){for(var array=[],i=0;i<256;++i)array[array.length]="%"+((i<16?"0":"")+i.toString(16)).toUpperCase();return array}(),arrayToObject=function(source,options){for(var obj=options&&options.plainObjects?{__proto__:null}:{},i=0;i<source.length;++i)void 0!==source[i]&&(obj[i]=source[i]);return obj};module.exports={arrayToObject,assign:function(target,source){return Object.keys(source).reduce(function(acc,key){return acc[key]=source[key],acc},target)},combine:function(a,b,arrayLimit,plainObjects){
-// If 'a' is already an overflow object, add to it
-if(isOverflow(a)){var newIndex=getMaxIndex(a)+1;return a[newIndex]=b,setMaxIndex(a,newIndex),a}var result=[].concat(a,b);return result.length>arrayLimit?markOverflow(arrayToObject(result,{plainObjects}),result.length-1):result},compact:function(value){for(var queue=[{obj:{o:value},prop:"o"}],refs=[],i=0;i<queue.length;++i)for(var item=queue[i],obj=item.obj[item.prop],keys=Object.keys(obj),j=0;j<keys.length;++j){var key=keys[j],val=obj[key];"object"==typeof val&&null!==val&&-1===refs.indexOf(val)&&(queue[queue.length]={obj,prop:key},refs[refs.length]=val)}return function(queue){for(;queue.length>1;){var item=queue.pop(),obj=item.obj[item.prop];if(isArray(obj)){for(var compacted=[],j=0;j<obj.length;++j)void 0!==obj[j]&&(compacted[compacted.length]=obj[j]);item.obj[item.prop]=compacted}}}(queue),value},decode:function(str,defaultDecoder,charset){var strWithoutPlus=str.replace(/\+/g," ");if("iso-8859-1"===charset)
-// unescape never throws, no try...catch needed:
-return strWithoutPlus.replace(/%[0-9a-f]{2}/gi,unescape);
-// utf-8
-try{return decodeURIComponent(strWithoutPlus)}catch(e){return strWithoutPlus}},encode:function(str,defaultEncoder,charset,kind,format){
-// This code was originally written by Brian White (mscdex) for the io.js core querystring library.
-// It has been adapted here for stricter adherence to RFC 3986
-if(0===str.length)return str;var string=str;if("symbol"==typeof str?string=Symbol.prototype.toString.call(str):"string"!=typeof str&&(string=String(str)),"iso-8859-1"===charset)return escape(string).replace(/%u[0-9a-f]{4}/gi,function($0){return"%26%23"+parseInt($0.slice(2),16)+"%3B"});for(var out="",j=0;j<string.length;j+=1024){for(var segment=string.length>=1024?string.slice(j,j+1024):string,arr=[],i=0;i<segment.length;++i){var c=segment.charCodeAt(i);45===c||46===c||95===c||126===c||c>=48&&c<=57||c>=65&&c<=90||c>=97&&c<=122||format===formats.RFC1738&&(40===c||41===c)?arr[arr.length]=segment.charAt(i):c<128?arr[arr.length]=hexTable[c]:c<2048?arr[arr.length]=hexTable[192|c>>6]+hexTable[128|63&c]:c<55296||c>=57344?arr[arr.length]=hexTable[224|c>>12]+hexTable[128|c>>6&63]+hexTable[128|63&c]:(i+=1,c=65536+((1023&c)<<10|1023&segment.charCodeAt(i)),arr[arr.length]=hexTable[240|c>>18]+hexTable[128|c>>12&63]+hexTable[128|c>>6&63]+hexTable[128|63&c])}out+=arr.join("")}return out},isBuffer:function(obj){return!(!obj||"object"!=typeof obj)&&!!(obj.constructor&&obj.constructor.isBuffer&&obj.constructor.isBuffer(obj))},isOverflow,isRegExp:function(obj){return"[object RegExp]"===Object.prototype.toString.call(obj)},markOverflow,maybeMap:function(val,fn){if(isArray(val)){for(var mapped=[],i=0;i<val.length;i+=1)mapped[mapped.length]=fn(val[i]);return mapped}return fn(val)},merge:function merge(target,source,options){
-/* eslint no-param-reassign: 0 */
-if(!source)return target;if("object"!=typeof source&&"function"!=typeof source){if(isArray(target)){var nextIndex=target.length;if(options&&"number"==typeof options.arrayLimit&&nextIndex>options.arrayLimit)return markOverflow(arrayToObject(target.concat(source),options),nextIndex);target[nextIndex]=source}else{if(!target||"object"!=typeof target)return[target,source];if(isOverflow(target)){
-// Add at next numeric index for overflow objects
-var newIndex=getMaxIndex(target)+1;target[newIndex]=source,setMaxIndex(target,newIndex)}else{if(options&&options.strictMerge)return[target,source];(options&&(options.plainObjects||options.allowPrototypes)||!has.call(Object.prototype,source))&&(target[source]=!0)}}return target}if(!target||"object"!=typeof target){if(isOverflow(source)){for(
-// Create new object with target at 0, source values shifted by 1
-var sourceKeys=Object.keys(source),result=options&&options.plainObjects?{__proto__:null,0:target}:{0:target},m=0;m<sourceKeys.length;m++){result[parseInt(sourceKeys[m],10)+1]=source[sourceKeys[m]]}return markOverflow(result,getMaxIndex(source)+1)}var combined=[target].concat(source);return options&&"number"==typeof options.arrayLimit&&combined.length>options.arrayLimit?markOverflow(arrayToObject(combined,options),combined.length-1):combined}var mergeTarget=target;return isArray(target)&&!isArray(source)&&(mergeTarget=arrayToObject(target,options)),isArray(target)&&isArray(source)?(source.forEach(function(item,i){if(has.call(target,i)){var targetItem=target[i];targetItem&&"object"==typeof targetItem&&item&&"object"==typeof item?target[i]=merge(targetItem,item,options):target[target.length]=item}else target[i]=item}),target):Object.keys(source).reduce(function(acc,key){var value=source[key];if(has.call(acc,key)?acc[key]=merge(acc[key],value,options):acc[key]=value,isOverflow(source)&&!isOverflow(acc)&&markOverflow(acc,getMaxIndex(source)),isOverflow(acc)){var keyNum=parseInt(key,10);String(keyNum)===key&&keyNum>=0&&keyNum>getMaxIndex(acc)&&setMaxIndex(acc,keyNum)}return acc},mergeTarget)}}},
-/***/4803(module,__unused_webpack_exports,__webpack_require__){"use strict";var inspect=__webpack_require__(8859),$TypeError=__webpack_require__(9675),listGetNode=function(list,key,isDelete){
-// eslint-disable-next-line eqeqeq
-for(
-/** @type {typeof list | NonNullable<(typeof list)['next']>} */
-var curr,prev=list
-/** @type {(typeof list)['next']} */;null!=(curr=prev.next);prev=curr)if(curr.key===key)return prev.next=curr.next,isDelete||(
-// eslint-disable-next-line no-extra-parens
-curr.next=/** @type {NonNullable<typeof list.next>} */list.next,list.next=curr),curr};
-/** @type {import('.')} */
-module.exports=function(){
-/** @typedef {ReturnType<typeof getSideChannelList>} Channel */
-/** @typedef {Parameters<Channel['get']>[0]} K */
-/** @typedef {Parameters<Channel['set']>[1]} V */
-/** @type {import('./list.d.ts').RootNode<V, K> | undefined} */var $o,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){var root=$o&&$o.next,deletedNode=function(objects,key){if(objects)return listGetNode(objects,key,!0)}($o,key);return deletedNode&&root&&root===deletedNode&&($o=void 0),!!deletedNode},get:function(key){return function(objects,key){if(objects){var node=listGetNode(objects,key);return node&&node.value}}($o,key)},has:function(key){return function(objects,key){return!!objects&&!!listGetNode(objects,key)}($o,key)},set:function(key,value){$o||(
-// Initialize the linked list as an empty node, so that we don't have to special-case handling of the first node: we can always refer to it as (previous node).next, instead of something like (list).head
-$o={next:void 0}),
-// eslint-disable-next-line no-extra-parens
-function(objects,key,value){var node=listGetNode(objects,key);node?node.value=value:
-// Prepend the new node to the beginning of the list
-objects.next=/** @type {import('./list.d.ts').ListNode<typeof value, typeof key>} */{// eslint-disable-line no-param-reassign, no-extra-parens
-key,next:objects.next,value}}(/** @type {NonNullable<typeof $o>} */$o,key,value)}};
-/** @type {Channel} */
-// @ts-expect-error TODO: figure out why this is erroring
-return channel}},
-/***/507(module,__unused_webpack_exports,__webpack_require__){"use strict";var GetIntrinsic=__webpack_require__(453),callBound=__webpack_require__(6556),inspect=__webpack_require__(8859),$TypeError=__webpack_require__(9675),$Map=GetIntrinsic("%Map%",!0),$mapGet=callBound("Map.prototype.get",!0),$mapSet=callBound("Map.prototype.set",!0),$mapHas=callBound("Map.prototype.has",!0),$mapDelete=callBound("Map.prototype.delete",!0),$mapSize=callBound("Map.prototype.size",!0);
-/** @type {import('.')} */
-module.exports=!!$Map&&/** @type {Exclude<import('.'), false>} */function(){
-/** @typedef {ReturnType<typeof getSideChannelMap>} Channel */
-/** @typedef {Parameters<Channel['get']>[0]} K */
-/** @typedef {Parameters<Channel['set']>[1]} V */
-/** @type {Map<K, V> | undefined} */var $m,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){if($m){var result=$mapDelete($m,key);return 0===$mapSize($m)&&($m=void 0),result}return!1},get:function(key){// eslint-disable-line consistent-return
-if($m)return $mapGet($m,key)},has:function(key){return!!$m&&$mapHas($m,key)},set:function(key,value){$m||(
-// @ts-expect-error TS can't handle narrowing a variable inside a closure
-$m=new $Map),$mapSet($m,key,value)}};
-/** @type {Channel} */
-// @ts-expect-error TODO: figure out why TS is erroring here
-return channel}},
-/***/2271(module,__unused_webpack_exports,__webpack_require__){"use strict";var GetIntrinsic=__webpack_require__(453),callBound=__webpack_require__(6556),inspect=__webpack_require__(8859),getSideChannelMap=__webpack_require__(507),$TypeError=__webpack_require__(9675),$WeakMap=GetIntrinsic("%WeakMap%",!0),$weakMapGet=callBound("WeakMap.prototype.get",!0),$weakMapSet=callBound("WeakMap.prototype.set",!0),$weakMapHas=callBound("WeakMap.prototype.has",!0),$weakMapDelete=callBound("WeakMap.prototype.delete",!0);
-/** @type {import('.')} */
-module.exports=$WeakMap?/** @type {Exclude<import('.'), false>} */function(){
-/** @typedef {ReturnType<typeof getSideChannelWeakMap>} Channel */
-/** @typedef {Parameters<Channel['get']>[0]} K */
-/** @typedef {Parameters<Channel['set']>[1]} V */
-/** @type {WeakMap<K & object, V> | undefined} */var $wm,$m,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){if($WeakMap&&key&&("object"==typeof key||"function"==typeof key)){if($wm)return $weakMapDelete($wm,key)}else if(getSideChannelMap&&$m)return $m.delete(key);return!1},get:function(key){return $WeakMap&&key&&("object"==typeof key||"function"==typeof key)&&$wm?$weakMapGet($wm,key):$m&&$m.get(key)},has:function(key){return $WeakMap&&key&&("object"==typeof key||"function"==typeof key)&&$wm?$weakMapHas($wm,key):!!$m&&$m.has(key)},set:function(key,value){$WeakMap&&key&&("object"==typeof key||"function"==typeof key)?($wm||($wm=new $WeakMap),$weakMapSet($wm,key,value)):getSideChannelMap&&($m||($m=getSideChannelMap()),
-// eslint-disable-next-line no-extra-parens
-/** @type {NonNullable<typeof $m>} */$m.set(key,value))}};
-/** @type {Channel | undefined} */
-// @ts-expect-error TODO: figure out why this is erroring
-return channel}:getSideChannelMap},
-/***/920(module,__unused_webpack_exports,__webpack_require__){"use strict";var $TypeError=__webpack_require__(9675),inspect=__webpack_require__(8859),getSideChannelList=__webpack_require__(4803),getSideChannelMap=__webpack_require__(507),makeChannel=__webpack_require__(2271)||getSideChannelMap||getSideChannelList;
-/** @type {import('.')} */
-module.exports=function(){
-/** @typedef {ReturnType<typeof getSideChannel>} Channel */
-/** @type {Channel | undefined} */var $channelData,channel={assert:function(key){if(!channel.has(key))throw new $TypeError("Side channel does not contain "+inspect(key))},delete:function(key){return!!$channelData&&$channelData.delete(key)},get:function(key){return $channelData&&$channelData.get(key)},has:function(key){return!!$channelData&&$channelData.has(key)},set:function(key,value){$channelData||($channelData=makeChannel()),$channelData.set(key,value)}};
-/** @type {Channel} */
-// @ts-expect-error TODO: figure out why this is erroring
-return channel}},
-/***/1270(module,exports,__webpack_require__){var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
-/* module decorator */module=__webpack_require__.nmd(module),function(){
-/** Detect free variables */
-exports&&exports.nodeType,module&&module.nodeType;var freeGlobal="object"==typeof __webpack_require__.g&&__webpack_require__.g;freeGlobal.global!==freeGlobal&&freeGlobal.window!==freeGlobal&&freeGlobal.self;
-/**
-	 * The `punycode` object.
-	 * @name punycode
-	 * @type Object
-	 */var punycode,
-/** Highest positive signed 32-bit float value */
-maxInt=2147483647,// '\x2D'
-/** Regular expressions */
-regexPunycode=/^xn--/,regexNonASCII=/[^\x20-\x7E]/,// unprintable ASCII chars + non-ASCII chars
-regexSeparators=/[\x2E\u3002\uFF0E\uFF61]/g,// RFC 3490 separators
-/** Error messages */
-errors={overflow:"Overflow: input needs wider integers to process","not-basic":"Illegal input >= 0x80 (not a basic code point)","invalid-input":"Invalid input"},floor=Math.floor,stringFromCharCode=String.fromCharCode;
-/*--------------------------------------------------------------------------*/
-/**
-	 * A generic error utility function.
-	 * @private
-	 * @param {String} type The error type.
-	 * @returns {Error} Throws a `RangeError` with the applicable error message.
-	 */function error(type){throw new RangeError(errors[type])}
-/**
-	 * A generic `Array#map` utility function.
-	 * @private
-	 * @param {Array} array The array to iterate over.
-	 * @param {Function} callback The function that gets called for every array
-	 * item.
-	 * @returns {Array} A new array of values returned by the callback function.
-	 */function map(array,fn){for(var length=array.length,result=[];length--;)result[length]=fn(array[length]);return result}
-/**
-	 * A simple `Array#map`-like wrapper to work with domain name strings or email
-	 * addresses.
-	 * @private
-	 * @param {String} domain The domain name or email address.
-	 * @param {Function} callback The function that gets called for every
-	 * character.
-	 * @returns {Array} A new string of characters returned by the callback
-	 * function.
-	 */function mapDomain(string,fn){var parts=string.split("@"),result="";return parts.length>1&&(
-// In email addresses, only the domain name should be punycoded. Leave
-// the local part (i.e. everything up to `@`) intact.
-result=parts[0]+"@",string=parts[1]),result+map((
-// Avoid `split(regex)` for IE8 compatibility. See #17.
-string=string.replace(regexSeparators,".")).split("."),fn).join(".")}
-/**
-	 * Creates an array containing the numeric code points of each Unicode
-	 * character in the string. While JavaScript uses UCS-2 internally,
-	 * this function will convert a pair of surrogate halves (each of which
-	 * UCS-2 exposes as separate characters) into a single code point,
-	 * matching UTF-16.
-	 * @see `punycode.ucs2.encode`
-	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
-	 * @memberOf punycode.ucs2
-	 * @name decode
-	 * @param {String} string The Unicode input string (UCS-2).
-	 * @returns {Array} The new array of code points.
-	 */function ucs2decode(string){for(var value,extra,output=[],counter=0,length=string.length;counter<length;)(value=string.charCodeAt(counter++))>=55296&&value<=56319&&counter<length?56320==(64512&(
-// high surrogate, and there is a next character
-extra=string.charCodeAt(counter++)))?// low surrogate
-output.push(((1023&value)<<10)+(1023&extra)+65536):(
-// unmatched surrogate; only append this code unit, in case the next
-// code unit is the high surrogate of a surrogate pair
-output.push(value),counter--):output.push(value);return output}
-/**
-	 * Creates a string based on an array of numeric code points.
-	 * @see `punycode.ucs2.decode`
-	 * @memberOf punycode.ucs2
-	 * @name encode
-	 * @param {Array} codePoints The array of numeric code points.
-	 * @returns {String} The new Unicode string (UCS-2).
-	 */function ucs2encode(array){return map(array,function(value){var output="";return value>65535&&(output+=stringFromCharCode((value-=65536)>>>10&1023|55296),value=56320|1023&value),output+=stringFromCharCode(value)}).join("")}
-/**
-	 * Converts a basic code point into a digit/integer.
-	 * @see `digitToBasic()`
-	 * @private
-	 * @param {Number} codePoint The basic numeric code point value.
-	 * @returns {Number} The numeric value of a basic code point (for use in
-	 * representing integers) in the range `0` to `base - 1`, or `base` if
-	 * the code point does not represent a value.
-	 */function basicToDigit(codePoint){return codePoint-48<10?codePoint-22:codePoint-65<26?codePoint-65:codePoint-97<26?codePoint-97:36}
-/**
-	 * Converts a digit/integer into a basic code point.
-	 * @see `basicToDigit()`
-	 * @private
-	 * @param {Number} digit The numeric value of a basic code point.
-	 * @returns {Number} The basic code point whose value (when used for
-	 * representing integers) is `digit`, which needs to be in the range
-	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
-	 * used; else, the lowercase form is used. The behavior is undefined
-	 * if `flag` is non-zero and `digit` has no uppercase form.
-	 */function digitToBasic(digit,flag){
-//  0..25 map to ASCII a..z or A..Z
-// 26..35 map to ASCII 0..9
-return digit+22+75*(digit<26)-((0!=flag)<<5)}
-/**
-	 * Bias adaptation function as per section 3.4 of RFC 3492.
-	 * https://tools.ietf.org/html/rfc3492#section-3.4
-	 * @private
-	 */function adapt(delta,numPoints,firstTime){var k=0;for(delta=firstTime?floor(delta/700):delta>>1,delta+=floor(delta/numPoints);delta>455;k+=36)delta=floor(delta/35);return floor(k+36*delta/(delta+38))}
-/**
-	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
-	 * symbols.
-	 * @memberOf punycode
-	 * @param {String} input The Punycode string of ASCII-only symbols.
-	 * @returns {String} The resulting string of Unicode symbols.
-	 */function decode(input){
-// Don't use UCS-2
-var out,basic,j,index,oldi,w,k,digit,t,
-/** Cached calculation results */
-baseMinusT,output=[],inputLength=input.length,i=0,n=128,bias=72;
-// Handle the basic code points: let `basic` be the number of input code
-// points before the last delimiter, or `0` if there is none, then copy
-// the first basic code points to the output.
-for((basic=input.lastIndexOf("-"))<0&&(basic=0),j=0;j<basic;++j)
-// if it's not a basic code point
-input.charCodeAt(j)>=128&&error("not-basic"),output.push(input.charCodeAt(j));
-// Main decoding loop: start just after the last delimiter if any basic code
-// points were copied; start at the beginning otherwise.
-for(index=basic>0?basic+1:0;index<inputLength;){
-// `index` is the index of the next character to be consumed.
-// Decode a generalized variable-length integer into `delta`,
-// which gets added to `i`. The overflow checking is easier
-// if we increase `i` as we go, then subtract off its starting
-// value at the end to obtain `delta`.
-for(oldi=i,w=1,k=36;index>=inputLength&&error("invalid-input"),((digit=basicToDigit(input.charCodeAt(index++)))>=36||digit>floor((maxInt-i)/w))&&error("overflow"),i+=digit*w,!(digit<(t=k<=bias?1:k>=bias+26?26:k-bias));k+=36)w>floor(maxInt/(baseMinusT=36-t))&&error("overflow"),w*=baseMinusT;bias=adapt(i-oldi,out=output.length+1,0==oldi),
-// `i` was supposed to wrap around from `out` to `0`,
-// incrementing `n` each time, so we'll fix that now:
-floor(i/out)>maxInt-n&&error("overflow"),n+=floor(i/out),i%=out,
-// Insert `n` at position `i` of the output
-output.splice(i++,0,n)}return ucs2encode(output)}
-/**
-	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
-	 * Punycode string of ASCII-only symbols.
-	 * @memberOf punycode
-	 * @param {String} input The string of Unicode symbols.
-	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
-	 */function encode(input){var n,delta,handledCPCount,basicLength,bias,j,m,q,k,t,currentValue,
-/** `inputLength` will hold the number of code points in `input`. */
-inputLength,
-/** Cached calculation results */
-handledCPCountPlusOne,baseMinusT,qMinusT,output=[];
-// Convert the input in UCS-2 to Unicode
-// Handle the basic code points
-for(
-// Cache the length
-inputLength=(input=ucs2decode(input)).length,
-// Initialize the state
-n=128,delta=0,bias=72,j=0;j<inputLength;++j)(currentValue=input[j])<128&&output.push(stringFromCharCode(currentValue));
-// Main encoding loop:
-for(handledCPCount=basicLength=output.length,
-// `handledCPCount` is the number of code points that have been handled;
-// `basicLength` is the number of basic code points.
-// Finish the basic string - if it is not empty - with a delimiter
-basicLength&&output.push("-");handledCPCount<inputLength;){
-// All non-basic code points < n have been handled already. Find the next
-// larger one:
-for(m=maxInt,j=0;j<inputLength;++j)(currentValue=input[j])>=n&&currentValue<m&&(m=currentValue);
-// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
-// but guard against overflow
-for(m-n>floor((maxInt-delta)/(handledCPCountPlusOne=handledCPCount+1))&&error("overflow"),delta+=(m-n)*handledCPCountPlusOne,n=m,j=0;j<inputLength;++j)if((currentValue=input[j])<n&&++delta>maxInt&&error("overflow"),currentValue==n){
-// Represent delta as a generalized variable-length integer
-for(q=delta,k=36;!(q<(t=k<=bias?1:k>=bias+26?26:k-bias));k+=36)qMinusT=q-t,baseMinusT=36-t,output.push(stringFromCharCode(digitToBasic(t+qMinusT%baseMinusT,0))),q=floor(qMinusT/baseMinusT);output.push(stringFromCharCode(digitToBasic(q,0))),bias=adapt(delta,handledCPCountPlusOne,handledCPCount==basicLength),delta=0,++handledCPCount}++delta,++n}return output.join("")}
-/**
-	 * Converts a Punycode string representing a domain name or an email address
-	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
-	 * it doesn't matter if you call it on a string that has already been
-	 * converted to Unicode.
-	 * @memberOf punycode
-	 * @param {String} input The Punycoded domain name or email address to
-	 * convert to Unicode.
-	 * @returns {String} The Unicode representation of the given Punycode
-	 * string.
-	 */
-/*--------------------------------------------------------------------------*/
-/** Define the public API */
-punycode={
-/**
-		 * A string representing the current Punycode.js version number.
-		 * @memberOf punycode
-		 * @type String
-		 */
-version:"1.4.1",
-/**
-		 * An object of methods to convert from JavaScript's internal character
-		 * representation (UCS-2) to Unicode code points, and back.
-		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
-		 * @memberOf punycode
-		 * @type Object
-		 */
-ucs2:{decode:ucs2decode,encode:ucs2encode},decode,encode,toASCII:
-/**
-	 * Converts a Unicode string representing a domain name or an email address to
-	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
-	 * i.e. it doesn't matter if you call it with a domain that's already in
-	 * ASCII.
-	 * @memberOf punycode
-	 * @param {String} input The domain name or email address to convert, as a
-	 * Unicode string.
-	 * @returns {String} The Punycode representation of the given domain name or
-	 * email address.
-	 */
-function(input){return mapDomain(input,function(string){return regexNonASCII.test(string)?"xn--"+encode(string):string})},toUnicode:function(input){return mapDomain(input,function(string){return regexPunycode.test(string)?decode(string.slice(4).toLowerCase()):string})}},void 0===(__WEBPACK_AMD_DEFINE_RESULT__=function(){return punycode}.call(exports,__webpack_require__,exports,module))||(module.exports=__WEBPACK_AMD_DEFINE_RESULT__)}()},
-/***/8835(__unused_webpack_module,exports,__webpack_require__){"use strict";
-/*
- * Copyright Joyent, Inc. and other Node contributors.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to permit
- * persons to whom the Software is furnished to do so, subject to the
- * following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
- */var punycode=__webpack_require__(1270);function Url(){this.protocol=null,this.slashes=null,this.auth=null,this.host=null,this.port=null,this.hostname=null,this.hash=null,this.search=null,this.query=null,this.pathname=null,this.path=null,this.href=null}
-// Reference: RFC 3986, RFC 1808, RFC 2396
-/*
- * define these here so at least they only have to be
- * compiled once on the first module load.
- */var protocolPattern=/^([a-z0-9.+-]+:)/i,portPattern=/:[0-9]*$/,
-// Special case for a simple path URL
-simplePathPattern=/^(\/\/?(?!\/)[^?\s]*)(\?[^\s]*)?$/,
-// RFC 2396: characters not allowed for various reasons.
-unwise=["{","}","|","\\","^","`"].concat(["<",">",'"',"`"," ","\r","\n","\t"]),
-// Allowed by RFCs, but cause of XSS attacks.  Always escape these.
-autoEscape=["'"].concat(unwise),
-/*
-   * Characters that are never ever allowed in a hostname.
-   * Note that any invalid chars are also handled, but these
-   * are the ones that are *expected* to be seen, so we fast-path
-   * them.
-   */
-nonHostChars=["%","/","?",";","#"].concat(autoEscape),hostEndingChars=["/","?","#"],hostnamePartPattern=/^[+a-z0-9A-Z_-]{0,63}$/,hostnamePartStart=/^([+a-z0-9A-Z_-]{0,63})(.*)$/,
-// protocols that can allow "unsafe" and "unwise" chars.
-unsafeProtocol={javascript:!0,"javascript:":!0},
-// protocols that never have a hostname.
-hostlessProtocol={javascript:!0,"javascript:":!0},
-// protocols that always contain a // bit.
-slashedProtocol={http:!0,https:!0,ftp:!0,gopher:!0,file:!0,"http:":!0,"https:":!0,"ftp:":!0,"gopher:":!0,"file:":!0},querystring=__webpack_require__(5373);function urlParse(url,parseQueryString,slashesDenoteHost){if(url&&"object"==typeof url&&url instanceof Url)return url;var u=new Url;return u.parse(url,parseQueryString,slashesDenoteHost),u}Url.prototype.parse=function(url,parseQueryString,slashesDenoteHost){if("string"!=typeof url)throw new TypeError("Parameter 'url' must be a string, not "+typeof url);
-/*
-   * Copy chrome, IE, opera backslash-handling behavior.
-   * Back slashes before the query string get converted to forward slashes
-   * See: https://code.google.com/p/chromium/issues/detail?id=25916
-   */var queryIndex=url.indexOf("?"),splitter=-1!==queryIndex&&queryIndex<url.indexOf("#")?"?":"#",uSplit=url.split(splitter);uSplit[0]=uSplit[0].replace(/\\/g,"/");var rest=url=uSplit.join(splitter);
-/*
-   * trim before proceeding.
-   * This is to support parse stuff like "  http://foo.com  \n"
-   */if(rest=rest.trim(),!slashesDenoteHost&&1===url.split("#").length){
-// Try fast path regexp
-var simplePath=simplePathPattern.exec(rest);if(simplePath)return this.path=rest,this.href=rest,this.pathname=simplePath[1],simplePath[2]?(this.search=simplePath[2],this.query=parseQueryString?querystring.parse(this.search.substr(1)):this.search.substr(1)):parseQueryString&&(this.search="",this.query={}),this}var proto=protocolPattern.exec(rest);if(proto){var lowerProto=(proto=proto[0]).toLowerCase();this.protocol=lowerProto,rest=rest.substr(proto.length)}
-/*
-   * figure out if it's got a host
-   * user@server is *always* interpreted as a hostname, and url
-   * resolution will treat //foo/bar as host=foo,path=bar because that's
-   * how the browser resolves relative URLs.
-   */if(slashesDenoteHost||proto||rest.match(/^\/\/[^@/]+@[^@/]+/)){var slashes="//"===rest.substr(0,2);!slashes||proto&&hostlessProtocol[proto]||(rest=rest.substr(2),this.slashes=!0)}if(!hostlessProtocol[proto]&&(slashes||proto&&!slashedProtocol[proto])){for(
-/*
-     * there's a hostname.
-     * the first instance of /, ?, ;, or # ends the host.
-     *
-     * If there is an @ in the hostname, then non-host chars *are* allowed
-     * to the left of the last @ sign, unless some host-ending character
-     * comes *before* the @-sign.
-     * URLs are obnoxious.
-     *
-     * ex:
-     * http://a@b@c/ => user:a@b host:c
-     * http://a@b?@c => user:a host:c path:/?@c
-     */
-/*
-     * v0.12 TODO(isaacs): This is not quite how Chrome does things.
-     * Review our test case against browsers more comprehensively.
-     */
-// find the first instance of any hostEndingChars
-var auth,atSign,hostEnd=-1,i=0;i<hostEndingChars.length;i++){-1!==(hec=rest.indexOf(hostEndingChars[i]))&&(-1===hostEnd||hec<hostEnd)&&(hostEnd=hec)}
-/*
-     * at this point, either we have an explicit point where the
-     * auth portion cannot go past, or the last @ char is the decider.
-     */
-/*
-     * Now we have a portion which is definitely the auth.
-     * Pull that off.
-     */
--1!==(
-// atSign can be anywhere.
-atSign=-1===hostEnd?rest.lastIndexOf("@"):rest.lastIndexOf("@",hostEnd))&&(auth=rest.slice(0,atSign),rest=rest.slice(atSign+1),this.auth=decodeURIComponent(auth)),
-// the host is the remaining to the left of the first non-host char
-hostEnd=-1;for(i=0;i<nonHostChars.length;i++){var hec;-1!==(hec=rest.indexOf(nonHostChars[i]))&&(-1===hostEnd||hec<hostEnd)&&(hostEnd=hec)}
-// if we still have not hit it, then the entire thing is a host.
--1===hostEnd&&(hostEnd=rest.length),this.host=rest.slice(0,hostEnd),rest=rest.slice(hostEnd),
-// pull out port.
-this.parseHost(),
-/*
-     * we've indicated that there is a hostname,
-     * so even if it's empty, it has to be present.
-     */
-this.hostname=this.hostname||"";
-/*
-     * if hostname begins with [ and ends with ]
-     * assume that it's an IPv6 address.
-     */
-var ipv6Hostname="["===this.hostname[0]&&"]"===this.hostname[this.hostname.length-1];
-// validate a little.
-if(!ipv6Hostname)for(var hostparts=this.hostname.split(/\./),l=(i=0,hostparts.length);i<l;i++){var part=hostparts[i];if(part&&!part.match(hostnamePartPattern)){for(var newpart="",j=0,k=part.length;j<k;j++)part.charCodeAt(j)>127?
-/*
-               * we replace non-ASCII char with a temporary placeholder
-               * we need this to make sure size of hostname is not
-               * broken by replacing non-ASCII by nothing
-               */
-newpart+="x":newpart+=part[j];
-// we test again with ASCII char only
-if(!newpart.match(hostnamePartPattern)){var validParts=hostparts.slice(0,i),notHost=hostparts.slice(i+1),bit=part.match(hostnamePartStart);bit&&(validParts.push(bit[1]),notHost.unshift(bit[2])),notHost.length&&(rest="/"+notHost.join(".")+rest),this.hostname=validParts.join(".");break}}}this.hostname.length>255?this.hostname="":
-// hostnames are always lower case.
-this.hostname=this.hostname.toLowerCase(),ipv6Hostname||(
-/*
-       * IDNA Support: Returns a punycoded representation of "domain".
-       * It only converts parts of the domain name that
-       * have non-ASCII characters, i.e. it doesn't matter if
-       * you call it with a domain that already is ASCII-only.
-       */
-this.hostname=punycode.toASCII(this.hostname));var p=this.port?":"+this.port:"",h=this.hostname||"";this.host=h+p,this.href+=this.host,
-/*
-     * strip [ and ] from the hostname
-     * the host field still retains them, though
-     */
-ipv6Hostname&&(this.hostname=this.hostname.substr(1,this.hostname.length-2),"/"!==rest[0]&&(rest="/"+rest))}
-/*
-   * now rest is set to the post-host stuff.
-   * chop off any delim chars.
-   */if(!unsafeProtocol[lowerProto])
-/*
-     * First, make 100% sure that any "autoEscape" chars get
-     * escaped, even if encodeURIComponent doesn't think they
-     * need to be.
-     */
-for(i=0,l=autoEscape.length;i<l;i++){var ae=autoEscape[i];if(-1!==rest.indexOf(ae)){var esc=encodeURIComponent(ae);esc===ae&&(esc=escape(ae)),rest=rest.split(ae).join(esc)}}
-// chop off from the tail first.
-var hash=rest.indexOf("#");-1!==hash&&(
-// got a fragment string.
-this.hash=rest.substr(hash),rest=rest.slice(0,hash));var qm=rest.indexOf("?");
-// to support http.request
-if(-1!==qm?(this.search=rest.substr(qm),this.query=rest.substr(qm+1),parseQueryString&&(this.query=querystring.parse(this.query)),rest=rest.slice(0,qm)):parseQueryString&&(
-// no query string, but parseQueryString still requested
-this.search="",this.query={}),rest&&(this.pathname=rest),slashedProtocol[lowerProto]&&this.hostname&&!this.pathname&&(this.pathname="/"),this.pathname||this.search){p=this.pathname||"";var s=this.search||"";this.path=p+s}
-// finally, reconstruct the href based on what has been validated.
-return this.href=this.format(),this},Url.prototype.format=function(){var auth=this.auth||"";auth&&(auth=(auth=encodeURIComponent(auth)).replace(/%3A/i,":"),auth+="@");var protocol=this.protocol||"",pathname=this.pathname||"",hash=this.hash||"",host=!1,query="";this.host?host=auth+this.host:this.hostname&&(host=auth+(-1===this.hostname.indexOf(":")?this.hostname:"["+this.hostname+"]"),this.port&&(host+=":"+this.port)),this.query&&"object"==typeof this.query&&Object.keys(this.query).length&&(query=querystring.stringify(this.query,{arrayFormat:"repeat",addQueryPrefix:!1}));var search=this.search||query&&"?"+query||"";return protocol&&":"!==protocol.substr(-1)&&(protocol+=":")
-/*
-   * only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
-   * unless they had them to begin with.
-   */,this.slashes||(!protocol||slashedProtocol[protocol])&&!1!==host?(host="//"+(host||""),pathname&&"/"!==pathname.charAt(0)&&(pathname="/"+pathname)):host||(host=""),hash&&"#"!==hash.charAt(0)&&(hash="#"+hash),search&&"?"!==search.charAt(0)&&(search="?"+search),protocol+host+(pathname=pathname.replace(/[?#]/g,function(match){return encodeURIComponent(match)}))+(search=search.replace("#","%23"))+hash},Url.prototype.resolve=function(relative){return this.resolveObject(urlParse(relative,!1,!0)).format()},Url.prototype.resolveObject=function(relative){if("string"==typeof relative){var rel=new Url;rel.parse(relative,!1,!0),relative=rel}for(var result=new Url,tkeys=Object.keys(this),tk=0;tk<tkeys.length;tk++){var tkey=tkeys[tk];result[tkey]=this[tkey]}
-/*
-   * hash is always overridden, no matter what.
-   * even href="" will remove it.
-   */
-// if the relative url is empty, then there's nothing left to do here.
-if(result.hash=relative.hash,""===relative.href)return result.href=result.format(),result;
-// hrefs like //foo/bar always cut to the protocol.
-if(relative.slashes&&!relative.protocol){for(
-// take everything except the protocol from relative
-var rkeys=Object.keys(relative),rk=0;rk<rkeys.length;rk++){var rkey=rkeys[rk];"protocol"!==rkey&&(result[rkey]=relative[rkey])}
-// urlParse appends trailing / to urls like http://www.example.com
-return slashedProtocol[result.protocol]&&result.hostname&&!result.pathname&&(result.pathname="/",result.path=result.pathname),result.href=result.format(),result}if(relative.protocol&&relative.protocol!==result.protocol){
-/*
-     * if it's a known url protocol, then changing
-     * the protocol does weird things
-     * first, if it's not file:, then we MUST have a host,
-     * and if there was a path
-     * to begin with, then we MUST have a path.
-     * if it is file:, then the host is dropped,
-     * because that's known to be hostless.
-     * anything else is assumed to be absolute.
-     */
-if(!slashedProtocol[relative.protocol]){for(var keys=Object.keys(relative),v=0;v<keys.length;v++){var k=keys[v];result[k]=relative[k]}return result.href=result.format(),result}if(result.protocol=relative.protocol,relative.host||hostlessProtocol[relative.protocol])result.pathname=relative.pathname;else{for(var relPath=(relative.pathname||"").split("/");relPath.length&&!(relative.host=relPath.shift()););relative.host||(relative.host=""),relative.hostname||(relative.hostname=""),""!==relPath[0]&&relPath.unshift(""),relPath.length<2&&relPath.unshift(""),result.pathname=relPath.join("/")}
-// to support http.request
-if(result.search=relative.search,result.query=relative.query,result.host=relative.host||"",result.auth=relative.auth,result.hostname=relative.hostname||relative.host,result.port=relative.port,result.pathname||result.search){var p=result.pathname||"",s=result.search||"";result.path=p+s}return result.slashes=result.slashes||relative.slashes,result.href=result.format(),result}var isSourceAbs=result.pathname&&"/"===result.pathname.charAt(0),isRelAbs=relative.host||relative.pathname&&"/"===relative.pathname.charAt(0),mustEndAbs=isRelAbs||isSourceAbs||result.host&&relative.pathname,removeAllDots=mustEndAbs,srcPath=result.pathname&&result.pathname.split("/")||[],psychotic=(relPath=relative.pathname&&relative.pathname.split("/")||[],result.protocol&&!slashedProtocol[result.protocol]);
-/*
-   * if the url is a non-slashed url, then relative
-   * links like ../.. should be able
-   * to crawl up to the hostname, as well.  This is strange.
-   * result.protocol has already been set by now.
-   * Later on, put the first path part into the host field.
-   */if(psychotic&&(result.hostname="",result.port=null,result.host&&(""===srcPath[0]?srcPath[0]=result.host:srcPath.unshift(result.host)),result.host="",relative.protocol&&(relative.hostname=null,relative.port=null,relative.host&&(""===relPath[0]?relPath[0]=relative.host:relPath.unshift(relative.host)),relative.host=null),mustEndAbs=mustEndAbs&&(""===relPath[0]||""===srcPath[0])),isRelAbs)
-// it's absolute.
-result.host=relative.host||""===relative.host?relative.host:result.host,result.hostname=relative.hostname||""===relative.hostname?relative.hostname:result.hostname,result.search=relative.search,result.query=relative.query,srcPath=relPath;else if(relPath.length)
-/*
-     * it's relative
-     * throw away the existing file, and take the new path instead.
-     */
-srcPath||(srcPath=[]),srcPath.pop(),srcPath=srcPath.concat(relPath),result.search=relative.search,result.query=relative.query;else if(null!=relative.search){
-/*
-     * just pull out the search.
-     * like href='?foo'.
-     * Put this after the other two cases because it simplifies the booleans
-     */
-if(psychotic)result.host=srcPath.shift(),result.hostname=result.host,(authInHost=!!(result.host&&result.host.indexOf("@")>0)&&result.host.split("@"))&&(result.auth=authInHost.shift(),result.hostname=authInHost.shift(),result.host=result.hostname);return result.search=relative.search,result.query=relative.query,
-// to support http.request
-null===result.pathname&&null===result.search||(result.path=(result.pathname?result.pathname:"")+(result.search?result.search:"")),result.href=result.format(),result}if(!srcPath.length)
-/*
-     * no path at all.  easy.
-     * we've already handled the other stuff above.
-     */
-return result.pathname=null,
-// to support http.request
-result.search?result.path="/"+result.search:result.path=null,result.href=result.format(),result;
-/*
-   * if a url ENDs in . or .., then it must get a trailing slash.
-   * however, if it ends in anything else non-slashy,
-   * then it must NOT get a trailing slash.
-   */for(var last=srcPath.slice(-1)[0],hasTrailingSlash=(result.host||relative.host||srcPath.length>1)&&("."===last||".."===last)||""===last,up=0,i=srcPath.length;i>=0;i--)"."===(last=srcPath[i])?srcPath.splice(i,1):".."===last?(srcPath.splice(i,1),up++):up&&(srcPath.splice(i,1),up--);
-// if the path is allowed to go above the root, restore leading ..s
-if(!mustEndAbs&&!removeAllDots)for(;up--;up)srcPath.unshift("..");!mustEndAbs||""===srcPath[0]||srcPath[0]&&"/"===srcPath[0].charAt(0)||srcPath.unshift(""),hasTrailingSlash&&"/"!==srcPath.join("/").substr(-1)&&srcPath.push("");var authInHost,isAbsolute=""===srcPath[0]||srcPath[0]&&"/"===srcPath[0].charAt(0);
-// put the host back
-psychotic&&(result.hostname=isAbsolute?"":srcPath.length?srcPath.shift():"",result.host=result.hostname,(authInHost=!!(result.host&&result.host.indexOf("@")>0)&&result.host.split("@"))&&(result.auth=authInHost.shift(),result.hostname=authInHost.shift(),result.host=result.hostname));return(mustEndAbs=mustEndAbs||result.host&&srcPath.length)&&!isAbsolute&&srcPath.unshift(""),srcPath.length>0?result.pathname=srcPath.join("/"):(result.pathname=null,result.path=null),
-// to support request.http
-null===result.pathname&&null===result.search||(result.path=(result.pathname?result.pathname:"")+(result.search?result.search:"")),result.auth=relative.auth||result.auth,result.slashes=result.slashes||relative.slashes,result.href=result.format(),result},Url.prototype.parseHost=function(){var host=this.host,port=portPattern.exec(host);port&&(":"!==(port=port[0])&&(this.port=port.substr(1)),host=host.substr(0,host.length-port.length)),host&&(this.hostname=host)},exports.parse=urlParse,exports.resolve=function(source,relative){return urlParse(source,!1,!0).resolve(relative)},exports.resolveObject=function(source,relative){return source?urlParse(source,!1,!0).resolveObject(relative):relative},exports.format=
-// format a parsed object into a url string
-function(obj){
-/*
-   * ensure it's an object, and not a string url.
-   * If it's an obj, this is a no-op.
-   * this way, you can call url_format() on strings
-   * to clean up potentially wonky urls.
-   */
-return"string"==typeof obj&&(obj=urlParse(obj)),obj instanceof Url?obj.format():Url.prototype.format.call(obj)},exports.Url=Url},
-/***/3e3(module){"use strict";module.exports=__WEBPACK_EXTERNAL_MODULE__3000__},
-/***/2634(){
+/***/0(module){"use strict";module.exports=__WEBPACK_EXTERNAL_MODULE__0__},
+/***/256(){
 /* (ignored) */
 /***/},
-/***/7256(){
-/* (ignored) */
-/***/},
-/***/9727(__unused_webpack___webpack_module__,__webpack_exports__,__webpack_require__){"use strict";
+/***/727(__unused_webpack___webpack_module__,__webpack_exports__,__webpack_require__){"use strict";
 /* harmony export */__webpack_require__.d(__webpack_exports__,{
 /* harmony export */default:()=>/* binding */B
 /* harmony export */});var A,I=(A="file:///build/woff2-decompress-wasm.js",function(I={}){I.ready=new Promise((A,I)=>{C=A,g=I});var C,g,Q,G,Z,l,Y,b,c,W,d,E,m,h,N,R,i,a,V,k,F,X,u=Object.assign({},I),o="";"undefined"!=typeof document&&document.currentScript&&(o=document.currentScript.src),A&&(o=A),o=0!==o.indexOf("blob:")?o.substr(0,o.replace(/[?#].*/,"").lastIndexOf("/")+1):"",I.print||console.log.bind(console);var J=I.printErr||console.error.bind(console);Object.assign(I,u),u=null,I.arguments&&I.arguments,I.thisProgram&&I.thisProgram,I.quit&&I.quit,I.wasmBinary&&(Q=I.wasmBinary),I.noExitRuntime,"object"!=typeof WebAssembly&&L("no native wasm support detected");var w=!1;function v(){var A=G.buffer;I.HEAP8=Z=new Int8Array(A),I.HEAP16=Y=new Int16Array(A),I.HEAPU8=l=new Uint8Array(A),I.HEAPU16=b=new Uint16Array(A),I.HEAP32=c=new Int32Array(A),I.HEAPU32=W=new Uint32Array(A),I.HEAPF32=d=new Float32Array(A),I.HEAPF64=E=new Float64Array(A)}var D=[],p=[],n=[],H=0,s=null,t=null;function L(A){I.onAbort&&I.onAbort(A),J(A="Aborted("+A+")"),w=!0,A+=". Build with -sASSERTIONS for more info.";var C=new WebAssembly.RuntimeError(A);throw g(C),C}var S="data:application/octet-stream;base64,";function z(A){return A.startsWith(S)}z(m="data:application/octet-stream;base64,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IgAgACgCACACR0ECdGogATYCACABIAI2AgAgAiABNgIIIAEoAggiAygCACECCyABQQE6AAwgA0EAOgAMIAMgAigCBCIANgIAIAAEQCAAIAM2AggLIAIgAygCCDYCCCADKAIIIgAgACgCACADR0ECdGogAjYCACACIAM2AgQgAyACNgIIDwsCQCAERQ0AIAQtAAwNAAwBCwJAIAEgAigCAEcEQCACIQEMAQsgAiABKAIEIgA2AgAgASAABH8gACACNgIIIAIoAggFIAMLNgIIIAIoAggiACAAKAIAIAJHQQJ0aiABNgIAIAEgAjYCBCACIAE2AgggASgCCCEDCyABQQE6AAwgA0EAOgAMIAMgAygCBCIAKAIAIgE2AgQgAQRAIAEgAzYCCAsgACADKAIINgIIIAMoAggiASABKAIAIANHQQJ0aiAANgIAIAAgAzYCACADIAA2AggMAgsgBEEMaiEFIAJBAToADCADIAAgA0Y6AAwgBUEBOgAAIAMiASAARw0ACwsLNAAgAC0AC0EHdgRAIAAgATYCBA8LIAAgAC0AC0GAAXEgAXI6AAsgACAALQALQf8AcToACwsIAEGfCRA8AAtgAQF/IAAoAiAgBEECdCIFIAJBH2pBBHZB/v///wBxQaCYCGovAQBBAWpsIAAoAhgRAgAhACABIAQ7AQwgASADOwEKIAEgAjsBCCABIAA2AgAgASAAIAVqNgIEIABBAEcL0AEBBX8CQCAAKAIEIgFBIEcEQCABQQhrIQIgACgCCCEBDAELIAAoAgwiAUUEQEEADwsgACAAKAIAQQh2IgI2AgAgACgCCCIDLQAAIQQgACABQQFrNgIMIABBGDYCBCAAIANBAWoiATYCCCAAIARBGHQgAnI2AgBBECECCwJAIAFBAXFFDQAgACgCDCIDRQ0AIAAgACgCAEEIdiIENgIAIAEtAAAhBSAAIANBAWs2AgwgACACNgIEIAAgAUEBajYCCCAAIAVBGHQgBHI2AgALQQELBAAgAAsdACABBEAgACABKAIAECsgACABKAIEECsgARARCwuxMgEQfyMAQSBrIgUkAANAIAFBIGshCQNAIAAhBANAAkACQAJAAkACQAJAAkACQCABIARrIgBBBXUiBw4GBwcAAQQCAwsgAUEgayIAKAIAIAQoAgBPDQYgBSAEKQIYNwMYIAUgBCkCEDcD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AhggBCAAKQIQNwIQIAQgACkCCDcCCCAEIAApAgA3AgAgACAFKQMYNwIYIAAgBSkDEDcCECAAIAUpAwg3AgggACAFKQMANwIAIApBBGohCgwBCyAJKAIAIQACQCAGKAIAIgcgBCgCAE8EQEEAIQogACAHTw0CIAUgBikCGDcDGCAFIAYpAhA3AxAgBSAGKQIINwMIIAUgBikCADcDACAGIAkpAhg3AhggBiAJKQIQNwIQIAYgCSkCCDcCCCAGIAkpAgA3AgAgCSAFKQMYNwIYIAkgBSkDEDcCECAJIAUpAwg3AgggCSAFKQMANwIAQQEhCiAGKAIAIAQoAgBPDQIgBSAEKQIYNwMYIAUgBCkCEDcDECAFIAQpAgg3AwggBSAEKQIANwMAIAQgBikCGDcCGCAEIAYpAhA3AhAgBCAGKQIINwIIIAQgBikCADcCACAGIAUpAxg3AhggBiAFKQMQNwIQIAYgBSkDCDcCCCAGIAUpAwA3AgAMAQsgACAHSQRAIAUgBCkCGDcDGCAFIAQpAhA3AxAgBSAEKQIINwMIIAUgBCkCADcDACAEIAkpAhg3AhggBCAJKQIQNwIQIAQgCSkCCDcCCCAEIAkpAgA3AgAgCSAFKQMYNwIYIAkgBSkDEDcCECAJIAUpAwg3AgggCSAFKQMANwIAQQEhCgwCCyAFIAQpAhg3AxggBSAEKQIQNwMQIAUgBCkCCDcDCCAFIAQpAgA3AwAgBCAGKQIYNwIYIAQgBikCEDcCECAEIAYpAgg3AgggBCAGKQIANwIAIAYgBSkDGDcCGCAGIAUpAxA3AhAgBiAFKQMINwIIIAYgBSkDADcCAEEBIQogCSgCACAGKAIATw0BIAUgBikCGDcDGCAFIAYpAhA3AxAgBSAGKQIINwMIIAUgBikCADcDACAGIAkpAhg3AhggBiAJKQIQNwIQIAYgCSkCCDcCCCAGIAkpAgA3AgAgCSAFKQMYNwIYIAkgBSkDEDcCECAJIAUpAwg3AgggCSAFKQMANwIAC0ECIQoLIANBAWshAyAJIQAgBCgCACIIIAYoAgAiB08EQANAIABBIGsiACAERgRAIARBIGohByAIIAkoAgBJDQUgByAJRg0GA0AgBygCACAISwRAIAUgBykCGDcDGCAFIAcpAhA3AxAgBSAHKQIINwMIIAUgBykCADcDACAHIAkpAhg3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BCADQQhrKAIAIQMgAkIANwIgIAJCADcCKCACQgA3AjAgAkIANwA3IAJCADcCGCACQQA2AhQgAkGYnwg2AhAgAiAANgIMIAIgATYCCCAAIANqIQBBACEDAkAgBCABQQAQFgRAIAJBATYCOCAEIAJBCGogACAAQQFBACAEKAIAKAIUEQoAIABBACACKAIgQQFGGyEDDAELIAQgAkEIaiAAQQFBACAEKAIAKAIYEQkAAkACQCACKAIsDgIAAQILIAIoAhxBACACKAIoQQFGG0EAIAIoAiRBAUYbQQAgAigCMEEBRhshAwwBCyACKAIgQQFHBEAgAigCMA0BIAIoAiRBAUcNASACKAIoQQFHDQELIAIoAhghAwsgAkFAayQAIAMLDgAgAEHQAGoQHUHQAGoLAgALFgAgAhASIQEgACACNgIEIAAgATYCAAv9AgEFfyMAQRBrIggkACACIAFBf3NB7////wdqTQRAAn8gAC0AC0EHdgRAIAAoAgAMAQsgAAshCiAIQQRqIgkgACABQef///8DSQR/IAggAUEBdDYCDCAIIAEgAmo2AgQjAEEQayICJAAgCSgCACAIQQxqIgsoAgBJIQwgAkEQaiQAIAsgCSAMGygCACICQQtPBH8gAkEQakFwcSICIAJBAWsiAiACQQtGGwVBCgtBAWoFQe////8HCxA5IAgoAgQhAiAIKAIIGiAEBEAgAiAKIAQQGwsgBgRAIAIgBGogByAGEBsLIAMgBCAFaiIJayEHIAMgCUcEQCACIARqIAZqIAQgCmogBWogBxAbCyABQQpHBEAgChARCyAAIAI2AgAgACAAKAIIQYCAgIB4cSAIKAIIQf////8HcXI2AgggACAAKAIIQYCAgIB4cjYCCCAAIAQgBmogB2oiADYCBCAIQQA6AAwgACACaiAILQAMOgAAIAhBEGokAA8LECcACy4BAX8jAEEQayIDJAAgACACECYgA0EAOgAPIAEgAmogAy0ADzoAACADQRBqJAALYQEDf0EIEDciAUHsowg2AgAgAUHcpAg2AgAgABA9IgJBDWoQEiIDQQA2AgggAyACNgIEIAMgAjYCACABIANBDGogACACQQFqEBM2AgQgAUGMpQg2AgAgAUGspQhBAxAFAAt6AQN/AkACQCAAIgFBA3FFDQAgAS0AAEUEQEEADwsDQCABQQFqIgFBA3FF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IAIgACkCODcDGCACIAApAjA3AxAgAiAAKQIoNwMIIAIgACkCIDcDACAAIAEpAhg3AjggACABKQIQNwIwIAAgASkCCDcCKCAAIAEpAgA3AiAgASACKQMYNwIYIAEgAikDEDcCECABIAIpAwg3AgggASACKQMANwIAIAAoAiAgACgCAE8NBCACIAApAhg3AxggAiAAKQIQNwMQIAIgACkCCDcDCCACIAApAgA3AwAgACAAKQI4NwIYIAAgACkCMDcCECAAIAApAig3AgggACAAKQIgNwIAIAAgAikDGDcCOCAAIAIpAxA3AjAgACACKQMINwIoIAAgAikDADcCIAwECyADIARJBEAgAiAAKQIYNwMYIAIgACkCEDcDECACIAApAgg3AwggAiAAKQIANwMAIAAgASkCGDcCGCAAIAEpAhA3AhAgACABKQIINwIIIAAgASkCADcCACABIAIpAxg3AhggASACKQMQNwIQIAEgAikDCDcCCCABIAIpAwA3AgAMBAsgAiAAKQIYNwMYIAIgACkCEDcDECACIAApAgg3AwggAiAAKQIANwMAIAAgACkCODcCGCAAIAApAjA3AhAgACAAKQIoNwIIIAAgACkCIDcCACAAIAIpAxg3AjggACACKQMQNwIwIAAgAikDCDcCKCAAIAIpAwA3AiAgASgCACAAKAIgTw0DIAIgACkCODcDGCACIAApAjA3AxAgAiAAKQIoNwMIIAIgACkCIDcDACAAIAEpAhg3AjggACABKQIQNwIwIAAgASkCCDcCKCAAIAEpAgA3AiAgASACKQMYNwIYIAEgAikDEDcCECABIAIpAwg3AgggASACKQMANwIADAMLIAAgAEEgaiAAQUBrIAFBIGsQHxoMAgsgACAAQSBqIABBQGsiAyAAQeAAahAfGiABQSBrIgEoAgAgACgCYE8NASACIAApAng3AxggAiAAKQJwNwMQIAIgACkCaDcDCCACIAApAmA3AwAgACABKQIYNwJ4IAAgASkCEDcCcCAAIAEpAgg3AmggACABKQIANwJgIAEgAikDGDcCGCABIAIpAxA3AhAgASACKQMINwIIIAEgAikDADcCACAAKAJgIAMoAgBPDQEgAiADKQIYNwMYIAIgAykCEDcDECACIAMpAgg3AwggAiADKQIANwMAIAMgACkCeDcCGCADIAApAnA3AhAgAyAAKQJoNwIIIAMgACkCYDcCACAAIAIpAxg3AnggACACKQMQNwJwIAAgAikDCDcCaCAAIAIpAwA3AmAgAygCACAAKAIgTw0BIAIgACkCODcDGCACIAApAjA3AxAgAiAAKQIoNwMIIAIgACkCIDcDACAAIAMpAhg3AjggACADKQIQNwIwIAAgAykCCDcCKCAAIAMpAgA3AiAgAyACKQMYNwIYIAMgAikDEDcCECADIAIpAwg3AgggAyACKQMANwIAIAAoAiAgACgCAE8NASACIAApAhg3AxggAiAAKQIQNwMQIAIgACkCCDcDCCACIAApAgA3AwAgACAAKQI4NwIYIAAgACkCMDcCECAAIAApAig3AgggACAAKQIgNwIAIAAgAikDGDcCOCAAIAIpAxA3AjAgACACKQMINwIoIAAgAikDADcCIAwBCyAAQUBrIQMgACgCQCEEAkAgACgCICIGIAAoAgAiB08EQCAEIAZPDQEgAiAAKQI4NwMYIAIgACkCMDcDECACIAApAig3AwggAiAAKQIgNwMAIAAgAykCGDcCOCAAIAMpAhA3AjAgACADKQIINwIoIAAgAykCADcCICADIAIpAxg3AhggAyACKQMQNwIQIAMgAikDCDcCCCADIAIpAwA3AgAgACgCICAHTw0BIAIgACkCGDcDGCACIAApAhA3AxAgAiAAKQIINwMIIAIgACkCADcDACAAIAApAjg3AhggACAAKQIwNwIQIAAgACkCKDcCCCAAIAApAiA3AgAgACACKQMYNwI4IAAgAikDEDcCMCAAIAIpAwg3AiggACACKQMANwIgDAELIAQgBkkEQCACIAApAhg3AxggAiAAKQIQNwMQIAIgACkCCDcDCCACIAApAgA3AwAgACADKQIYNwIYIAAgAykCEDcCECAAIAMpAgg3AgggACADKQIANwIAIAMgAikDGDcCGCADIAIpAxA3AhAgAyACKQMINwIIIAMgAikDADcCAAwBCyACIAApAhg3AxggAiAAKQIQNwMQIAIgACkCCDcDCCACIAApAgA3AwAgACAAKQI4NwIYIAAgACkCMDcCECAAIAApAig3AgggACAAKQIgNwIAIAAgAikDGDcCOCAAIAIpAxA3AjAgACACKQMINwIoIAAgAikDADcCICAEIAAoAiBPDQAgAiAAKQI4NwMYIAIgACkCMDcD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IAEtADRFDQEMAwsgAUEENgIsCyABIAI2AhQgASABKAIoQQFqNgIoIAEoAiRBAUcNASABKAIYQQJHDQEgAUEBOgA2DwsgACgCCCIAIAEgAiADIAQgACgCACgCGBEJAAsLMQAgACABKAIIQQAQFgRAIAEgAiADEDUPCyAAKAIIIgAgASACIAMgACgCACgCHBEHAAsYACAAIAEoAghBABAWBEAgASACIAMQNQsLmwEBAn8jAEFAaiIDJAACf0EBIAAgAUEAEBYNABpBACABRQ0AGkEAIAFByJ8IEDYiAUUNABogA0EMakE0EBQaIANBATYCOCADQX82AhQgAyAANgIQIAMgATYCCCABIANBCGogAigCAEEBIAEoAgAoAhwRBwAgAygCICIAQQFGBEAgAiADKAIYNgIACyAAQQFGCyEEIANBQGskACAECwoAIAAgAUEAEBYLJAEBf0HcpwgoAgAiAARAA0AgACgCABEFACAAKAIEIgANAAsLCyQBAn8gACgCBCIAED1BAWoiARAdIgIEfyACIAAgARATBUEACwsGACABEB0LBgAgARARC64BAQR/IwBBEGsiAiQAIAEoAgAiA0Hw////B0kEQAJAIANBCk0EQCACIAM6AAsgAiEEDAELIANBD3JBAWoiBRASIQQgAiAFQYCAgIB4cjYCCCACIAQ2AgAgAiADNgIECyAEIAFBBGogAxATIANqQQA6AAAgAkEMaiACIAARAQAgAigCDBALIAIoAgwiABAKIAIsAAtBAEgEQCACKAIAEBELIAJBEGokACAADwsQJwALBwAgACgCDAv5CQENfyAAKAIIIgQgAk8gBCACayADT3EiEARAAkAgAiAAKAIEIgQoAgQgBC0ACyIKIgUgBcBBAEgbIgVGBEAjAEEQayIJJAACQCADIApBB3YEfyAEKAIIQf////8HcUEBawVBCgsiBQJ/IAQtAAtBB3YEQCAEKAIEDAELIAQtAAtB/wBxCyIHa00EQCADRQ0BAn8gBC0AC0EHdgRAIAQoAgAMAQsgBAsiBSAHaiABIAMQGyAEIAMgB2oiARAmIAlBADoADyABIAVqIAktAA86AAAMAQsgBCAFIAMgBWsgB2ogByAHQQAgAyABEDoLIAlBEGokACACIANqIQ4MAQsgBSACIANqIg5JBEAjAEEQayIIJAAgDiAFayIJBEAgCSAE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Z25lZCBpbnQAZmxvYXQAdWludDY0X3QAZGVjb21wcmVzcwB2ZWN0b3IAdW5zaWduZWQgY2hhcgBzdGQ6OmV4Y2VwdGlvbgBib29sAGVtc2NyaXB0ZW46OnZhbABiYWRfYXJyYXlfbmV3X2xlbmd0aAB1bnNpZ25lZCBsb25nAHN0ZDo6d3N0cmluZwBiYXNpY19zdHJpbmcAc3RkOjpzdHJpbmcAc3RkOjp1MTZzdHJpbmcAc3RkOjp1MzJzdHJpbmcAZG91YmxlAHZvaWQAc3RkOjpiYWRfYWxsb2MAZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8c2hvcnQ+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PHVuc2lnbmVkIHNob3J0PgBlbXNjcmlwdGVuOjptZW1vcnlfdmlldzxpbnQ+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PHVuc2lnbmVkIGludD4AZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8ZmxvYXQ+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PHVpbnQ4X3Q+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PGludDhfdD4AZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8dWludDE2X3Q+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PGludDE2X3Q+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PHVpbnQ2NF90PgBlbXNjcmlwdGVuOjptZW1vcnlfdmlldzxpbnQ2NF90PgBlbXNjcmlwdGVuOjptZW1vcnlfdmlldzx1aW50MzJfdD4AZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8aW50MzJfdD4AZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8Y2hhcj4AZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8dW5zaWduZWQgY2hhcj4Ac3RkOjpiYXNpY19zdHJpbmc8dW5zaWduZWQgY2hhcj4AZW1zY3JpcHRlbjo6bWVtb3J5X3ZpZXc8c2lnbmVkIGNoYXI+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PGxvbmc+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PHVuc2lnbmVkIGxvbmc+AGVtc2NyaXB0ZW46Om1lbW9yeV92aWV3PGRvdWJsZT4AsAcA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AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBgYGBgYGBgYGBgYGBgYGBwAAAAAAAAIAAAAAAQAAAwAAAAACAAAEAAAAAAMAAAUAAAAAAwAABgAAAAADAAAHAAAAAAMAAAgAAAAAAwAACQAAAAAAAQACAAAAAAEBAAMAAAAAAgEABAAAAAADAQAFAAAAAAMBAAYAAAAAAwEABwAAAAADAQAIAAAAAAMBAAkAAAAAAAIAAgAAAAABAgADAAAAAAICAAQAAAAAAwIABQAAAAADAgAGAAAAAAMCAAcAAAAAAwIACAAAAAADAgAJAAAAAAADAAIAAAAAAQMAAwAAAAACAwAEAAAAAAMDAAUAAAAAAwMABgAAAAADAwAHAAAAAAMDAAgAAAAAAwMACQAAAAAABAACAAAAAAEEAAMAAAAAAgQABAAAAAADBAAFAAAAAAMEAAYAAAAAAwQABwAAAAADBAAIAAAAAAMEAAkAAAAAAAUAAgAAAAABBQADAAAAAAIFAAQAAAAAAwUABQAAAAADBQAGAAAAAAMFAAcAAAAAAwUACAAAAAADBQAJAAEAAAAGAAIAAQAAAQYAAwABAAACBgAEAAEAAAMGAAUAAQAAAwYABgABAAADBgAHAAEAAAMGAAgAAQAAAwYACQABAAAACAACAAEAAAEIAAMAAQAAAggABAABAAADCAAFAAEAAAMIAAYAAQAAAwgABwABAAADCAAIAAEAAAMIAAkAAAEAAwAACgAAAQADAAAMAAACAAMAAA4AAAIAAwAAEgAAAwADAAAWAAADAAMAAB4AAAQAAwAAJgAABAADAAA2AAABAAMBAAoAAAEAAwEADAAAAgADAQAOAAACAAMBABIAAAMAAwEAFgAAAwADAQAeAAAEAAMBACYAAAQAAwEANgAAAQADAgAKAAABAAMCAAwAAAIAAwIADgAAAgADAgASAAADAAMCABYAAAMAAwIAHgAABAADAgAmAAAEAAMCADYAAAEAAwMACgAAAQADAwAMAAACAAMDAA4AAAIAAwMAEgAAAwADAwAWAAADAAMDAB4AAAQAAwMAJgAABAADAwA2AAABAAMEAAoAAAEAAwQADAAAAgADBAAOAAACAAMEABIAAAMAAwQAFgAAAwADBAAeAAAEAAMEACYAAAQAAwQANgAAAQADBQAKAAABAAMFAAwAAAIAAwUADgAAAgADBQASAAADAAMFABYAAAMAAwUAHgAABAADBQAmAAAEAAMFADYAAQEAAwYACgABAQADBgAMAAECAAMGAA4AAQIAAwYAEgABAwADBgAWAAEDAAMGAB4AAQQAAwYAJgABBAADBgA2AAEBAAMIAAoAAQEAAwgADAABAgADCAAOAAECAAMIABIAAQMAAwgAFgABAwADCAAeAAEEAAMIACYAAQQAAwgANgAAAP8AAAACAAAA/wEAAAMAAAD/AgAABAAAAP8DAAAFAAAA/wMAAAYAAAD/AwAABwAAAP8DAAAIAAAA/wMAAAkAAAD/AAEAAgAAAP8BAQADAAAA/wIBAAQAAAD/AwEABQAAAP8DAQAGAAAA/wMBAAcAAAD/AwEACAAAAP8DAQAJAAAA/wACAAIAAAD/AQIAAwAAAP8CAgAEAAAA/wMCAAUAAAD/AwIABgAAAP8DAgAHAAAA/wMCAAgAAAD/AwIACQAAAP8AAwACAAAA/wEDAAMAAAD/AgMABAAAAP8DAwAFAAAA/wMDAAYAAAD/AwMABwAAAP8DAwAIAAAA/wMDAAkAAAD/AAQAAgAAAP8BBAADAAAA/wIEAAQAAAD/AwQABQAAAP8DBAAGAAAA/wMEAAcAAAD/AwQACAAAAP8DBAAJAAAA/wAFAAIAAAD/AQUAAwAAAP8CBQAEAAAA/wMFAAUAAAD/AwUABgAAAP8DBQAHAAAA/wMFAAgAAAD/AwUACQABAP8ABgACAAEA/wEGAAMAAQD/AgYABAABAP8DBgAFAAEA/wMGAAYAAQD/AwYABwABAP8DBgAIAAEA/wMGAAkAAQD/AAgAAgABAP8BCAADAAEA/wIIAAQAAQD/AwgABQABAP8DCAAGAAEA/wMIAAcAAQD/AwgACAABAP8DCAAJAAAB/wMAAAoAAAH/AwAADAAAAv8DAAAOAAAC/wMAABIAAAP/AwAAFgAAA/8DAAAeAAAE/wMAACYAAAT/AwAANgAAAf8DAQAKAAAB/wMB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c2VkbWFkZWhhbmRoZXJld2hhdG5hbWVMaW5rYmxvZ3NpemViYXNlaGVsZG1ha2VtYWludXNlcicpICtob2xkZW5kc3dpdGhOZXdzcmVhZHdlcmVzaWdudGFrZWhhdmVnYW1lc2VlbmNhbGxwYXRod2VsbHBsdXNtZW51ZmlsbXBhcnRqb2ludGhpc2xpc3Rnb29kbmVlZHdheXN3ZXN0am9ic21pbmRhbHNvbG9nb3JpY2h1c2VzbGFzdHRlYW1hcm15Zm9vZGtpbmd3aWxsZWFzdHdhcmRiZXN0ZmlyZVBhZ2Vrbm93YXdheS5wbmdtb3ZldGhhbmxvYWRnaXZlc2VsZm5vdGVtdWNoZmVlZG1hbnlyb2NraWNvbm9uY2Vsb29raGlkZWRpZWRIb21lcnVsZWhvc3RhamF4aW5mb2NsdWJsYXdzbGVzc2hhbGZzb21lc3VjaHpvbmUxMDAlb25lc2NhcmVUaW1lcmFjZWJsdWVmb3Vyd2Vla2ZhY2Vob3BlZ2F2ZWhhcmRsb3N0d2hlbnBhcmtrZXB0cGFzc3NoaXByb29tSFRNTHBsYW5UeXBlZG9uZXNhdmVrZWVwZmxhZ2xpbmtzb2xkZml2ZXRvb2tyYXRldG93bmp1bXB0aHVzZGFya2NhcmRmaWxlZmVhcnN0YXlraWxsdGhhdGZhbGxhdXRvZXZlci5jb210YWxrc2hvcHZvdGVkZWVwbW9kZXJlc3R0dXJuYm9ybmJhbmRmZWxscm9zZXVybChza2lucm9sZWNvbWVhY3RzYWdlc21lZXRnb2xkLmpwZ2l0ZW12YXJ5ZmVsdHRoZW5zZW5kZHJvcFZpZXdjb3B5MS4wIjwvYT5zdG9wZWxzZWxpZXN0b3VycGFjay5naWZwYXN0Y3NzP2dyYXltZWFuJmd0O3JpZGVzaG90bGF0ZXNhaWRyb2FkdmFyIGZlZWxqb2hucmlja3BvcnRmYXN0J1VBLWRlYWQ8L2I+cG9vcmJpbGx0eXBlVS5TLndvb2RtdXN0MnB4O0luZm9yYW5rd2lkZXdhbnR3YWxsbGVhZFswXTtwYXVsd2F2ZXN1cmUkKCcjd2FpdG1hc3Nhcm1zZ29lc2dhaW5sYW5ncGFpZCEtLSBsb2NrdW5pdHJvb3R3YWxrZmlybXdpZmV4bWwic29uZ3Rlc3QyMHB4a2luZHJvd3N0b29sZm9udG1haWxzYWZlc3Rhcm1hcHNjb3JlcmFpbmZsb3diYWJ5c3BhbnNheXM0cHg7NnB4O2FydHNmb290cmVhbHdpa2loZWF0c3RlcHRyaXBvcmcvbGFrZXdlYWt0b2xkRm9ybWNhc3RmYW5zYmFua3ZlcnlydW5zanVseXRhc2sxcHg7Z29hbGdyZXdzbG93ZWRnZWlkPSJzZXRzNXB4Oy5qcz80MHB4aWYgKHNvb25zZWF0bm9uZXR1YmV6ZXJvc2VudHJlZWRmYWN0aW50b2dpZnRoYXJtMThweGNhbWVoaWxsYm9sZHpvb212b2lkZWFzeXJpbmdmaWxscGVha2luaXRjb3N0M3B4O2phY2t0YWdzYml0c3JvbGxlZGl0a25ld25lYXI8IS0tZ3Jvd0pTT05kdXR5TmFtZXNhbGV5b3UgbG90c3BhaW5qYXp6Y29sZGV5ZXNmaXNod3d3LnJpc2t0YWJzcHJldjEwcHhyaXNlMjVweEJsdWVkaW5nMzAwLGJhbGxmb3JkZWFybndpbGRib3guZmFpcmxhY2t2ZXJzcGFpcmp1bmV0ZWNoaWYoIXBpY2tldmlsJCgiI3dhcm1sb3JkZG9lc3B1bGwsMDAwaWRlYWRyYXdodWdlc3BvdGZ1bmRidXJuaHJlZmNlbGxrZXlzdGlja2hvdXJsb3NzZnVlbDEycHhzdWl0ZGVhbFJTUyJhZ2VkZ3JleUdFVCJlYXNlYWltc2dpcmxhaWRzOHB4O25hdnlncmlkdGlwcyM5OTl3YXJzbGFkeWNhcnMpOyB9cGhwP2hlbGx0YWxsd2hvbXpoOuUqLw0KIDEwMGhhbGwuCgpBN3B4O3B1c2hjaGF0MHB4O2NyZXcqLzwvaGFzaDc1cHhmbGF0cmFyZSAmJiB0ZWxsY2FtcG9udG9sYWlkbWlzc3NraXB0ZW50ZmluZW1hbGVnZXRzcGxvdDQwMCwNCg0KY29vbGZlZXQucGhwPGJyPmVyaWNtb3N0Z3VpZGJlbGxkZXNjaGFpcm1hdGhhdG9tL2ltZyYjODJsdWNrY2VudDAwMDt0aW55Z29uZWh0bWxzZWxsZHJ1Z0ZSRUVub2Rlbmljaz9pZD1sb3NlbnVsbHZhc3R3aW5kUlNTIHdlYXJyZWx5YmVlbnNhbWVkdWtlbmFzYWNhcGV3aXNoZ3VsZlQyMzpoaXRzc2xvdGdhdGVraWNrYmx1cnRoZXkxNXB4JycpOyk7Ij5tc2lld2luc2JpcmRzb3J0YmV0YXNlZWtUMTg6b3Jkc3RyZWVtYWxsNjBweGZhcm3igJlzYm95c1swXS4nKTsiUE9TVGJlYXJraWRzKTt9fW1hcnl0ZW5kKFVLKXF1YWR6aDrmLXNpei0tLS1wcm9wJyk7DWxpZnRUMTk6dmljZWFuZHlkZWJ0PlJTU3Bvb2xuZWNrYmxvd1QxNjpkb29yZXZhbFQxNzpsZXRzZmFpbG9yYWxwb2xsbm92YWNvbHNnZW5lIOKAlHNvZnRyb21ldGlsbHJvc3M8aDM+cG91cmZhZGVwaW5rPHRyPm1pbmkpfCEobWluZXpoOuhiYXJzaGVhcjAwKTttaWxrIC0tPmlyb25mcmVkZGlza3dlbnRzb2lscHV0cy9qcy9ob2x5VDIyOklTQk5UMjA6YWRhbXNlZXM8aDI+anNvbicsICdjb250VDIxOiBSU1Nsb29wYXNpYW1vb248L3A+c291bExJTkVmb3J0Y2FydFQxNDo8aDE+ODBweCEtLTw5cHg7VDA0Om1pa2U6NDZabmljZWluY2hZb3JrcmljZXpoOuQnKSk7cHVyZW1hZ2VwYXJhdG9uZWJvbmQ6MzdaX29mXyddKTswMDAsemg653Rhbmt5YXJkYm93bGJ1c2g6NTZaSmF2YTMwcHgKfH0KJUMzJTozNFpqZWZmRVhQSWNhc2h2aXNhZ29sZnNub3d6aDrpcXVlci5jc3NzaWNrbWVhdG1pbi5iaW5kZGVsbGhpcmVwaWNzcmVudDozNlpIVFRQLTIwMWZvdG93b2xmRU5EIHhib3g6NTRaQk9EWWRpY2s7Cn0KZXhpdDozNVp2YXJzYmVhdCd9KTtkaWV0OTk5O2FubmV9fTwvW2ldLkxhbmdrbcKyd2lyZXRveXNhZGRzc2VhbGFsZXg7Cgl9ZWNob25pbmUub3JnMDA1KXRvbnlqZXdzc2FuZGxlZ3Nyb29mMDAwKSAyMDB3aW5lZ2VhcmRvZ3Nib290Z2FyeWN1dHN0eWxldGVtcHRpb24ueG1sY29ja2dhbmckKCcuNTBweFBoLkRtaXNjYWxhbmxvYW5kZXNrbWlsZXJ5YW51bml4ZGlzYyk7fQpkdXN0Y2xpcCkuCgo3MHB4LTIwMERWRHM3XT48dGFwZWRlbW9pKyspd2FnZWV1cm9waGlsb3B0c2hvbGVGQVFzYXNpbi0yNlRsYWJzcGV0c1VSTCBidWxrY29vazt9DQpIRUFEWzBdKWFiYnJqdWFuKDE5OGxlc2h0d2luPC9pPnNvbnlndXlzZnVja3BpcGV8LQohMDAyKW5kb3dbMV07W107CkxvZyBzYWx0DQoJCWJhbmd0cmltYmF0aCl7DQowMHB4Cn0pO2tvOuxmZWVzYWQ+DXM6Ly8gW107dG9sbHBsdWcoKXsKew0KIC5qcycyMDBwZHVhbGJvYXQuSlBHKTsKfXF1b3QpOwoKJyk7Cg0KfQ0yMDE0MjAxNTIwMTYyMDE3MjAxODIwMTkyMDIwMjAyMTIwMjIyMDIzMjAyNDIwMjUyMDI2MjAyNzIwMjgyMDI5MjAzMDIwMzEyMDMyMjAzMzIwMzQyMDM1MjAzNjIwMzcyMDEzMjAxMjIwMTEyMDEwMjAwOTIwMDgyMDA3MjAwNjIwMDUyMDA0MjAwMzIwMDIyMDAxMjAwMDE5OTkxOTk4MTk5NzE5OTYxOTk1MTk5NDE5OTMxOTkyMTk5MTE5OTAxOTg5MTk4ODE5ODcxOTg2MTk4NTE5ODQxOTgzMTk4MjE5ODExOTgwMTk3OTE5NzgxOTc3MTk3NjE5NzUxOTc0MTk3MzE5NzIxOTcxMTk3MDE5NjkxOTY4MTk2NzE5NjYxOTY1MTk2NDE5NjMxOTYyMTk2MTE5NjAxOTU5MTk1ODE5NTcxOTU2MTk1NTE5NTQxOTUzMTk1MjE5NTExOTUwMTAwMDEwMjQxMzk0MDAwMDk5OTljb21vbcOhc2VzdGVlc3RhcGVyb3RvZG9oYWNlY2FkYWHDsW9iaWVuZMOtYWFzw612aWRhY2Fzb290cm9mb3Jvc29sb290cmFjdWFsZGlqb3NpZG9ncmFudGlwb3RlbWFkZWJlYWxnb3F1w6llc3RvbmFkYXRyZXNwb2NvY2FzYWJham90b2Rhc2lub2FndWFwdWVzdW5vc2FudGVkaWNlbHVpc2VsbGFtYXlvem9uYWFtb3JwaXNvb2JyYWNsaWNlbGxvZGlvc2hvcmFjYXNp0LfQsNC90LDQvtC80YDQsNGA0YPRgtCw0L3QtdC/0L7QvtGC0LjQt9C90L7QtNC+0YLQvtC20LXQvtC90LjRhdCd0LDQtdC10LHRi9C80YvQktGL0YHQvtCy0YvQstC+0J3QvtC+0LHQn9C+0LvQuNC90LjQoNCk0J3QtdCc0YvRgtGL0J7QvdC40LzQtNCw0JfQsNCU0LDQndGD0J7QsdGC0LXQmNC30LXQudC90YPQvNC80KLRi9GD0LbZgdmK2KPZhtmF2KfZhdi52YPZhNij2YjYsdiv2YrYp9mB2YnZh9mI2YTZhdmE2YPYp9mI2YTZh9io2LPYp9mE2KXZhtmH2YrYo9mK2YLYr9mH2YTYq9mF2KjZh9mE2YjZhNmK2KjZhNin2YrYqNmD2LTZitin2YXYo9mF2YbYqtio2YrZhNmG2K3YqNmH2YXZhdi02YjYtGZpcnN0dmlkZW9saWdodHdvcmxkbWVkaWF3aGl0ZWNsb3NlYmxhY2tyaWdodHNtYWxsYm9va3NwbGFjZW11c2ljZmllbGRvcmRlcnBvaW50dmFsdWVsZXZlbHRhYmxlYm9hcmRob3VzZWdyb3Vwd29ya3N5ZWFyc3N0YXRldG9kYXl3YXRlcnN0YXJ0c3R5bGVkZWF0aHBvd2VycGhvbmVuaWdodGVycm9yaW5wdXRhYm91dHRlcm1zdGl0bGV0b29sc2V2ZW50bG9jYWx0aW1lc2xhcmdld29yZHNnYW1lc3Nob3J0c3BhY2Vmb2N1c2NsZWFybW9kZWxibG9ja2d1aWRlcmFkaW9zaGFyZXdvbWVuYWdhaW5tb25leWltYWdlbmFtZXN5b3VuZ2xpbmVzbGF0ZXJjb2xvcmdyZWVuZnJvbnQmYW1wO3dhdGNoZm9yY2VwcmljZXJ1bGVzYmVnaW5hZnRlcnZpc2l0aXNzdWVhcmVhc2JlbG93aW5kZXh0b3RhbGhvdXJzbGFiZWxwcmludHByZXNzYnVpbHRsaW5rc3NwZWVkc3R1ZHl0cmFkZWZvdW5kc2Vuc2V1bmRlcnNob3duZm9ybXNyYW5nZWFkZGVkc3RpbGxtb3ZlZHRha2VuYWJvdmVmbGFzaGZpeGVkb2Z0ZW5vdGhlcnZpZXdzY2hlY2tsZWdhbHJpdmVyaXRlbXNxdWlja3NoYXBlaHVtYW5leGlzdGdvaW5nbW92aWV0aGlyZGJhc2ljcGVhY2VzdGFnZXdpZHRobG9naW5pZGVhc3dyb3RlcGFnZXN1c2Vyc2RyaXZlc3RvcmVicmVha3NvdXRodm9pY2VzaXRlc21vbnRod2hlcmVidWlsZHdoaWNoZWFydGhmb3J1bXRocmVlc3BvcnRwYXJ0eUNsaWNrbG93ZXJsaXZlc2NsYXNzbGF5ZXJlbnRyeXN0b3J5dXNhZ2Vzb3VuZGNvdXJ0eW91ciBiaXJ0aHBvcHVwdHlwZXNhcHBseUltYWdlYmVpbmd1cHBlcm5vdGVzZXZlcnlzaG93c21lYW5zZXh0cmFtYXRjaHRyYWNra25vd25lYXJseWJlZ2Fuc3VwZXJwYXBlcm5vcnRobGVhcm5naXZlbm5hbWVkZW5kZWRUZXJtc3BhcnRzR3JvdXBicmFuZHVzaW5nd29tYW5mYWxzZXJlYWR5YXVkaW90YWtlc3doaWxlLmNvbS9saXZlZGNhc2VzZGFpbHljaGlsZGdyZWF0anVkZ2V0aG9zZXVuaXRzbmV2ZXJicm9hZGNvYXN0Y292ZXJhcHBsZWZpbGVzY3ljbGVzY2VuZXBsYW5zY2xpY2t3cml0ZXF1ZWVucGllY2VlbWFpbGZyYW1lb2xkZXJwaG90b2xpbWl0Y2FjaGVjaXZpbHNjYWxlZW50ZXJ0aGVtZXRoZXJldG91Y2hib3VuZHJveWFsYXNrZWR3aG9sZXNpbmNlc3RvY2sgbmFtZWZhaXRoaGVhcnRlbXB0eW9mZmVyc2NvcGVvd25lZG1pZ2h0YWxidW10aGlua2Jsb29kYXJyYXltYWpvcnRydXN0Y2Fub251bmlvbmNvdW50dmFsaWRzdG9uZVN0eWxlTG9naW5oYXBweW9jY3VybGVmdDpmcmVzaHF1aXRlZmlsbXNncmFkZW5lZWRzdXJiYW5maWdodGJhc2lzaG92ZXJhdXRvO3JvdXRlLmh0bWxtaXhlZGZpbmFsWW91ciBzbGlkZXRvcGljYnJvd25hbG9uZWRyYXduc3BsaXRyZWFjaFJpZ2h0ZGF0ZXNtYXJjaHF1b3RlZ29vZHNMaW5rc2RvdWJ0YXN5bmN0aHVtYmFsbG93Y2hpZWZ5b3V0aG5vdmVsMTBweDtzZXJ2ZXVudGlsaGFuZHNDaGVja1NwYWNlcXVlcnlqYW1lc2VxdWFsdHdpY2UwLDAwMFN0YXJ0cGFuZWxzb25nc3JvdW5kZWlnaHRzaGlmdHdvcnRocG9zdHNsZWFkc3dlZWtzYXZvaWR0aGVzZW1pbGVzcGxhbmVzbWFydGFscGhhcGxhbnRtYXJrc3JhdGVzcGxheXNjbGFpbXNhbGVzdGV4dHNzdGFyc3dyb25nPC9oMz50aGluZy5vcmcvbXVsdGloZWFyZFBvd2Vyc3RhbmR0b2tlbnNvbGlkKHRoaXNicmluZ3NoaXBzc3RhZmZ0cmllZGNhbGxzZnVsbHlmYWN0c2FnZW50VGhpcyAvLy0tPmFkbWluZWd5cHRFdmVudDE1cHg7RW1haWx0cnVlImNyb3Nzc3BlbnRibG9nc2JveCI+bm90ZWRsZWF2ZWNoaW5hc2l6ZXNndWVzdDwvaDQ+cm9ib3RoZWF2eXRydWUsc2V2ZW5ncmFuZGNyaW1lc2lnbnNhd2FyZWRhbmNlcGhhc2U+PCEtLWVuX1VTJiMzOTsyMDBweF9uYW1lbGF0aW5lbmpveWFqYXguYXRpb25zbWl0aFUuUy4gaG9sZHNwZXRlcmluZGlhbmF2Ij5jaGFpbnNjb3JlY29tZXNkb2luZ3ByaW9yU2hhcmUxOTkwc3JvbWFubGlzdHNqYXBhbmZhbGxzdHJpYWxvd25lcmFncmVlPC9oMj5hYnVzZWFsZXJ0b3BlcmEiLS8vV2NhcmRzaGlsbHN0ZWFtc1Bob3RvdHJ1dGhjbGVhbi5waHA/c2FpbnRtZXRhbGxvdWlzbWVhbnRwcm9vZmJyaWVmcm93Ij5nZW5yZXRydWNrbG9va3NWYWx1ZUZyYW1lLm5ldC8tLT4KPHRyeSB7CnZhciBtYWtlc2Nvc3RzcGxhaW5hZHVsdHF1ZXN0dHJhaW5sYWJvcmhlbHBzY2F1c2VtYWdpY21vdG9ydGhlaXIyNTBweGxlYXN0c3RlcHNDb3VudGNvdWxkZ2xhc3NzaWRlc2Z1bmRzaG90ZWxhd2FyZG1vdXRobW92ZXNwYXJpc2dpdmVzZHV0Y2h0ZXhhc2ZydWl0bnVsbCx8fFtdO3RvcCI+CjwhLS1QT1NUIm9jZWFuPGJyLz5mbG9vcnNwZWFrZGVwdGggc2l6ZWJhbmtzY2F0Y2hjaGFydDIwcHg7YWxpZ25kZWFsc3dvdWxkNTBweDt1cmw9InBhcmtzbW91c2VNb3N0IC4uLjwvYW1vbmdicmFpbmJvZHkgbm9uZTtiYXNlZGNhcnJ5ZHJhZnRyZWZlcnBhZ2VfaG9tZS5tZXRlcmRlbGF5ZHJlYW1wcm92ZWpvaW50PC90cj5kcnVnczwhLS0gYXByaWxpZGVhbGFsbGVuZXhhY3Rmb3J0aGNvZGVzbG9naWNWaWV3IHNlZW1zYmxhbmtwb3J0cyAoMjAwc2F2ZWRfbGlua2dvYWxzZ3JhbnRncmVla2hvbWVzcmluZ3NyYXRlZDMwcHg7d2hvc2VwYXJzZSgpOyIgQmxvY2tsaW51eGpvbmVzcGl4ZWwnKTsiPik7aWYoLWxlZnRkYXZpZGhvcnNlRm9jdXNyYWlzZWJveGVzVHJhY2tlbWVudDwvZW0+YmFyIj4uc3JjPXRvd2VyYWx0PSJjYWJsZWhlbnJ5MjRweDtzZXR1cGl0YWx5c2hhcnBtaW5vcnRhc3Rld2FudHN0aGlzLnJlc2V0d2hlZWxnaXJscy9jc3MvMTAwJTtjbHVic3N0dWZmYmlibGV2b3RlcyAxMDAwa29yZWF9KTsNCmJhbmRzcXVldWU9IHt9OzgwcHg7Y2tpbmd7DQoJCWFoZWFkY2xvY2tpcmlzaGxpa2UgcmF0aW9zdGF0c0Zvcm0ieWFob28pWzBdO0Fib3V0ZmluZHM8L2gxPmRlYnVndGFza3NVUkwgPWNlbGxzfSkoKTsxMnB4O3ByaW1ldGVsbHN0dXJuczB4NjAwLmpwZyJzcGFpbmJlYWNodGF4ZXNtaWNyb2FuZ2VsLS0+PC9naWZ0c3N0ZXZlLWxpbmtib2R5Ln0pOwoJbW91bnQgKDE5OUZBUTwvcm9nZXJmcmFua0NsYXNzMjhweDtmZWVkczxoMT48c2NvdHR0ZXN0czIycHg7ZHJpbmspIHx8IGxld2lzc2hhbGwjMDM5OyBmb3IgbG92ZWR3YXN0ZTAwcHg7amE644JzaW1vbjxmb250cmVwbHltZWV0c3VudGVyY2hlYXB0aWdodEJyYW5kKSAhPSBkcmVzc2NsaXBzcm9vbXNvbmtleW1vYmlsbWFpbi5OYW1lIHBsYXRlZnVubnl0cmVlc2NvbS8iMS5qcGd3bW9kZXBhcmFtU1RBUlRsZWZ0IGlkZGVuLCAyMDEpOwp9CmZvcm0udmlydXNjaGFpcnRyYW5zd29yc3RQYWdlc2l0aW9ucGF0Y2g8IS0tCm8tY2FjZmlybXN0b3VycywwMDAgYXNpYW5pKyspe2Fkb2JlJylbMF1pZD0xMGJvdGg7bWVudSAuMi5taS5wbmcia2V2aW5jb2FjaENoaWxkYnJ1Y2UyLmpwZ1VSTCkrLmpwZ3xzdWl0ZXNsaWNlaGFycnkxMjAiIHN3ZWV0dHI+DQpuYW1lPWRpZWdvcGFnZSBzd2lzcy0tPgoKI2ZmZjsiPkxvZy5jb20idHJlYXRzaGVldCkgJiYgMTRweDtzbGVlcG50ZW50ZmlsZWRqYTrjg2lkPSJjTmFtZSJ3b3JzZXNob3RzLWJveC1kZWx0YQombHQ7YmVhcnM6NDhaPGRhdGEtcnVyYWw8L2E+IHNwZW5kYmFrZXJzaG9wcz0gIiI7cGhwIj5jdGlvbjEzcHg7YnJpYW5oZWxsb3NpemU9bz0lMkYgam9pbm1heWJlPGltZyBpbWciPiwgZmpzaW1nIiAiKVswXU1Ub3BCVHlwZSJuZXdseURhbnNrY3plY2h0cmFpbGtub3dzPC9oNT5mYXEiPnpoLWNuMTApOwotMSIpO3R5cGU9Ymx1ZXN0cnVseWRhdmlzLmpzJzs+DQo8IXN0ZWVsIHlvdSBoMj4NCmZvcm0gamVzdXMxMDAlIG1lbnUuDQoJDQp3YWxlc3Jpc2tzdW1lbnRkZGluZ2ItbGlrdGVhY2hnaWYiIHZlZ2FzZGFuc2tlZXN0aXNocWlwc3VvbWlzb2JyZWRlc2RlZW50cmV0b2Rvc3B1ZWRlYcOxb3Nlc3TDoXRpZW5laGFzdGFvdHJvc3BhcnRlZG9uZGVudWV2b2hhY2VyZm9ybWFtaXNtb21lam9ybXVuZG9hcXXDrWTDrWFzc8OzbG9heXVkYWZlY2hhdG9kYXN0YW50b21lbm9zZGF0b3NvdHJhc3NpdGlvbXVjaG9haG9yYWx1Z2FybWF5b3Jlc3Rvc2hvcmFzdGVuZXJhbnRlc2ZvdG9zZXN0YXNwYcOtc251ZXZhc2FsdWRmb3Jvc21lZGlvcXVpZW5tZXNlc3BvZGVyY2hpbGVzZXLDoXZlY2VzZGVjaXJqb3PDqWVzdGFydmVudGFncnVwb2hlY2hvZWxsb3N0ZW5nb2FtaWdvY29zYXNuaXZlbGdlbnRlbWlzbWFhaXJlc2p1bGlvdGVtYXNoYWNpYWZhdm9yanVuaW9saWJyZXB1bnRvYnVlbm9hdXRvcmFicmlsYnVlbmF0ZXh0b21hcnpvc2FiZXJsaXN0YWx1ZWdvY8OzbW9lbmVyb2p1ZWdvcGVyw7poYWJlcmVzdG95bnVuY2FtdWplcnZhbG9yZnVlcmFsaWJyb2d1c3RhaWd1YWx2b3Rvc2Nhc29zZ3XDrWFwdWVkb3NvbW9zYXZpc291c3RlZGRlYmVubm9jaGVidXNjYWZhbHRhZXVyb3NzZXJpZWRpY2hvY3Vyc29jbGF2ZWNhc2FzbGXDs25wbGF6b2xhcmdvb2JyYXN2aXN0YWFwb3lvanVudG90cmF0YXZpc3RvY3JlYXJjYW1wb2hlbW9zY2luY29jYXJnb3Bpc29zb3JkZW5oYWNlbsOhcmVhZGlzY29wZWRyb2NlcmNhcHVlZGFwYXBlbG1lbm9yw7p0aWxjbGFyb2pvcmdlY2FsbGVwb25lcnRhcmRlbmFkaWVtYXJjYXNpZ3VlZWxsYXNzaWdsb2NvY2hlbW90b3NtYWRyZWNsYXNlcmVzdG9uacOxb3F1ZWRhcGFzYXJiYW5jb2hpam9zdmlhamVwYWJsb8Opc3RldmllbmVyZWlub2RlamFyZm9uZG9jYW5hbG5vcnRlbGV0cmFjYXVzYXRvbWFybWFub3NsdW5lc2F1dG9zdmlsbGF2ZW5kb3Blc2FydGlwb3N0ZW5nYW1hcmNvbGxldmFwYWRyZXVuaWRvdmFtb3N6b25hc2FtYm9zYmFuZGFtYXJpYWFidXNvbXVjaGFzdWJpcnJpb2phdml2aXJncmFkb2NoaWNhYWxsw61qb3ZlbmRpY2hhZXN0YW50YWxlc3NhbGlyc3VlbG9wZXNvc2ZpbmVzbGxhbWFidXNjb8Opc3RhbGxlZ2FuZWdyb3BsYXphaHVtb3JwYWdhcmp1bnRhZG9ibGVpc2xhc2JvbHNhYmHDsW9oYWJsYWx1Y2hhw4FyZWFkaWNlbmp1Z2Fybm90YXN2YWxsZWFsbMOhY2FyZ2Fkb2xvcmFiYWpvZXN0w6lndXN0b21lbnRlbWFyaW9maXJtYWNvc3RvZmljaGFwbGF0YWhvZ2FyYXJ0ZXNsZXllc2FxdWVsbXVzZW9iYXNlc3BvY29zbWl0YWRjaWVsb2NoaWNvbWllZG9nYW5hcnNhbnRvZXRhcGFkZWJlc3BsYXlhcmVkZXNzaWV0ZWNvcnRlY29yZWFkdWRhc2Rlc2Vvdmllam9kZXNlYWFndWFzJnF1b3Q7ZG9tYWluY29tbW9uc3RhdHVzZXZlbnRzbWFzdGVyc3lzdGVtYWN0aW9uYmFubmVycmVtb3Zlc2Nyb2xsdXBkYXRlZ2xvYmFsbWVkaXVtZmlsdGVybnVtYmVyY2hhbmdlcmVzdWx0cHVibGljc2NyZWVuY2hvb3Nlbm9ybWFsdHJhdmVsaXNzdWVzc291cmNldGFyZ2V0c3ByaW5nbW9kdWxlbW9iaWxlc3dpdGNocGhvdG9zYm9yZGVycmVnaW9uaXRzZWxmc29jaWFsYWN0aXZlY29sdW1ucmVjb3JkZm9sbG93dGl0bGU+ZWl0aGVybGVuZ3RoZmFtaWx5ZnJpZW5kbGF5b3V0YXV0aG9yY3JlYXRlcmV2aWV3c3VtbWVyc2VydmVycGxheWVkcGxheWVyZXhwYW5kcG9saWN5Zm9ybWF0ZG91YmxlcG9pbnRzc2VyaWVzcGVyc29ubGl2aW5nZGVzaWdubW9udGhzZm9yY2VzdW5pcXVld2VpZ2h0cGVvcGxlZW5lcmd5bmF0dXJlc2VhcmNoZmlndXJlaGF2aW5nY3VzdG9tb2Zmc2V0bGV0dGVyd2luZG93c3VibWl0cmVuZGVyZ3JvdXBzdXBsb2FkaGVhbHRobWV0aG9kdmlkZW9zc2Nob29sZnV0dXJlc2hhZG93ZGViYXRldmFsdWVzT2JqZWN0b3RoZXJzcmlnaHRzbGVhZ3VlY2hyb21lc2ltcGxlbm90aWNlc2hhcmVkZW5kaW5nc2Vhc29ucmVwb3J0b25saW5lc3F1YXJlYnV0dG9uaW1hZ2VzZW5hYmxlbW92aW5nbGF0ZXN0d2ludGVyRnJhbmNlcGVyaW9kc3Ryb25ncmVwZWF0TG9uZG9uZGV0YWlsZm9ybWVkZGVtYW5kc2VjdXJlcGFzc2VkdG9nZ2xlcGxhY2VzZGV2aWNlc3RhdGljY2l0aWVzc3RyZWFteWVsbG93YXR0YWNrc3RyZWV0ZmxpZ2h0aGlkZGVuaW5mbyI+b3BlbmVkdXNlZnVsdmFsbGV5Y2F1c2VzbGVhZGVyc2VjcmV0c2Vjb25kZGFtYWdlc3BvcnRzZXhjZXB0cmF0aW5nc2lnbmVkdGhpbmdzZWZmZWN0ZmllbGRzc3RhdGVzb2ZmaWNldmlzdWFsZWRpdG9ydm9sdW1lUmVwb3J0bXVzZXVtbW92aWVzcGFyZW50YWNjZXNzbW9zdGx5bW90aGVyIiBpZD0ibWFya2V0Z3JvdW5kY2hhbmNlc3VydmV5YmVmb3Jlc3ltYm9sbW9tZW50c3BlZWNobW90aW9uaW5zaWRlbWF0dGVyQ2VudGVyb2JqZWN0ZXhpc3RzbWlkZGxlRXVyb3BlZ3Jvd3RobGVnYWN5bWFubmVyZW5vdWdoY2FyZWVyYW5zd2Vyb3JpZ2lucG9ydGFsY2xpZW50c2VsZWN0cmFuZG9tY2xvc2VkdG9waWNzY29taW5nZmF0aGVyb3B0aW9uc2ltcGx5cmFpc2VkZXNjYXBlY2hvc2VuY2h1cmNoZGVmaW5lcmVhc29uY29ybmVyb3V0cHV0bWVtb3J5aWZyYW1lcG9saWNlbW9kZWxzTnVtYmVyZHVyaW5nb2ZmZXJzc3R5bGVza2lsbGVkbGlzdGVkY2FsbGVkc2lsdmVybWFyZ2luZGVsZXRlYmV0dGVyYnJvd3NlbGltaXRzR2xvYmFsc2luZ2xld2lkZ2V0Y2VudGVyYnVkZ2V0bm93cmFwY3JlZGl0Y2xhaW1zZW5naW5lc2FmZXR5Y2hvaWNlc3Bpcml0LXN0eWxlc3ByZWFkbWFraW5nbmVlZGVkcnVzc2lhcGxlYXNlZXh0ZW50U2NyaXB0YnJva2VuYWxsb3dzY2hhcmdlZGl2aWRlZmFjdG9ybWVtYmVyLWJhc2VkdGhlb3J5Y29uZmlnYXJvdW5kd29ya2VkaGVscGVkQ2h1cmNoaW1wYWN0c2hvdWxkYWx3YXlzbG9nbyIgYm90dG9tbGlzdCI+KXt2YXIgcHJlZml4b3JhbmdlSGVhZGVyLnB1c2goY291cGxlZ2FyZGVuYnJpZGdlbGF1bmNoUmV2aWV3dGFraW5ndmlzaW9ubGl0dGxlZGF0aW5nQnV0dG9uYmVhdXR5dGhlbWVzZm9yZ290U2VhcmNoYW5jaG9yYWxtb3N0bG9hZGVkQ2hhbmdlcmV0dXJuc3RyaW5ncmVsb2FkTW9iaWxlaW5jb21lc3VwcGx5U291cmNlb3JkZXJzdmlld2VkJm5ic3A7Y291cnNlQWJvdXQgaXNsYW5kPGh0bWwgY29va2llbmFtZT0iYW1hem9ubW9kZXJuYWR2aWNlaW48L2E+OiBUaGUgZGlhbG9naG91c2VzQkVHSU4gTWV4aWNvc3RhcnRzY2VudHJlaGVpZ2h0YWRkaW5nSXNsYW5kYXNzZXRzRW1waXJlU2Nob29sZWZmb3J0ZGlyZWN0bmVhcmx5bWFudWFsU2VsZWN0LgoKT25lam9pbmVkbWVudSI+UGhpbGlwYXdhcmRzaGFuZGxlaW1wb3J0T2ZmaWNlcmVnYXJkc2tpbGxzbmF0aW9uU3BvcnRzZGVncmVld2Vla2x5IChlLmcuYmVoaW5kZG9jdG9ybG9nZ2VkdW5pdGVkPC9iPjwvYmVnaW5zcGxhbnRzYXNzaXN0YXJ0aXN0aXNzdWVkMzAwcHh8Y2FuYWRhYWdlbmN5c2NoZW1lcmVtYWluQnJhemlsc2FtcGxlbG9nbyI+YmV5b25kLXNjYWxlYWNjZXB0c2VydmVkbWFyaW5lRm9vdGVyY2FtZXJhPC9oMT4KX2Zvcm0ibGVhdmVzc3RyZXNzIiAvPg0KLmdpZiIgb25sb2FkbG9hZGVyT3hmb3Jkc2lzdGVyc3Vydml2bGlzdGVuZmVtYWxlRGVzaWduc2l6ZT0iYXBwZWFsdGV4dCI+bGV2ZWxzdGhhbmtzaGlnaGVyZm9yY2VkYW5pbWFsYW55b25lQWZyaWNhYWdyZWVkcmVjZW50UGVvcGxlPGJyIC8+d29uZGVycHJpY2VzdHVybmVkfHwge307bWFpbiI+aW5saW5lc3VuZGF5d3JhcCI+ZmFpbGVkY2Vuc3VzbWludXRlYmVhY29ucXVvdGVzMTUwcHh8ZXN0YXRlcmVtb3RlZW1haWwibGlua2VkcmlnaHQ7c2lnbmFsZm9ybWFsMS5odG1sc2lnbnVwcHJpbmNlZmxvYXQ6LnBuZyIgZm9ydW0uQWNjZXNzcGFwZXJzc291bmRzZXh0ZW5kSGVpZ2h0c2xpZGVyVVRGLTgiJmFtcDsgQmVmb3JlLiBXaXRoc3R1ZGlvb3duZXJzbWFuYWdlcHJvZml0alF1ZXJ5YW5udWFscGFyYW1zYm91Z2h0ZmFtb3VzZ29vZ2xlbG9uZ2VyaSsrKSB7aXNyYWVsc2F5aW5nZGVjaWRlaG9tZSI+aGVhZGVyZW5zdXJlYnJhbmNocGllY2VzYmxvY2s7c3RhdGVkdG9wIj48cmFjaW5ncmVzaXplLS0mZ3Q7cGFjaXR5c2V4dWFsYnVyZWF1LmpwZyIgMTAsMDAwb2J0YWludGl0bGVzYW1vdW50LCBJbmMuY29tZWR5bWVudSIgbHlyaWNzdG9kYXkuaW5kZWVkY291bnR5X2xvZ28uRmFtaWx5bG9va2VkTWFya2V0bHNlIGlmUGxheWVydHVya2V5KTt2YXIgZm9yZXN0Z2l2aW5nZXJyb3JzRG9tYWlufWVsc2V7aW5zZXJ0QmxvZzwvZm9vdGVybG9naW4uZmFzdGVyYWdlbnRzPGJvZHkgMTBweCAwcHJhZ21hZnJpZGF5anVuaW9yZG9sbGFycGxhY2VkY292ZXJzcGx1Z2luNSwwMDAgcGFnZSI+Ym9zdG9uLnRlc3QoYXZhdGFydGVzdGVkX2NvdW50Zm9ydW1zc2NoZW1haW5kZXgsZmlsbGVkc2hhcmVzcmVhZGVyYWxlcnQoYXBwZWFyU3VibWl0bGluZSI+Ym9keSI+CiogVGhlVGhvdWdoc2VlaW5namVyc2V5TmV3czwvdmVyaWZ5ZXhwZXJ0aW5qdXJ5d2lkdGg9Q29va2llU1RBUlQgYWNyb3NzX2ltYWdldGhyZWFkbmF0aXZlcG9ja2V0Ym94Ij4KU3lzdGVtIERhdmlkY2FuY2VydGFibGVzcHJvdmVkQXByaWwgcmVhbGx5ZHJpdmVyaXRlbSI+bW9yZSI+Ym9hcmRzY29sb3JzY2FtcHVzZmlyc3QgfHwgW107bWVkaWEuZ3VpdGFyZmluaXNod2lkdGg6c2hvd2VkT3RoZXIgLnBocCIgYXNzdW1lbGF5ZXJzd2lsc29uc3RvcmVzcmVsaWVmc3dlZGVuQ3VzdG9tZWFzaWx5IHlvdXIgU3RyaW5nCgpXaGlsdGF5bG9yY2xlYXI6cmVzb3J0ZnJlbmNodGhvdWdoIikgKyAiPGJvZHk+YnV5aW5nYnJhbmRzTWVtYmVybmFtZSI+b3BwaW5nc2VjdG9yNXB4OyI+dnNwYWNlcG9zdGVybWFqb3IgY29mZmVlbWFydGlubWF0dXJlaGFwcGVuPC9uYXY+a2Fuc2FzbGluayI+SW1hZ2VzPWZhbHNld2hpbGUgaHNwYWNlMCZhbXA7IAoKSW4gIHBvd2VyUG9sc2tpLWNvbG9yam9yZGFuQm90dG9tU3RhcnQgLWNvdW50Mi5odG1sbmV3cyI+MDEuanBnT25saW5lLXJpZ2h0bWlsbGVyc2VuaW9ySVNCTiAwMCwwMDAgZ3VpZGVzdmFsdWUpZWN0aW9ucmVwYWlyLnhtbCIgIHJpZ2h0cy5odG1sLWJsb2NrcmVnRXhwOmhvdmVyd2l0aGludmlyZ2lucGhvbmVzPC90cj4NdXNpbmcgCgl2YXIgPicpOwoJPC90ZD4KPC90cj4KYmFoYXNhYnJhc2lsZ2FsZWdvbWFneWFycG9sc2tpc3Jwc2tp2LHYr9mI5Lit5paH566A5L2T57mB6auU5L+h5oGv5Lit5Zu95oiR5Lus5LiA5Liq5YWs5Y+4566h55CG6K665Z2b5Y+v5Lul5pyN5Yqh5pe26Ze05Liq5Lq65Lqn5ZOB6Ieq5bex5LyB5Lia5p+l55yL5bel5L2c6IGU57O75rKh5pyJ572R56uZ5omA5pyJ6K+E6K665Lit5b+D5paH56ug55So5oi36aaW6aG15L2c6ICF5oqA5pyv6Zeu6aKY55u45YWz5LiL6L295pCc57Si5L2/55So6L2v5Lu25Zyo57q/5Li76aKY6LWE5paZ6KeG6aKR5Zue5aSN5rOo5YaM572R57uc5pS26JeP5YaF5a655o6o6I2Q5biC5Zy65raI5oGv56m66Ze05Y+R5biD5LuA5LmI5aW95Y+L55Sf5rS75Zu+54mH5Y+R5bGV5aaC5p6c5omL5py65paw6Ze75pyA5paw5pa55byP5YyX5Lqs5o+Q5L6b5YWz5LqO5pu05aSa6L+Z5Liq57O757uf55+l6YGT5ri45oiP5bm/5ZGK5YW25LuW5Y+R6KGo5a6J5YWo56ys5LiA5Lya5ZGY6L+b6KGM54K55Ye754mI5p2D55S15a2Q5LiW55WM6K6+6K6h5YWN6LS55pWZ6IKy5Yqg5YWl5rS75Yqo5LuW5Lus5ZWG5ZOB5Y2a5a6i546w5Zyo5LiK5rW35aaC5L2V5bey57uP55WZ6KiA6K+m57uG56S+5Yy655m75b2V5pys56uZ6ZyA6KaB5Lu35qC85pSv5oyB5Zu96ZmF6ZO+5o6l5Zu95a625bu66K6+5pyL5Y+L6ZiF6K+75rOV5b6L5L2N572u57uP5rWO6YCJ5oup6L+Z5qC35b2T5YmN5YiG57G75o6S6KGM5Zug5Li65Lqk5piT5pyA5ZCO6Z+z5LmQ5LiN6IO96YCa6L+H6KGM5Lia56eR5oqA5Y+v6IO96K6+5aSH5ZCI5L2c5aSn5a6256S+5Lya56CU56m25LiT5Lia5YWo6YOo6aG555uu6L+Z6YeM6L+Y5piv5byA5aeL5oOF5Ya155S16ISR5paH5Lu25ZOB54mM5biu5Yqp5paH5YyW6LWE5rqQ5aSn5a2m5a2m5Lmg5Zyw5Z2A5rWP6KeI5oqV6LWE5bel56iL6KaB5rGC5oCO5LmI5pe25YCZ5Yqf6IO95Li76KaB55uu5YmN6LWE6K6v5Z+O5biC5pa55rOV55S15b2x5oub6IGY5aOw5piO5Lu75L2V5YGl5bq35pWw5o2u576O5Zu95rG96L2m5LuL57uN5L2G5piv5Lqk5rWB55Sf5Lqn5omA5Lul55S16K+d5pi+56S65LiA5Lqb5Y2V5L2N5Lq65ZGY5YiG5p6Q5Zyw5Zu+5peF5ri45bel5YW35a2m55Sf57O75YiX572R5Y+L5biW5a2Q5a+G56CB6aKR6YGT5o6n5Yi25Zyw5Yy65Z+65pys5YWo5Zu9572R5LiK6YeN6KaB56ys5LqM5Zac5qyi6L+b5YWl5Y+L5oOF6L+Z5Lqb6ICD6K+V5Y+R546w5Z+56K6t5Lul5LiK5pS/5bqc5oiQ5Li6546v5aKD6aaZ5riv5ZCM5pe25aix5LmQ5Y+R6YCB5LiA5a6a5byA5Y+R5L2c5ZOB5qCH5YeG5qyi6L+O6Kej5Yaz5Zyw5pa55LiA5LiL5Lul5Y+K6LSj5Lu75oiW6ICF5a6i5oi35Luj6KGo56ev5YiG5aWz5Lq65pWw56CB6ZSA5ZSu5Ye6546w56a757q/5bqU55So5YiX6KGo5LiN5ZCM57yW6L6R57uf6K6h5p+l6K+i5LiN6KaB5pyJ5YWz5py65p6E5b6I5aSa5pKt5pS+57uE57uH5pS/562W55u05o6l6IO95Yqb5p2l5rqQ5pmC6ZaT55yL5Yiw54Ot6Zeo5YWz6ZSu5LiT5Yy66Z2e5bi46Iux6K+t55m+5bqm5biM5pyb576O5aWz5q+U6L6D55+l6K+G6KeE5a6a5bu66K6u6YOo6Zeo5oSP6KeB57K+5b2p5pel5pys5o+Q6auY5Y+R6KiA5pa56Z2i5Z+66YeR5aSE55CG5p2D6ZmQ5b2x54mH6ZO26KGM6L+Y5pyJ5YiG5Lqr54mp5ZOB57uP6JCl5re75Yqg5LiT5a626L+Z56eN6K+d6aKY6LW35p2l5Lia5Yqh5YWs5ZGK6K6w5b2V566A5LuL6LSo6YeP55S35Lq65b2x5ZON5byV55So5oql5ZGK6YOo5YiG5b+r6YCf5ZKo6K+i5pe25bCa5rOo5oSP55Sz6K+35a2m5qCh5bqU6K+l5Y6G5Y+y5Y+q5piv6L+U5Zue6LSt5Lmw5ZCN56ew5Li65LqG5oiQ5Yqf6K+05piO5L6b5bqU5a2p5a2Q5LiT6aKY56iL5bqP5LiA6Iis5pyD5ZOh5Y+q5pyJ5YW25a6D5L+d5oqk6ICM5LiU5LuK5aSp56qX5Y+j5Yqo5oCB54q25oCB54m55Yir6K6k5Li65b+F6aG75pu05paw5bCP6K+05oiR5YCR5L2c5Li65aqS5L2T5YyF5ous6YKj5LmI5LiA5qC35Zu95YaF5piv5ZCm5qC55o2u55S16KeG5a2m6Zmi5YW35pyJ6L+H56iL55Sx5LqO5Lq65omN5Ye65p2l5LiN6L+H5q2j5Zyo5piO5pif5pWF5LqL5YWz57O75qCH6aKY5ZWG5Yqh6L6T5YWl5LiA55u05Z+656GA5pWZ5a2m5LqG6Kej5bu6562R57uT5p6c5YWo55CD6YCa55+l6K6h5YiS5a+55LqO6Im65pyv55u45YaM5Y+R55Sf55yf55qE5bu656uL562J57qn57G75Z6L57uP6aqM5a6e546w5Yi25L2c5p2l6Ieq5qCH562+5Lul5LiL5Y6f5Yib5peg5rOV5YW25Lit5YCL5Lq65LiA5YiH5oyH5Y2X5YWz6Zet6ZuG5Zui56ys5LiJ5YWz5rOo5Zug5q2k54Wn54mH5rex5Zyz5ZWG5Lia5bm/5bee5pel5pyf6auY57qn5pyA6L+R57u85ZCI6KGo56S65LiT6L6R6KGM5Li65Lqk6YCa6K+E5Lu36KeJ5b6X57K+5Y2O5a625bqt5a6M5oiQ5oSf6KeJ5a6J6KOF5b6X5Yiw6YKu5Lu25Yi25bqm6aOf5ZOB6Jm954S26L2s6L295oql5Lu36K6w6ICF5pa55qGI6KGM5pS/5Lq65rCR55So5ZOB5Lic6KW/5o+Q5Ye66YWS5bqX54S25ZCO5LuY5qy+54Ot54K55Lul5YmN5a6M5YWo5Y+R5biW6K6+572u6aKG5a+85bel5Lia5Yy76Zmi55yL55yL57uP5YW45Y6f5Zug5bmz5Y+w5ZCE56eN5aKe5Yqg5p2Q5paZ5paw5aKe5LmL5ZCO6IGM5Lia5pWI5p6c5LuK5bm06K665paH5oiR5Zu95ZGK6K+J54mI5Li75L+u5pS55Y+C5LiO5omT5Y2w5b+r5LmQ5py65qKw6KeC54K55a2Y5Zyo57K+56We6I635b6X5Yip55So57un57ut5L2g5Lus6L+Z5LmI5qih5byP6K+t6KiA6IO95aSf6ZuF6JmO5pON5L2c6aOO5qC85LiA6LW356eR5a2m5L2T6IKy55+t5L+h5p2h5Lu25rK755aX6L+Q5Yqo5Lqn5Lia5Lya6K6u5a+86Iiq5YWI55Sf6IGU55uf5Y+v5piv5ZWP6aGM57uT5p6E5L2c55So6LCD5p+l6LOH5paZ6Ieq5Yqo6LSf6LSj5Yac5Lia6K6/6Zeu5a6e5pa95o6l5Y+X6K6o6K666YKj5Liq5Y+N6aaI5Yqg5by65aWz5oCn6IyD5Zu05pyN5YuZ5LyR6Zey5LuK5pel5a6i5pyN6KeA55yL5Y+C5Yqg55qE6K+d5LiA54K55L+d6K+B5Zu+5Lmm5pyJ5pWI5rWL6K+V56e75Yqo5omN6IO95Yaz5a6a6IKh56Wo5LiN5pat6ZyA5rGC5LiN5b6X5Yqe5rOV5LmL6Ze06YeH55So6JCl6ZSA5oqV6K+J55uu5qCH54ix5oOF5pGE5b2x5pyJ5Lqb6KSH6KO95paH5a2m5py65Lya5pWw5a2X6KOF5L+u6LSt54mp5Yac5p2R5YWo6Z2i57K+5ZOB5YW25a6e5LqL5oOF5rC05bmz5o+Q56S65LiK5biC6LCi6LCi5pmu6YCa5pWZ5biI5LiK5Lyg57G75Yir5q2M5puy5oul5pyJ5Yib5paw6YWN5Lu25Y+q6KaB5pe25Luj6LOH6KiK6L6+5Yiw5Lq655Sf6K6i6ZiF6ICB5biI5bGV56S65b+D55CG6LS05a2Q57ay56uZ5Li76aGM6Ieq54S257qn5Yir566A5Y2V5pS56Z2p6YKj5Lqb5p2l6K+05omT5byA5Luj56CB5Yig6Zmk6K+B5Yi46IqC55uu6YeN54K55qyh5pW45aSa5bCR6KeE5YiS6LWE6YeR5om+5Yiw5Lul5ZCO5aSn5YWo5Li76aG15pyA5L2z5Zue562U5aSp5LiL5L+d6Zqc546w5Luj5qOA5p+l5oqV56Wo5bCP5pe25rKS5pyJ5q2j5bi455Sa6Iez5Luj55CG55uu5b2V5YWs5byA5aSN5Yi26YeR6J6N5bm456aP54mI5pys5b2i5oiQ5YeG5aSH6KGM5oOF5Zue5Yiw5oCd5oOz5oCO5qC35Y2P6K6u6K6k6K+B5pyA5aW95Lqn55Sf5oyJ54Wn5pyN6KOF5bm/5Lic5Yqo5ryr6YeH6LSt5paw5omL57uE5Zu+6Z2i5p2/5Y+C6ICD5pS/5rK75a655piT5aSp5Zyw5Yqq5Yqb5Lq65Lus5Y2H57qn6YCf5bqm5Lq654mp6LCD5pW05rWB6KGM6YCg5oiQ5paH5a2X6Z+p5Zu96LS45piT5byA5bGV55u46Zec6KGo546w5b2x6KeG5aaC5q2k576O5a655aSn5bCP5oql6YGT5p2h5qy+5b+D5oOF6K645aSa5rOV6KeE5a625bGF5Lmm5bqX6L+e5o6l56uL5Y2z5Li+5oql5oqA5ben5aWl6L+Q55m75YWl5Lul5p2l55CG6K665LqL5Lu26Ieq55Sx5Lit5Y2O5Yqe5YWs5aaI5aaI55yf5q2j5LiN6ZSZ5YWo5paH5ZCI5ZCM5Lu35YC85Yir5Lq655uR552j5YW35L2T5LiW57qq5Zui6Zif5Yib5Lia5om/5ouF5aKe6ZW/5pyJ5Lq65L+d5oyB5ZWG5a6257u05L+u5Y+w5rm+5bem5Y+z6IKh5Lu9562U5qGI5a6e6ZmF55S15L+h57uP55CG55Sf5ZG95a6j5Lyg5Lu75Yqh5q2j5byP54m56Imy5LiL5p2l5Y2P5Lya5Y+q6IO95b2T54S26YeN5paw5YWn5a655oyH5a+86L+Q6KGM5pel5b+X6LOj5a626LaF6L+H5Zyf5Zyw5rWZ5rGf5pSv5LuY5o6o5Ye656uZ6ZW/5p2t5bee5omn6KGM5Yi26YCg5LmL5LiA5o6o5bm/546w5Zy65o+P6L+w5Y+Y5YyW5Lyg57uf5q2M5omL5L+d6Zmp6K++56iL5Yy755aX57uP6L+H6L+H5Y675LmL5YmN5pS25YWl5bm05bqm5p2C5b+X576O5Li95pyA6auY55m76ZmG5pyq5p2l5Yqg5bel5YWN6LSj5pWZ56iL54mI5Z2X6Lqr5L2T6YeN5bqG5Ye65ZSu5oiQ5pys5b2i5byP5Zyf6LGG5Ye65YO55Lic5pa56YKu566x5Y2X5Lqs5rGC6IGM5Y+W5b6X6IGM5L2N55u45L+h6aG16Z2i5YiG6ZKf572R6aG156Gu5a6a5Zu+5L6L572R5Z2A56ev5p6B6ZSZ6K+v55uu55qE5a6d6LSd5py65YWz6aOO6Zmp5o6I5p2D55eF5q+S5a6g54mp6Zmk5LqG6KmV6KuW55a+55eF5Y+K5pe25rGC6LSt56uZ54K55YS/56ul5q+P5aSp5Lit5aSu6K6k6K+G5q+P5Liq5aSp5rSl5a2X5L2T5Y+w54Gj57u05oqk5pys6aG15Liq5oCn5a6Y5pa55bi46KeB55u45py65oiY55Wl5bqU5b2T5b6L5biI5pa55L6/5qCh5Zut6IKh5biC5oi/5bGL5qCP55uu5ZGY5bel5a+86Ie056qB54S26YGT5YW35pys572R57uT5ZCI5qGj5qGI5Yqz5Yqo5Y+m5aSW576O5YWD5byV6LW35pS55Y+Y56ys5Zub5Lya6K6h6Kqq5piO6ZqQ56eB5a6d5a6d6KeE6IyD5raI6LS55YWx5ZCM5b+Y6K6w5L2T57O75bim5p2l5ZCN5a2X55m86KGo5byA5pS+5Yqg55uf5Y+X5Yiw5LqM5omL5aSn6YeP5oiQ5Lq65pWw6YeP5YWx5Lqr5Yy65Z+f5aWz5a2p5Y6f5YiZ5omA5Zyo57uT5p2f6YCa5L+h6LaF57qn6YWN572u5b2T5pe25LyY56eA5oCn5oSf5oi/5Lqn6YGK5oiy5Ye65Y+j5o+Q5Lqk5bCx5Lia5L+d5YGl56iL5bqm5Y+C5pWw5LqL5Lia5pW05Liq5bGx5Lic5oOF5oSf54m55q6K5YiG6aGe5pCc5bCL5bGe5LqO6Zeo5oi36LSi5Yqh5aOw6Z+z5Y+K5YW26LSi57uP5Z2a5oyB5bmy6YOo5oiQ56uL5Yip55uK6ICD6JmR5oiQ6YO95YyF6KOF55So5oi25q+U6LWb5paH5piO5oub5ZWG5a6M5pW055yf5piv55y8552b5LyZ5Ly05aiB5pyb6aKG5Z+f5Y2r55Sf5LyY5oOg6KuW5aOH5YWs5YWx6Imv5aW95YWF5YiG56ym5ZCI6ZmE5Lu254m554K55LiN5Y+v6Iux5paH6LWE5Lqn5qC55pys5piO5pi+5a+G56K85YWs5LyX5rCR5peP5pu05Yqg5Lqr5Y+X5ZCM5a2m5ZCv5Yqo6YCC5ZCI5Y6f5p2l6Zeu562U5pys5paH576O6aOf57u/6Imy56iz5a6a57uI5LqO55Sf54mp5L6b5rGC5pCc54uQ5Yqb6YeP5Lil6YeN5rC46L+c5YaZ55yf5pyJ6ZmQ56ue5LqJ5a+56LGh6LS555So5LiN5aW957ud5a+55Y2B5YiG5L+D6L+b54K56K+E5b2x6Z+z5LyY5Yq/5LiN5bCR5qyj6LWP5bm25LiU5pyJ54K55pa55ZCR5YWo5paw5L+h55So6K6+5pa95b2i6LGh6LWE5qC856qB56C06ZqP552A6YeN5aSn5LqO5piv5q+V5Lia5pm66IO95YyW5bel5a6M576O5ZWG5Z+O57uf5LiA5Ye654mI5omT6YCg55Si5ZOB5qaC5Ya155So5LqO5L+d55WZ5Zug57Sg5Lit5ZyL5a2Y5YKo6LS05Zu+5pyA5oSb6ZW/5pyf5Y+j5Lu355CG6LSi5Z+65Zyw5a6J5o6S5q2m5rGJ6YeM6Z2i5Yib5bu65aSp56m66aaW5YWI5a6M5ZaE6amx5Yqo5LiL6Z2i5LiN5YaN6K+a5L+h5oSP5LmJ6Ziz5YWJ6Iux5Zu95ryC5Lqu5Yab5LqL546p5a62576k5LyX5Yac5rCR5Y2z5Y+v5ZCN56ix5a625YW35Yqo55S75oOz5Yiw5rOo5piO5bCP5a2m5oCn6IO96ICD56CU56Gs5Lu26KeC55yL5riF5qWa5pCe56yR6aaW6aCB6buE6YeR6YCC55So5rGf6IuP55yf5a6e5Li7566h6Zi25q616Ki75YaK57+76K+R5p2D5Yip5YGa5aW95Ly85LmO6YCa6K6v5pa95bel54uA5oWL5Lmf6K64546v5L+d5Z+55YW75qaC5b+15aSn5Z6L5py656Wo55CG6Kej5Yy/5ZCNY3VhbmRvZW52aWFybWFkcmlkYnVzY2FyaW5pY2lvdGllbXBvcG9ycXVlY3VlbnRhZXN0YWRvcHVlZGVuanVlZ29zY29udHJhZXN0w6Fubm9tYnJldGllbmVucGVyZmlsbWFuZXJhYW1pZ29zY2l1ZGFkY2VudHJvYXVucXVlcHVlZGVzZGVudHJvcHJpbWVycHJlY2lvc2Vnw7puYnVlbm9zdm9sdmVycHVudG9zc2VtYW5haGFiw61hYWdvc3RvbnVldm9zdW5pZG9zY2FybG9zZXF1aXBvbmnDsW9zbXVjaG9zYWxndW5hY29ycmVvaW1hZ2VucGFydGlyYXJyaWJhbWFyw61haG9tYnJlZW1wbGVvdmVyZGFkY2FtYmlvbXVjaGFzZnVlcm9ucGFzYWRvbMOtbmVhcGFyZWNlbnVldmFzY3Vyc29zZXN0YWJhcXVpZXJvbGlicm9zY3VhbnRvYWNjZXNvbWlndWVsdmFyaW9zY3VhdHJvdGllbmVzZ3J1cG9zc2Vyw6FuZXVyb3BhbWVkaW9zZnJlbnRlYWNlcmNhZGVtw6Fzb2ZlcnRhY29jaGVzbW9kZWxvaXRhbGlhbGV0cmFzYWxnw7puY29tcHJhY3VhbGVzZXhpc3RlY3VlcnBvc2llbmRvcHJlbnNhbGxlZ2FydmlhamVzZGluZXJvbXVyY2lhcG9kcsOhcHVlc3RvZGlhcmlvcHVlYmxvcXVpZXJlbWFudWVscHJvcGlvY3Jpc2lzY2llcnRvc2VndXJvbXVlcnRlZnVlbnRlY2VycmFyZ3JhbmRlZWZlY3RvcGFydGVzbWVkaWRhcHJvcGlhb2ZyZWNldGllcnJhZS1tYWlsdmFyaWFzZm9ybWFzZnV0dXJvb2JqZXRvc2VndWlycmllc2dvbm9ybWFzbWlzbW9zw7puaWNvY2FtaW5vc2l0aW9zcmF6w7NuZGViaWRvcHJ1ZWJhdG9sZWRvdGVuw61hamVzw7pzZXNwZXJvY29jaW5hb3JpZ2VudGllbmRhY2llbnRvY8OhZGl6aGFibGFyc2Vyw61hbGF0aW5hZnVlcnphZXN0aWxvZ3VlcnJhZW50cmFyw6l4aXRvbMOzcGV6YWdlbmRhdsOtZGVvZXZpdGFycGFnaW5hbWV0cm9zamF2aWVycGFkcmVzZsOhY2lsY2FiZXphw6FyZWFzc2FsaWRhZW52w61vamFww7NuYWJ1c29zYmllbmVzdGV4dG9zbGxldmFycHVlZGFuZnVlcnRlY29tw7puY2xhc2VzaHVtYW5vdGVuaWRvYmlsYmFvdW5pZGFkZXN0w6FzZWRpdGFyY3JlYWRv0LTQu9GP0YfRgtC+0LrQsNC60LjQu9C40Y3RgtC+0LLRgdC10LXQs9C+0L/RgNC40YLQsNC60LXRidC10YPQttC10JrQsNC60LHQtdC30LHRi9C70L7QvdC40JLRgdC10L/QvtC00K3RgtC+0YLQvtC80YfQtdC80L3QtdGC0LvQtdGC0YDQsNC30L7QvdCw0LPQtNC10LzQvdC10JTQu9GP0J/RgNC40L3QsNGB0L3QuNGF0YLQtdC80LrRgtC+0LPQvtC00LLQvtGC0YLQsNC80KHQqNCQ0LzQsNGP0KfRgtC+0LLQsNGB0LLQsNC80LXQvNGD0KLQsNC60LTQstCw0L3QsNC80Y3RgtC40Y3RgtGD0JLQsNC80YLQtdGF0L/RgNC+0YLRg9GC0L3QsNC00LTQvdGP0JLQvtGC0YLRgNC40L3QtdC50JLQsNGB0L3QuNC80YHQsNC80YLQvtGC0YDRg9Cx0J7QvdC40LzQuNGA0L3QtdC10J7QntCe0LvQuNGG0Y3RgtCw0J7QvdCw0L3QtdC80LTQvtC80LzQvtC50LTQstC10L7QvdC+0YHRg9C04KSV4KWH4KS54KWI4KSV4KWA4KS44KWH4KSV4KS+4KSV4KWL4KSU4KSw4KSq4KSw4KSo4KWH4KSP4KSV4KSV4KS/4KSt4KWA4KSH4KS44KSV4KSw4KSk4KWL4KS54KWL4KSG4KSq4KS54KWA4KSv4KS54KSv4KS+4KSk4KSV4KSl4KS+amFncmFu4KSG4KSc4KSc4KWL4KSF4KSs4KSm4KWL4KSX4KSI4KSc4KS+4KSX4KSP4KS54KSu4KSH4KSo4KS14KS54KSv4KWH4KSl4KWH4KSl4KWA4KSY4KSw4KSc4KSs4KSm4KWA4KSV4KSI4KSc4KWA4KS14KWH4KSo4KSI4KSo4KSP4KS54KSw4KSJ4KS44KSu4KWH4KSV4KSu4KS14KWL4KSy4KWH4KS44KSs4KSu4KSI4KSm4KWH4KST4KSw4KSG4KSu4KSs4KS44KSt4KSw4KSs4KSo4KSa4KSy4KSu4KSo4KSG4KSX4KS44KWA4KSy4KWA2LnZhNmJ2KXZhNmJ2YfYsNin2KLYrtix2LnYr9iv2KfZhNmJ2YfYsNmH2LXZiNix2LrZitix2YPYp9mG2YjZhNin2KjZitmG2LnYsdi22LDZhNmD2YfZhtin2YrZiNmF2YLYp9mE2LnZhNmK2KfZhtin2YTZg9mG2K3YqtmJ2YLYqNmE2YjYrdip2KfYrtix2YHZgti32LnYqNiv2LHZg9mG2KXYsNin2YPZhdin2KfYrdiv2KXZhNin2YHZitmH2KjYudi22YPZitmB2KjYrdir2YjZhdmG2YjZh9mI2KPZhtin2KzYr9in2YTZh9in2LPZhNmF2LnZhtiv2YTZitiz2LnYqNix2LXZhNmJ2YXZhtiw2KjZh9in2KPZhtmH2YXYq9mE2YPZhtiq2KfZhNin2K3Zitir2YXYtdix2LTYsdit2K3ZiNmE2YjZgdmK2KfYsNin2YTZg9mE2YXYsdip2KfZhtiq2KfZhNmB2KPYqNmI2K7Yp9i12KPZhtiq2KfZhtmH2KfZhNmK2LnYttmI2YjZgtiv2KfYqNmG2K7Zitix2KjZhtiq2YTZg9mF2LTYp9ih2YjZh9mK2KfYqNmI2YLYtdi12YjZhdin2LHZgtmF2KPYrdiv2YbYrdmG2LnYr9mF2LHYo9mK2KfYrdip2YPYqtio2K/ZiNmG2YrYrNio2YXZhtmH2KrYrdiq2KzZh9ip2LPZhtip2YrYqtmF2YPYsdip2LrYstip2YbZgdiz2KjZitiq2YTZhNmH2YTZhtin2KrZhNmD2YLZhNio2YTZhdin2LnZhtmH2KPZiNmE2LTZitih2YbZiNix2KPZhdin2YHZitmD2KjZg9mE2LDYp9iq2LHYqtio2KjYo9mG2YfZhdiz2KfZhtmD2KjZiti52YHZgtiv2K3Ys9mG2YTZh9mF2LTYudix2KPZh9mE2LTZh9ix2YLYt9ix2LfZhNiocHJvZmlsZXNlcnZpY2VkZWZhdWx0aGltc2VsZmRldGFpbHNjb250ZW50c3VwcG9ydHN0YXJ0ZWRtZXNzYWdlc3VjY2Vzc2Zhc2hpb248dGl0bGU+Y291bnRyeWFjY291bnRjcmVhdGVkc3Rvcmllc3Jlc3VsdHNydW5uaW5ncHJvY2Vzc3dyaXRpbmdvYmplY3RzdmlzaWJsZXdlbGNvbWVhcnRpY2xldW5rbm93bm5ldHdvcmtjb21wYW55ZHluYW1pY2Jyb3dzZXJwcml2YWN5cHJvYmxlbVNlcnZpY2VyZXNwZWN0ZGlzcGxheXJlcXVlc3RyZXNlcnZld2Vic2l0ZWhpc3RvcnlmcmllbmRzb3B0aW9uc3dvcmtpbmd2ZXJzaW9ubWlsbGlvbmNoYW5uZWx3aW5kb3cuYWRkcmVzc3Zpc2l0ZWR3ZWF0aGVyY29ycmVjdHByb2R1Y3RlZGlyZWN0Zm9yd2FyZHlvdSBjYW5yZW1vdmVkc3ViamVjdGNvbnRyb2xhcmNoaXZlY3VycmVudHJlYWRpbmdsaWJyYXJ5bGltaXRlZG1hbmFnZXJmdXJ0aGVyc3VtbWFyeW1hY2hpbmVtaW51dGVzcHJpdmF0ZWNvbnRleHRwcm9ncmFtc29jaWV0eW51bWJlcnN3cml0dGVuZW5hYmxlZHRyaWdnZXJzb3VyY2VzbG9hZGluZ2VsZW1lbnRwYXJ0bmVyZmluYWxseXBlcmZlY3RtZWFuaW5nc3lzdGVtc2tlZXBpbmdjdWx0dXJlJnF1b3Q7LGpvdXJuYWxwcm9qZWN0c3VyZmFjZXMmcXVvdDtleHBpcmVzcmV2aWV3c2JhbGFuY2VFbmdsaXNoQ29udGVudHRocm91Z2hQbGVhc2Ugb3BpbmlvbmNvbnRhY3RhdmVyYWdlcHJpbWFyeXZpbGxhZ2VTcGFuaXNoZ2FsbGVyeWRlY2xpbmVtZWV0aW5nbWlzc2lvbnBvcHVsYXJxdWFsaXR5bWVhc3VyZWdlbmVyYWxzcGVjaWVzc2Vzc2lvbnNlY3Rpb253cml0ZXJzY291bnRlcmluaXRpYWxyZXBvcnRzZmlndXJlc21lbWJlcnNob2xkaW5nZGlzcHV0ZWVhcmxpZXJleHByZXNzZGlnaXRhbHBpY3R1cmVBbm90aGVybWFycmllZHRyYWZmaWNsZWFkaW5nY2hhbmdlZGNlbnRyYWx2aWN0b3J5aW1hZ2VzL3JlYXNvbnNzdHVkaWVzZmVhdHVyZWxpc3RpbmdtdXN0IGJlc2Nob29sc1ZlcnNpb251c3VhbGx5ZXBpc29kZXBsYXlpbmdncm93aW5nb2J2aW91c292ZXJsYXlwcmVzZW50YWN0aW9uczwvdWw+DQp3cmFwcGVyYWxyZWFkeWNlcnRhaW5yZWFsaXR5c3RvcmFnZWFub3RoZXJkZXNrdG9wb2ZmZXJlZHBhdHRlcm51bnVzdWFsRGlnaXRhbGNhcGl0YWxXZWJzaXRlZmFpbHVyZWNvbm5lY3RyZWR1Y2VkQW5kcm9pZGRlY2FkZXNyZWd1bGFyICZhbXA7IGFuaW1hbHNyZWxlYXNlQXV0b21hdGdldHRpbmdtZXRob2Rzbm90aGluZ1BvcHVsYXJjYXB0aW9ubGV0dGVyc2NhcHR1cmVzY2llbmNlbGljZW5zZWNoYW5nZXNFbmdsYW5kPTEmYW1wO0hpc3RvcnkgPSBuZXcgQ2VudHJhbHVwZGF0ZWRTcGVjaWFsTmV0d29ya3JlcXVpcmVjb21tZW50d2FybmluZ0NvbGxlZ2V0b29sYmFycmVtYWluc2JlY2F1c2VlbGVjdGVkRGV1dHNjaGZpbmFuY2V3b3JrZXJzcXVpY2tseWJldHdlZW5leGFjdGx5c2V0dGluZ2Rpc2Vhc2VTb2NpZXR5d2VhcG9uc2V4aGliaXQmbHQ7IS0tQ29udHJvbGNsYXNzZXNjb3ZlcmVkb3V0bGluZWF0dGFja3NkZXZpY2VzKHdpbmRvd3B1cnBvc2V0aXRsZT0iTW9iaWxlIGtpbGxpbmdzaG93aW5nSXRhbGlhbmRyb3BwZWRoZWF2aWx5ZWZmZWN0cy0xJ10pOwpjb25maXJtQ3VycmVudGFkdmFuY2VzaGFyaW5nb3BlbmluZ2RyYXdpbmdiaWxsaW9ub3JkZXJlZEdlcm1hbnlyZWxhdGVkPC9mb3JtPmluY2x1ZGV3aGV0aGVyZGVmaW5lZFNjaWVuY2VjYXRhbG9nQXJ0aWNsZWJ1dHRvbnNsYXJnZXN0dW5pZm9ybWpvdXJuZXlzaWRlYmFyQ2hpY2Fnb2hvbGlkYXlHZW5lcmFscGFzc2FnZSwmcXVvdDthbmltYXRlZmVlbGluZ2Fycml2ZWRwYXNzaW5nbmF0dXJhbHJvdWdobHkuCgpUaGUgYnV0IG5vdGRlbnNpdHlCcml0YWluQ2hpbmVzZWxhY2sgb2Z0cmlidXRlSXJlbGFuZCIgZGF0YS1mYWN0b3JzcmVjZWl2ZXRoYXQgaXNMaWJyYXJ5aHVzYmFuZGluIGZhY3RhZmZhaXJzQ2hhcmxlc3JhZGljYWxicm91Z2h0ZmluZGluZ2xhbmRpbmc6bGFuZz0icmV0dXJuIGxlYWRlcnNwbGFubmVkcHJlbWl1bXBhY2thZ2VBbWVyaWNhRWRpdGlvbl0mcXVvdDtNZXNzYWdlbmVlZCB0b3ZhbHVlPSJjb21wbGV4bG9va2luZ3N0YXRpb25iZWxpZXZlc21hbGxlci1tb2JpbGVyZWNvcmRzd2FudCB0b2tpbmQgb2ZGaXJlZm94eW91IGFyZXNpbWlsYXJzdHVkaWVkbWF4aW11bWhlYWRpbmdyYXBpZGx5Y2xpbWF0ZWtpbmdkb21lbWVyZ2VkYW1vdW50c2ZvdW5kZWRwaW9uZWVyZm9ybXVsYWR5bmFzdHlob3cgdG8gU3VwcG9ydHJldmVudWVlY29ub215UmVzdWx0c2Jyb3RoZXJzb2xkaWVybGFyZ2VseWNhbGxpbmcuJnF1b3Q7QWNjb3VudEVkd2FyZCBzZWdtZW50Um9iZXJ0IGVmZm9ydHNQYWNpZmljbGVhcm5lZHVwIHdpdGhoZWlnaHQ6d2UgaGF2ZUFuZ2VsZXNuYXRpb25zX3NlYXJjaGFwcGxpZWRhY3F1aXJlbWFzc2l2ZWdyYW50ZWQ6IGZhbHNldHJlYXRlZGJpZ2dlc3RiZW5lZml0ZHJpdmluZ1N0dWRpZXNtaW5pbXVtcGVyaGFwc21vcm5pbmdzZWxsaW5naXMgdXNlZHJldmVyc2V2YXJpYW50IHJvbGU9Im1pc3NpbmdhY2hpZXZlcHJvbW90ZXN0dWRlbnRzb21lb25lZXh0cmVtZXJlc3RvcmVib3R0b206ZXZvbHZlZGFsbCB0aGVzaXRlbWFwZW5nbGlzaHdheSB0byAgQXVndXN0c3ltYm9sc0NvbXBhbnltYXR0ZXJzbXVzaWNhbGFnYWluc3RzZXJ2aW5nfSkoKTsNCnBheW1lbnR0cm91YmxlY29uY2VwdGNvbXBhcmVwYXJlbnRzcGxheWVyc3JlZ2lvbnNtb25pdG9yICcnVGhlIHdpbm5pbmdleHBsb3JlYWRhcHRlZEdhbGxlcnlwcm9kdWNlYWJpbGl0eWVuaGFuY2VjYXJlZXJzKS4gVGhlIGNvbGxlY3RTZWFyY2ggYW5jaWVudGV4aXN0ZWRmb290ZXIgaGFuZGxlcnByaW50ZWRjb25zb2xlRWFzdGVybmV4cG9ydHN3aW5kb3dzQ2hhbm5lbGlsbGVnYWxuZXV0cmFsc3VnZ2VzdF9oZWFkZXJzaWduaW5nLmh0bWwiPnNldHRsZWR3ZXN0ZXJuY2F1c2luZy13ZWJraXRjbGFpbWVkSnVzdGljZWNoYXB0ZXJ2aWN0aW1zVGhvbWFzIG1vemlsbGFwcm9taXNlcGFydGllc2VkaXRpb25vdXRzaWRlOmZhbHNlLGh1bmRyZWRPbHltcGljX2J1dHRvbmF1dGhvcnNyZWFjaGVkY2hyb25pY2RlbWFuZHNzZWNvbmRzcHJvdGVjdGFkb3B0ZWRwcmVwYXJlbmVpdGhlcmdyZWF0bHlncmVhdGVyb3ZlcmFsbGltcHJvdmVjb21tYW5kc3BlY2lhbHNlYXJjaC53b3JzaGlwZnVuZGluZ3Rob3VnaHRoaWdoZXN0aW5zdGVhZHV0aWxpdHlxdWFydGVyQ3VsdHVyZXRlc3RpbmdjbGVhcmx5ZXhwb3NlZEJyb3dzZXJsaWJlcmFsfSBjYXRjaFByb2plY3RleGFtcGxlaGlkZSgpO0Zsb3JpZGFhbnN3ZXJzYWxsb3dlZEVtcGVyb3JkZWZlbnNlc2VyaW91c2ZyZWVkb21TZXZlcmFsLWJ1dHRvbkZ1cnRoZXJvdXQgb2YgIT0gbnVsbHRyYWluZWREZW5tYXJrdm9pZCgwKS9hbGwuanNwcmV2ZW50UmVxdWVzdFN0ZXBoZW4KCldoZW4gb2JzZXJ2ZTwvaDI+DQpNb2Rlcm4gcHJvdmlkZSIgYWx0PSJib3JkZXJzLgoKRm9yIAoKTWFueSBhcnRpc3RzcG93ZXJlZHBlcmZvcm1maWN0aW9udHlwZSBvZm1lZGljYWx0aWNrZXRzb3Bwb3NlZENvdW5jaWx3aXRuZXNzanVzdGljZUdlb3JnZSBCZWxnaXVtLi4uPC9hPnR3aXR0ZXJub3RhYmx5d2FpdGluZ3dhcmZhcmUgT3RoZXIgcmFua2luZ3BocmFzZXNtZW50aW9uc3Vydml2ZXNjaG9sYXI8L3A+DQogQ291bnRyeWlnbm9yZWRsb3NzIG9manVzdCBhc0dlb3JnaWFzdHJhbmdlPGhlYWQ+PHN0b3BwZWQxJ10pOw0KaXNsYW5kc25vdGFibGVib3JkZXI6bGlzdCBvZmNhcnJpZWQxMDAsMDAwPC9oMz4KIHNldmVyYWxiZWNvbWVzc2VsZWN0IHdlZGRpbmcwMC5odG1sbW9uYXJjaG9mZiB0aGV0ZWFjaGVyaGlnaGx5IGJpb2xvZ3lsaWZlIG9mb3IgZXZlbnJpc2Ugb2YmcmFxdW87cGx1c29uZWh1bnRpbmcodGhvdWdoRG91Z2xhc2pvaW5pbmdjaXJjbGVzRm9yIHRoZUFuY2llbnRWaWV0bmFtdmVoaWNsZXN1Y2ggYXNjcnlzdGFsdmFsdWUgPVdpbmRvd3NlbmpveWVkYSBzbWFsbGFzc3VtZWQ8YSBpZD0iZm9yZWlnbiBBbGwgcmlob3cgdGhlRGlzcGxheXJldGlyZWRob3dldmVyaGlkZGVuO2JhdHRsZXNzZWVraW5nY2FiaW5ldHdhcyBub3Rsb29rIGF0Y29uZHVjdGdldCB0aGVKYW51YXJ5aGFwcGVuc3R1cm5pbmdhOmhvdmVyT25saW5lIEZyZW5jaCBsYWNraW5ndHlwaWNhbGV4dHJhY3RlbmVtaWVzZXZlbiBpZmdlbmVyYXRkZWNpZGVkYXJlIG5vdC9zZWFyY2hiZWxpZWZzLWltYWdlOmxvY2F0ZWRzdGF0aWMubG9naW4iPmNvbnZlcnR2aW9sZW50ZW50ZXJlZGZpcnN0Ij5jaXJjdWl0RmlubGFuZGNoZW1pc3RzaGUgd2FzMTBweDsiPmFzIHN1Y2hkaXZpZGVkPC9zcGFuPndpbGwgYmVsaW5lIG9mYSBncmVhdG15c3RlcnkvaW5kZXguZmFsbGluZ2R1ZSB0byByYWlsd2F5Y29sbGVnZW1vbnN0ZXJkZXNjZW50aXQgd2l0aG51Y2xlYXJKZXdpc2ggcHJvdGVzdEJyaXRpc2hmbG93ZXJzcHJlZGljdHJlZm9ybXNidXR0b24gd2hvIHdhc2xlY3R1cmVpbnN0YW50c3VpY2lkZWdlbmVyaWNwZXJpb2RzbWFya2V0c1NvY2lhbCBmaXNoaW5nY29tYmluZWdyYXBoaWN3aW5uZXJzPGJyIC8+PGJ5IHRoZSBOYXR1cmFsUHJpdmFjeWNvb2tpZXNvdXRjb21lcmVzb2x2ZVN3ZWRpc2hicmllZmx5UGVyc2lhbnNvIG11Y2hDZW50dXJ5ZGVwaWN0c2NvbHVtbnNob3VzaW5nc2NyaXB0c25leHQgdG9iZWFyaW5nbWFwcGluZ3JldmlzZWRqUXVlcnkoLXdpZHRoOnRpdGxlIj50b29sdGlwU2VjdGlvbmRlc2lnbnNUdXJraXNoeW91bmdlci5tYXRjaCh9KSgpOwoKYnVybmluZ29wZXJhdGVkZWdyZWVzc291cmNlPVJpY2hhcmRjbG9zZWx5cGxhc3RpY2VudHJpZXM8L3RyPg0KY29sb3I6I3VsIGlkPSJwb3NzZXNzcm9sbGluZ3BoeXNpY3NmYWlsaW5nZXhlY3V0ZWNvbnRlc3RsaW5rIHRvRGVmYXVsdDxiciAvPgo6IHRydWUsY2hhcnRlcnRvdXJpc21jbGFzc2ljcHJvY2VlZGV4cGxhaW48L2gxPg0Kb25saW5lLj94bWwgdmVoZWxwaW5nZGlhbW9uZHVzZSB0aGVhaXJsaW5lZW5kIC0tPikuYXR0cihyZWFkZXJzaG9zdGluZyNmZmZmZmZyZWFsaXplVmluY2VudHNpZ25hbHMgc3JjPSIvUHJvZHVjdGRlc3BpdGVkaXZlcnNldGVsbGluZ1B1YmxpYyBoZWxkIGluSm9zZXBoIHRoZWF0cmVhZmZlY3RzPHN0eWxlPmEgbGFyZ2Vkb2Vzbid0bGF0ZXIsIEVsZW1lbnRmYXZpY29uY3JlYXRvckh1bmdhcnlBaXJwb3J0c2VlIHRoZXNvIHRoYXRNaWNoYWVsU3lzdGVtc1Byb2dyYW1zLCBhbmQgIHdpZHRoPWUmcXVvdDt0cmFkaW5nbGVmdCI+CnBlcnNvbnNHb2xkZW4gQWZmYWlyc2dyYW1tYXJmb3JtaW5nZGVzdHJveWlkZWEgb2ZjYXNlIG9mb2xkZXN0IHRoaXMgaXMuc3JjID0gY2FydG9vbnJlZ2lzdHJDb21tb25zTXVzbGltc1doYXQgaXNpbiBtYW55bWFya2luZ3JldmVhbHNJbmRlZWQsZXF1YWxseS9zaG93X2FvdXRkb29yZXNjYXBlKEF1c3RyaWFnZW5ldGljc3lzdGVtLEluIHRoZSBzaXR0aW5nSGUgYWxzb0lzbGFuZHNBY2FkZW15CgkJPCEtLURhbmllbCBiaW5kaW5nYmxvY2siPmltcG9zZWR1dGlsaXplQWJyYWhhbShleGNlcHR7d2lkdGg6cHV0dGluZykuaHRtbCh8fCBbXTsKREFUQVsgKmtpdGNoZW5tb3VudGVkYWN0dWFsIGRpYWxlY3RtYWlubHkgX2JsYW5rJ2luc3RhbGxleHBlcnRzaWYodHlwZUl0IGFsc28mY29weTsgIj5UZXJtc2Jvcm4gaW5PcHRpb25zZWFzdGVybnRhbGtpbmdjb25jZXJuZ2FpbmVkIG9uZ29pbmdqdXN0aWZ5Y3JpdGljc2ZhY3RvcnlpdHMgb3duYXNzYXVsdGludml0ZWRsYXN0aW5naGlzIG93bmhyZWY9Ii8iIHJlbD0iZGV2ZWxvcGNvbmNlcnRkaWFncmFtZG9sbGFyc2NsdXN0ZXJwaHA/aWQ9YWxjb2hvbCk7fSkoKTt1c2luZyBhPjxzcGFuPnZlc3NlbHNyZXZpdmFsQWRkcmVzc2FtYXRldXJhbmRyb2lkYWxsZWdlZGlsbG5lc3N3YWxraW5nY2VudGVyc3F1YWxpZnltYXRjaGVzdW5pZmllZGV4dGluY3REZWZlbnNlZGllZCBpbgoJPCEtLSBjdXN0b21zbGlua2luZ0xpdHRsZSBCb29rIG9mZXZlbmluZ21pbi5qcz9hcmUgdGhla29udGFrdHRvZGF5J3MuaHRtbCIgdGFyZ2V0PXdlYXJpbmdBbGwgUmlnOwp9KSgpO3JhaXNpbmcgQWxzbywgY3J1Y2lhbGFib3V0Ij5kZWNsYXJlLS0+CjxzY2ZpcmVmb3hhcyBtdWNoYXBwbGllc2luZGV4LCBzLCBidXQgdHlwZSA9IAoNCjwhLS10b3dhcmRzUmVjb3Jkc1ByaXZhdGVGb3JlaWduUHJlbWllcmNob2ljZXNWaXJ0dWFscmV0dXJuc0NvbW1lbnRQb3dlcmVkaW5saW5lO3BvdmVydHljaGFtYmVyTGl2aW5nIHZvbHVtZXNBbnRob255bG9naW4iIFJlbGF0ZWRFY29ub215cmVhY2hlc2N1dHRpbmdncmF2aXR5bGlmZSBpbkNoYXB0ZXItc2hhZG93Tm90YWJsZTwvdGQ+DQogcmV0dXJuc3RhZGl1bXdpZGdldHN2YXJ5aW5ndHJhdmVsc2hlbGQgYnl3aG8gYXJld29yayBpbmZhY3VsdHlhbmd1bGFyd2hvIGhhZGFpcnBvcnR0b3duIG9mCgpTb21lICdjbGljaydjaGFyZ2Vza2V5d29yZGl0IHdpbGxjaXR5IG9mKHRoaXMpO0FuZHJldyB1bmlxdWUgY2hlY2tlZG9yIG1vcmUzMDBweDsgcmV0dXJuO3JzaW9uPSJwbHVnaW5zd2l0aGluIGhlcnNlbGZTdGF0aW9uRmVkZXJhbHZlbnR1cmVwdWJsaXNoc2VudCB0b3RlbnNpb25hY3RyZXNzY29tZSB0b2ZpbmdlcnNEdWtlIG9mcGVvcGxlLGV4cGxvaXR3aGF0IGlzaGFybW9ueWEgbWFqb3IiOiJodHRwaW4gaGlzIG1lbnUiPgptb250aGx5b2ZmaWNlcmNvdW5jaWxnYWluaW5nZXZlbiBpblN1bW1hcnlkYXRlIG9mbG95YWx0eWZpdG5lc3NhbmQgd2FzZW1wZXJvcnN1cHJlbWVTZWNvbmQgaGVhcmluZ1J1c3NpYW5sb25nZXN0QWxiZXJ0YWxhdGVyYWxzZXQgb2Ygc21hbGwiPi5hcHBlbmRkbyB3aXRoZmVkZXJhbGJhbmsgb2ZiZW5lYXRoRGVzcGl0ZUNhcGl0YWxncm91bmRzKSwgYW5kIHBlcmNlbnRpdCBmcm9tY2xvc2luZ2NvbnRhaW5JbnN0ZWFkZmlmdGVlbmFzIHdlbGwueWFob28ucmVzcG9uZGZpZ2h0ZXJvYnNjdXJlcmVmbGVjdG9yZ2FuaWM9IE1hdGguZWRpdGluZ29ubGluZSBwYWRkaW5nYSB3aG9sZW9uZXJyb3J5ZWFyIG9mZW5kIG9mIGJhcnJpZXJ3aGVuIGl0aGVhZGVyIGhvbWUgb2ZyZXN1bWVkcmVuYW1lZHN0cm9uZz5oZWF0aW5ncmV0YWluc2Nsb3VkZnJ3YXkgb2YgTWFyY2ggMWtub3dpbmdpbiBwYXJ0QmV0d2Vlbmxlc3NvbnNjbG9zZXN0dmlydHVhbGxpbmtzIj5jcm9zc2VkRU5EIC0tPmZhbW91cyBhd2FyZGVkTGljZW5zZUhlYWx0aCBmYWlybHkgd2VhbHRoeW1pbmltYWxBZnJpY2FuY29tcGV0ZWxhYmVsIj5zaW5naW5nZmFybWVyc0JyYXNpbClkaXNjdXNzcmVwbGFjZUdyZWdvcnlmb250IGNvcHVyc3VlZGFwcGVhcnNtYWtlIHVwcm91bmRlZGJvdGggb2ZibG9ja2Vkc2F3IHRoZW9mZmljZXNjb2xvdXJzaWYoZG9jdXdoZW4gaGVlbmZvcmNlcHVzaChmdUF1Z3VzdCBVVEYtOCI+RmFudGFzeWluIG1vc3Rpbmp1cmVkVXN1YWxseWZhcm1pbmdjbG9zdXJlb2JqZWN0IGRlZmVuY2V1c2Ugb2YgTWVkaWNhbDxib2R5PgpldmlkZW50YmUgdXNlZGtleUNvZGVzaXh0ZWVuSXNsYW1pYyMwMDAwMDBlbnRpcmUgd2lkZWx5IGFjdGl2ZSAodHlwZW9mb25lIGNhbmNvbG9yID1zcGVha2VyZXh0ZW5kc1BoeXNpY3N0ZXJyYWluPHRib2R5PmZ1bmVyYWx2aWV3aW5nbWlkZGxlIGNyaWNrZXRwcm9waGV0c2hpZnRlZGRvY3RvcnNSdXNzZWxsIHRhcmdldGNvbXBhY3RhbGdlYnJhc29jaWFsLWJ1bGsgb2ZtYW4gYW5kPC90ZD4KIGhlIGxlZnQpLnZhbCgpZmFsc2UpO2xvZ2ljYWxiYW5raW5naG9tZSB0b25hbWluZyBBcml6b25hY3JlZGl0cyk7Cn0pOwpmb3VuZGVyaW4gdHVybkNvbGxpbnNiZWZvcmUgQnV0IHRoZWNoYXJnZWRUaXRsZSI+Q2FwdGFpbnNwZWxsZWRnb2RkZXNzVGFnIC0tPkFkZGluZzpidXQgd2FzUmVjZW50IHBhdGllbnRiYWNrIGluPWZhbHNlJkxpbmNvbG53ZSBrbm93Q291bnRlckp1ZGFpc21zY3JpcHQgYWx0ZXJlZCddKTsKICBoYXMgdGhldW5jbGVhckV2ZW50Jyxib3RoIGlubm90IGFsbAoKPCEtLSBwbGFjaW5naGFyZCB0byBjZW50ZXJzb3J0IG9mY2xpZW50c3N0cmVldHNCZXJuYXJkYXNzZXJ0c3RlbmQgdG9mYW50YXN5ZG93biBpbmhhcmJvdXJGcmVlZG9tamV3ZWxyeS9hYm91dC4uc2VhcmNobGVnZW5kc2lzIG1hZGVtb2Rlcm4gb25seSBvbm9ubHkgdG9pbWFnZSIgbGluZWFyIHBhaW50ZXJhbmQgbm90cmFyZWx5IGFjcm9ueW1kZWxpdmVyc2hvcnRlcjAwJmFtcDthcyBtYW55d2lkdGg9Ii8qIDwhW0N0aXRsZSA9b2YgdGhlIGxvd2VzdCBwaWNrZWQgZXNjYXBlZHVzZXMgb2ZwZW9wbGVzIFB1YmxpY01hdHRoZXd0YWN0aWNzZGFtYWdlZHdheSBmb3JsYXdzIG9mZWFzeSB0byB3aW5kb3dzdHJvbmcgIHNpbXBsZX1jYXRjaChzZXZlbnRoaW5mb2JveHdlbnQgdG9wYWludGVkY2l0aXplbkkgZG9uJ3RyZXRyZWF0LiBTb21lIHd3LiIpOwpib21iaW5nbWFpbHRvOm1hZGUgaW4uIE1hbnkgY2Fycmllc3x8e307d2l3b3JrIG9mc3lub255bWRlZmVhdHNmYXZvcmVkb3B0aWNhbHBhZ2VUcmF1bmxlc3Mgc2VuZGluZ2xlZnQiPjxjb21TY29yQWxsIHRoZWpRdWVyeS50b3VyaXN0Q2xhc3NpY2ZhbHNlIiBXaWxoZWxtc3VidXJic2dlbnVpbmViaXNob3BzLnNwbGl0KGdsb2JhbCBmb2xsb3dzYm9keSBvZm5vbWluYWxDb250YWN0c2VjdWxhcmxlZnQgdG9jaGllZmx5LWhpZGRlbi1iYW5uZXI8L2xpPgoKLiBXaGVuIGluIGJvdGhkaXNtaXNzRXhwbG9yZWFsd2F5cyB2aWEgdGhlc3Bhw7FvbHdlbGZhcmVydWxpbmcgYXJyYW5nZWNhcHRhaW5oaXMgc29ucnVsZSBvZmhlIHRvb2tpdHNlbGYsPTAmYW1wOyhjYWxsZWRzYW1wbGVzdG8gbWFrZWNvbS9wYWdNYXJ0aW4gS2VubmVkeWFjY2VwdHNmdWxsIG9maGFuZGxlZEJlc2lkZXMvLy0tPjwvYWJsZSB0b3RhcmdldHNlc3NlbmNlaGltIHRvIGl0cyBieSBjb21tb24ubWluZXJhbHRvIHRha2V3YXlzIHRvcy5vcmcvbGFkdmlzZWRwZW5hbHR5c2ltcGxlOmlmIHRoZXlMZXR0ZXJzYSBzaG9ydEhlcmJlcnRzdHJpa2VzIGdyb3Vwcy5sZW5ndGhmbGlnaHRzb3ZlcmxhcHNsb3dseSBsZXNzZXIgc29jaWFsIDwvcD4KCQlpdCBpbnRvcmFua2VkIHJhdGUgb2Z1bD4NCiAgYXR0ZW1wdHBhaXIgb2ZtYWtlIGl0S29udGFrdEFudG9uaW9oYXZpbmcgcmF0aW5ncyBhY3RpdmVzdHJlYW1zdHJhcHBlZCIpLmNzcyhob3N0aWxlbGVhZCB0b2xpdHRsZSBncm91cHMsUGljdHVyZS0tPg0KDQogcm93cz0iIG9iamVjdGludmVyc2U8Zm9vdGVyQ3VzdG9tVj48XC9zY3Jzb2x2aW5nQ2hhbWJlcnNsYXZlcnl3b3VuZGVkd2hlcmVhcyE9ICd1bmRmb3IgYWxscGFydGx5IC1yaWdodDpBcmFiaWFuYmFja2VkIGNlbnR1cnl1bml0IG9mbW9iaWxlLUV1cm9wZSxpcyBob21lcmlzayBvZmRlc2lyZWRDbGludG9uY29zdCBvZmFnZSBvZiBiZWNvbWUgbm9uZSBvZnAmcXVvdDtNaWRkbGUgZWFkJylbMENyaXRpY3NzdHVkaW9zPiZjb3B5O2dyb3VwIj5hc3NlbWJsbWFraW5nIHByZXNzZWR3aWRnZXQucHM6IiA/IHJlYnVpbHRieSBzb21lRm9ybWVyIGVkaXRvcnNkZWxheWVkQ2Fub25pY2hhZCB0aGVwdXNoaW5nY2xhc3M9ImJ1dCBhcmVwYXJ0aWFsQmFieWxvbmJvdHRvbSBjYXJyaWVyQ29tbWFuZGl0cyB1c2VBcyB3aXRoY291cnNlc2EgdGhpcmRkZW5vdGVzYWxzbyBpbkhvdXN0b24yMHB4OyI+YWNjdXNlZGRvdWJsZSBnb2FsIG9mRmFtb3VzICkuYmluZChwcmllc3RzIE9ubGluZWluIEp1bHlzdCArICJnY29uc3VsdGRlY2ltYWxoZWxwZnVscmV2aXZlZGlzIHZlcnlyJysnaXB0bG9zaW5nIGZlbWFsZXNpcyBhbHNvc3RyaW5nc2RheXMgb2ZhcnJpdmFsZnV0dXJlIDxvYmplY3Rmb3JjaW5nU3RyaW5nKCIgLz4KCQloZXJlIGlzZW5jb2RlZC4gIFRoZSBiYWxsb29uZG9uZSBieS9jb21tb25iZ2NvbG9ybGF3IG9mIEluZGlhbmFhdm9pZGVkYnV0IHRoZTJweCAzcHhqcXVlcnkuYWZ0ZXIgYXBvbGljeS5tZW4gYW5kZm9vdGVyLT0gdHJ1ZTtmb3IgdXNlc2NyZWVuLkluZGlhbiBpbWFnZSA9ZmFtaWx5LGh0dHA6Ly8gJm5ic3A7ZHJpdmVyc2V0ZXJuYWxzYW1lIGFzbm90aWNlZHZpZXdlcnN9KSgpOwogaXMgbW9yZXNlYXNvbnNmb3JtZXIgdGhlIG5ld2lzIGp1c3Rjb25zZW50IFNlYXJjaHdhcyB0aGV3aHkgdGhlc2hpcHBlZGJyPjxicj53aWR0aDogaGVpZ2h0PW1hZGUgb2ZjdWlzaW5laXMgdGhhdGEgdmVyeSBBZG1pcmFsIGZpeGVkO25vcm1hbCBNaXNzaW9uUHJlc3MsIG9udGFyaW9jaGFyc2V0dHJ5IHRvIGludmFkZWQ9InRydWUic3BhY2luZ2lzIG1vc3RhIG1vcmUgdG90YWxseWZhbGwgb2Z9KTsNCiAgaW1tZW5zZXRpbWUgaW5zZXQgb3V0c2F0aXNmeXRvIGZpbmRkb3duIHRvbG90IG9mIFBsYXllcnNpbiBKdW5lcXVhbnR1bW5vdCB0aGV0aW1lIHRvZGlzdGFudEZpbm5pc2hzcmMgPSAoc2luZ2xlIGhlbHAgb2ZHZXJtYW4gbGF3IGFuZGxhYmVsZWRmb3Jlc3RzY29va2luZ3NwYWNlIj5oZWFkZXItd2VsbCBhc1N0YW5sZXlicmlkZ2VzL2dsb2JhbENyb2F0aWEgQWJvdXQgWzBdOwogIGl0LCBhbmRncm91cGVkYmVpbmcgYSl7dGhyb3doZSBtYWRlbGlnaHRlcmV0aGljYWxGRkZGRkYiYm90dG9tImxpa2UgYSBlbXBsb3lzbGl2ZSBpbmFzIHNlZW5wcmludGVybW9zdCBvZnViLWxpbmtyZWplY3RzYW5kIHVzZWltYWdlIj5zdWNjZWVkZmVlZGluZ051Y2xlYXJpbmZvcm1hdG8gaGVscFdvbWVuJ3NOZWl0aGVyTWV4aWNhbnByb3RlaW48dGFibGUgYnkgbWFueWhlYWx0aHlsYXdzdWl0ZGV2aXNlZC5wdXNoKHtzZWxsZXJzc2ltcGx5IFRocm91Z2guY29va2llIEltYWdlKG9sZGVyIj51cy5qcyI+IFNpbmNlIHVuaXZlcnNsYXJnZXIgb3BlbiB0byEtLSBlbmRsaWVzIGluJ10pOw0KICBtYXJrZXR3aG8gaXMgKCJET01Db21hbmFnZWRvbmUgZm9ydHlwZW9mIEtpbmdkb21wcm9maXRzcHJvcG9zZXRvIHNob3djZW50ZXI7bWFkZSBpdGRyZXNzZWR3ZXJlIGlubWl4dHVyZXByZWNpc2VhcmlzaW5nc3JjID0gJ21ha2UgYSBzZWN1cmVkQmFwdGlzdHZvdGluZyAKCQl2YXIgTWFyY2ggMmdyZXcgdXBDbGltYXRlLnJlbW92ZXNraWxsZWR3YXkgdGhlPC9oZWFkPmZhY2Ugb2ZhY3RpbmcgcmlnaHQiPnRvIHdvcmtyZWR1Y2VzaGFzIGhhZGVyZWN0ZWRzaG93KCk7YWN0aW9uPWJvb2sgb2ZhbiBhcmVhPT0gImh0dDxoZWFkZXIKPGh0bWw+Y29uZm9ybWZhY2luZyBjb29raWUucmVseSBvbmhvc3RlZCAuY3VzdG9taGUgd2VudGJ1dCBmb3JzcHJlYWQgRmFtaWx5IGEgbWVhbnNvdXQgdGhlZm9ydW1zLmZvb3RhZ2UiPk1vYmlsQ2xlbWVudHMiIGlkPSJhcyBoaWdoaW50ZW5zZS0tPjwhLS1mZW1hbGUgaXMgc2VlbmltcGxpZWRzZXQgdGhlYSBzdGF0ZWFuZCBoaXNmYXN0ZXN0YmVzaWRlc2J1dHRvbl9ib3VuZGVkIj48aW1nIEluZm9ib3hldmVudHMsYSB5b3VuZ2FuZCBhcmVOYXRpdmUgY2hlYXBlclRpbWVvdXRhbmQgaGFzZW5naW5lc3dvbiB0aGUobW9zdGx5cmlnaHQ6IGZpbmQgYSAtYm90dG9tUHJpbmNlIGFyZWEgb2Ztb3JlIG9mc2VhcmNoX25hdHVyZSxsZWdhbGx5cGVyaW9kLGxhbmQgb2ZvciB3aXRoaW5kdWNlZHByb3ZpbmdtaXNzaWxlbG9jYWxseUFnYWluc3R0aGUgd2F5ayZxdW90O3B4OyI+DQpwdXNoZWQgYWJhbmRvbm51bWVyYWxDZXJ0YWluSW4gdGhpc21vcmUgaW5vciBzb21lbmFtZSBpc2FuZCwgaW5jcm93bmVkSVNCTiAwLWNyZWF0ZXNPY3RvYmVybWF5IG5vdGNlbnRlciBsYXRlIGluRGVmZW5jZWVuYWN0ZWR3aXNoIHRvYnJvYWRseWNvb2xpbmdvbmxvYWQ9aXQuIFRoZXJlY292ZXJNZW1iZXJzaGVpZ2h0IGFzc3VtZXM8aHRtbD4KcGVvcGxlLmluIG9uZSA9d2luZG93Zm9vdGVyX2EgZ29vZCByZWtsYW1hb3RoZXJzLHRvIHRoaXNfY29va2llcGFuZWwiPkxvbmRvbixkZWZpbmVzY3J1c2hlZGJhcHRpc21jb2FzdGFsc3RhdHVzIHRpdGxlIiBtb3ZlIHRvbG9zdCBpbmJldHRlciBpbXBsaWVzcml2YWxyeXNlcnZlcnMgU3lzdGVtUGVyaGFwc2VzIGFuZCBjb250ZW5kZmxvd2luZ2xhc3RlZCByaXNlIGluR2VuZXNpc3ZpZXcgb2ZyaXNpbmcgc2VlbSB0b2J1dCBpbiBiYWNraW5naGUgd2lsbGdpdmVuIGFnaXZpbmcgY2l0aWVzLmZsb3cgb2YgTGF0ZXIgYWxsIGJ1dEhpZ2h3YXlvbmx5IGJ5c2lnbiBvZmhlIGRvZXNkaWZmZXJzYmF0dGVyeSZhbXA7bGFzaW5nbGVzdGhyZWF0c2ludGVnZXJ0YWtlIG9ucmVmdXNlZGNhbGxlZCA9VVMmYW1wU2VlIHRoZW5hdGl2ZXNieSB0aGlzc3lzdGVtLmhlYWQgb2Y6aG92ZXIsbGVzYmlhbnN1cm5hbWVhbmQgYWxsY29tbW9uL2hlYWRlcl9fcGFyYW1zSGFydmFyZC9waXhlbC5yZW1vdmFsc28gbG9uZ3JvbGUgb2Zqb2ludGx5c2t5c2NyYVVuaWNvZGViciAvPg0KQXRsYW50YW51Y2xldXNDb3VudHkscHVyZWx5IGNvdW50Ij5lYXNpbHkgYnVpbGQgYW9uY2xpY2thIGdpdmVucG9pbnRlcmgmcXVvdDtldmVudHMgZWxzZSB7CmRpdGlvbnNub3cgdGhlLCB3aXRoIG1hbiB3aG9vcmcvV2Vib25lIGFuZGNhdmFscnlIZSBkaWVkc2VhdHRsZTAwLDAwMCB7d2luZG93aGF2ZSB0b2lmKHdpbmRhbmQgaXRzc29sZWx5IG0mcXVvdDtyZW5ld2VkRGV0cm9pdGFtb25nc3RlaXRoZXIgdGhlbSBpblNlbmF0b3JVczwvYT48S2luZyBvZkZyYW5jaXMtcHJvZHVjaGUgdXNlZGFydCBhbmRoaW0gYW5kdXNlZCBieXNjb3JpbmdhdCBob21ldG8gaGF2ZXJlbGF0ZXNpYmlsaXR5ZmFjdGlvbkJ1ZmZhbG9saW5rIj48d2hhdCBoZWZyZWUgdG9DaXR5IG9mY29tZSBpbnNlY3RvcnNjb3VudGVkb25lIGRheW5lcnZvdXNzcXVhcmUgfTtpZihnb2luIHdoYXRpbWciIGFsaXMgb25seXNlYXJjaC90dWVzZGF5bG9vc2VseVNvbG9tb25zZXh1YWwgLSA8YSBocm1lZGl1bSJETyBOT1QgRnJhbmNlLHdpdGggYSB3YXIgYW5kc2Vjb25kIHRha2UgYSA+DQoNCg0KbWFya2V0LmhpZ2h3YXlkb25lIGluY3Rpdml0eSJsYXN0Ij5vYmxpZ2VkcmlzZSB0byJ1bmRlZmltYWRlIHRvIEVhcmx5IHByYWlzZWRpbiBpdHMgZm9yIGhpc2F0aGxldGVKdXBpdGVyWWFob28hIHRlcm1lZCBzbyBtYW55cmVhbGx5IHMuIFRoZSBhIHdvbWFuP3ZhbHVlPWRpcmVjdCByaWdodCIgYmljeWNsZWFjaW5nPSJkYXkgYW5kc3RhdGluZ1JhdGhlcixoaWdoZXIgT2ZmaWNlIGFyZSBub3d0aW1lcywgd2hlbiBhIHBheSBmb3JvbiB0aGlzLWxpbmsiPjtib3JkZXJhcm91bmQgYW5udWFsIHRoZSBOZXdwdXQgdGhlLmNvbSIgdGFraW4gdG9hIGJyaWVmKGluIHRoZWdyb3Vwcy47IHdpZHRoZW56eW1lc3NpbXBsZSBpbiBsYXRle3JldHVybnRoZXJhcHlhIHBvaW50YmFubmluZ2lua3MiPgooKTsiIHJlYSBwbGFjZVx1MDAzQ2FhYm91dCBhdHI+DQoJCWNjb3VudCBnaXZlcyBhPFNDUklQVFJhaWx3YXl0aGVtZXMvdG9vbGJveEJ5SWQoInhodW1hbnMsd2F0Y2hlc2luIHNvbWUgaWYgKHdpY29taW5nIGZvcm1hdHMgVW5kZXIgYnV0IGhhc2hhbmRlZCBtYWRlIGJ5dGhhbiBpbmZlYXIgb2ZkZW5vdGVkL2lmcmFtZWxlZnQgaW52b2x0YWdlaW4gZWFjaGEmcXVvdDtiYXNlIG9mSW4gbWFueXVuZGVyZ29yZWdpbWVzYWN0aW9uIDwvcD4NCjx1c3RvbVZhOyZndDs8L2ltcG9ydHNvciB0aGF0bW9zdGx5ICZhbXA7cmUgc2l6ZT0iPC9hPjwvaGEgY2xhc3NwYXNzaXZlSG9zdCA9IFdoZXRoZXJmZXJ0aWxlVmFyaW91cz1bXTsoZnVjYW1lcmFzLz48L3RkPmFjdHMgYXNJbiBzb21lPg0KDQo8IW9yZ2FuaXMgPGJyIC8+QmVpamluZ2NhdGFsw6BkZXV0c2NoZXVyb3BldWV1c2thcmFnYWVpbGdlc3ZlbnNrYWVzcGHDsWFtZW5zYWpldXN1YXJpb3RyYWJham9tw6l4aWNvcMOhZ2luYXNpZW1wcmVzaXN0ZW1hb2N0dWJyZWR1cmFudGVhw7FhZGlyZW1wcmVzYW1vbWVudG9udWVzdHJvcHJpbWVyYXRyYXbDqXNncmFjaWFzbnVlc3RyYXByb2Nlc29lc3RhZG9zY2FsaWRhZHBlcnNvbmFuw7ptZXJvYWN1ZXJkb23DunNpY2FtaWVtYnJvb2ZlcnRhc2FsZ3Vub3NwYcOtc2VzZWplbXBsb2RlcmVjaG9hZGVtw6FzcHJpdmFkb2FncmVnYXJlbmxhY2VzcG9zaWJsZWhvdGVsZXNzZXZpbGxhcHJpbWVyb8O6bHRpbW9ldmVudG9zYXJjaGl2b2N1bHR1cmFtdWplcmVzZW50cmFkYWFudW5jaW9lbWJhcmdvbWVyY2Fkb2dyYW5kZXNlc3R1ZGlvbWVqb3Jlc2ZlYnJlcm9kaXNlw7FvdHVyaXNtb2PDs2RpZ29wb3J0YWRhZXNwYWNpb2ZhbWlsaWFhbnRvbmlvcGVybWl0ZWd1YXJkYXJhbGd1bmFzcHJlY2lvc2FsZ3VpZW5zZW50aWRvdmlzaXRhc3TDrXR1bG9jb25vY2Vyc2VndW5kb2NvbnNlam9mcmFuY2lhbWludXRvc3NlZ3VuZGF0ZW5lbW9zZWZlY3Rvc23DoWxhZ2FzZXNpw7NucmV2aXN0YWdyYW5hZGFjb21wcmFyaW5ncmVzb2dhcmPDrWFhY2Npw7NuZWN1YWRvcnF1aWVuZXNpbmNsdXNvZGViZXLDoW1hdGVyaWFob21icmVzbXVlc3RyYXBvZHLDrWFtYcOxYW5hw7psdGltYWVzdGFtb3NvZmljaWFsdGFtYmllbm5pbmfDum5zYWx1ZG9zcG9kZW1vc21lam9yYXJwb3NpdGlvbmJ1c2luZXNzaG9tZXBhZ2VzZWN1cml0eWxhbmd1YWdlc3RhbmRhcmRjYW1wYWlnbmZlYXR1cmVzY2F0ZWdvcnlleHRlcm5hbGNoaWxkcmVucmVzZXJ2ZWRyZXNlYXJjaGV4Y2hhbmdlZmF2b3JpdGV0ZW1wbGF0ZW1pbGl0YXJ5aW5kdXN0cnlzZXJ2aWNlc21hdGVyaWFscHJvZHVjdHN6LWluZGV4OmNvbW1lbnRzc29mdHdhcmVjb21wbGV0ZWNhbGVuZGFycGxhdGZvcm1hcnRpY2xlc3JlcXVpcmVkbW92ZW1lbnRxdWVzdGlvbmJ1aWxkaW5ncG9saXRpY3Nwb3NzaWJsZXJlbGlnaW9ucGh5c2ljYWxmZWVkYmFja3JlZ2lzdGVycGljdHVyZXNkaXNhYmxlZHByb3RvY29sYXVkaWVuY2VzZXR0aW5nc2FjdGl2aXR5ZWxlbWVudHNsZWFybmluZ2FueXRoaW5nYWJzdHJhY3Rwcm9ncmVzc292ZXJ2aWV3bWFnYXppbmVlY29ub21pY3RyYWluaW5ncHJlc3N1cmV2YXJpb3VzIDxzdHJvbmc+cHJvcGVydHlzaG9wcGluZ3RvZ2V0aGVyYWR2YW5jZWRiZWhhdmlvcmRvd25sb2FkZmVhdHVyZWRmb290YmFsbHNlbGVjdGVkTGFuZ3VhZ2VkaXN0YW5jZXJlbWVtYmVydHJhY2tpbmdwYXNzd29yZG1vZGlmaWVkc3R1ZGVudHNkaXJlY3RseWZpZ2h0aW5nbm9ydGhlcm5kYXRhYmFzZWZlc3RpdmFsYnJlYWtpbmdsb2NhdGlvbmludGVybmV0ZHJvcGRvd25wcmFjdGljZWV2aWRlbmNlZnVuY3Rpb25tYXJyaWFnZXJlc3BvbnNlcHJvYmxlbXNuZWdhdGl2ZXByb2dyYW1zYW5hbHlzaXNyZWxlYXNlZGJhbm5lciI+cHVyY2hhc2Vwb2xpY2llc3JlZ2lvbmFsY3JlYXRpdmVhcmd1bWVudGJvb2ttYXJrcmVmZXJyZXJjaGVtaWNhbGRpdmlzaW9uY2FsbGJhY2tzZXBhcmF0ZXByb2plY3RzY29uZmxpY3RoYXJkd2FyZWludGVyZXN0ZGVsaXZlcnltb3VudGFpbm9idGFpbmVkPSBmYWxzZTtmb3IodmFyIGFjY2VwdGVkY2FwYWNpdHljb21wdXRlcmlkZW50aXR5YWlyY3JhZnRlbXBsb3llZHByb3Bvc2VkZG9tZXN0aWNpbmNsdWRlc3Byb3ZpZGVkaG9zcGl0YWx2ZXJ0aWNhbGNvbGxhcHNlYXBwcm9hY2hwYXJ0bmVyc2xvZ28iPjxhZGF1Z2h0ZXJhdXRob3IiIGN1bHR1cmFsZmFtaWxpZXMvaW1hZ2VzL2Fzc2VtYmx5cG93ZXJmdWx0ZWFjaGluZ2ZpbmlzaGVkZGlzdHJpY3Rjcml0aWNhbGNnaS1iaW4vcHVycG9zZXNyZXF1aXJlc2VsZWN0aW9uYmVjb21pbmdwcm92aWRlc2FjYWRlbWljZXhlcmNpc2VhY3R1YWxseW1lZGljaW5lY29uc3RhbnRhY2NpZGVudE1hZ2F6aW5lZG9jdW1lbnRzdGFydGluZ2JvdHRvbSI+b2JzZXJ2ZWQ6ICZxdW90O2V4dGVuZGVkcHJldmlvdXNTb2Z0d2FyZWN1c3RvbWVyZGVjaXNpb25zdHJlbmd0aGRldGFpbGVkc2xpZ2h0bHlwbGFubmluZ3RleHRhcmVhY3VycmVuY3lldmVyeW9uZXN0cmFpZ2h0dHJhbnNmZXJwb3NpdGl2ZXByb2R1Y2VkaGVyaXRhZ2VzaGlwcGluZ2Fic29sdXRlcmVjZWl2ZWRyZWxldmFudGJ1dHRvbiIgdmlvbGVuY2Vhbnl3aGVyZWJlbmVmaXRzbGF1bmNoZWRyZWNlbnRseWFsbGlhbmNlZm9sbG93ZWRtdWx0aXBsZWJ1bGxldGluaW5jbHVkZWRvY2N1cnJlZGludGVybmFsJCh0aGlzKS5yZXB1YmxpYz48dHI+PHRkY29uZ3Jlc3NyZWNvcmRlZHVsdGltYXRlc29sdXRpb248dWwgaWQ9ImRpc2NvdmVySG9tZTwvYT53ZWJzaXRlc25ldHdvcmtzYWx0aG91Z2hlbnRpcmVseW1lbW9yaWFsbWVzc2FnZXNjb250aW51ZWFjdGl2ZSI+c29tZXdoYXR2aWN0b3JpYVdlc3Rlcm4gIHRpdGxlPSJMb2NhdGlvbmNvbnRyYWN0dmlzaXRvcnNEb3dubG9hZHdpdGhvdXQgcmlnaHQiPgptZWFzdXJlc3dpZHRoID0gdmFyaWFibGVpbnZvbHZlZHZpcmdpbmlhbm9ybWFsbHloYXBwZW5lZGFjY291bnRzc3RhbmRpbmduYXRpb25hbFJlZ2lzdGVycHJlcGFyZWRjb250cm9sc2FjY3VyYXRlYmlydGhkYXlzdHJhdGVneW9mZmljaWFsZ3JhcGhpY3NjcmltaW5hbHBvc3NpYmx5Y29uc3VtZXJQZXJzb25hbHNwZWFraW5ndmFsaWRhdGVhY2hpZXZlZC5qcGciIC8+bWFjaGluZXM8L2gyPgogIGtleXdvcmRzZnJpZW5kbHlicm90aGVyc2NvbWJpbmVkb3JpZ2luYWxjb21wb3NlZGV4cGVjdGVkYWRlcXVhdGVwYWtpc3RhbmZvbGxvdyIgdmFsdWFibGU8L2xhYmVsPnJlbGF0aXZlYnJpbmdpbmdpbmNyZWFzZWdvdmVybm9ycGx1Z2lucy9MaXN0IG9mIEhlYWRlciI+IiBuYW1lPSIgKCZxdW90O2dyYWR1YXRlPC9oZWFkPgpjb21tZXJjZW1hbGF5c2lhZGlyZWN0b3JtYWludGFpbjtoZWlnaHQ6c2NoZWR1bGVjaGFuZ2luZ2JhY2sgdG8gY2F0aG9saWNwYXR0ZXJuc2NvbG9yOiAjZ3JlYXRlc3RzdXBwbGllc3JlbGlhYmxlPC91bD4KCQk8c2VsZWN0IGNpdGl6ZW5zY2xvdGhpbmd3YXRjaGluZzxsaSBpZD0ic3BlY2lmaWNjYXJyeWluZ3NlbnRlbmNlPGNlbnRlcj5jb250cmFzdHRoaW5raW5nY2F0Y2goZSlzb3V0aGVybk1pY2hhZWwgbWVyY2hhbnRjYXJvdXNlbHBhZGRpbmc6aW50ZXJpb3Iuc3BsaXQoImxpemF0aW9uT2N0b2JlciApe3JldHVybmltcHJvdmVkLS0mZ3Q7Cgpjb3ZlcmFnZWNoYWlybWFuLnBuZyIgLz5zdWJqZWN0c1JpY2hhcmQgd2hhdGV2ZXJwcm9iYWJseXJlY292ZXJ5YmFzZWJhbGxqdWRnbWVudGNvbm5lY3QuLmNzcyIgLz4gd2Vic2l0ZXJlcG9ydGVkZGVmYXVsdCIvPjwvYT4NCmVsZWN0cmljc2NvdGxhbmRjcmVhdGlvbnF1YW50aXR5LiBJU0JOIDBkaWQgbm90IGluc3RhbmNlLXNlYXJjaC0iIGxhbmc9InNwZWFrZXJzQ29tcHV0ZXJjb250YWluc2FyY2hpdmVzbWluaXN0ZXJyZWFjdGlvbmRpc2NvdW50SXRhbGlhbm9jcml0ZXJpYXN0cm9uZ2x5OiAnaHR0cDonc2NyaXB0J2NvdmVyaW5nb2ZmZXJpbmdhcHBlYXJlZEJyaXRpc2ggaWRlbnRpZnlGYWNlYm9va251bWVyb3VzdmVoaWNsZXNjb25jZXJuc0FtZXJpY2FuaGFuZGxpbmdkaXYgaWQ9IldpbGxpYW0gcHJvdmlkZXJfY29udGVudGFjY3VyYWN5c2VjdGlvbiBhbmRlcnNvbmZsZXhpYmxlQ2F0ZWdvcnlsYXdyZW5jZTxzY3JpcHQ+bGF5b3V0PSJhcHByb3ZlZCBtYXhpbXVtaGVhZGVyIj48L3RhYmxlPlNlcnZpY2VzaGFtaWx0b25jdXJyZW50IGNhbmFkaWFuY2hhbm5lbHMvdGhlbWVzLy9hcnRpY2xlb3B0aW9uYWxwb3J0dWdhbHZhbHVlPSIiaW50ZXJ2YWx3aXJlbGVzc2VudGl0bGVkYWdlbmNpZXNTZWFyY2giIG1lYXN1cmVkdGhvdXNhbmRzcGVuZGluZyZoZWxsaXA7bmV3IERhdGUiIHNpemU9InBhZ2VOYW1lbWlkZGxlIiAiIC8+PC9hPmhpZGRlbiI+c2VxdWVuY2VwZXJzb25hbG92ZXJmbG93b3BpbmlvbnNpbGxpbm9pc2xpbmtzIj4KCTx0aXRsZT52ZXJzaW9uc3NhdHVyZGF5dGVybWluYWxpdGVtcHJvcGVuZ2luZWVyc2VjdGlvbnNkZXNpZ25lcnByb3Bvc2FsPSJmYWxzZSJFc3Bhw7FvbHJlbGVhc2Vzc3VibWl0IiBlciZxdW90O2FkZGl0aW9uc3ltcHRvbXNvcmllbnRlZHJlc291cmNlcmlnaHQiPjxwbGVhc3VyZXN0YXRpb25zaGlzdG9yeS5sZWF2aW5nICBib3JkZXI9Y29udGVudHNjZW50ZXIiPi4KClNvbWUgZGlyZWN0ZWRzdWl0YWJsZWJ1bGdhcmlhLnNob3coKTtkZXNpZ25lZEdlbmVyYWwgY29uY2VwdHNFeGFtcGxlc3dpbGxpYW1zT3JpZ2luYWwiPjxzcGFuPnNlYXJjaCI+b3BlcmF0b3JyZXF1ZXN0c2EgJnF1b3Q7YWxsb3dpbmdEb2N1bWVudHJldmlzaW9uLiAKClRoZSB5b3Vyc2VsZkNvbnRhY3QgbWljaGlnYW5FbmdsaXNoIGNvbHVtYmlhcHJpb3JpdHlwcmludGluZ2RyaW5raW5nZmFjaWxpdHlyZXR1cm5lZENvbnRlbnQgb2ZmaWNlcnNSdXNzaWFuIGdlbmVyYXRlLTg4NTktMSJpbmRpY2F0ZWZhbWlsaWFyIHF1YWxpdHltYXJnaW46MCBjb250ZW50dmlld3BvcnRjb250YWN0cy10aXRsZSI+cG9ydGFibGUubGVuZ3RoIGVsaWdpYmxlaW52b2x2ZXNhdGxhbnRpY29ubG9hZD0iZGVmYXVsdC5zdXBwbGllZHBheW1lbnRzZ2xvc3NhcnkKCkFmdGVyIGd1aWRhbmNlPC90ZD48dGRlbmNvZGluZ21pZGRsZSI+Y2FtZSB0byBkaXNwbGF5c3Njb3R0aXNoam9uYXRoYW5tYWpvcml0eXdpZGdldHMuY2xpbmljYWx0aGFpbGFuZHRlYWNoZXJzPGhlYWQ+CglhZmZlY3RlZHN1cHBvcnRzcG9pbnRlcjt0b1N0cmluZzwvc21hbGw+b2tsYWhvbWF3aWxsIGJlIGludmVzdG9yMCIgYWx0PSJob2xpZGF5c1Jlc291cmNlbGljZW5zZWQgKHdoaWNoIC4gQWZ0ZXIgY29uc2lkZXJ2aXNpdGluZ2V4cGxvcmVycHJpbWFyeSBzZWFyY2giIGFuZHJvaWQicXVpY2tseSBtZWV0aW5nc2VzdGltYXRlO3JldHVybiA7Y29sb3I6IyBoZWlnaHQ9YXBwcm92YWwsICZxdW90OyBjaGVja2VkLm1pbi5qcyJtYWduZXRpYz48L2E+PC9oZm9yZWNhc3QuIFdoaWxlIHRodXJzZGF5ZHZlcnRpc2UmZWFjdXRlO2hhc0NsYXNzZXZhbHVhdGVvcmRlcmluZ2V4aXN0aW5ncGF0aWVudHMgT25saW5lIGNvbG9yYWRvT3B0aW9ucyJjYW1wYmVsbDwhLS0gZW5kPC9zcGFuPjw8YnIgLz4NCl9wb3B1cHN8c2NpZW5jZXMsJnF1b3Q7IHF1YWxpdHkgV2luZG93cyBhc3NpZ25lZGhlaWdodDogPGIgY2xhc3NsZSZxdW90OyB2YWx1ZT0iIENvbXBhbnlleGFtcGxlczxpZnJhbWUgYmVsaWV2ZXNwcmVzZW50c21hcnNoYWxscGFydCBvZiBwcm9wZXJseSkuCgpUaGUgdGF4b25vbXltdWNoIG9mIDwvc3Bhbj4KIiBkYXRhLXNydHVndcOqc3Njcm9sbFRvIHByb2plY3Q8aGVhZD4NCmF0dG9ybmV5ZW1waGFzaXNzcG9uc29yc2ZhbmN5Ym94d29ybGQncyB3aWxkbGlmZWNoZWNrZWQ9c2Vzc2lvbnNwcm9ncmFtbXB4O2ZvbnQtIFByb2plY3Rqb3VybmFsc2JlbGlldmVkdmFjYXRpb250aG9tcHNvbmxpZ2h0aW5nYW5kIHRoZSBzcGVjaWFsIGJvcmRlcj0wY2hlY2tpbmc8L3Rib2R5PjxidXR0b24gQ29tcGxldGVjbGVhcmZpeAo8aGVhZD4KYXJ0aWNsZSA8c2VjdGlvbmZpbmRpbmdzcm9sZSBpbiBwb3B1bGFyICBPY3RvYmVyd2Vic2l0ZSBleHBvc3VyZXVzZWQgdG8gIGNoYW5nZXNvcGVyYXRlZGNsaWNraW5nZW50ZXJpbmdjb21tYW5kc2luZm9ybWVkIG51bWJlcnMgIDwvZGl2PmNyZWF0aW5nb25TdWJtaXRtYXJ5bGFuZGNvbGxlZ2VzYW5hbHl0aWNsaXN0aW5nc2NvbnRhY3QubG9nZ2VkSW5hZHZpc29yeXNpYmxpbmdzY29udGVudCJzJnF1b3Q7KXMuIFRoaXMgcGFja2FnZXNjaGVja2JveHN1Z2dlc3RzcHJlZ25hbnR0b21vcnJvd3NwYWNpbmc9aWNvbi5wbmdqYXBhbmVzZWNvZGViYXNlYnV0dG9uIj5nYW1ibGluZ3N1Y2ggYXMgLCB3aGlsZSA8L3NwYW4+IG1pc3NvdXJpc3BvcnRpbmd0b3A6MXB4IC48L3NwYW4+dGVuc2lvbnN3aWR0aD0iMmxhenlsb2Fkbm92ZW1iZXJ1c2VkIGluIGhlaWdodD0iY3JpcHQiPgombmJzcDs8Lzx0cj48dGQgaGVpZ2h0OjIvcHJvZHVjdGNvdW50cnkgaW5jbHVkZSBmb290ZXIiICZsdDshLS0gdGl0bGUiPjwvanF1ZXJ5LjwvZm9ybT4KKOeugOS9kyko57mB6auUKWhydmF0c2tpaXRhbGlhbm9yb23Dom7Eg3TDvHJrw6dl2KfYsdiv2Yh0YW1iacOpbm5vdGljaWFzbWVuc2FqZXNwZXJzb25hc2RlcmVjaG9zbmFjaW9uYWxzZXJ2aWNpb2NvbnRhY3RvdXN1YXJpb3Nwcm9ncmFtYWdvYmllcm5vZW1wcmVzYXNhbnVuY2lvc3ZhbGVuY2lhY29sb21iaWFkZXNwdcOpc2RlcG9ydGVzcHJveWVjdG9wcm9kdWN0b3DDumJsaWNvbm9zb3Ryb3NoaXN0b3JpYXByZXNlbnRlbWlsbG9uZXNtZWRpYW50ZXByZWd1bnRhYW50ZXJpb3JyZWN1cnNvc3Byb2JsZW1hc2FudGlhZ29udWVzdHJvc29waW5pw7NuaW1wcmltaXJtaWVudHJhc2Ftw6lyaWNhdmVuZGVkb3Jzb2NpZWRhZHJlc3BlY3RvcmVhbGl6YXJyZWdpc3Ryb3BhbGFicmFzaW50ZXLDqXNlbnRvbmNlc2VzcGVjaWFsbWllbWJyb3NyZWFsaWRhZGPDs3Jkb2JhemFyYWdvemFww6FnaW5hc3NvY2lhbGVzYmxvcXVlYXJnZXN0acOzbmFscXVpbGVyc2lzdGVtYXNjaWVuY2lhc2NvbXBsZXRvdmVyc2nDs25jb21wbGV0YWVzdHVkaW9zcMO6YmxpY2FvYmpldGl2b2FsaWNhbnRlYnVzY2Fkb3JjYW50aWRhZGVudHJhZGFzYWNjaW9uZXNhcmNoaXZvc3N1cGVyaW9ybWF5b3LDrWFhbGVtYW5pYWZ1bmNpw7Nuw7psdGltb3NoYWNpZW5kb2FxdWVsbG9zZWRpY2nDs25mZXJuYW5kb2FtYmllbnRlZmFjZWJvb2tudWVzdHJhc2NsaWVudGVzcHJvY2Vzb3NiYXN0YW50ZXByZXNlbnRhcmVwb3J0YXJjb25ncmVzb3B1YmxpY2FyY29tZXJjaW9jb250cmF0b2rDs3ZlbmVzZGlzdHJpdG90w6ljbmljYWNvbmp1bnRvZW5lcmfDrWF0cmFiYWphcmFzdHVyaWFzcmVjaWVudGV1dGlsaXphcmJvbGV0w61uc2FsdmFkb3Jjb3JyZWN0YXRyYWJham9zcHJpbWVyb3NuZWdvY2lvc2xpYmVydGFkZGV0YWxsZXNwYW50YWxsYXByw7N4aW1vYWxtZXLDrWFhbmltYWxlc3F1acOpbmVzY29yYXrDs25zZWNjacOzbmJ1c2NhbmRvb3BjaW9uZXNleHRlcmlvcmNvbmNlcHRvdG9kYXbDrWFnYWxlcsOtYWVzY3JpYmlybWVkaWNpbmFsaWNlbmNpYWNvbnN1bHRhYXNwZWN0b3NjcsOtdGljYWTDs2xhcmVzanVzdGljaWFkZWJlcsOhbnBlcsOtb2RvbmVjZXNpdGFtYW50ZW5lcnBlcXVlw7FvcmVjaWJpZGF0cmlidW5hbHRlbmVyaWZlY2FuY2nDs25jYW5hcmlhc2Rlc2NhcmdhZGl2ZXJzb3NtYWxsb3JjYXJlcXVpZXJldMOpY25pY29kZWJlcsOtYXZpdmllbmRhZmluYW56YXNhZGVsYW50ZWZ1bmNpb25hY29uc2Vqb3NkaWbDrWNpbGNpdWRhZGVzYW50aWd1YXNhdmFuemFkYXTDqXJtaW5vdW5pZGFkZXNzw6FuY2hlemNhbXBhw7Fhc29mdG9uaWNyZXZpc3Rhc2NvbnRpZW5lc2VjdG9yZXNtb21lbnRvc2ZhY3VsdGFkY3LDqWRpdG9kaXZlcnNhc3N1cHVlc3RvZmFjdG9yZXNzZWd1bmRvc3BlcXVlw7Fh0LPQvtC00LDQtdGB0LvQuNC10YHRgtGM0LHRi9C70L7QsdGL0YLRjNGN0YLQvtC80JXRgdC70LjRgtC+0LPQvtC80LXQvdGP0LLRgdC10YXRjdGC0L7QudC00LDQttC10LHRi9C70LjQs9C+0LTRg9C00LXQvdGM0Y3RgtC+0YLQsdGL0LvQsNGB0LXQsdGP0L7QtNC40L3RgdC10LHQtdC90LDQtNC+0YHQsNC50YLRhNC+0YLQvtC90LXQs9C+0YHQstC+0LjRgdCy0L7QudC40LPRgNGL0YLQvtC20LXQstGB0LXQvNGB0LLQvtGO0LvQuNGI0YzRjdGC0LjRhdC/0L7QutCw0LTQvdC10LnQtNC+0LzQsNC80LjRgNCw0LvQuNCx0L7RgtC10LzRg9GF0L7RgtGP0LTQstGD0YXRgdC10YLQuNC70Y7QtNC40LTQtdC70L7QvNC40YDQtdGC0LXQsdGP0YHQstC+0LXQstC40LTQtdGH0LXQs9C+0Y3RgtC40LzRgdGH0LXRgtGC0LXQvNGL0YbQtdC90YvRgdGC0LDQu9Cy0LXQtNGM0YLQtdC80LXQstC+0LTRi9GC0LXQsdC10LLRi9GI0LXQvdCw0LzQuNGC0LjQv9Cw0YLQvtC80YPQv9GA0LDQstC70LjRhtCw0L7QtNC90LDQs9C+0LTRi9C30L3QsNGO0LzQvtCz0YPQtNGA0YPQs9Cy0YHQtdC50LjQtNC10YLQutC40L3QvtC+0LTQvdC+0LTQtdC70LDQtNC10LvQtdGB0YDQvtC60LjRjtC90Y/QstC10YHRjNCV0YHRgtGM0YDQsNC30LDQvdCw0YjQuNin2YTZhNmH2KfZhNiq2YrYrNmF2YrYudiu2KfYtdip2KfZhNiw2YrYudmE2YrZh9is2K/Zitiv2KfZhNii2YbYp9mE2LHYr9iq2K3Zg9mF2LXZgdit2KnZg9in2YbYqtin2YTZhNmK2YrZg9mI2YbYtNio2YPYqdmB2YrZh9in2KjZhtin2KrYrdmI2KfYodij2YPYq9ix2K7ZhNin2YTYp9mE2K3YqNiv2YTZitmE2K/YsdmI2LPYp9i22LrYt9iq2YPZiNmG2YfZhtin2YPYs9in2K3YqdmG2KfYr9mK2KfZhNi32KjYudmE2YrZg9i02YPYsdin2YrZhdmD2YbZhdmG2YfYp9i02LHZg9ip2LHYptmK2LPZhti02YrYt9mF2KfYsNin2KfZhNmB2YbYtNio2KfYqNiq2LnYqNix2LHYrdmF2KnZg9in2YHYqdmK2YLZiNmE2YXYsdmD2LLZg9mE2YXYqdij2K3Zhdiv2YLZhNio2YrZiti52YbZiti12YjYsdip2LfYsdmK2YLYtNin2LHZg9is2YjYp9mE2KPYrtix2YnZhdi52YbYp9in2KjYrdir2LnYsdmI2LbYqNi02YPZhNmF2LPYrNmE2KjZhtin2YbYrtin2YTYr9mD2KrYp9io2YPZhNmK2KnYqNiv2YjZhtij2YrYttin2YrZiNis2K/Zgdix2YrZgtmD2KrYqNiq2KPZgdi22YTZhdi32KjYrtin2YPYq9ix2KjYp9ix2YPYp9mB2LbZhNin2K3ZhNmJ2YbZgdiz2YfYo9mK2KfZhdix2K/ZiNiv2KPZhtmH2KfYr9mK2YbYp9in2YTYp9mG2YXYudix2LbYqti52YTZhdiv2KfYrtmE2YXZhdmD2YYAAAAAAAAAAAEAAQABAAEAAgACAAIAAgAEAAQABAAEAAABAgMEBQYHBwYFBAMCAQAICQoLDA0ODw8ODQwLCgkIEBESExQVFhcXFhUUExIREBgZGhscHR4fHx4dHBsaGRj/////AAAAAAAAAAD/////AQAAAAIAAAACAAAAAQAAAAEAAAADAAAA//8AAQAAAAEAAP//AAEAAAAIAAgACAAIAAAAAQACAAMABAAFAAYAB3Jlc291cmNlc2NvdW50cmllc3F1ZXN0aW9uc2VxdWlwbWVudGNvbW11bml0eWF2YWlsYWJsZWhpZ2hsaWdodERURC94aHRtbG1hcmtldGluZ2tub3dsZWRnZXNvbWV0aGluZ2NvbnRhaW5lcmRpcmVjdGlvbnN1YnNjcmliZWFkdmVydGlzZWNoYXJhY3RlciIgdmFsdWU9Ijwvc2VsZWN0PkF1c3RyYWxpYSIgY2xhc3M9InNpdHVhdGlvbmF1dGhvcml0eWZvbGxvd2luZ3ByaW1hcmlseW9wZXJhdGlvbmNoYWxsZW5nZWRldmVsb3BlZGFub255bW91c2Z1bmN0aW9uIGZ1bmN0aW9uc2NvbXBhbmllc3N0cnVjdHVyZWFncmVlbWVudCIgdGl0bGU9InBvdGVudGlhbGVkdWNhdGlvbmFyZ3VtZW50c3NlY29uZGFyeWNvcHlyaWdodGxhbmd1YWdlc2V4Y2x1c2l2ZWNvbmRpdGlvbjwvZm9ybT4NCnN0YXRlbWVudGF0dGVudGlvbkJpb2dyYXBoeX0gZWxzZSB7CnNvbHV0aW9uc3doZW4gdGhlIEFuYWx5dGljc3RlbXBsYXRlc2Rhbmdlcm91c3NhdGVsbGl0ZWRvY3VtZW50c3B1Ymxpc2hlcmltcG9ydGFudHByb3RvdHlwZWluZmx1ZW5jZSZyYXF1bzs8L2VmZmVjdGl2ZWdlbmVyYWxseXRyYW5zZm9ybWJlYXV0aWZ1bHRyYW5zcG9ydG9yZ2FuaXplZHB1Ymxpc2hlZHByb21pbmVudHVudGlsIHRoZXRodW1ibmFpbE5hdGlvbmFsIC5mb2N1cygpO292ZXIgdGhlIG1pZ3JhdGlvbmFubm91bmNlZGZvb3RlciI+CmV4Y2VwdGlvbmxlc3MgdGhhbmV4cGVuc2l2ZWZvcm1hdGlvbmZyYW1ld29ya3RlcnJpdG9yeW5kaWNhdGlvbmN1cnJlbnRseWNsYXNzTmFtZWNyaXRpY2lzbXRyYWRpdGlvbmVsc2V3aGVyZUFsZXhhbmRlcmFwcG9pbnRlZG1hdGVyaWFsc2Jyb2FkY2FzdG1lbnRpb25lZGFmZmlsaWF0ZTwvb3B0aW9uPnRyZWF0bWVudGRpZmZlcmVudC9kZWZhdWx0LlByZXNpZGVudG9uY2xpY2s9ImJpb2dyYXBoeW90aGVyd2lzZXBlcm1hbmVudEZyYW7Dp2Fpc0hvbGx5d29vZGV4cGFuc2lvbnN0YW5kYXJkczwvc3R5bGU+CnJlZHVjdGlvbkRlY2VtYmVyIHByZWZlcnJlZENhbWJyaWRnZW9wcG9uZW50c0J1c2luZXNzIGNvbmZ1c2lvbj4KPHRpdGxlPnByZXNlbnRlZGV4cGxhaW5lZGRvZXMgbm90IHdvcmxkd2lkZWludGVyZmFjZXBvc2l0aW9uc25ld3NwYXBlcjwvdGFibGU+Cm1vdW50YWluc2xpa2UgdGhlIGVzc2VudGlhbGZpbmFuY2lhbHNlbGVjdGlvbmFjdGlvbj0iL2FiYW5kb25lZEVkdWNhdGlvbnBhcnNlSW50KHN0YWJpbGl0eXVuYWJsZSB0bzwvdGl0bGU+CnJlbGF0aW9uc05vdGUgdGhhdGVmZmljaWVudHBlcmZvcm1lZHR3byB5ZWFyc1NpbmNlIHRoZXRoZXJlZm9yZXdyYXBwZXIiPmFsdGVybmF0ZWluY3JlYXNlZEJhdHRsZSBvZnBlcmNlaXZlZHRyeWluZyB0b25lY2Vzc2FyeXBvcnRyYXllZGVsZWN0aW9uc0VsaXphYmV0aDwvaWZyYW1lPmRpc2NvdmVyeWluc3VyYW5jZXMubGVuZ3RoO2xlZ2VuZGFyeUdlb2dyYXBoeWNhbmRpZGF0ZWNvcnBvcmF0ZXNvbWV0aW1lc3NlcnZpY2VzLmluaGVyaXRlZDwvc3Ryb25nPkNvbW11bml0eXJlbGlnaW91c2xvY2F0aW9uc0NvbW1pdHRlZWJ1aWxkaW5nc3RoZSB3b3JsZG5vIGxvbmdlcmJlZ2lubmluZ3JlZmVyZW5jZWNhbm5vdCBiZWZyZXF1ZW5jeXR5cGljYWxseWludG8gdGhlIHJlbGF0aXZlO3JlY29yZGluZ3ByZXNpZGVudGluaXRpYWxseXRlY2huaXF1ZXRoZSBvdGhlcml0IGNhbiBiZWV4aXN0ZW5jZXVuZGVybGluZXRoaXMgdGltZXRlbGVwaG9uZWl0ZW1zY29wZXByYWN0aWNlc2FkdmFudGFnZSk7cmV0dXJuIEZvciBvdGhlcnByb3ZpZGluZ2RlbW9jcmFjeWJvdGggdGhlIGV4dGVuc2l2ZXN1ZmZlcmluZ3N1cHBvcnRlZGNvbXB1dGVycyBmdW5jdGlvbnByYWN0aWNhbHNhaWQgdGhhdGl0IG1heSBiZUVuZ2xpc2g8L2Zyb20gdGhlIHNjaGVkdWxlZGRvd25sb2FkczwvbGFiZWw+CnN1c3BlY3RlZG1hcmdpbjogMHNwaXJpdHVhbDwvaGVhZD4KCm1pY3Jvc29mdGdyYWR1YWxseWRpc2N1c3NlZGhlIGJlY2FtZWV4ZWN1dGl2ZWpxdWVyeS5qc2hvdXNlaG9sZGNvbmZpcm1lZHB1cmNoYXNlZGxpdGVyYWxseWRlc3Ryb3llZHVwIHRvIHRoZXZhcmlhdGlvbnJlbWFpbmluZ2l0IGlzIG5vdGNlbnR1cmllc0phcGFuZXNlIGFtb25nIHRoZWNvbXBsZXRlZGFsZ29yaXRobWludGVyZXN0c3JlYmVsbGlvbnVuZGVmaW5lZGVuY291cmFnZXJlc2l6YWJsZWludm9sdmluZ3NlbnNpdGl2ZXVuaXZlcnNhbHByb3Zpc2lvbihhbHRob3VnaGZlYXR1cmluZ2NvbmR1Y3RlZCksIHdoaWNoIGNvbnRpbnVlZC1oZWFkZXIiPkZlYnJ1YXJ5IG51bWVyb3VzIG92ZXJmbG93OmNvbXBvbmVudGZyYWdtZW50c2V4Y2VsbGVudGNvbHNwYW49InRlY2huaWNhbG5lYXIgdGhlIEFkdmFuY2VkIHNvdXJjZSBvZmV4cHJlc3NlZEhvbmcgS29uZyBGYWNlYm9va211bHRpcGxlIG1lY2hhbmlzbWVsZXZhdGlvbm9mZmVuc2l2ZTwvZm9ybT4KCXNwb25zb3JlZGRvY3VtZW50Lm9yICZxdW90O3RoZXJlIGFyZXRob3NlIHdob21vdmVtZW50c3Byb2Nlc3Nlc2RpZmZpY3VsdHN1Ym1pdHRlZHJlY29tbWVuZGNvbnZpbmNlZHByb21vdGluZyIgd2lkdGg9Ii5yZXBsYWNlKGNsYXNzaWNhbGNvYWxpdGlvbmhpcyBmaXJzdGRlY2lzaW9uc2Fzc2lzdGFudGluZGljYXRlZGV2b2x1dGlvbi13cmFwcGVyImVub3VnaCB0b2Fsb25nIHRoZWRlbGl2ZXJlZC0tPg0KPCEtLUFtZXJpY2FuIHByb3RlY3RlZE5vdmVtYmVyIDwvc3R5bGU+PGZ1cm5pdHVyZUludGVybmV0ICBvbmJsdXI9InN1c3BlbmRlZHJlY2lwaWVudGJhc2VkIG9uIE1vcmVvdmVyLGFib2xpc2hlZGNvbGxlY3RlZHdlcmUgbWFkZWVtb3Rpb25hbGVtZXJnZW5jeW5hcnJhdGl2ZWFkdm9jYXRlc3B4O2JvcmRlcmNvbW1pdHRlZGRpcj0ibHRyImVtcGxveWVlc3Jlc2VhcmNoLiBzZWxlY3RlZHN1Y2Nlc3NvcmN1c3RvbWVyc2Rpc3BsYXllZFNlcHRlbWJlcmFkZENsYXNzKEZhY2Vib29rIHN1Z2dlc3RlZGFuZCBsYXRlcm9wZXJhdGluZ2VsYWJvcmF0ZVNvbWV0aW1lc0luc3RpdHV0ZWNlcnRhaW5seWluc3RhbGxlZGZvbGxvd2Vyc0plcnVzYWxlbXRoZXkgaGF2ZWNvbXB1dGluZ2dlbmVyYXRlZHByb3ZpbmNlc2d1YXJhbnRlZWFyYml0cmFyeXJlY29nbml6ZXdhbnRlZCB0b3B4O3dpZHRoOnRoZW9yeSBvZmJlaGF2aW91cldoaWxlIHRoZWVzdGltYXRlZGJlZ2FuIHRvIGl0IGJlY2FtZW1hZ25pdHVkZW11c3QgaGF2ZW1vcmUgdGhhbkRpcmVjdG9yeWV4dGVuc2lvbnNlY3JldGFyeW5hdHVyYWxseW9jY3VycmluZ3ZhcmlhYmxlc2dpdmVuIHRoZXBsYXRmb3JtLjwvbGFiZWw+PGZhaWxlZCB0b2NvbXBvdW5kc2tpbmRzIG9mIHNvY2lldGllc2Fsb25nc2lkZSAtLSZndDsKCnNvdXRod2VzdHRoZSByaWdodHJhZGlhdGlvbm1heSBoYXZlIHVuZXNjYXBlKHNwb2tlbiBpbiIgaHJlZj0iL3Byb2dyYW1tZW9ubHkgdGhlIGNvbWUgZnJvbWRpcmVjdG9yeWJ1cmllZCBpbmEgc2ltaWxhcnRoZXkgd2VyZTwvZm9udD48L05vcndlZ2lhbnNwZWNpZmllZHByb2R1Y2luZ3Bhc3NlbmdlcihuZXcgRGF0ZXRlbXBvcmFyeWZpY3Rpb25hbEFmdGVyIHRoZWVxdWF0aW9uc2Rvd25sb2FkLnJlZ3VsYXJseWRldmVsb3BlcmFib3ZlIHRoZWxpbmtlZCB0b3BoZW5vbWVuYXBlcmlvZCBvZnRvb2x0aXAiPnN1YnN0YW5jZWF1dG9tYXRpY2FzcGVjdCBvZkFtb25nIHRoZWNvbm5lY3RlZGVzdGltYXRlc0FpciBGb3JjZXN5c3RlbSBvZm9iamVjdGl2ZWltbWVkaWF0ZW1ha2luZyBpdHBhaW50aW5nc2NvbnF1ZXJlZGFyZSBzdGlsbHByb2NlZHVyZWdyb3d0aCBvZmhlYWRlZCBieUV1cm9wZWFuIGRpdmlzaW9uc21vbGVjdWxlc2ZyYW5jaGlzZWludGVudGlvbmF0dHJhY3RlZGNoaWxkaG9vZGFsc28gdXNlZGRlZGljYXRlZHNpbmdhcG9yZWRlZ3JlZSBvZmZhdGhlciBvZmNvbmZsaWN0czwvYT48L3A+CmNhbWUgZnJvbXdlcmUgdXNlZG5vdGUgdGhhdHJlY2VpdmluZ0V4ZWN1dGl2ZWV2ZW4gbW9yZWFjY2VzcyB0b2NvbW1hbmRlclBvbGl0aWNhbG11c2ljaWFuc2RlbGljaW91c3ByaXNvbmVyc2FkdmVudCBvZlVURi04IiAvPjwhW0NEQVRBWyI+Q29udGFjdFNvdXRoZXJuIGJnY29sb3I9InNlcmllcyBvZi4gSXQgd2FzIGluIEV1cm9wZXBlcm1pdHRlZHZhbGlkYXRlLmFwcGVhcmluZ29mZmljaWFsc3NlcmlvdXNseS1sYW5ndWFnZWluaXRpYXRlZGV4dGVuZGluZ2xvbmctdGVybWluZmxhdGlvbnN1Y2ggdGhhdGdldENvb2tpZW1hcmtlZCBieTwvYnV0dG9uPmltcGxlbWVudGJ1dCBpdCBpc2luY3JlYXNlc2Rvd24gdGhlIHJlcXVpcmluZ2RlcGVuZGVudC0tPgo8IS0tIGludGVydmlld1dpdGggdGhlIGNvcGllcyBvZmNvbnNlbnN1c3dhcyBidWlsdFZlbmV6dWVsYShmb3JtZXJseXRoZSBzdGF0ZXBlcnNvbm5lbHN0cmF0ZWdpY2Zhdm91ciBvZmludmVudGlvbldpa2lwZWRpYWNvbnRpbmVudHZpcnR1YWxseXdoaWNoIHdhc3ByaW5jaXBsZUNvbXBsZXRlIGlkZW50aWNhbHNob3cgdGhhdHByaW1pdGl2ZWF3YXkgZnJvbW1vbGVjdWxhcnByZWNpc2VseWRpc3NvbHZlZFVuZGVyIHRoZXZlcnNpb249Ij4mbmJzcDs8L0l0IGlzIHRoZSBUaGlzIGlzIHdpbGwgaGF2ZW9yZ2FuaXNtc3NvbWUgdGltZUZyaWVkcmljaHdhcyBmaXJzdHRoZSBvbmx5IGZhY3QgdGhhdGZvcm0gaWQ9InByZWNlZGluZ1RlY2huaWNhbHBoeXNpY2lzdG9jY3VycyBpbm5hdmlnYXRvcnNlY3Rpb24iPnNwYW4gaWQ9InNvdWdodCB0b2JlbG93IHRoZXN1cnZpdmluZ308L3N0eWxlPmhpcyBkZWF0aGFzIGluIHRoZWNhdXNlZCBieXBhcnRpYWxseWV4aXN0aW5nIHVzaW5nIHRoZXdhcyBnaXZlbmEgbGlzdCBvZmxldmVscyBvZm5vdGlvbiBvZk9mZmljaWFsIGRpc21pc3NlZHNjaWVudGlzdHJlc2VtYmxlc2R1cGxpY2F0ZWV4cGxvc2l2ZXJlY292ZXJlZGFsbCBvdGhlcmdhbGxlcmllc3twYWRkaW5nOnBlb3BsZSBvZnJlZ2lvbiBvZmFkZHJlc3Nlc2Fzc29jaWF0ZWltZyBhbHQ9ImluIG1vZGVybnNob3VsZCBiZW1ldGhvZCBvZnJlcG9ydGluZ3RpbWVzdGFtcG5lZWRlZCB0b3RoZSBHcmVhdHJlZ2FyZGluZ3NlZW1lZCB0b3ZpZXdlZCBhc2ltcGFjdCBvbmlkZWEgdGhhdHRoZSBXb3JsZGhlaWdodCBvZmV4cGFuZGluZ1RoZXNlIGFyZWN1cnJlbnQiPmNhcmVmdWxseW1haW50YWluc2NoYXJnZSBvZkNsYXNzaWNhbGFkZHJlc3NlZHByZWRpY3RlZG93bmVyc2hpcDxkaXYgaWQ9InJpZ2h0Ij4NCnJlc2lkZW5jZWxlYXZlIHRoZWNvbnRlbnQiPmFyZSBvZnRlbiAgfSkoKTsNCnByb2JhYmx5IFByb2Zlc3Nvci1idXR0b24iIHJlc3BvbmRlZHNheXMgdGhhdGhhZCB0byBiZXBsYWNlZCBpbkh1bmdhcmlhbnN0YXR1cyBvZnNlcnZlcyBhc1VuaXZlcnNhbGV4ZWN1dGlvbmFnZ3JlZ2F0ZWZvciB3aGljaGluZmVjdGlvbmFncmVlZCB0b2hvd2V2ZXIsIHBvcHVsYXIiPnBsYWNlZCBvbmNvbnN0cnVjdGVsZWN0b3JhbHN5bWJvbCBvZmluY2x1ZGluZ3JldHVybiB0b2FyY2hpdGVjdENocmlzdGlhbnByZXZpb3VzIGxpdmluZyBpbmVhc2llciB0b3Byb2Zlc3NvcgombHQ7IS0tIGVmZmVjdCBvZmFuYWx5dGljc3dhcyB0YWtlbndoZXJlIHRoZXRvb2sgb3ZlcmJlbGllZiBpbkFmcmlrYWFuc2FzIGZhciBhc3ByZXZlbnRlZHdvcmsgd2l0aGEgc3BlY2lhbDxmaWVsZHNldENocmlzdG1hc1JldHJpZXZlZAoKSW4gdGhlIGJhY2sgaW50b25vcnRoZWFzdG1hZ2F6aW5lcz48c3Ryb25nPmNvbW1pdHRlZWdvdmVybmluZ2dyb3VwcyBvZnN0b3JlZCBpbmVzdGFibGlzaGEgZ2VuZXJhbGl0cyBmaXJzdHRoZWlyIG93bnBvcHVsYXRlZGFuIG9iamVjdENhcmliYmVhbmFsbG93IHRoZWRpc3RyaWN0c3dpc2NvbnNpbmxvY2F0aW9uLjsgd2lkdGg6IGluaGFiaXRlZFNvY2lhbGlzdEphbnVhcnkgMTwvZm9vdGVyPnNpbWlsYXJseWNob2ljZSBvZnRoZSBzYW1lIHNwZWNpZmljIGJ1c2luZXNzIFRoZSBmaXJzdC5sZW5ndGg7IGRlc2lyZSB0b2RlYWwgd2l0aHNpbmNlIHRoZXVzZXJBZ2VudGNvbmNlaXZlZGluZGV4LnBocGFzICZxdW90O2VuZ2FnZSBpbnJlY2VudGx5LGZldyB5ZWFyc3dlcmUgYWxzbwo8aGVhZD4KPGVkaXRlZCBieWFyZSBrbm93bmNpdGllcyBpbmFjY2Vzc2tleWNvbmRlbW5lZGFsc28gaGF2ZXNlcnZpY2VzLGZhbWlseSBvZlNjaG9vbCBvZmNvbnZlcnRlZG5hdHVyZSBvZiBsYW5ndWFnZW1pbmlzdGVyczwvb2JqZWN0PnRoZXJlIGlzIGEgcG9wdWxhcnNlcXVlbmNlc2Fkdm9jYXRlZFRoZXkgd2VyZWFueSBvdGhlcmxvY2F0aW9uPWVudGVyIHRoZW11Y2ggbW9yZXJlZmxlY3RlZHdhcyBuYW1lZG9yaWdpbmFsIGEgdHlwaWNhbHdoZW4gdGhleWVuZ2luZWVyc2NvdWxkIG5vdHJlc2lkZW50c3dlZG5lc2RheXRoZSB0aGlyZCBwcm9kdWN0c0phbnVhcnkgMndoYXQgdGhleWEgY2VydGFpbnJlYWN0aW9uc3Byb2Nlc3NvcmFmdGVyIGhpc3RoZSBsYXN0IGNvbnRhaW5lZCI+PC9kaXY+CjwvYT48L3RkPmRlcGVuZCBvbnNlYXJjaCI+CnBpZWNlcyBvZmNvbXBldGluZ1JlZmVyZW5jZXRlbm5lc3NlZXdoaWNoIGhhcyB2ZXJzaW9uPTwvc3Bhbj4gPDwvaGVhZGVyPmdpdmVzIHRoZWhpc3RvcmlhbnZhbHVlPSIiPnBhZGRpbmc6MHZpZXcgdGhhdHRvZ2V0aGVyLHRoZSBtb3N0IHdhcyBmb3VuZHN1YnNldCBvZmF0dGFjayBvbmNoaWxkcmVuLHBvaW50cyBvZnBlcnNvbmFsIHBvc2l0aW9uOmFsbGVnZWRseUNsZXZlbGFuZHdhcyBsYXRlcmFuZCBhZnRlcmFyZSBnaXZlbndhcyBzdGlsbHNjcm9sbGluZ2Rlc2lnbiBvZm1ha2VzIHRoZW11Y2ggbGVzc0FtZXJpY2Fucy4KCkFmdGVyICwgYnV0IHRoZU11c2V1bSBvZmxvdWlzaWFuYShmcm9tIHRoZW1pbm5lc290YXBhcnRpY2xlc2EgcHJvY2Vzc0RvbWluaWNhbnZvbHVtZSBvZnJldHVybmluZ2RlZmVuc2l2ZTAwcHh8cmlnaG1hZGUgZnJvbW1vdXNlb3ZlciIgc3R5bGU9InN0YXRlcyBvZih3aGljaCBpc2NvbnRpbnVlc0ZyYW5jaXNjb2J1aWxkaW5nIHdpdGhvdXQgYXdpdGggc29tZXdobyB3b3VsZGEgZm9ybSBvZmEgcGFydCBvZmJlZm9yZSBpdGtub3duIGFzICBTZXJ2aWNlc2xvY2F0aW9uIGFuZCBvZnRlbm1lYXN1cmluZ2FuZCBpdCBpc3BhcGVyYmFja3ZhbHVlcyBvZg0KPHRpdGxlPj0gd2luZG93LmRldGVybWluZWVyJnF1b3Q7IHBsYXllZCBieWFuZCBlYXJseTwvY2VudGVyPmZyb20gdGhpc3RoZSB0aHJlZXBvd2VyIGFuZG9mICZxdW90O2lubmVySFRNTDxhIGhyZWY9Ink6aW5saW5lO0NodXJjaCBvZnRoZSBldmVudHZlcnkgaGlnaG9mZmljaWFsIC1oZWlnaHQ6IGNvbnRlbnQ9Ii9jZ2ktYmluL3RvIGNyZWF0ZWFmcmlrYWFuc2VzcGVyYW50b2ZyYW7Dp2Fpc2xhdHZpZcWhdWxpZXR1dmnFs8SMZcWhdGluYcSNZcWhdGluYeC5hOC4l+C4ouaXpeacrOiqnueugOS9k+Wtl+e5gemrlOWtl+2VnOq1reyWtOS4uuS7gOS5iOiuoeeul+acuueslOiusOacrOiojuirluWNgOacjeWKoeWZqOS6kuiBlOe9keaIv+WcsOS6p+S/seS5kOmDqOWHuueJiOekvuaOkuihjOamnOmDqOiQveagvOi/m+S4gOatpeaUr+S7mOWunemqjOivgeeggeWnlOWRmOS8muaVsOaNruW6k+a2iOi0ueiAheWKnuWFrOWupOiuqOiuuuWMuua3seWcs+W4guaSreaUvuWZqOWMl+S6rOW4guWkp+WtpueUn+i2iuadpei2iueuoeeQhuWRmOS/oeaBr+e9kXNlcnZpY2lvc2FydMOtY3Vsb2FyZ2VudGluYWJhcmNlbG9uYWN1YWxxdWllcnB1YmxpY2Fkb3Byb2R1Y3Rvc3BvbMOtdGljYXJlc3B1ZXN0YXdpa2lwZWRpYXNpZ3VpZW50ZWLDunNxdWVkYWNvbXVuaWRhZHNlZ3VyaWRhZHByaW5jaXBhbHByZWd1bnRhc2NvbnRlbmlkb3Jlc3BvbmRlcnZlbmV6dWVsYXByb2JsZW1hc2RpY2llbWJyZXJlbGFjacOzbm5vdmllbWJyZXNpbWlsYXJlc3Byb3llY3Rvc3Byb2dyYW1hc2luc3RpdHV0b2FjdGl2aWRhZGVuY3VlbnRyYWVjb25vbcOtYWltw6FnZW5lc2NvbnRhY3RhcmRlc2Nhcmdhcm5lY2VzYXJpb2F0ZW5jacOzbnRlbMOpZm9ub2NvbWlzacOzbmNhbmNpb25lc2NhcGFjaWRhZGVuY29udHJhcmFuw6FsaXNpc2Zhdm9yaXRvc3TDqXJtaW5vc3Byb3ZpbmNpYWV0aXF1ZXRhc2VsZW1lbnRvc2Z1bmNpb25lc3Jlc3VsdGFkb2NhcsOhY3RlcnByb3BpZWRhZHByaW5jaXBpb25lY2VzaWRhZG11bmljaXBhbGNyZWFjacOzbmRlc2Nhcmdhc3ByZXNlbmNpYWNvbWVyY2lhbG9waW5pb25lc2VqZXJjaWNpb2VkaXRvcmlhbHNhbGFtYW5jYWdvbnrDoWxlemRvY3VtZW50b3BlbMOtY3VsYXJlY2llbnRlc2dlbmVyYWxlc3RhcnJhZ29uYXByw6FjdGljYW5vdmVkYWRlc3Byb3B1ZXN0YXBhY2llbnRlc3TDqWNuaWNhc29iamV0aXZvc2NvbnRhY3Rvc+CkruClh+CkguCksuCkv+Ckj+CkueCliOCkguCkl+Ckr+CkvuCkuOCkvuCkpeCkj+CkteCkguCksOCkueClh+CkleCli+CkiOCkleClgeCkm+CksOCkueCkvuCkrOCkvuCkpuCkleCkueCkvuCkuOCkreClgOCkueClgeCkj+CksOCkueClgOCkruCliOCkguCkpuCkv+CkqOCkrOCkvuCkpGRpcGxvZG9jc+CkuOCkruCkr+CksOClguCkquCkqOCkvuCkruCkquCkpOCkvuCkq+Ckv+CksOCklOCkuOCkpOCkpOCksOCkueCksuCli+Ckl+CkueClgeCkhuCkrOCkvuCksOCkpuClh+CktuCkueClgeCkiOCkluClh+CksuCkr+CkpuCkv+CkleCkvuCkruCkteClh+CkrOCkpOClgOCkqOCkrOClgOCkmuCkruCljOCkpOCkuOCkvuCksuCksuClh+CkluCknOClieCkrOCkruCkpuCkpuCkpOCkpeCkvuCkqOCkueClgOCktuCkueCksOCkheCksuCkl+CkleCkreClgOCkqOCkl+CksOCkquCkvuCkuOCksOCkvuCkpOCkleCkv+Ckj+CkieCkuOClh+Ckl+Ckr+ClgOCkueClguCkgeCkhuCkl+Clh+Ckn+ClgOCkruCkluCli+CknOCkleCkvuCksOCkheCkreClgOCkl+Ckr+Clh+CkpOClgeCkruCkteCli+Ckn+CkpuClh+CkguCkheCkl+CksOCkkOCkuOClh+CkruClh+CksuCksuCkl+CkvuCkueCkvuCksuCkiuCkquCksOCkmuCkvuCksOCkkOCkuOCkvuCkpuClh+CksOCknOCkv+CkuOCkpuCkv+CksuCkrOCkguCkpuCkrOCkqOCkvuCkueClguCkguCksuCkvuCkluCknOClgOCkpOCkrOCkn+CkqOCkruCkv+CksuCkh+CkuOClh+CkhuCkqOClh+CkqOCkr+CkvuCkleClgeCksuCksuClieCkl+CkreCkvuCkl+CksOClh+CksuCknOCkl+CkueCksOCkvuCkruCksuCkl+Clh+CkquClh+CknOCkueCkvuCkpeCkh+CkuOClgOCkuOCkueClgOCkleCksuCkvuCkoOClgOCkleCkueCkvuCkgeCkpuClguCksOCkpOCkueCkpOCkuOCkvuCkpOCkr+CkvuCkpuCkhuCkr+CkvuCkquCkvuCkleCkleCljOCkqOCktuCkvuCkruCkpuClh+CkluCkr+CkueClgOCksOCkvuCkr+CkluClgeCkpuCksuCkl+ClgGNhdGVnb3JpZXNleHBlcmllbmNlPC90aXRsZT4NCkNvcHlyaWdodCBqYXZhc2NyaXB0Y29uZGl0aW9uc2V2ZXJ5dGhpbmc8cCBjbGFzcz0idGVjaG5vbG9neWJhY2tncm91bmQ8YSBjbGFzcz0ibWFuYWdlbWVudCZjb3B5OyAyMDFqYXZhU2NyaXB0Y2hhcmFjdGVyc2JyZWFkY3J1bWJ0aGVtc2VsdmVzaG9yaXpvbnRhbGdvdmVybm1lbnRDYWxpZm9ybmlhYWN0aXZpdGllc2Rpc2NvdmVyZWROYXZpZ2F0aW9udHJhbnNpdGlvbmNvbm5lY3Rpb25uYXZpZ2F0aW9uYXBwZWFyYW5jZTwvdGl0bGU+PG1jaGVja2JveCIgdGVjaG5pcXVlc3Byb3RlY3Rpb25hcHBhcmVudGx5YXMgd2VsbCBhc3VudCcsICdVQS1yZXNvbHV0aW9ub3BlcmF0aW9uc3RlbGV2aXNpb250cmFuc2xhdGVkV2FzaGluZ3Rvbm5hdmlnYXRvci4gPSB3aW5kb3cuaW1wcmVzc2lvbiZsdDticiZndDtsaXRlcmF0dXJlcG9wdWxhdGlvbmJnY29sb3I9IiNlc3BlY2lhbGx5IGNvbnRlbnQ9InByb2R1Y3Rpb25uZXdzbGV0dGVycHJvcGVydGllc2RlZmluaXRpb25sZWFkZXJzaGlwVGVjaG5vbG9neVBhcmxpYW1lbnRjb21wYXJpc29udWwgY2xhc3M9Ii5pbmRleE9mKCJjb25jbHVzaW9uZGlzY3Vzc2lvbmNvbXBvbmVudHNiaW9sb2dpY2FsUmV2b2x1dGlvbl9jb250YWluZXJ1bmRlcnN0b29kbm9zY3JpcHQ+PHBlcm1pc3Npb25lYWNoIG90aGVyYXRtb3NwaGVyZSBvbmZvY3VzPSI8Zm9ybSBpZD0icHJvY2Vzc2luZ3RoaXMudmFsdWVnZW5lcmF0aW9uQ29uZmVyZW5jZXN1YnNlcXVlbnR3ZWxsLWtub3dudmFyaWF0aW9uc3JlcHV0YXRpb25waGVub21lbm9uZGlzY2lwbGluZWxvZ28ucG5nIiAoZG9jdW1lbnQsYm91bmRhcmllc2V4cHJlc3Npb25zZXR0bGVtZW50QmFja2dyb3VuZG91dCBvZiB0aGVlbnRlcnByaXNlKCJodHRwczoiIHVuZXNjYXBlKCJwYXNzd29yZCIgZGVtb2NyYXRpYzxhIGhyZWY9Ii93cmFwcGVyIj4KbWVtYmVyc2hpcGxpbmd1aXN0aWNweDtwYWRkaW5ncGhpbG9zb3BoeWFzc2lzdGFuY2V1bml2ZXJzaXR5ZmFjaWxpdGllc3JlY29nbml6ZWRwcmVmZXJlbmNlaWYgKHR5cGVvZm1haW50YWluZWR2b2NhYnVsYXJ5aHlwb3RoZXNpcy5zdWJtaXQoKTsmYW1wO25ic3A7YW5ub3RhdGlvbmJlaGluZCB0aGVGb3VuZGF0aW9ucHVibGlzaGVyImFzc3VtcHRpb25pbnRyb2R1Y2VkY29ycnVwdGlvbnNjaWVudGlzdHNleHBsaWNpdGx5aW5zdGVhZCBvZmRpbWVuc2lvbnMgb25DbGljaz0iY29uc2lkZXJlZGRlcGFydG1lbnRvY2N1cGF0aW9uc29vbiBhZnRlcmludmVzdG1lbnRwcm9ub3VuY2VkaWRlbnRpZmllZGV4cGVyaW1lbnRNYW5hZ2VtZW50Z2VvZ3JhcGhpYyIgaGVpZ2h0PSJsaW5rIHJlbD0iLnJlcGxhY2UoL2RlcHJlc3Npb25jb25mZXJlbmNlcHVuaXNobWVudGVsaW1pbmF0ZWRyZXNpc3RhbmNlYWRhcHRhdGlvbm9wcG9zaXRpb253ZWxsIGtub3duc3VwcGxlbWVudGRldGVybWluZWRoMSBjbGFzcz0iMHB4O21hcmdpbm1lY2hhbmljYWxzdGF0aXN0aWNzY2VsZWJyYXRlZEdvdmVybm1lbnQKCkR1cmluZyB0ZGV2ZWxvcGVyc2FydGlmaWNpYWxlcXVpdmFsZW50b3JpZ2luYXRlZENvbW1pc3Npb25hdHRhY2htZW50PHNwYW4gaWQ9InRoZXJlIHdlcmVOZWRlcmxhbmRzYmV5b25kIHRoZXJlZ2lzdGVyZWRqb3VybmFsaXN0ZnJlcXVlbnRseWFsbCBvZiB0aGVsYW5nPSJlbiIgPC9zdHlsZT4NCmFic29sdXRlOyBzdXBwb3J0aW5nZXh0cmVtZWx5IG1haW5zdHJlYW08L3N0cm9uZz4gcG9wdWxhcml0eWVtcGxveW1lbnQ8L3RhYmxlPg0KIGNvbHNwYW49IjwvZm9ybT4KICBjb252ZXJzaW9uYWJvdXQgdGhlIDwvcD48L2Rpdj5pbnRlZ3JhdGVkIiBsYW5nPSJlblBvcnR1Z3Vlc2VzdWJzdGl0dXRlaW5kaXZpZHVhbGltcG9zc2libGVtdWx0aW1lZGlhYWxtb3N0IGFsbHB4IHNvbGlkICNhcGFydCBmcm9tc3ViamVjdCB0b2luIEVuZ2xpc2hjcml0aWNpemVkZXhjZXB0IGZvcmd1aWRlbGluZXNvcmlnaW5hbGx5cmVtYXJrYWJsZXRoZSBzZWNvbmRoMiBjbGFzcz0iPGEgdGl0bGU9IihpbmNsdWRpbmdwYXJhbWV0ZXJzcHJvaGliaXRlZD0gImh0dHA6Ly9kaWN0aW9uYXJ5cGVyY2VwdGlvbnJldm9sdXRpb25mb3VuZGF0aW9ucHg7aGVpZ2h0OnN1Y2Nlc3NmdWxzdXBwb3J0ZXJzbWlsbGVubml1bWhpcyBmYXRoZXJ0aGUgJnF1b3Q7bm8tcmVwZWF0O2NvbW1lcmNpYWxpbmR1c3RyaWFsZW5jb3VyYWdlZGFtb3VudCBvZiB1bm9mZmljaWFsZWZmaWNpZW5jeVJlZmVyZW5jZXNjb29yZGluYXRlZGlzY2xhaW1lcmV4cGVkaXRpb25kZXZlbG9waW5nY2FsY3VsYXRlZHNpbXBsaWZpZWRsZWdpdGltYXRlc3Vic3RyaW5nKDAiIGNsYXNzPSJjb21wbGV0ZWx5aWxsdXN0cmF0ZWZpdmUgeWVhcnNpbnN0cnVtZW50UHVibGlzaGluZzEiIGNsYXNzPSJwc3ljaG9sb2d5Y29uZmlkZW5jZW51bWJlciBvZiBhYnNlbmNlIG9mZm9jdXNlZCBvbmpvaW5lZCB0aGVzdHJ1Y3R1cmVzcHJldmlvdXNseT48L2lmcmFtZT5vbmNlIGFnYWluYnV0IHJhdGhlcmltbWlncmFudHNvZiBjb3Vyc2UsYSBncm91cCBvZkxpdGVyYXR1cmVVbmxpa2UgdGhlPC9hPiZuYnNwOwpmdW5jdGlvbiBpdCB3YXMgdGhlQ29udmVudGlvbmF1dG9tb2JpbGVQcm90ZXN0YW50YWdncmVzc2l2ZWFmdGVyIHRoZSBTaW1pbGFybHksIiAvPjwvZGl2PmNvbGxlY3Rpb24NCmZ1bmN0aW9udmlzaWJpbGl0eXRoZSB1c2Ugb2Z2b2x1bnRlZXJzYXR0cmFjdGlvbnVuZGVyIHRoZSB0aHJlYXRlbmVkKjwhW0NEQVRBW2ltcG9ydGFuY2VpbiBnZW5lcmFsdGhlIGxhdHRlcjwvZm9ybT4KPC8uaW5kZXhPZignaSA9IDA7IGkgPGRpZmZlcmVuY2VkZXZvdGVkIHRvdHJhZGl0aW9uc3NlYXJjaCBmb3J1bHRpbWF0ZWx5dG91cm5hbWVudGF0dHJpYnV0ZXNzby1jYWxsZWQgfQo8L3N0eWxlPmV2YWx1YXRpb25lbXBoYXNpemVkYWNjZXNzaWJsZTwvc2VjdGlvbj5zdWNjZXNzaW9uYWxvbmcgd2l0aE1lYW53aGlsZSxpbmR1c3RyaWVzPC9hPjxiciAvPmhhcyBiZWNvbWVhc3BlY3RzIG9mVGVsZXZpc2lvbnN1ZmZpY2llbnRiYXNrZXRiYWxsYm90aCBzaWRlc2NvbnRpbnVpbmdhbiBhcnRpY2xlPGltZyBhbHQ9ImFkdmVudHVyZXNoaXMgbW90aGVybWFuY2hlc3RlcnByaW5jaXBsZXNwYXJ0aWN1bGFyY29tbWVudGFyeWVmZmVjdHMgb2ZkZWNpZGVkIHRvIj48c3Ryb25nPnB1Ymxpc2hlcnNKb3VybmFsIG9mZGlmZmljdWx0eWZhY2lsaXRhdGVhY2NlcHRhYmxlc3R5bGUuY3NzIglmdW5jdGlvbiBpbm5vdmF0aW9uPkNvcHlyaWdodHNpdHVhdGlvbnN3b3VsZCBoYXZlYnVzaW5lc3Nlc0RpY3Rpb25hcnlzdGF0ZW1lbnRzb2Z0ZW4gdXNlZHBlcnNpc3RlbnRpbiBKYW51YXJ5Y29tcHJpc2luZzwvdGl0bGU+CglkaXBsb21hdGljY29udGFpbmluZ3BlcmZvcm1pbmdleHRlbnNpb25zbWF5IG5vdCBiZWNvbmNlcHQgb2Ygb25jbGljaz0iSXQgaXMgYWxzb2ZpbmFuY2lhbCBtYWtpbmcgdGhlTHV4ZW1ib3VyZ2FkZGl0aW9uYWxhcmUgY2FsbGVkZW5nYWdlZCBpbiJzY3JpcHQiKTtidXQgaXQgd2FzZWxlY3Ryb25pY29uc3VibWl0PSIKPCEtLSBFbmQgZWxlY3RyaWNhbG9mZmljaWFsbHlzdWdnZXN0aW9udG9wIG9mIHRoZXVubGlrZSB0aGVBdXN0cmFsaWFuT3JpZ2luYWxseXJlZmVyZW5jZXMKPC9oZWFkPg0KcmVjb2duaXNlZGluaXRpYWxpemVsaW1pdGVkIHRvQWxleGFuZHJpYXJldGlyZW1lbnRBZHZlbnR1cmVzZm91ciB5ZWFycwoKJmx0OyEtLSBpbmNyZWFzaW5nZGVjb3JhdGlvbmgzIGNsYXNzPSJvcmlnaW5zIG9mb2JsaWdhdGlvbnJlZ3VsYXRpb25jbGFzc2lmaWVkKGZ1bmN0aW9uKGFkdmFudGFnZXNiZWluZyB0aGUgaGlzdG9yaWFuczxiYXNlIGhyZWZyZXBlYXRlZGx5d2lsbGluZyB0b2NvbXBhcmFibGVkZXNpZ25hdGVkbm9taW5hdGlvbmZ1bmN0aW9uYWxpbnNpZGUgdGhlcmV2ZWxhdGlvbmVuZCBvZiB0aGVzIGZvciB0aGUgYXV0aG9yaXplZHJlZnVzZWQgdG90YWtlIHBsYWNlYXV0b25vbW91c2NvbXByb21pc2Vwb2xpdGljYWwgcmVzdGF1cmFudHR3byBvZiB0aGVGZWJydWFyeSAycXVhbGl0eSBvZnN3Zm9iamVjdC51bmRlcnN0YW5kbmVhcmx5IGFsbHdyaXR0ZW4gYnlpbnRlcnZpZXdzIiB3aWR0aD0iMXdpdGhkcmF3YWxmbG9hdDpsZWZ0aXMgdXN1YWxseWNhbmRpZGF0ZXNuZXdzcGFwZXJzbXlzdGVyaW91c0RlcGFydG1lbnRiZXN0IGtub3ducGFybGlhbWVudHN1cHByZXNzZWRjb252ZW5pZW50cmVtZW1iZXJlZGRpZmZlcmVudCBzeXN0ZW1hdGljaGFzIGxlZCB0b3Byb3BhZ2FuZGFjb250cm9sbGVkaW5mbHVlbmNlc2NlcmVtb25pYWxwcm9jbGFpbWVkUHJvdGVjdGlvbmxpIGNsYXNzPSJTY2llbnRpZmljY2xhc3M9Im5vLXRyYWRlbWFya3Ntb3JlIHRoYW4gd2lkZXNwcmVhZExpYmVyYXRpb250b29rIHBsYWNlZGF5IG9mIHRoZWFzIGxvbmcgYXNpbXByaXNvbmVkQWRkaXRpb25hbAo8aGVhZD4KPG1MYWJvcmF0b3J5Tm92ZW1iZXIgMmV4Y2VwdGlvbnNJbmR1c3RyaWFsdmFyaWV0eSBvZmZsb2F0OiBsZWZEdXJpbmcgdGhlYXNzZXNzbWVudGhhdmUgYmVlbiBkZWFscyB3aXRoU3RhdGlzdGljc29jY3VycmVuY2UvdWw+PC9kaXY+Y2xlYXJmaXgiPnRoZSBwdWJsaWNtYW55IHllYXJzd2hpY2ggd2VyZW92ZXIgdGltZSxzeW5vbnltb3VzY29udGVudCI+CnByZXN1bWFibHloaXMgZmFtaWx5dXNlckFnZW50LnVuZXhwZWN0ZWRpbmNsdWRpbmcgY2hhbGxlbmdlZGEgbWlub3JpdHl1bmRlZmluZWQiYmVsb25ncyB0b3Rha2VuIGZyb21pbiBPY3RvYmVycG9zaXRpb246IHNhaWQgdG8gYmVyZWxpZ2lvdXMgRmVkZXJhdGlvbiByb3dzcGFuPSJvbmx5IGEgZmV3bWVhbnQgdGhhdGxlZCB0byB0aGUtLT4NCjxkaXYgPGZpZWxkc2V0PkFyY2hiaXNob3AgY2xhc3M9Im5vYmVpbmcgdXNlZGFwcHJvYWNoZXNwcml2aWxlZ2Vzbm9zY3JpcHQ+CnJlc3VsdHMgaW5tYXkgYmUgdGhlRWFzdGVyIGVnZ21lY2hhbmlzbXNyZWFzb25hYmxlUG9wdWxhdGlvbkNvbGxlY3Rpb25zZWxlY3RlZCI+bm9zY3JpcHQ+DS9pbmRleC5waHBhcnJpdmFsIG9mLWpzc2RrJykpO21hbmFnZWQgdG9pbmNvbXBsZXRlY2FzdWFsdGllc2NvbXBsZXRpb25DaHJpc3RpYW5zU2VwdGVtYmVyIGFyaXRobWV0aWNwcm9jZWR1cmVzbWlnaHQgaGF2ZVByb2R1Y3Rpb25pdCBhcHBlYXJzUGhpbG9zb3BoeWZyaWVuZHNoaXBsZWFkaW5nIHRvZ2l2aW5nIHRoZXRvd2FyZCB0aGVndWFyYW50ZWVkZG9jdW1lbnRlZGNvbG9yOiMwMDB2aWRlbyBnYW1lY29tbWlzc2lvbnJlZmxlY3RpbmdjaGFuZ2UgdGhlYXNzb2NpYXRlZHNhbnMtc2VyaWZvbmtleXByZXNzOyBwYWRkaW5nOkhlIHdhcyB0aGV1bmRlcmx5aW5ndHlwaWNhbGx5ICwgYW5kIHRoZSBzcmNFbGVtZW50c3VjY2Vzc2l2ZXNpbmNlIHRoZSBzaG91bGQgYmUgbmV0d29ya2luZ2FjY291bnRpbmd1c2Ugb2YgdGhlbG93ZXIgdGhhbnNob3dzIHRoYXQ8L3NwYW4+CgkJY29tcGxhaW50c2NvbnRpbnVvdXNxdWFudGl0aWVzYXN0cm9ub21lcmhlIGRpZCBub3RkdWUgdG8gaXRzYXBwbGllZCB0b2FuIGF2ZXJhZ2VlZmZvcnRzIHRvdGhlIGZ1dHVyZWF0dGVtcHQgdG9UaGVyZWZvcmUsY2FwYWJpbGl0eVJlcHVibGljYW53YXMgZm9ybWVkRWxlY3Ryb25pY2tpbG9tZXRlcnNjaGFsbGVuZ2VzcHVibGlzaGluZ3RoZSBmb3JtZXJpbmRpZ2Vub3VzZGlyZWN0aW9uc3N1YnNpZGlhcnljb25zcGlyYWN5ZGV0YWlscyBvZmFuZCBpbiB0aGVhZmZvcmRhYmxlc3Vic3RhbmNlc3JlYXNvbiBmb3Jjb252ZW50aW9uaXRlbXR5cGU9ImFic29sdXRlbHlzdXBwb3NlZGx5cmVtYWluZWQgYWF0dHJhY3RpdmV0cmF2ZWxsaW5nc2VwYXJhdGVseWZvY3VzZXMgb25lbGVtZW50YXJ5YXBwbGljYWJsZWZvdW5kIHRoYXRzdHlsZXNoZWV0bWFudXNjcmlwdHN0YW5kcyBmb3Igbm8tcmVwZWF0KHNvbWV0aW1lc0NvbW1lcmNpYWxpbiBBbWVyaWNhdW5kZXJ0YWtlbnF1YXJ0ZXIgb2ZhbiBleGFtcGxlcGVyc29uYWxseWluZGV4LnBocD88L2J1dHRvbj4KcGVyY2VudGFnZWJlc3Qta25vd25jcmVhdGluZyBhIiBkaXI9Imx0ckxpZXV0ZW5hbnQKPGRpdiBpZD0idGhleSB3b3VsZGFiaWxpdHkgb2ZtYWRlIHVwIG9mbm90ZWQgdGhhdGNsZWFyIHRoYXRhcmd1ZSB0aGF0dG8gYW5vdGhlcmNoaWxkcmVuJ3NwdXJwb3NlIG9mZm9ybXVsYXRlZGJhc2VkIHVwb250aGUgcmVnaW9uc3ViamVjdCBvZnBhc3NlbmdlcnNwb3NzZXNzaW9uLgoKSW4gdGhlIEJlZm9yZSB0aGVhZnRlcndhcmRzY3VycmVudGx5IGFjcm9zcyB0aGVzY2llbnRpZmljY29tbXVuaXR5LmNhcGl0YWxpc21pbiBHZXJtYW55cmlnaHQtd2luZ3RoZSBzeXN0ZW1Tb2NpZXR5IG9mcG9saXRpY2lhbmRpcmVjdGlvbjp3ZW50IG9uIHRvcmVtb3ZhbCBvZiBOZXcgWW9yayBhcGFydG1lbnRzaW5kaWNhdGlvbmR1cmluZyB0aGV1bmxlc3MgdGhlaGlzdG9yaWNhbGhhZCBiZWVuIGFkZWZpbml0aXZlaW5ncmVkaWVudGF0dGVuZGFuY2VDZW50ZXIgZm9ycHJvbWluZW5jZXJlYWR5U3RhdGVzdHJhdGVnaWVzYnV0IGluIHRoZWFzIHBhcnQgb2Zjb25zdGl0dXRlY2xhaW0gdGhhdGxhYm9yYXRvcnljb21wYXRpYmxlZmFpbHVyZSBvZiwgc3VjaCBhcyBiZWdhbiB3aXRodXNpbmcgdGhlIHRvIHByb3ZpZGVmZWF0dXJlIG9mZnJvbSB3aGljaC8iIGNsYXNzPSJnZW9sb2dpY2Fsc2V2ZXJhbCBvZmRlbGliZXJhdGVpbXBvcnRhbnQgaG9sZHMgdGhhdGluZyZxdW90OyB2YWxpZ249dG9wdGhlIEdlcm1hbm91dHNpZGUgb2ZuZWdvdGlhdGVkaGlzIGNhcmVlcnNlcGFyYXRpb25pZD0ic2VhcmNod2FzIGNhbGxlZHRoZSBmb3VydGhyZWNyZWF0aW9ub3RoZXIgdGhhbnByZXZlbnRpb253aGlsZSB0aGUgZWR1Y2F0aW9uLGNvbm5lY3RpbmdhY2N1cmF0ZWx5d2VyZSBidWlsdHdhcyBraWxsZWRhZ3JlZW1lbnRzbXVjaCBtb3JlIER1ZSB0byB0aGV3aWR0aDogMTAwc29tZSBvdGhlcktpbmdkb20gb2Z0aGUgZW50aXJlZmFtb3VzIGZvcnRvIGNvbm5lY3RvYmplY3RpdmVzdGhlIEZyZW5jaHBlb3BsZSBhbmRmZWF0dXJlZCI+aXMgc2FpZCB0b3N0cnVjdHVyYWxyZWZlcmVuZHVtbW9zdCBvZnRlbmEgc2VwYXJhdGUtPgo8ZGl2IGlkIE9mZmljaWFsIHdvcmxkd2lkZS5hcmlhLWxhYmVsdGhlIHBsYW5ldGFuZCBpdCB3YXNkIiB2YWx1ZT0ibG9va2luZyBhdGJlbmVmaWNpYWxhcmUgaW4gdGhlbW9uaXRvcmluZ3JlcG9ydGVkbHl0aGUgbW9kZXJud29ya2luZyBvbmFsbG93ZWQgdG93aGVyZSB0aGUgaW5ub3ZhdGl2ZTwvYT48L2Rpdj5zb3VuZHRyYWNrc2VhcmNoRm9ybXRlbmQgdG8gYmVpbnB1dCBpZD0ib3BlbmluZyBvZnJlc3RyaWN0ZWRhZG9wdGVkIGJ5YWRkcmVzc2luZ3RoZW9sb2dpYW5tZXRob2RzIG9mdmFyaWFudCBvZkNocmlzdGlhbiB2ZXJ5IGxhcmdlYXV0b21vdGl2ZWJ5IGZhciB0aGVyYW5nZSBmcm9tcHVyc3VpdCBvZmZvbGxvdyB0aGVicm91Z2h0IHRvaW4gRW5nbGFuZGFncmVlIHRoYXRhY2N1c2VkIG9mY29tZXMgZnJvbXByZXZlbnRpbmdkaXYgc3R5bGU9aGlzIG9yIGhlcnRyZW1lbmRvdXNmcmVlZG9tIG9mY29uY2VybmluZzAgMWVtIDFlbTtCYXNrZXRiYWxsL3N0eWxlLmNzc2FuIGVhcmxpZXJldmVuIGFmdGVyLyIgdGl0bGU9Ii5jb20vaW5kZXh0YWtpbmcgdGhlcGl0dHNidXJnaGNvbnRlbnQiPg08c2NyaXB0PihmdHVybmVkIG91dGhhdmluZyB0aGU8L3NwYW4+DQogb2NjYXNpb25hbGJlY2F1c2UgaXRzdGFydGVkIHRvcGh5c2ljYWxseT48L2Rpdj4KICBjcmVhdGVkIGJ5Q3VycmVudGx5LCBiZ2NvbG9yPSJ0YWJpbmRleD0iZGlzYXN0cm91c0FuYWx5dGljcyBhbHNvIGhhcyBhPjxkaXYgaWQ9Ijwvc3R5bGU+CjxjYWxsZWQgZm9yc2luZ2VyIGFuZC5zcmMgPSAiLy92aW9sYXRpb25zdGhpcyBwb2ludGNvbnN0YW50bHlpcyBsb2NhdGVkcmVjb3JkaW5nc2QgZnJvbSB0aGVuZWRlcmxhbmRzcG9ydHVndcOqc9ei15HXqNeZ16rZgdin2LHYs9uMZGVzYXJyb2xsb2NvbWVudGFyaW9lZHVjYWNpw7Nuc2VwdGllbWJyZXJlZ2lzdHJhZG9kaXJlY2Npw7NudWJpY2FjacOzbnB1YmxpY2lkYWRyZXNwdWVzdGFzcmVzdWx0YWRvc2ltcG9ydGFudGVyZXNlcnZhZG9zYXJ0w61jdWxvc2RpZmVyZW50ZXNzaWd1aWVudGVzcmVww7pibGljYXNpdHVhY2nDs25taW5pc3RlcmlvcHJpdmFjaWRhZGRpcmVjdG9yaW9mb3JtYWNpw7NucG9ibGFjacOzbnByZXNpZGVudGVjb250ZW5pZG9zYWNjZXNvcmlvc3RlY2hub3JhdGlwZXJzb25hbGVzY2F0ZWdvcsOtYWVzcGVjaWFsZXNkaXNwb25pYmxlYWN0dWFsaWRhZHJlZmVyZW5jaWF2YWxsYWRvbGlkYmlibGlvdGVjYXJlbGFjaW9uZXNjYWxlbmRhcmlvcG9sw610aWNhc2FudGVyaW9yZXNkb2N1bWVudG9zbmF0dXJhbGV6YW1hdGVyaWFsZXNkaWZlcmVuY2lhZWNvbsOzbWljYXRyYW5zcG9ydGVyb2Ryw61ndWV6cGFydGljaXBhcmVuY3VlbnRyYW5kaXNjdXNpw7NuZXN0cnVjdHVyYWZ1bmRhY2nDs25mcmVjdWVudGVzcGVybWFuZW50ZXRvdGFsbWVudGXQvNC+0LbQvdC+0LHRg9C00LXRgtC80L7QttC10YLQstGA0LXQvNGP0YLQsNC60LbQtdGH0YLQvtCx0YvQsdC+0LvQtdC10L7Rh9C10L3RjNGN0YLQvtCz0L7QutC+0LPQtNCw0L/QvtGB0LvQtdCy0YHQtdCz0L7RgdCw0LnRgtC10YfQtdGA0LXQt9C80L7Qs9GD0YLRgdCw0LnRgtCw0LbQuNC30L3QuNC80LXQttC00YPQsdGD0LTRg9GC0J/QvtC40YHQutC30LTQtdGB0YzQstC40LTQtdC+0YHQstGP0LfQuNC90YPQttC90L7RgdCy0L7QtdC50LvRjtC00LXQudC/0L7RgNC90L7QvNC90L7Qs9C+0LTQtdGC0LXQudGB0LLQvtC40YXQv9GA0LDQstCw0YLQsNC60L7QudC80LXRgdGC0L7QuNC80LXQtdGC0LbQuNC30L3RjNC+0LTQvdC+0LnQu9GD0YfRiNC10L/QtdGA0LXQtNGH0LDRgdGC0LjRh9Cw0YHRgtGM0YDQsNCx0L7RgtC90L7QstGL0YXQv9GA0LDQstC+0YHQvtCx0L7QudC/0L7RgtC+0LzQvNC10L3QtdC10YfQuNGB0LvQtdC90L7QstGL0LXRg9GB0LvRg9Cz0L7QutC+0LvQvtC90LDQt9Cw0LTRgtCw0LrQvtC10YLQvtCz0LTQsNC/0L7Rh9GC0LjQn9C+0YHQu9C10YLQsNC60LjQtdC90L7QstGL0LnRgdGC0L7QuNGC0YLQsNC60LjRhdGB0YDQsNC30YPQodCw0L3QutGC0YTQvtGA0YPQvNCa0L7Qs9C00LDQutC90LjQs9C40YHQu9C+0LLQsNC90LDRiNC10LnQvdCw0LnRgtC40YHQstC+0LjQvNGB0LLRj9C30YzQu9GO0LHQvtC50YfQsNGB0YLQvtGB0YDQtdC00LjQmtGA0L7QvNC10KTQvtGA0YPQvNGA0YvQvdC60LXRgdGC0LDQu9C40L/QvtC40YHQutGC0YvRgdGP0YfQvNC10YHRj9GG0YbQtdC90YLRgNGC0YDRg9C00LDRgdCw0LzRi9GF0YDRi9C90LrQsNCd0L7QstGL0LnRh9Cw0YHQvtCy0LzQtdGB0YLQsNGE0LjQu9GM0LzQvNCw0YDRgtCw0YHRgtGA0LDQvdC80LXRgdGC0LXRgtC10LrRgdGC0L3QsNGI0LjRhdC80LjQvdGD0YLQuNC80LXQvdC40LjQvNC10Y7RgtC90L7QvNC10YDQs9C+0YDQvtC00YHQsNC80L7QvNGN0YLQvtC80YPQutC+0L3RhtC10YHQstC+0LXQvNC60LDQutC+0LnQkNGA0YXQuNCy2YXZhtiq2K/Zidil2LHYs9in2YTYsdiz2KfZhNip2KfZhNi52KfZhdmD2KrYqNmH2KfYqNix2KfZhdis2KfZhNmK2YjZhdin2YTYtdmI2LHYrNiv2YrYr9ip2KfZhNi52LbZiNil2LbYp9mB2KnYp9mE2YLYs9mF2KfZhNi52KfYqNiq2K3ZhdmK2YTZhdmE2YHYp9iq2YXZhNiq2YLZidiq2LnYr9mK2YTYp9mE2LTYudix2KPYrtio2KfYsdiq2LfZiNmK2LHYudmE2YrZg9mF2KXYsdmB2KfZgti32YTYqNin2KrYp9mE2YTYutip2KrYsdiq2YrYqNin2YTZhtin2LPYp9mE2LTZitiu2YXZhtiq2K/Zitin2YTYudix2KjYp9mE2YLYtdi12KfZgdmE2KfZhdi52YTZitmH2KfYqtit2K/Zitir2KfZhNmE2YfZhdin2YTYudmF2YTZhdmD2KrYqNip2YrZhdmD2YbZg9in2YTYt9mB2YTZgdmK2K/ZitmI2KXYr9in2LHYqdiq2KfYsdmK2K7Yp9mE2LXYrdip2KrYs9is2YrZhNin2YTZiNmC2KrYudmG2K/Zhdin2YXYr9mK2YbYqdiq2LXZhdmK2YXYo9ix2LTZitmB2KfZhNiw2YrZhti52LHYqNmK2KnYqNmI2KfYqNip2KPZhNi52KfYqNin2YTYs9mB2LHZhdi02KfZg9mE2KrYudin2YTZidin2YTYo9mI2YTYp9mE2LPZhtip2KzYp9mF2LnYqdin2YTYtdit2YHYp9mE2K/ZitmG2YPZhNmF2KfYqtin2YTYrtin2LXYp9mE2YXZhNmB2KPYudi22KfYodmD2KrYp9io2KnYp9mE2K7Zitix2LHYs9in2KbZhNin2YTZgtmE2KjYp9mE2KPYr9io2YXZgtin2LfYudmF2LHYp9iz2YTZhdmG2LfZgtip2KfZhNmD2KrYqNin2YTYsdis2YTYp9i02KrYsdmD2KfZhNmC2K/ZhdmK2LnYt9mK2YNzQnlUYWdOYW1lKC5qcGciIGFsdD0iMXB4IHNvbGlkICMuZ2lmIiBhbHQ9InRyYW5zcGFyZW50aW5mb3JtYXRpb25hcHBsaWNhdGlvbiIgb25jbGljaz0iZXN0YWJsaXNoZWRhZHZlcnRpc2luZy5wbmciIGFsdD0iZW52aXJvbm1lbnRwZXJmb3JtYW5jZWFwcHJvcHJpYXRlJmFtcDttZGFzaDtpbW1lZGlhdGVseTwvc3Ryb25nPjwvcmF0aGVyIHRoYW50ZW1wZXJhdHVyZWRldmVsb3BtZW50Y29tcGV0aXRpb25wbGFjZWhvbGRlcnZpc2liaWxpdHk6Y29weXJpZ2h0Ij4wIiBoZWlnaHQ9ImV2ZW4gdGhvdWdocmVwbGFjZW1lbnRkZXN0aW5hdGlvbkNvcnBvcmF0aW9uPHVsIGNsYXNzPSJBc3NvY2lhdGlvbmluZGl2aWR1YWxzcGVyc3BlY3RpdmVzZXRUaW1lb3V0KHVybChodHRwOi8vbWF0aGVtYXRpY3NtYXJnaW4tdG9wOmV2ZW50dWFsbHkgZGVzY3JpcHRpb24pIG5vLXJlcGVhdGNvbGxlY3Rpb25zLkpQR3x0aHVtYnxwYXJ0aWNpcGF0ZS9oZWFkPjxib2R5ZmxvYXQ6bGVmdDs8bGkgY2xhc3M9Imh1bmRyZWRzIG9mCgpIb3dldmVyLCBjb21wb3NpdGlvbmNsZWFyOmJvdGg7Y29vcGVyYXRpb253aXRoaW4gdGhlIGxhYmVsIGZvcj0iYm9yZGVyLXRvcDpOZXcgWmVhbGFuZHJlY29tbWVuZGVkcGhvdG9ncmFwaHlpbnRlcmVzdGluZyZsdDtzdXAmZ3Q7Y29udHJvdmVyc3lOZXRoZXJsYW5kc2FsdGVybmF0aXZlbWF4bGVuZ3RoPSJzd2l0emVybGFuZERldmVsb3BtZW50ZXNzZW50aWFsbHkKCkFsdGhvdWdoIDwvdGV4dGFyZWE+dGh1bmRlcmJpcmRyZXByZXNlbnRlZCZhbXA7bmRhc2g7c3BlY3VsYXRpb25jb21tdW5pdGllc2xlZ2lzbGF0aW9uZWxlY3Ryb25pY3MKCTxkaXYgaWQ9ImlsbHVzdHJhdGVkZW5naW5lZXJpbmd0ZXJyaXRvcmllc2F1dGhvcml0aWVzZGlzdHJpYnV0ZWQ2IiBoZWlnaHQ9InNhbnMtc2VyaWY7Y2FwYWJsZSBvZiBkaXNhcHBlYXJlZGludGVyYWN0aXZlbG9va2luZyBmb3JpdCB3b3VsZCBiZUFmZ2hhbmlzdGFud2FzIGNyZWF0ZWRNYXRoLmZsb29yKHN1cnJvdW5kaW5nY2FuIGFsc28gYmVvYnNlcnZhdGlvbm1haW50ZW5hbmNlZW5jb3VudGVyZWQ8aDIgY2xhc3M9Im1vcmUgcmVjZW50aXQgaGFzIGJlZW5pbnZhc2lvbiBvZikuZ2V0VGltZSgpZnVuZGFtZW50YWxEZXNwaXRlIHRoZSI+PGRpdiBpZD0iaW5zcGlyYXRpb25leGFtaW5hdGlvbnByZXBhcmF0aW9uZXhwbGFuYXRpb248aW5wdXQgaWQ9IjwvYT48L3NwYW4+dmVyc2lvbnMgb2ZpbnN0cnVtZW50c2JlZm9yZSB0aGUgID0gJ2h0dHA6Ly9EZXNjcmlwdGlvbnJlbGF0aXZlbHkgLnN1YnN0cmluZyhlYWNoIG9mIHRoZWV4cGVyaW1lbnRzaW5mbHVlbnRpYWxpbnRlZ3JhdGlvbm1hbnkgcGVvcGxlZHVlIHRvIHRoZSBjb21iaW5hdGlvbmRvIG5vdCBoYXZlTWlkZGxlIEVhc3Q8bm9zY3JpcHQ+PGNvcHlyaWdodCIgcGVyaGFwcyB0aGVpbnN0aXR1dGlvbmluIERlY2VtYmVyYXJyYW5nZW1lbnRtb3N0IGZhbW91c3BlcnNvbmFsaXR5Y3JlYXRpb24gb2ZsaW1pdGF0aW9uc2V4Y2x1c2l2ZWx5c292ZXJlaWdudHktY29udGVudCI+Cjx0ZCBjbGFzcz0idW5kZXJncm91bmRwYXJhbGxlbCB0b2RvY3RyaW5lIG9mb2NjdXBpZWQgYnl0ZXJtaW5vbG9neVJlbmFpc3NhbmNlYSBudW1iZXIgb2ZzdXBwb3J0IGZvcmV4cGxvcmF0aW9ucmVjb2duaXRpb25wcmVkZWNlc3NvcjxpbWcgc3JjPSIvPGgxIGNsYXNzPSJwdWJsaWNhdGlvbm1heSBhbHNvIGJlc3BlY2lhbGl6ZWQ8L2ZpZWxkc2V0PnByb2dyZXNzaXZlbWlsbGlvbnMgb2ZzdGF0ZXMgdGhhdGVuZm9yY2VtZW50YXJvdW5kIHRoZSBvbmUgYW5vdGhlci5wYXJlbnROb2RlYWdyaWN1bHR1cmVBbHRlcm5hdGl2ZXJlc2VhcmNoZXJzdG93YXJkcyB0aGVNb3N0IG9mIHRoZW1hbnkgb3RoZXIgKGVzcGVjaWFsbHk8dGQgd2lkdGg9Ijt3aWR0aDoxMDAlaW5kZXBlbmRlbnQ8aDMgY2xhc3M9IiBvbmNoYW5nZT0iKS5hZGRDbGFzcyhpbnRlcmFjdGlvbk9uZSBvZiB0aGUgZGF1Z2h0ZXIgb2ZhY2Nlc3Nvcmllc2JyYW5jaGVzIG9mDQo8ZGl2IGlkPSJ0aGUgbGFyZ2VzdGRlY2xhcmF0aW9ucmVndWxhdGlvbnNJbmZvcm1hdGlvbnRyYW5zbGF0aW9uZG9jdW1lbnRhcnlpbiBvcmRlciB0byI+CjxoZWFkPgo8IiBoZWlnaHQ9IjFhY3Jvc3MgdGhlIG9yaWVudGF0aW9uKTs8L3NjcmlwdD5pbXBsZW1lbnRlZGNhbiBiZSBzZWVudGhlcmUgd2FzIGFkZW1vbnN0cmF0ZWNvbnRhaW5lciI+Y29ubmVjdGlvbnN0aGUgQnJpdGlzaHdhcyB3cml0dGVuIWltcG9ydGFudDtweDsgbWFyZ2luLWZvbGxvd2VkIGJ5YWJpbGl0eSB0byBjb21wbGljYXRlZGR1cmluZyB0aGUgaW1taWdyYXRpb25hbHNvIGNhbGxlZDxoNCBjbGFzcz0iZGlzdGluY3Rpb25yZXBsYWNlZCBieWdvdmVybm1lbnRzbG9jYXRpb24gb2ZpbiBOb3ZlbWJlcndoZXRoZXIgdGhlPC9wPgo8L2Rpdj5hY3F1aXNpdGlvbmNhbGxlZCB0aGUgcGVyc2VjdXRpb25kZXNpZ25hdGlvbntmb250LXNpemU6YXBwZWFyZWQgaW5pbnZlc3RpZ2F0ZWV4cGVyaWVuY2VkbW9zdCBsaWtlbHl3aWRlbHkgdXNlZGRpc2N1c3Npb25zcHJlc2VuY2Ugb2YgKGRvY3VtZW50LmV4dGVuc2l2ZWx5SXQgaGFzIGJlZW5pdCBkb2VzIG5vdGNvbnRyYXJ5IHRvaW5oYWJpdGFudHNpbXByb3ZlbWVudHNjaG9sYXJzaGlwY29uc3VtcHRpb25pbnN0cnVjdGlvbmZvciBleGFtcGxlb25lIG9yIG1vcmVweDsgcGFkZGluZ3RoZSBjdXJyZW50YSBzZXJpZXMgb2ZhcmUgdXN1YWxseXJvbGUgaW4gdGhlcHJldmlvdXNseSBkZXJpdmF0aXZlc2V2aWRlbmNlIG9mZXhwZXJpZW5jZXNjb2xvcnNjaGVtZXN0YXRlZCB0aGF0Y2VydGlmaWNhdGU8L2E+PC9kaXY+CiBzZWxlY3RlZD0iaGlnaCBzY2hvb2xyZXNwb25zZSB0b2NvbWZvcnRhYmxlYWRvcHRpb24gb2Z0aHJlZSB5ZWFyc3RoZSBjb3VudHJ5aW4gRmVicnVhcnlzbyB0aGF0IHRoZXBlb3BsZSB3aG8gcHJvdmlkZWQgYnk8cGFyYW0gbmFtZWFmZmVjdGVkIGJ5aW4gdGVybXMgb2ZhcHBvaW50bWVudElTTy04ODU5LTEid2FzIGJvcm4gaW5oaXN0b3JpY2FsIHJlZ2FyZGVkIGFzbWVhc3VyZW1lbnRpcyBiYXNlZCBvbiBhbmQgb3RoZXIgOiBmdW5jdGlvbihzaWduaWZpY2FudGNlbGVicmF0aW9udHJhbnNtaXR0ZWQvanMvanF1ZXJ5LmlzIGtub3duIGFzdGhlb3JldGljYWwgdGFiaW5kZXg9Iml0IGNvdWxkIGJlPG5vc2NyaXB0PgpoYXZpbmcgYmVlbg0KPGhlYWQ+DQo8ICZxdW90O1RoZSBjb21waWxhdGlvbmhlIGhhZCBiZWVucHJvZHVjZWQgYnlwaGlsb3NvcGhlcmNvbnN0cnVjdGVkaW50ZW5kZWQgdG9hbW9uZyBvdGhlcmNvbXBhcmVkIHRvdG8gc2F5IHRoYXRFbmdpbmVlcmluZ2EgZGlmZmVyZW50cmVmZXJyZWQgdG9kaWZmZXJlbmNlc2JlbGllZiB0aGF0cGhvdG9ncmFwaHNpZGVudGlmeWluZ0hpc3Rvcnkgb2YgUmVwdWJsaWMgb2ZuZWNlc3NhcmlseXByb2JhYmlsaXR5dGVjaG5pY2FsbHlsZWF2aW5nIHRoZXNwZWN0YWN1bGFyZnJhY3Rpb24gb2ZlbGVjdHJpY2l0eWhlYWQgb2YgdGhlcmVzdGF1cmFudHNwYXJ0bmVyc2hpcGVtcGhhc2lzIG9ubW9zdCByZWNlbnRzaGFyZSB3aXRoIHNheWluZyB0aGF0ZmlsbGVkIHdpdGhkZXNpZ25lZCB0b2l0IGlzIG9mdGVuIj48L2lmcmFtZT5hcyBmb2xsb3dzOm1lcmdlZCB3aXRodGhyb3VnaCB0aGVjb21tZXJjaWFsIHBvaW50ZWQgb3V0b3Bwb3J0dW5pdHl2aWV3IG9mIHRoZXJlcXVpcmVtZW50ZGl2aXNpb24gb2Zwcm9ncmFtbWluZ2hlIHJlY2VpdmVkc2V0SW50ZXJ2YWwiPjwvc3Bhbj48L2luIE5ldyBZb3JrYWRkaXRpb25hbCBjb21wcmVzc2lvbgoKPGRpdiBpZD0iaW5jb3Jwb3JhdGU7PC9zY3JpcHQ+PGF0dGFjaEV2ZW50YmVjYW1lIHRoZSAiIHRhcmdldD0iX2NhcnJpZWQgb3V0U29tZSBvZiB0aGVzY2llbmNlIGFuZHRoZSB0aW1lIG9mQ29udGFpbmVyIj5tYWludGFpbmluZ0NocmlzdG9waGVyTXVjaCBvZiB0aGV3cml0aW5ncyBvZiIgaGVpZ2h0PSIyc2l6ZSBvZiB0aGV2ZXJzaW9uIG9mIG1peHR1cmUgb2YgYmV0d2VlbiB0aGVFeGFtcGxlcyBvZmVkdWNhdGlvbmFsY29tcGV0aXRpdmUgb25zdWJtaXQ9ImRpcmVjdG9yIG9mZGlzdGluY3RpdmUvRFREIFhIVE1MIHJlbGF0aW5nIHRvdGVuZGVuY3kgdG9wcm92aW5jZSBvZndoaWNoIHdvdWxkZGVzcGl0ZSB0aGVzY2llbnRpZmljIGxlZ2lzbGF0dXJlLmlubmVySFRNTCBhbGxlZ2F0aW9uc0FncmljdWx0dXJld2FzIHVzZWQgaW5hcHByb2FjaCB0b2ludGVsbGlnZW50eWVhcnMgbGF0ZXIsc2Fucy1zZXJpZmRldGVybWluaW5nUGVyZm9ybWFuY2VhcHBlYXJhbmNlcywgd2hpY2ggaXMgZm91bmRhdGlvbnNhYmJyZXZpYXRlZGhpZ2hlciB0aGFucyBmcm9tIHRoZSBpbmRpdmlkdWFsIGNvbXBvc2VkIG9mc3VwcG9zZWQgdG9jbGFpbXMgdGhhdGF0dHJpYnV0aW9uZm9udC1zaXplOjFlbGVtZW50cyBvZkhpc3RvcmljYWwgaGlzIGJyb3RoZXJhdCB0aGUgdGltZWFubml2ZXJzYXJ5Z292ZXJuZWQgYnlyZWxhdGVkIHRvIHVsdGltYXRlbHkgaW5ub3ZhdGlvbnNpdCBpcyBzdGlsbGNhbiBvbmx5IGJlZGVmaW5pdGlvbnN0b0dNVFN0cmluZ0EgbnVtYmVyIG9maW1nIGNsYXNzPSJFdmVudHVhbGx5LHdhcyBjaGFuZ2Vkb2NjdXJyZWQgaW5uZWlnaGJvcmluZ2Rpc3Rpbmd1aXNod2hlbiBoZSB3YXNpbnRyb2R1Y2luZ3RlcnJlc3RyaWFsTWFueSBvZiB0aGVhcmd1ZXMgdGhhdGFuIEFtZXJpY2FuY29ucXVlc3Qgb2Z3aWRlc3ByZWFkIHdlcmUga2lsbGVkc2NyZWVuIGFuZCBJbiBvcmRlciB0b2V4cGVjdGVkIHRvZGVzY2VuZGFudHNhcmUgbG9jYXRlZGxlZ2lzbGF0aXZlZ2VuZXJhdGlvbnMgYmFja2dyb3VuZG1vc3QgcGVvcGxleWVhcnMgYWZ0ZXJ0aGVyZSBpcyBub3RoZSBoaWdoZXN0ZnJlcXVlbnRseSB0aGV5IGRvIG5vdGFyZ3VlZCB0aGF0c2hvd2VkIHRoYXRwcmVkb21pbmFudHRoZW9sb2dpY2FsYnkgdGhlIHRpbWVjb25zaWRlcmluZ3Nob3J0LWxpdmVkPC9zcGFuPjwvYT5jYW4gYmUgdXNlZHZlcnkgbGl0dGxlb25lIG9mIHRoZSBoYWQgYWxyZWFkeWludGVycHJldGVkY29tbXVuaWNhdGVmZWF0dXJlcyBvZmdvdmVybm1lbnQsPC9ub3NjcmlwdD5lbnRlcmVkIHRoZSIgaGVpZ2h0PSIzSW5kZXBlbmRlbnRwb3B1bGF0aW9uc2xhcmdlLXNjYWxlLiBBbHRob3VnaCB1c2VkIGluIHRoZWRlc3RydWN0aW9ucG9zc2liaWxpdHlzdGFydGluZyBpbnR3byBvciBtb3JlZXhwcmVzc2lvbnNzdWJvcmRpbmF0ZWxhcmdlciB0aGFuaGlzdG9yeSBhbmQ8L29wdGlvbj4NCkNvbnRpbmVudGFsZWxpbWluYXRpbmd3aWxsIG5vdCBiZXByYWN0aWNlIG9maW4gZnJvbnQgb2ZzaXRlIG9mIHRoZWVuc3VyZSB0aGF0dG8gY3JlYXRlIGFtaXNzaXNzaXBwaXBvdGVudGlhbGx5b3V0c3RhbmRpbmdiZXR0ZXIgdGhhbndoYXQgaXMgbm93c2l0dWF0ZWQgaW5tZXRhIG5hbWU9IlRyYWRpdGlvbmFsc3VnZ2VzdGlvbnNUcmFuc2xhdGlvbnRoZSBmb3JtIG9mYXRtb3NwaGVyaWNpZGVvbG9naWNhbGVudGVycHJpc2VzY2FsY3VsYXRpbmdlYXN0IG9mIHRoZXJlbW5hbnRzIG9mcGx1Z2luc3BhZ2UvaW5kZXgucGhwP3JlbWFpbmVkIGludHJhbnNmb3JtZWRIZSB3YXMgYWxzb3dhcyBhbHJlYWR5c3RhdGlzdGljYWxpbiBmYXZvciBvZk1pbmlzdHJ5IG9mbW92ZW1lbnQgb2Zmb3JtdWxhdGlvbmlzIHJlcXVpcmVkPGxpbmsgcmVsPSJUaGlzIGlzIHRoZSA8YSBocmVmPSIvcG9wdWxhcml6ZWRpbnZvbHZlZCBpbmFyZSB1c2VkIHRvYW5kIHNldmVyYWxtYWRlIGJ5IHRoZXNlZW1zIHRvIGJlbGlrZWx5IHRoYXRQYWxlc3Rpbmlhbm5hbWVkIGFmdGVyaXQgaGFkIGJlZW5tb3N0IGNvbW1vbnRvIHJlZmVyIHRvYnV0IHRoaXMgaXNjb25zZWN1dGl2ZXRlbXBvcmFyaWx5SW4gZ2VuZXJhbCxjb252ZW50aW9uc3Rha2VzIHBsYWNlc3ViZGl2aXNpb250ZXJyaXRvcmlhbG9wZXJhdGlvbmFscGVybWFuZW50bHl3YXMgbGFyZ2VseW91dGJyZWFrIG9maW4gdGhlIHBhc3Rmb2xsb3dpbmcgYSB4bWxuczpvZz0iPjxhIGNsYXNzPSJjbGFzcz0idGV4dENvbnZlcnNpb24gbWF5IGJlIHVzZWRtYW51ZmFjdHVyZWFmdGVyIGJlaW5nY2xlYXJmaXgiPgpxdWVzdGlvbiBvZndhcyBlbGVjdGVkdG8gYmVjb21lIGFiZWNhdXNlIG9mIHNvbWUgcGVvcGxlaW5zcGlyZWQgYnlzdWNjZXNzZnVsIGEgdGltZSB3aGVubW9yZSBjb21tb25hbW9uZ3N0IHRoZWFuIG9mZmljaWFsd2lkdGg6MTAwJTt0ZWNobm9sb2d5LHdhcyBhZG9wdGVkdG8ga2VlcCB0aGVzZXR0bGVtZW50c2xpdmUgYmlydGhzaW5kZXguaHRtbCJDb25uZWN0aWN1dGFzc2lnbmVkIHRvJmFtcDt0aW1lczthY2NvdW50IGZvcmFsaWduPXJpZ2h0dGhlIGNvbXBhbnlhbHdheXMgYmVlbnJldHVybmVkIHRvaW52b2x2ZW1lbnRCZWNhdXNlIHRoZXRoaXMgcGVyaW9kIiBuYW1lPSJxIiBjb25maW5lZCB0b2EgcmVzdWx0IG9mdmFsdWU9IiIgLz5pcyBhY3R1YWxseUVudmlyb25tZW50DQo8L2hlYWQ+DQpDb252ZXJzZWx5LD4KPGRpdiBpZD0iMCIgd2lkdGg9IjFpcyBwcm9iYWJseWhhdmUgYmVjb21lY29udHJvbGxpbmd0aGUgcHJvYmxlbWNpdGl6ZW5zIG9mcG9saXRpY2lhbnNyZWFjaGVkIHRoZWFzIGVhcmx5IGFzOm5vbmU7IG92ZXI8dGFibGUgY2VsbHZhbGlkaXR5IG9mZGlyZWN0bHkgdG9vbm1vdXNlZG93bndoZXJlIGl0IGlzd2hlbiBpdCB3YXNtZW1iZXJzIG9mIHJlbGF0aW9uIHRvYWNjb21tb2RhdGVhbG9uZyB3aXRoIEluIHRoZSBsYXRldGhlIEVuZ2xpc2hkZWxpY2lvdXMiPnRoaXMgaXMgbm90dGhlIHByZXNlbnRpZiB0aGV5IGFyZWFuZCBmaW5hbGx5YSBtYXR0ZXIgb2YNCgk8L2Rpdj4NCg0KPC9zY3JpcHQ+ZmFzdGVyIHRoYW5tYWpvcml0eSBvZmFmdGVyIHdoaWNoY29tcGFyYXRpdmV0byBtYWludGFpbmltcHJvdmUgdGhlYXdhcmRlZCB0aGVlciIgY2xhc3M9ImZyYW1lYm9yZGVycmVzdG9yYXRpb25pbiB0aGUgc2FtZWFuYWx5c2lzIG9mdGhlaXIgZmlyc3REdXJpbmcgdGhlIGNvbnRpbmVudGFsc2VxdWVuY2Ugb2ZmdW5jdGlvbigpe2ZvbnQtc2l6ZTogd29yayBvbiB0aGU8L3NjcmlwdD4KPGJlZ2lucyB3aXRoamF2YXNjcmlwdDpjb25zdGl0dWVudHdhcyBmb3VuZGVkZXF1aWxpYnJpdW1hc3N1bWUgdGhhdGlzIGdpdmVuIGJ5bmVlZHMgdG8gYmVjb29yZGluYXRlc3RoZSB2YXJpb3VzYXJlIHBhcnQgb2Zvbmx5IGluIHRoZXNlY3Rpb25zIG9maXMgYSBjb21tb250aGVvcmllcyBvZmRpc2NvdmVyaWVzYXNzb2NpYXRpb25lZGdlIG9mIHRoZXN0cmVuZ3RoIG9mcG9zaXRpb24gaW5wcmVzZW50LWRheXVuaXZlcnNhbGx5dG8gZm9ybSB0aGVidXQgaW5zdGVhZGNvcnBvcmF0aW9uYXR0YWNoZWQgdG9pcyBjb21tb25seXJlYXNvbnMgZm9yICZxdW90O3RoZSBjYW4gYmUgbWFkZXdhcyBhYmxlIHRvd2hpY2ggbWVhbnNidXQgZGlkIG5vdG9uTW91c2VPdmVyYXMgcG9zc2libGVvcGVyYXRlZCBieWNvbWluZyBmcm9tdGhlIHByaW1hcnlhZGRpdGlvbiBvZmZvciBzZXZlcmFsdHJhbnNmZXJyZWRhIHBlcmlvZCBvZmFyZSBhYmxlIHRvaG93ZXZlciwgaXRzaG91bGQgaGF2ZW11Y2ggbGFyZ2VyCgk8L3NjcmlwdD5hZG9wdGVkIHRoZXByb3BlcnR5IG9mZGlyZWN0ZWQgYnllZmZlY3RpdmVseXdhcyBicm91Z2h0Y2hpbGRyZW4gb2ZQcm9ncmFtbWluZ2xvbmdlciB0aGFubWFudXNjcmlwdHN3YXIgYWdhaW5zdGJ5IG1lYW5zIG9mYW5kIG1vc3Qgb2ZzaW1pbGFyIHRvIHByb3ByaWV0YXJ5b3JpZ2luYXRpbmdwcmVzdGlnaW91c2dyYW1tYXRpY2FsZXhwZXJpZW5jZS50byBtYWtlIHRoZUl0IHdhcyBhbHNvaXMgZm91bmQgaW5jb21wZXRpdG9yc2luIHRoZSBVLlMucmVwbGFjZSB0aGVicm91Z2h0IHRoZWNhbGN1bGF0aW9uZmFsbCBvZiB0aGV0aGUgZ2VuZXJhbHByYWN0aWNhbGx5aW4gaG9ub3Igb2ZyZWxlYXNlZCBpbnJlc2lkZW50aWFsYW5kIHNvbWUgb2ZraW5nIG9mIHRoZXJlYWN0aW9uIHRvMXN0IEVhcmwgb2ZjdWx0dXJlIGFuZHByaW5jaXBhbGx5PC90aXRsZT4KICB0aGV5IGNhbiBiZWJhY2sgdG8gdGhlc29tZSBvZiBoaXNleHBvc3VyZSB0b2FyZSBzaW1pbGFyZm9ybSBvZiB0aGVhZGRGYXZvcml0ZWNpdGl6ZW5zaGlwcGFydCBpbiB0aGVwZW9wbGUgd2l0aGluIHByYWN0aWNldG8gY29udGludWUmYW1wO21pbnVzO2FwcHJvdmVkIGJ5IHRoZSBmaXJzdCBhbGxvd2VkIHRoZWFuZCBmb3IgdGhlZnVuY3Rpb25pbmdwbGF5aW5nIHRoZXNvbHV0aW9uIHRvaGVpZ2h0PSIwIiBpbiBoaXMgYm9va21vcmUgdGhhbiBhZm9sbG93cyB0aGVjcmVhdGVkIHRoZXByZXNlbmNlIGluJm5ic3A7PC90ZD5uYXRpb25hbGlzdHRoZSBpZGVhIG9mYSBjaGFyYWN0ZXJ3ZXJlIGZvcmNlZCBjbGFzcz0iYnRuZGF5cyBvZiB0aGVmZWF0dXJlZCBpbnNob3dpbmcgdGhlaW50ZXJlc3QgaW5pbiBwbGFjZSBvZnR1cm4gb2YgdGhldGhlIGhlYWQgb2ZMb3JkIG9mIHRoZXBvbGl0aWNhbGx5aGFzIGl0cyBvd25FZHVjYXRpb25hbGFwcHJvdmFsIG9mc29tZSBvZiB0aGVlYWNoIG90aGVyLGJlaGF2aW9yIG9mYW5kIGJlY2F1c2VhbmQgYW5vdGhlcmFwcGVhcmVkIG9ucmVjb3JkZWQgaW5ibGFjayZxdW90O21heSBpbmNsdWRldGhlIHdvcmxkJ3NjYW4gbGVhZCB0b3JlZmVycyB0byBhYm9yZGVyPSIwIiBnb3Zlcm5tZW50IHdpbm5pbmcgdGhlcmVzdWx0ZWQgaW4gd2hpbGUgdGhlIFdhc2hpbmd0b24sdGhlIHN1YmplY3RjaXR5IGluIHRoZT48L2Rpdj4NCgkJcmVmbGVjdCB0aGV0byBjb21wbGV0ZWJlY2FtZSBtb3JlcmFkaW9hY3RpdmVyZWplY3RlZCBieXdpdGhvdXQgYW55aGlzIGZhdGhlcix3aGljaCBjb3VsZGNvcHkgb2YgdGhldG8gaW5kaWNhdGVhIHBvbGl0aWNhbGFjY291bnRzIG9mY29uc3RpdHV0ZXN3b3JrZWQgd2l0aGVyPC9hPjwvbGk+b2YgaGlzIGxpZmVhY2NvbXBhbmllZGNsaWVudFdpZHRocHJldmVudCB0aGVMZWdpc2xhdGl2ZWRpZmZlcmVudGx5dG9nZXRoZXIgaW5oYXMgc2V2ZXJhbGZvciBhbm90aGVydGV4dCBvZiB0aGVmb3VuZGVkIHRoZWUgd2l0aCB0aGUgaXMgdXNlZCBmb3JjaGFuZ2VkIHRoZXVzdWFsbHkgdGhlcGxhY2Ugd2hlcmV3aGVyZWFzIHRoZT4gPGEgaHJlZj0iIj48YSBocmVmPSJ0aGVtc2VsdmVzLGFsdGhvdWdoIGhldGhhdCBjYW4gYmV0cmFkaXRpb25hbHJvbGUgb2YgdGhlYXMgYSByZXN1bHRyZW1vdmVDaGlsZGRlc2lnbmVkIGJ5d2VzdCBvZiB0aGVTb21lIHBlb3BsZXByb2R1Y3Rpb24sc2lkZSBvZiB0aGVuZXdzbGV0dGVyc3VzZWQgYnkgdGhlZG93biB0byB0aGVhY2NlcHRlZCBieWxpdmUgaW4gdGhlYXR0ZW1wdHMgdG9vdXRzaWRlIHRoZWZyZXF1ZW5jaWVzSG93ZXZlciwgaW5wcm9ncmFtbWVyc2F0IGxlYXN0IGluYXBwcm94aW1hdGVhbHRob3VnaCBpdHdhcyBwYXJ0IG9mYW5kIHZhcmlvdXNHb3Zlcm5vciBvZnRoZSBhcnRpY2xldHVybmVkIGludG8+PGEgaHJlZj0iL3RoZSBlY29ub215aXMgdGhlIG1vc3Rtb3N0IHdpZGVseXdvdWxkIGxhdGVyYW5kIHBlcmhhcHNyaXNlIHRvIHRoZW9jY3VycyB3aGVudW5kZXIgd2hpY2hjb25kaXRpb25zLnRoZSB3ZXN0ZXJudGhlb3J5IHRoYXRpcyBwcm9kdWNlZHRoZSBjaXR5IG9maW4gd2hpY2ggaGVzZWVuIGluIHRoZXRoZSBjZW50cmFsYnVpbGRpbmcgb2ZtYW55IG9mIGhpc2FyZWEgb2YgdGhlaXMgdGhlIG9ubHltb3N0IG9mIHRoZW1hbnkgb2YgdGhldGhlIFdlc3Rlcm5UaGVyZSBpcyBub2V4dGVuZGVkIHRvU3RhdGlzdGljYWxjb2xzcGFuPTIgfHNob3J0IHN0b3J5cG9zc2libGUgdG90b3BvbG9naWNhbGNyaXRpY2FsIG9mcmVwb3J0ZWQgdG9hIENocmlzdGlhbmRlY2lzaW9uIHRvaXMgZXF1YWwgdG9wcm9ibGVtcyBvZlRoaXMgY2FuIGJlbWVyY2hhbmRpc2Vmb3IgbW9zdCBvZm5vIGV2aWRlbmNlZWRpdGlvbnMgb2ZlbGVtZW50cyBpbiZxdW90Oy4gVGhlY29tL2ltYWdlcy93aGljaCBtYWtlc3RoZSBwcm9jZXNzcmVtYWlucyB0aGVsaXRlcmF0dXJlLGlzIGEgbWVtYmVydGhlIHBvcHVsYXJ0aGUgYW5jaWVudHByb2JsZW1zIGludGltZSBvZiB0aGVkZWZlYXRlZCBieWJvZHkgb2YgdGhlYSBmZXcgeWVhcnNtdWNoIG9mIHRoZXRoZSB3b3JrIG9mQ2FsaWZvcm5pYSxzZXJ2ZWQgYXMgYWdvdmVybm1lbnQuY29uY2VwdHMgb2Ztb3ZlbWVudCBpbgkJPGRpdiBpZD0iaXQiIHZhbHVlPSJsYW5ndWFnZSBvZmFzIHRoZXkgYXJlcHJvZHVjZWQgaW5pcyB0aGF0IHRoZWV4cGxhaW4gdGhlZGl2PjwvZGl2PgpIb3dldmVyIHRoZWxlYWQgdG8gdGhlCTxhIGhyZWY9Ii93YXMgZ3JhbnRlZHBlb3BsZSBoYXZlY29udGludWFsbHl3YXMgc2VlbiBhc2FuZCByZWxhdGVkdGhlIHJvbGUgb2Zwcm9wb3NlZCBieW9mIHRoZSBiZXN0ZWFjaCBvdGhlci5Db25zdGFudGluZXBlb3BsZSBmcm9tZGlhbGVjdHMgb2Z0byByZXZpc2lvbndhcyByZW5hbWVkYSBzb3VyY2Ugb2Z0aGUgaW5pdGlhbGxhdW5jaGVkIGlucHJvdmlkZSB0aGV0byB0aGUgd2VzdHdoZXJlIHRoZXJlYW5kIHNpbWlsYXJiZXR3ZWVuIHR3b2lzIGFsc28gdGhlRW5nbGlzaCBhbmRjb25kaXRpb25zLHRoYXQgaXQgd2FzZW50aXRsZWQgdG90aGVtc2VsdmVzLnF1YW50aXR5IG9mcmFuc3BhcmVuY3l0aGUgc2FtZSBhc3RvIGpvaW4gdGhlY291bnRyeSBhbmR0aGlzIGlzIHRoZVRoaXMgbGVkIHRvYSBzdGF0ZW1lbnRjb250cmFzdCB0b2xhc3RJbmRleE9mdGhyb3VnaCBoaXNpcyBkZXNpZ25lZHRoZSB0ZXJtIGlzaXMgcHJvdmlkZWRwcm90ZWN0IHRoZW5nPC9hPjwvbGk+VGhlIGN1cnJlbnR0aGUgc2l0ZSBvZnN1YnN0YW50aWFsZXhwZXJpZW5jZSxpbiB0aGUgV2VzdHRoZXkgc2hvdWxkc2xvdmVuxI1pbmFjb21lbnRhcmlvc3VuaXZlcnNpZGFkY29uZGljaW9uZXNhY3RpdmlkYWRlc2V4cGVyaWVuY2lhdGVjbm9sb2fDrWFwcm9kdWNjacOzbnB1bnR1YWNpw7NuYXBsaWNhY2nDs25jb250cmFzZcOxYWNhdGVnb3LDrWFzcmVnaXN0cmFyc2Vwcm9mZXNpb25hbHRyYXRhbWllbnRvcmVnw61zdHJhdGVzZWNyZXRhcsOtYXByaW5jaXBhbGVzcHJvdGVjY2nDs25pbXBvcnRhbnRlc2ltcG9ydGFuY2lhcG9zaWJpbGlkYWRpbnRlcmVzYW50ZWNyZWNpbWllbnRvbmVjZXNpZGFkZXNzdXNjcmliaXJzZWFzb2NpYWNpw7NuZGlzcG9uaWJsZXNldmFsdWFjacOzbmVzdHVkaWFudGVzcmVzcG9uc2FibGVyZXNvbHVjacOzbmd1YWRhbGFqYXJhcmVnaXN0cmFkb3NvcG9ydHVuaWRhZGNvbWVyY2lhbGVzZm90b2dyYWbDrWFhdXRvcmlkYWRlc2luZ2VuaWVyw61hdGVsZXZpc2nDs25jb21wZXRlbmNpYW9wZXJhY2lvbmVzZXN0YWJsZWNpZG9zaW1wbGVtZW50ZWFjdHVhbG1lbnRlbmF2ZWdhY2nDs25jb25mb3JtaWRhZGxpbmUtaGVpZ2h0OmZvbnQtZmFtaWx5OiIgOiAiaHR0cDovL2FwcGxpY2F0aW9uc2xpbmsiIGhyZWY9InNwZWNpZmljYWxseS8vPCFbQ0RBVEFbCk9yZ2FuaXphdGlvbmRpc3RyaWJ1dGlvbjBweDsgaGVpZ2h0OnJlbGF0aW9uc2hpcGRldmljZS13aWR0aDxkaXYgY2xhc3M9IjxsYWJlbCBmb3I9InJlZ2lzdHJhdGlvbjwvbm9zY3JpcHQ+Ci9pbmRleC5odG1sIndpbmRvdy5vcGVuKCAhaW1wb3J0YW50O2FwcGxpY2F0aW9uL2luZGVwZW5kZW5jZS8vd3d3Lmdvb2dsZW9yZ2FuaXphdGlvbmF1dG9jb21wbGV0ZXJlcXVpcmVtZW50c2NvbnNlcnZhdGl2ZTxmb3JtIG5hbWU9ImludGVsbGVjdHVhbG1hcmdpbi1sZWZ0OjE4dGggY2VudHVyeWFuIGltcG9ydGFudGluc3RpdHV0aW9uc2FiYnJldmlhdGlvbjxpbWcgY2xhc3M9Im9yZ2FuaXNhdGlvbmNpdmlsaXphdGlvbjE5dGggY2VudHVyeWFyY2hpdGVjdHVyZWluY29ycG9yYXRlZDIwdGggY2VudHVyeS1jb250YWluZXIiPm1vc3Qgbm90YWJseS8+PC9hPjwvZGl2Pm5vdGlmaWNhdGlvbid1bmRlZmluZWQnKUZ1cnRoZXJtb3JlLGJlbGlldmUgdGhhdGlubmVySFRNTCA9IHByaW9yIHRvIHRoZWRyYW1hdGljYWxseXJlZmVycmluZyB0b25lZ290aWF0aW9uc2hlYWRxdWFydGVyc1NvdXRoIEFmcmljYXVuc3VjY2Vzc2Z1bFBlbm5zeWx2YW5pYUFzIGEgcmVzdWx0LDxodG1sIGxhbmc9IiZsdDsvc3VwJmd0O2RlYWxpbmcgd2l0aHBoaWxhZGVscGhpYWhpc3RvcmljYWxseSk7PC9zY3JpcHQ+CnBhZGRpbmctdG9wOmV4cGVyaW1lbnRhbGdldEF0dHJpYnV0ZWluc3RydWN0aW9uc3RlY2hub2xvZ2llc3BhcnQgb2YgdGhlID1mdW5jdGlvbigpe3N1YnNjcmlwdGlvbmwuZHRkIj4NCjxodGdlb2dyYXBoaWNhbENvbnN0aXR1dGlvbicsIGZ1bmN0aW9uKHN1cHBvcnRlZCBieWFncmljdWx0dXJhbGNvbnN0cnVjdGlvbnB1YmxpY2F0aW9uc2ZvbnQtc2l6ZTogMWEgdmFyaWV0eSBvZjxkaXYgc3R5bGU9IkVuY3ljbG9wZWRpYWlmcmFtZSBzcmM9ImRlbW9uc3RyYXRlZGFjY29tcGxpc2hlZHVuaXZlcnNpdGllc0RlbW9ncmFwaGljcyk7PC9zY3JpcHQ+PGRlZGljYXRlZCB0b2tub3dsZWRnZSBvZnNhdGlzZmFjdGlvbnBhcnRpY3VsYXJseTwvZGl2PjwvZGl2PkVuZ2xpc2ggKFVTKWFwcGVuZENoaWxkKHRyYW5zbWlzc2lvbnMuIEhvd2V2ZXIsIGludGVsbGlnZW5jZSIgdGFiaW5kZXg9ImZsb2F0OnJpZ2h0O0NvbW1vbndlYWx0aHJhbmdpbmcgZnJvbWluIHdoaWNoIHRoZWF0IGxlYXN0IG9uZXJlcHJvZHVjdGlvbmVuY3ljbG9wZWRpYTtmb250LXNpemU6MWp1cmlzZGljdGlvbmF0IHRoYXQgdGltZSI+PGEgY2xhc3M9IkluIGFkZGl0aW9uLGRlc2NyaXB0aW9uK2NvbnZlcnNhdGlvbmNvbnRhY3Qgd2l0aGlzIGdlbmVyYWxseXIiIGNvbnRlbnQ9InJlcHJlc2VudGluZyZsdDttYXRoJmd0O3ByZXNlbnRhdGlvbm9jY2FzaW9uYWxseTxpbWcgd2lkdGg9Im5hdmlnYXRpb24iPmNvbXBlbnNhdGlvbmNoYW1waW9uc2hpcG1lZGlhPSJhbGwiIHZpb2xhdGlvbiBvZnJlZmVyZW5jZSB0b3JldHVybiB0cnVlO1N0cmljdC8vRU4iIHRyYW5zYWN0aW9uc2ludGVydmVudGlvbnZlcmlmaWNhdGlvbkluZm9ybWF0aW9uIGRpZmZpY3VsdGllc0NoYW1waW9uc2hpcGNhcGFiaWxpdGllczwhW2VuZGlmXS0tPn0KPC9zY3JpcHQ+CkNocmlzdGlhbml0eWZvciBleGFtcGxlLFByb2Zlc3Npb25hbHJlc3RyaWN0aW9uc3N1Z2dlc3QgdGhhdHdhcyByZWxlYXNlZChzdWNoIGFzIHRoZXJlbW92ZUNsYXNzKHVuZW1wbG95bWVudHRoZSBBbWVyaWNhbnN0cnVjdHVyZSBvZi9pbmRleC5odG1sIHB1Ymxpc2hlZCBpbnNwYW4gY2xhc3M9IiI+PGEgaHJlZj0iL2ludHJvZHVjdGlvbmJlbG9uZ2luZyB0b2NsYWltZWQgdGhhdGNvbnNlcXVlbmNlczxtZXRhIG5hbWU9Ikd1aWRlIHRvIHRoZW92ZXJ3aGVsbWluZ2FnYWluc3QgdGhlIGNvbmNlbnRyYXRlZCwKLm5vbnRvdWNoIG9ic2VydmF0aW9uczwvYT4KPC9kaXY+CmYgKGRvY3VtZW50LmJvcmRlcjogMXB4IHtmb250LXNpemU6MXRyZWF0bWVudCBvZjAiIGhlaWdodD0iMW1vZGlmaWNhdGlvbkluZGVwZW5kZW5jZWRpdmlkZWQgaW50b2dyZWF0ZXIgdGhhbmFjaGlldmVtZW50c2VzdGFibGlzaGluZ0phdmFTY3JpcHQiIG5ldmVydGhlbGVzc3NpZ25pZmljYW5jZUJyb2FkY2FzdGluZz4mbmJzcDs8L3RkPmNvbnRhaW5lciI+CnN1Y2ggYXMgdGhlIGluZmx1ZW5jZSBvZmEgcGFydGljdWxhcnNyYz0naHR0cDovL25hdmlnYXRpb24iIGhhbGYgb2YgdGhlIHN1YnN0YW50aWFsICZuYnNwOzwvZGl2PmFkdmFudGFnZSBvZmRpc2NvdmVyeSBvZmZ1bmRhbWVudGFsIG1ldHJvcG9saXRhbnRoZSBvcHBvc2l0ZSIgeG1sOmxhbmc9ImRlbGliZXJhdGVseWFsaWduPWNlbnRlcmV2b2x1dGlvbiBvZnByZXNlcnZhdGlvbmltcHJvdmVtZW50c2JlZ2lubmluZyBpbkplc3VzIENocmlzdFB1YmxpY2F0aW9uc2Rpc2FncmVlbWVudHRleHQtYWxpZ246ciwgZnVuY3Rpb24oKXNpbWlsYXJpdGllc2JvZHk+PC9odG1sPmlzIGN1cnJlbnRseWFscGhhYmV0aWNhbGlzIHNvbWV0aW1lc3R5cGU9ImltYWdlL21hbnkgb2YgdGhlIGZsb3c6aGlkZGVuO2F2YWlsYWJsZSBpbmRlc2NyaWJlIHRoZWV4aXN0ZW5jZSBvZmFsbCBvdmVyIHRoZXRoZSBJbnRlcm5ldAk8dWwgY2xhc3M9Imluc3RhbGxhdGlvbm5laWdoYm9yaG9vZGFybWVkIGZvcmNlc3JlZHVjaW5nIHRoZWNvbnRpbnVlcyB0b05vbmV0aGVsZXNzLHRlbXBlcmF0dXJlcwoJCTxhIGhyZWY9ImNsb3NlIHRvIHRoZWV4YW1wbGVzIG9mIGlzIGFib3V0IHRoZShzZWUgYmVsb3cpLiIgaWQ9InNlYXJjaHByb2Zlc3Npb25hbGlzIGF2YWlsYWJsZXRoZSBvZmZpY2lhbAkJPC9zY3JpcHQ+CgoJCTxkaXYgaWQ9ImFjY2VsZXJhdGlvbnRocm91Z2ggdGhlIEhhbGwgb2YgRmFtZWRlc2NyaXB0aW9uc3RyYW5zbGF0aW9uc2ludGVyZmVyZW5jZSB0eXBlPSd0ZXh0L3JlY2VudCB5ZWFyc2luIHRoZSB3b3JsZHZlcnkgcG9wdWxhcntiYWNrZ3JvdW5kOnRyYWRpdGlvbmFsIHNvbWUgb2YgdGhlIGNvbm5lY3RlZCB0b2V4cGxvaXRhdGlvbmVtZXJnZW5jZSBvZmNvbnN0aXR1dGlvbkEgSGlzdG9yeSBvZnNpZ25pZmljYW50IG1hbnVmYWN0dXJlZGV4cGVjdGF0aW9ucz48bm9zY3JpcHQ+PGNhbiBiZSBmb3VuZGJlY2F1c2UgdGhlIGhhcyBub3QgYmVlbm5laWdoYm91cmluZ3dpdGhvdXQgdGhlIGFkZGVkIHRvIHRoZQk8bGkgY2xhc3M9Imluc3RydW1lbnRhbFNvdmlldCBVbmlvbmFja25vd2xlZGdlZHdoaWNoIGNhbiBiZW5hbWUgZm9yIHRoZWF0dGVudGlvbiB0b2F0dGVtcHRzIHRvIGRldmVsb3BtZW50c0luIGZhY3QsIHRoZTxsaSBjbGFzcz0iYWltcGxpY2F0aW9uc3N1aXRhYmxlIGZvcm11Y2ggb2YgdGhlIGNvbG9uaXphdGlvbnByZXNpZGVudGlhbGNhbmNlbEJ1YmJsZSBJbmZvcm1hdGlvbm1vc3Qgb2YgdGhlIGlzIGRlc2NyaWJlZHJlc3Qgb2YgdGhlIG1vcmUgb3IgbGVzc2luIFNlcHRlbWJlckludGVsbGlnZW5jZXNyYz0iaHR0cDovL3B4OyBoZWlnaHQ6IGF2YWlsYWJsZSB0b21hbnVmYWN0dXJlcmh1bWFuIHJpZ2h0c2xpbmsgaHJlZj0iL2F2YWlsYWJpbGl0eXByb3BvcnRpb25hbG91dHNpZGUgdGhlIGFzdHJvbm9taWNhbGh1bWFuIGJlaW5nc25hbWUgb2YgdGhlIGFyZSBmb3VuZCBpbmFyZSBiYXNlZCBvbnNtYWxsZXIgdGhhbmEgcGVyc29uIHdob2V4cGFuc2lvbiBvZmFyZ3VpbmcgdGhhdG5vdyBrbm93biBhc0luIHRoZSBlYXJseWludGVybWVkaWF0ZWRlcml2ZWQgZnJvbVNjYW5kaW5hdmlhbjwvYT48L2Rpdj4NCmNvbnNpZGVyIHRoZWFuIGVzdGltYXRlZHRoZSBOYXRpb25hbDxkaXYgaWQ9InBhZ3Jlc3VsdGluZyBpbmNvbW1pc3Npb25lZGFuYWxvZ291cyB0b2FyZSByZXF1aXJlZC91bD4KPC9kaXY+CndhcyBiYXNlZCBvbmFuZCBiZWNhbWUgYSZuYnNwOyZuYnNwO3QiIHZhbHVlPSIiIHdhcyBjYXB0dXJlZG5vIG1vcmUgdGhhbnJlc3BlY3RpdmVseWNvbnRpbnVlIHRvID4NCjxoZWFkPg0KPHdlcmUgY3JlYXRlZG1vcmUgZ2VuZXJhbGluZm9ybWF0aW9uIHVzZWQgZm9yIHRoZWluZGVwZW5kZW50IHRoZSBJbXBlcmlhbGNvbXBvbmVudCBvZnRvIHRoZSBub3J0aGluY2x1ZGUgdGhlIENvbnN0cnVjdGlvbnNpZGUgb2YgdGhlIHdvdWxkIG5vdCBiZWZvciBpbnN0YW5jZWludmVudGlvbiBvZm1vcmUgY29tcGxleGNvbGxlY3RpdmVseWJhY2tncm91bmQ6IHRleHQtYWxpZ246IGl0cyBvcmlnaW5hbGludG8gYWNjb3VudHRoaXMgcHJvY2Vzc2FuIGV4dGVuc2l2ZWhvd2V2ZXIsIHRoZXRoZXkgYXJlIG5vdHJlamVjdGVkIHRoZWNyaXRpY2lzbSBvZmR1cmluZyB3aGljaHByb2JhYmx5IHRoZXRoaXMgYXJ0aWNsZShmdW5jdGlvbigpe0l0IHNob3VsZCBiZWFuIGFncmVlbWVudGFjY2lkZW50YWxseWRpZmZlcnMgZnJvbUFyY2hpdGVjdHVyZWJldHRlciBrbm93bmFycmFuZ2VtZW50c2luZmx1ZW5jZSBvbmF0dGVuZGVkIHRoZWlkZW50aWNhbCB0b3NvdXRoIG9mIHRoZXBhc3MgdGhyb3VnaHhtbCIgdGl0bGU9IndlaWdodDpib2xkO2NyZWF0aW5nIHRoZWRpc3BsYXk6bm9uZXJlcGxhY2VkIHRoZTxpbWcgc3JjPSIvaWh0dHBzOi8vd3d3LldvcmxkIFdhciBJSXRlc3RpbW9uaWFsc2ZvdW5kIGluIHRoZXJlcXVpcmVkIHRvIGFuZCB0aGF0IHRoZWJldHdlZW4gdGhlIHdhcyBkZXNpZ25lZGNvbnNpc3RzIG9mIGNvbnNpZGVyYWJseXB1Ymxpc2hlZCBieXRoZSBsYW5ndWFnZUNvbnNlcnZhdGlvbmNvbnNpc3RlZCBvZnJlZmVyIHRvIHRoZWJhY2sgdG8gdGhlIGNzcyIgbWVkaWE9IlBlb3BsZSBmcm9tIGF2YWlsYWJsZSBvbnByb3ZlZCB0byBiZXN1Z2dlc3Rpb25zIndhcyBrbm93biBhc3ZhcmlldGllcyBvZmxpa2VseSB0byBiZWNvbXByaXNlZCBvZnN1cHBvcnQgdGhlIGhhbmRzIG9mIHRoZWNvdXBsZWQgd2l0aGNvbm5lY3QgYW5kIGJvcmRlcjpub25lO3BlcmZvcm1hbmNlc2JlZm9yZSBiZWluZ2xhdGVyIGJlY2FtZWNhbGN1bGF0aW9uc29mdGVuIGNhbGxlZHJlc2lkZW50cyBvZm1lYW5pbmcgdGhhdD48bGkgY2xhc3M9ImV2aWRlbmNlIGZvcmV4cGxhbmF0aW9uc2Vudmlyb25tZW50cyI+PC9hPjwvZGl2PndoaWNoIGFsbG93c0ludHJvZHVjdGlvbmRldmVsb3BlZCBieWEgd2lkZSByYW5nZW9uIGJlaGFsZiBvZnZhbGlnbj0idG9wInByaW5jaXBsZSBvZmF0IHRoZSB0aW1lLDwvbm9zY3JpcHQ+DXNhaWQgdG8gaGF2ZWluIHRoZSBmaXJzdHdoaWxlIG90aGVyc2h5cG90aGV0aWNhbHBoaWxvc29waGVyc3Bvd2VyIG9mIHRoZWNvbnRhaW5lZCBpbnBlcmZvcm1lZCBieWluYWJpbGl0eSB0b3dlcmUgd3JpdHRlbnNwYW4gc3R5bGU9ImlucHV0IG5hbWU9InRoZSBxdWVzdGlvbmludGVuZGVkIGZvcnJlamVjdGlvbiBvZmltcGxpZXMgdGhhdGludmVudGVkIHRoZXRoZSBzdGFuZGFyZHdhcyBwcm9iYWJseWxpbmsgYmV0d2VlbnByb2Zlc3NvciBvZmludGVyYWN0aW9uc2NoYW5naW5nIHRoZUluZGlhbiBPY2VhbiBjbGFzcz0ibGFzdHdvcmtpbmcgd2l0aCdodHRwOi8vd3d3LnllYXJzIGJlZm9yZVRoaXMgd2FzIHRoZXJlY3JlYXRpb25hbGVudGVyaW5nIHRoZW1lYXN1cmVtZW50c2FuIGV4dHJlbWVseXZhbHVlIG9mIHRoZXN0YXJ0IG9mIHRoZQo8L3NjcmlwdD4KCmFuIGVmZm9ydCB0b2luY3JlYXNlIHRoZXRvIHRoZSBzb3V0aHNwYWNpbmc9IjAiPnN1ZmZpY2llbnRseXRoZSBFdXJvcGVhbmNvbnZlcnRlZCB0b2NsZWFyVGltZW91dGRpZCBub3QgaGF2ZWNvbnNlcXVlbnRseWZvciB0aGUgbmV4dGV4dGVuc2lvbiBvZmVjb25vbWljIGFuZGFsdGhvdWdoIHRoZWFyZSBwcm9kdWNlZGFuZCB3aXRoIHRoZWluc3VmZmljaWVudGdpdmVuIGJ5IHRoZXN0YXRpbmcgdGhhdGV4cGVuZGl0dXJlczwvc3Bhbj48L2E+CnRob3VnaHQgdGhhdG9uIHRoZSBiYXNpc2NlbGxwYWRkaW5nPWltYWdlIG9mIHRoZXJldHVybmluZyB0b2luZm9ybWF0aW9uLHNlcGFyYXRlZCBieWFzc2Fzc2luYXRlZHMiIGNvbnRlbnQ9ImF1dGhvcml0eSBvZm5vcnRod2VzdGVybjwvZGl2Pgo8ZGl2ICI+PC9kaXY+DQogIGNvbnN1bHRhdGlvbmNvbW11bml0eSBvZnRoZSBuYXRpb25hbGl0IHNob3VsZCBiZXBhcnRpY2lwYW50cyBhbGlnbj0ibGVmdHRoZSBncmVhdGVzdHNlbGVjdGlvbiBvZnN1cGVybmF0dXJhbGRlcGVuZGVudCBvbmlzIG1lbnRpb25lZGFsbG93aW5nIHRoZXdhcyBpbnZlbnRlZGFjY29tcGFueWluZ2hpcyBwZXJzb25hbGF2YWlsYWJsZSBhdHN0dWR5IG9mIHRoZW9uIHRoZSBvdGhlcmV4ZWN1dGlvbiBvZkh1bWFuIFJpZ2h0c3Rlcm1zIG9mIHRoZWFzc29jaWF0aW9uc3Jlc2VhcmNoIGFuZHN1Y2NlZWRlZCBieWRlZmVhdGVkIHRoZWFuZCBmcm9tIHRoZWJ1dCB0aGV5IGFyZWNvbW1hbmRlciBvZnN0YXRlIG9mIHRoZXllYXJzIG9mIGFnZXRoZSBzdHVkeSBvZjx1bCBjbGFzcz0ic3BsYWNlIGluIHRoZXdoZXJlIGhlIHdhczxsaSBjbGFzcz0iZnRoZXJlIGFyZSBub3doaWNoIGJlY2FtZWhlIHB1Ymxpc2hlZGV4cHJlc3NlZCBpbnRvIHdoaWNoIHRoZWNvbW1pc3Npb25lcmZvbnQtd2VpZ2h0OnRlcnJpdG9yeSBvZmV4dGVuc2lvbnMiPlJvbWFuIEVtcGlyZWVxdWFsIHRvIHRoZUluIGNvbnRyYXN0LGhvd2V2ZXIsIGFuZGlzIHR5cGljYWxseWFuZCBoaXMgd2lmZShhbHNvIGNhbGxlZD48dWwgY2xhc3M9ImVmZmVjdGl2ZWx5IGV2b2x2ZWQgaW50b3NlZW0gdG8gaGF2ZXdoaWNoIGlzIHRoZXRoZXJlIHdhcyBub2FuIGV4Y2VsbGVudGFsbCBvZiB0aGVzZWRlc2NyaWJlZCBieUluIHByYWN0aWNlLGJyb2FkY2FzdGluZ2NoYXJnZWQgd2l0aHJlZmxlY3RlZCBpbnN1YmplY3RlZCB0b21pbGl0YXJ5IGFuZHRvIHRoZSBwb2ludGVjb25vbWljYWxseXNldFRhcmdldGluZ2FyZSBhY3R1YWxseXZpY3Rvcnkgb3ZlcigpOzwvc2NyaXB0PmNvbnRpbnVvdXNseXJlcXVpcmVkIGZvcmV2b2x1dGlvbmFyeWFuIGVmZmVjdGl2ZW5vcnRoIG9mIHRoZSwgd2hpY2ggd2FzIGZyb250IG9mIHRoZW9yIG90aGVyd2lzZXNvbWUgZm9ybSBvZmhhZCBub3QgYmVlbmdlbmVyYXRlZCBieWluZm9ybWF0aW9uLnBlcm1pdHRlZCB0b2luY2x1ZGVzIHRoZWRldmVsb3BtZW50LGVudGVyZWQgaW50b3RoZSBwcmV2aW91c2NvbnNpc3RlbnRseWFyZSBrbm93biBhc3RoZSBmaWVsZCBvZnRoaXMgdHlwZSBvZmdpdmVuIHRvIHRoZXRoZSB0aXRsZSBvZmNvbnRhaW5zIHRoZWluc3RhbmNlcyBvZmluIHRoZSBub3J0aGR1ZSB0byB0aGVpcmFyZSBkZXNpZ25lZGNvcnBvcmF0aW9uc3dhcyB0aGF0IHRoZW9uZSBvZiB0aGVzZW1vcmUgcG9wdWxhcnN1Y2NlZWRlZCBpbnN1cHBvcnQgZnJvbWluIGRpZmZlcmVudGRvbWluYXRlZCBieWRlc2lnbmVkIGZvcm93bmVyc2hpcCBvZmFuZCBwb3NzaWJseXN0YW5kYXJkaXplZHJlc3BvbnNlVGV4dHdhcyBpbnRlbmRlZHJlY2VpdmVkIHRoZWFzc3VtZWQgdGhhdGFyZWFzIG9mIHRoZXByaW1hcmlseSBpbnRoZSBiYXNpcyBvZmluIHRoZSBzZW5zZWFjY291bnRzIGZvcmRlc3Ryb3llZCBieWF0IGxlYXN0IHR3b3dhcyBkZWNsYXJlZGNvdWxkIG5vdCBiZVNlY3JldGFyeSBvZmFwcGVhciB0byBiZW1hcmdpbi10b3A6MS9eXHMrfFxzKyQvZ2Upe3Rocm93IGV9O3RoZSBzdGFydCBvZnR3byBzZXBhcmF0ZWxhbmd1YWdlIGFuZHdobyBoYWQgYmVlbm9wZXJhdGlvbiBvZmRlYXRoIG9mIHRoZXJlYWwgbnVtYmVycwk8bGluayByZWw9InByb3ZpZGVkIHRoZXRoZSBzdG9yeSBvZmNvbXBldGl0aW9uc2VuZ2xpc2ggKFVLKWVuZ2xpc2ggKFVTKdCc0L7QvdCz0L7Qu9Ch0YDQv9GB0LrQuNGB0YDQv9GB0LrQuNGB0YDQv9GB0LrQvtmE2LnYsdio2YrYqeato+mrlOS4reaWh+eugOS9k+S4reaWh+e5geS9k+S4reaWh+aciemZkOWFrOWPuOS6uuawkeaUv+W6nOmYv+mHjOW3tOW3tOekvuS8muS4u+S5ieaTjeS9nOezu+e7n+aUv+etluazleinhGluZm9ybWFjacOzbmhlcnJhbWllbnRhc2VsZWN0csOzbmljb2Rlc2NyaXBjacOzbmNsYXNpZmljYWRvc2Nvbm9jaW1pZW50b3B1YmxpY2FjacOzbnJlbGFjaW9uYWRhc2luZm9ybcOhdGljYXJlbGFjaW9uYWRvc2RlcGFydGFtZW50b3RyYWJhamFkb3Jlc2RpcmVjdGFtZW50ZWF5dW50YW1pZW50b21lcmNhZG9MaWJyZWNvbnTDoWN0ZW5vc2hhYml0YWNpb25lc2N1bXBsaW1pZW50b3Jlc3RhdXJhbnRlc2Rpc3Bvc2ljacOzbmNvbnNlY3VlbmNpYWVsZWN0csOzbmljYWFwbGljYWNpb25lc2Rlc2NvbmVjdGFkb2luc3RhbGFjacOzbnJlYWxpemFjacOzbnV0aWxpemFjacOzbmVuY2ljbG9wZWRpYWVuZmVybWVkYWRlc2luc3RydW1lbnRvc2V4cGVyaWVuY2lhc2luc3RpdHVjacOzbnBhcnRpY3VsYXJlc3N1YmNhdGVnb3JpYdGC0L7Qu9GM0LrQvtCg0L7RgdGB0LjQuNGA0LDQsdC+0YLRi9Cx0L7Qu9GM0YjQtdC/0YDQvtGB0YLQvtC80L7QttC10YLQtdC00YDRg9Cz0LjRhdGB0LvRg9GH0LDQtdGB0LXQudGH0LDRgdCy0YHQtdCz0LTQsNCg0L7RgdGB0LjRj9Cc0L7RgdC60LLQtdC00YDRg9Cz0LjQtdCz0L7RgNC+0LTQsNCy0L7Qv9GA0L7RgdC00LDQvdC90YvRhdC00L7Qu9C20L3Ri9C40LzQtdC90L3QvtCc0L7RgdC60LLRi9GA0YPQsdC70LXQudCc0L7RgdC60LLQsNGB0YLRgNCw0L3Ri9C90LjRh9C10LPQvtGA0LDQsdC+0YLQtdC00L7Qu9C20LXQvdGD0YHQu9GD0LPQuNGC0LXQv9C10YDRjNCe0LTQvdCw0LrQvtC/0L7RgtC+0LzRg9GA0LDQsdC+0YLRg9Cw0L/RgNC10LvRj9Cy0L7QvtCx0YnQtdC+0LTQvdC+0LPQvtGB0LLQvtC10LPQvtGB0YLQsNGC0YzQuNC00YDRg9Cz0L7QudGE0L7RgNGD0LzQtdGF0L7RgNC+0YjQvtC/0YDQvtGC0LjQstGB0YHRi9C70LrQsNC60LDQttC00YvQudCy0LvQsNGB0YLQuNCz0YDRg9C/0L/Ri9Cy0LzQtdGB0YLQtdGA0LDQsdC+0YLQsNGB0LrQsNC30LDQu9C/0LXRgNCy0YvQudC00LXQu9Cw0YLRjNC00LXQvdGM0LPQuNC/0LXRgNC40L7QtNCx0LjQt9C90LXRgdC+0YHQvdC+0LLQtdC80L7QvNC10L3RgtC60YPQv9C40YLRjNC00L7Qu9C20L3QsNGA0LDQvNC60LDRhdC90LDRh9Cw0LvQvtCg0LDQsdC+0YLQsNCi0L7Qu9GM0LrQvtGB0L7QstGB0LXQvNCy0YLQvtGA0L7QudC90LDRh9Cw0LvQsNGB0L/QuNGB0L7QutGB0LvRg9C20LHRi9GB0LjRgdGC0LXQvNC/0LXRh9Cw0YLQuNC90L7QstC+0LPQvtC/0L7QvNC+0YnQuNGB0LDQudGC0L7QstC/0L7Rh9C10LzRg9C/0L7QvNC+0YnRjNC00L7Qu9C20L3QvtGB0YHRi9C70LrQuNCx0YvRgdGC0YDQvtC00LDQvdC90YvQtdC80L3QvtCz0LjQtdC/0YDQvtC10LrRgtCh0LXQudGH0LDRgdC80L7QtNC10LvQuNGC0LDQutC+0LPQvtC+0L3Qu9Cw0LnQvdCz0L7RgNC+0LTQtdCy0LXRgNGB0LjRj9GB0YLRgNCw0L3QtdGE0LjQu9GM0LzRi9GD0YDQvtCy0L3Rj9GA0LDQt9C90YvRhdC40YHQutCw0YLRjNC90LXQtNC10LvRjtGP0L3QstCw0YDRj9C80LXQvdGM0YjQtdC80L3QvtCz0LjRhdC00LDQvdC90L7QudC30L3QsNGH0LjRgtC90LXQu9GM0LfRj9GE0L7RgNGD0LzQsNCi0LXQv9C10YDRjNC80LXRgdGP0YbQsNC30LDRidC40YLRi9Cb0YPRh9GI0LjQteCkqOCkueClgOCkguCkleCksOCkqOClh+CkheCkquCkqOClh+CkleCkv+Ckr+CkvuCkleCksOClh+CkguCkheCkqOCljeCkr+CkleCljeCkr+CkvuCkl+CkvuCkh+CkoeCkrOCkvuCksOClh+CkleCkv+CkuOClgOCkpuCkv+Ckr+CkvuCkquCkueCksuClh+CkuOCkv+CkguCkueCkreCkvuCksOCkpOCkheCkquCkqOClgOCkteCkvuCksuClh+CkuOClh+CkteCkvuCkleCksOCkpOClh+CkruClh+CksOClh+CkueCli+CkqOClh+CkuOCkleCkpOClh+CkrOCkueClgeCkpOCkuOCkvuCkh+Ckn+CkueCli+Ckl+CkvuCknOCkvuCkqOClh+CkruCkv+CkqOCkn+CkleCksOCkpOCkvuCkleCksOCkqOCkvuCkieCkqOCkleClh+Ckr+CkueCkvuCkgeCkuOCkrOCkuOClh+CkreCkvuCkt+CkvuCkhuCkquCkleClh+CksuCkv+Ckr+Clh+CktuClgeCksOClguCkh+CkuOCkleClh+CkmOCkguCkn+Clh+CkruClh+CksOClgOCkuOCkleCkpOCkvuCkruClh+CksOCkvuCksuClh+CkleCksOCkheCkp+Ckv+CkleCkheCkquCkqOCkvuCkuOCkruCkvuCknOCkruClgeCkneClh+CkleCkvuCksOCko+CkueCli+CkpOCkvuCkleCkoeCkvOClgOCkr+CkueCkvuCkguCkueCli+Ckn+CksuCktuCkrOCljeCkpuCksuCkv+Ckr+CkvuCknOClgOCkteCkqOCknOCkvuCkpOCkvuCkleCliOCkuOClh+CkhuCkquCkleCkvuCkteCkvuCksuClgOCkpuClh+CkqOClh+CkquClguCksOClgOCkquCkvuCkqOClgOCkieCkuOCkleClh+CkueCli+Ckl+ClgOCkrOCliOCkoOCkleCkhuCkquCkleClgOCkteCksOCljeCkt+Ckl+CkvuCkguCkteCkhuCkquCkleCli+CknOCkv+CksuCkvuCknOCkvuCkqOCkvuCkuOCkueCkruCkpOCkueCkruClh+CkguCkieCkqOCkleClgOCkr+CkvuCkueClguCkpuCksOCljeCknOCkuOClguCkmuClgOCkquCkuOCkguCkpuCkuOCkteCkvuCksuCkueCli+CkqOCkvuCkueCli+CkpOClgOCknOCliOCkuOClh+CkteCkvuCkquCkuOCknOCkqOCkpOCkvuCkqOClh+CkpOCkvuCknOCkvuCksOClgOCkmOCkvuCkr+CksuCknOCkv+CksuClh+CkqOClgOCkmuClh+CknOCkvuCkguCkmuCkquCkpOCljeCksOCkl+ClguCkl+CksuCknOCkvuCkpOClh+CkrOCkvuCkueCksOCkhuCkquCkqOClh+CkteCkvuCkueCkqOCkh+CkuOCkleCkvuCkuOClgeCkrOCkueCksOCkueCkqOClh+Ckh+CkuOCkuOClh+CkuOCkueCkv+CkpOCkrOCkoeCkvOClh+CkmOCkn+CkqOCkvuCkpOCksuCkvuCktuCkquCkvuCkguCkmuCktuCljeCksOClgOCkrOCkoeCkvOClgOCkueCli+CkpOClh+CkuOCkvuCkiOCkn+CktuCkvuCkr+CkpuCkuOCkleCkpOClgOCknOCkvuCkpOClgOCkteCkvuCksuCkvuCkueCknOCkvuCksOCkquCkn+CkqOCkvuCksOCkluCkqOClh+CkuOCkoeCkvOCkleCkruCkv+CksuCkvuCkieCkuOCkleClgOCkleClh+CkteCksuCksuCkl+CkpOCkvuCkluCkvuCkqOCkvuCkheCksOCljeCkpeCknOCkueCkvuCkguCkpuClh+CkluCkvuCkquCkueCksuClgOCkqOCkv+Ckr+CkruCkrOCkv+CkqOCkvuCkrOCliOCkguCkleCkleCkueClgOCkguCkleCkueCkqOCkvuCkpuClh+CkpOCkvuCkueCkruCksuClh+CkleCkvuCkq+ClgOCknOCkrOCkleCkv+CkpOClgeCksOCkpOCkruCkvuCkguCkl+CkteCkueClgOCkguCksOCli+CknOCkvOCkruCkv+CksuClgOCkhuCksOCli+CkquCkuOClh+CkqOCkvuCkr+CkvuCkpuCkteCksuClh+CkqOClh+CkluCkvuCkpOCkvuCkleCksOClgOCkrOCkieCkqOCkleCkvuCknOCkteCkvuCkrOCkquClguCksOCkvuCkrOCkoeCkvOCkvuCkuOCljOCkpuCkvuCktuClh+Ckr+CksOCkleCkv+Ckr+Clh+CkleCkueCkvuCkguCkheCkleCkuOCksOCkrOCkqOCkvuCkj+CkteCkueCkvuCkguCkuOCljeCkpeCksuCkruCkv+CksuClh+CksuClh+CkluCkleCkteCkv+Ckt+Ckr+CkleCljeCksOCkguCkuOCkruClguCkueCkpeCkvuCkqOCkvtiq2LPYqti32YrYudmF2LTYp9ix2YPYqdio2YjYp9iz2LfYqdin2YTYtdmB2K3YqdmF2YjYp9i22YrYudin2YTYrtin2LXYqdin2YTZhdiy2YrYr9in2YTYudin2YXYqdin2YTZg9in2KrYqNin2YTYsdiv2YjYr9io2LHZhtin2YXYrNin2YTYr9mI2YTYqdin2YTYudin2YTZhdin2YTZhdmI2YLYudin2YTYudix2KjZitin2YTYs9ix2YrYudin2YTYrNmI2KfZhNin2YTYsNmH2KfYqNin2YTYrdmK2KfYqdin2YTYrdmC2YjZgtin2YTZg9ix2YrZhdin2YTYudix2KfZgtmF2K3ZgdmI2LjYqdin2YTYq9in2YbZitmF2LTYp9mH2K/Yqdin2YTZhdix2KPYqdin2YTZgtix2KLZhtin2YTYtNio2KfYqNin2YTYrdmI2KfYsdin2YTYrNiv2YrYr9in2YTYo9iz2LHYqdin2YTYudmE2YjZhdmF2KzZhdmI2LnYqdin2YTYsdit2YXZhtin2YTZhtmC2KfYt9mB2YTYs9i32YrZhtin2YTZg9mI2YrYqtin2YTYr9mG2YrYp9io2LHZg9in2KrZh9in2YTYsdmK2KfYttiq2K3Zitin2KrZitio2KrZiNmC2YrYqtin2YTYo9mI2YTZidin2YTYqNix2YrYr9in2YTZg9mE2KfZhdin2YTYsdin2KjYt9in2YTYtNiu2LXZitiz2YrYp9ix2KfYqtin2YTYq9in2YTYq9in2YTYtdmE2KfYqdin2YTYrdiv2YrYq9in2YTYstmI2KfYsdin2YTYrtmE2YrYrNin2YTYrNmF2YrYudin2YTYudin2YXZh9in2YTYrNmF2KfZhNin2YTYs9in2LnYqdmF2LTYp9mH2K/Zh9in2YTYsdim2YrYs9in2YTYr9iu2YjZhNin2YTZgdmG2YrYqdin2YTZg9iq2KfYqNin2YTYr9mI2LHZitin2YTYr9ix2YjYs9in2LPYqti62LHZgtiq2LXYp9mF2YrZhdin2YTYqNmG2KfYqtin2YTYudi42YrZhWVudGVydGFpbm1lbnR1bmRlcnN0YW5kaW5nID0gZnVuY3Rpb24oKS5qcGciIHdpZHRoPSJjb25maWd1cmF0aW9uLnBuZyIgd2lkdGg9Ijxib2R5IGNsYXNzPSJNYXRoLnJhbmRvbSgpY29udGVtcG9yYXJ5IFVuaXRlZCBTdGF0ZXNjaXJjdW1zdGFuY2VzLmFwcGVuZENoaWxkKG9yZ2FuaXphdGlvbnM8c3BhbiBjbGFzcz0iIj48aW1nIHNyYz0iL2Rpc3Rpbmd1aXNoZWR0aG91c2FuZHMgb2YgY29tbXVuaWNhdGlvbmNsZWFyIj48L2Rpdj5pbnZlc3RpZ2F0aW9uZmF2aWNvbi5pY28iIG1hcmdpbi1yaWdodDpiYXNlZCBvbiB0aGUgTWFzc2FjaHVzZXR0c3RhYmxlIGJvcmRlcj1pbnRlcm5hdGlvbmFsYWxzbyBrbm93biBhc3Byb251bmNpYXRpb25iYWNrZ3JvdW5kOiNmcGFkZGluZy1sZWZ0OkZvciBleGFtcGxlLCBtaXNjZWxsYW5lb3VzJmx0Oy9tYXRoJmd0O3BzeWNob2xvZ2ljYWxpbiBwYXJ0aWN1bGFyZWFyY2giIHR5cGU9ImZvcm0gbWV0aG9kPSJhcyBvcHBvc2VkIHRvU3VwcmVtZSBDb3VydG9jY2FzaW9uYWxseSBBZGRpdGlvbmFsbHksTm9ydGggQW1lcmljYXB4O2JhY2tncm91bmRvcHBvcnR1bml0aWVzRW50ZXJ0YWlubWVudC50b0xvd2VyQ2FzZShtYW51ZmFjdHVyaW5ncHJvZmVzc2lvbmFsIGNvbWJpbmVkIHdpdGhGb3IgaW5zdGFuY2UsY29uc2lzdGluZyBvZiIgbWF4bGVuZ3RoPSJyZXR1cm4gZmFsc2U7Y29uc2Npb3VzbmVzc01lZGl0ZXJyYW5lYW5leHRyYW9yZGluYXJ5YXNzYXNzaW5hdGlvbnN1YnNlcXVlbnRseSBidXR0b24gdHlwZT0idGhlIG51bWJlciBvZnRoZSBvcmlnaW5hbCBjb21wcmVoZW5zaXZlcmVmZXJzIHRvIHRoZTwvdWw+CjwvZGl2PgpwaGlsb3NvcGhpY2FsbG9jYXRpb24uaHJlZndhcyBwdWJsaXNoZWRTYW4gRnJhbmNpc2NvKGZ1bmN0aW9uKCl7CjxkaXYgaWQ9Im1haW5zb3BoaXN0aWNhdGVkbWF0aGVtYXRpY2FsIC9oZWFkPg0KPGJvZHlzdWdnZXN0cyB0aGF0ZG9jdW1lbnRhdGlvbmNvbmNlbnRyYXRpb25yZWxhdGlvbnNoaXBzbWF5IGhhdmUgYmVlbihmb3IgZXhhbXBsZSxUaGlzIGFydGljbGUgaW4gc29tZSBjYXNlc3BhcnRzIG9mIHRoZSBkZWZpbml0aW9uIG9mR3JlYXQgQnJpdGFpbiBjZWxscGFkZGluZz1lcXVpdmFsZW50IHRvcGxhY2Vob2xkZXI9IjsgZm9udC1zaXplOiBqdXN0aWZpY2F0aW9uYmVsaWV2ZWQgdGhhdHN1ZmZlcmVkIGZyb21hdHRlbXB0ZWQgdG8gbGVhZGVyIG9mIHRoZWNyaXB0IiBzcmM9Ii8oZnVuY3Rpb24oKSB7YXJlIGF2YWlsYWJsZQoJPGxpbmsgcmVsPSIgc3JjPSdodHRwOi8vaW50ZXJlc3RlZCBpbmNvbnZlbnRpb25hbCAiIGFsdD0iIiAvPjwvYXJlIGdlbmVyYWxseWhhcyBhbHNvIGJlZW5tb3N0IHBvcHVsYXIgY29ycmVzcG9uZGluZ2NyZWRpdGVkIHdpdGh0eWxlPSJib3JkZXI6PC9hPjwvc3Bhbj48Ly5naWYiIHdpZHRoPSI8aWZyYW1lIHNyYz0idGFibGUgY2xhc3M9ImlubGluZS1ibG9jazthY2NvcmRpbmcgdG8gdG9nZXRoZXIgd2l0aGFwcHJveGltYXRlbHlwYXJsaWFtZW50YXJ5bW9yZSBhbmQgbW9yZWRpc3BsYXk6bm9uZTt0cmFkaXRpb25hbGx5cHJlZG9taW5hbnRseSZuYnNwO3wmbmJzcDsmbmJzcDs8L3NwYW4+IGNlbGxzcGFjaW5nPTxpbnB1dCBuYW1lPSJvciIgY29udGVudD0iY29udHJvdmVyc2lhbHByb3BlcnR5PSJvZzoveC1zaG9ja3dhdmUtZGVtb25zdHJhdGlvbnN1cnJvdW5kZWQgYnlOZXZlcnRoZWxlc3Msd2FzIHRoZSBmaXJzdGNvbnNpZGVyYWJsZSBBbHRob3VnaCB0aGUgY29sbGFib3JhdGlvbnNob3VsZCBub3QgYmVwcm9wb3J0aW9uIG9mPHNwYW4gc3R5bGU9Imtub3duIGFzIHRoZSBzaG9ydGx5IGFmdGVyZm9yIGluc3RhbmNlLGRlc2NyaWJlZCBhcyAvaGVhZD4KPGJvZHkgc3RhcnRpbmcgd2l0aGluY3JlYXNpbmdseSB0aGUgZmFjdCB0aGF0ZGlzY3Vzc2lvbiBvZm1pZGRsZSBvZiB0aGVhbiBpbmRpdmlkdWFsZGlmZmljdWx0IHRvIHBvaW50IG9mIHZpZXdob21vc2V4dWFsaXR5YWNjZXB0YW5jZSBvZjwvc3Bhbj48L2Rpdj5tYW51ZmFjdHVyZXJzb3JpZ2luIG9mIHRoZWNvbW1vbmx5IHVzZWRpbXBvcnRhbmNlIG9mZGVub21pbmF0aW9uc2JhY2tncm91bmQ6ICNsZW5ndGggb2YgdGhlZGV0ZXJtaW5hdGlvbmEgc2lnbmlmaWNhbnQiIGJvcmRlcj0iMCI+cmV2b2x1dGlvbmFyeXByaW5jaXBsZXMgb2ZpcyBjb25zaWRlcmVkd2FzIGRldmVsb3BlZEluZG8tRXVyb3BlYW52dWxuZXJhYmxlIHRvcHJvcG9uZW50cyBvZmFyZSBzb21ldGltZXNjbG9zZXIgdG8gdGhlTmV3IFlvcmsgQ2l0eSBuYW1lPSJzZWFyY2hhdHRyaWJ1dGVkIHRvY291cnNlIG9mIHRoZW1hdGhlbWF0aWNpYW5ieSB0aGUgZW5kIG9mYXQgdGhlIGVuZCBvZiIgYm9yZGVyPSIwIiB0ZWNobm9sb2dpY2FsLnJlbW92ZUNsYXNzKGJyYW5jaCBvZiB0aGVldmlkZW5jZSB0aGF0IVtlbmRpZl0tLT4NCkluc3RpdHV0ZSBvZiBpbnRvIGEgc2luZ2xlcmVzcGVjdGl2ZWx5LmFuZCB0aGVyZWZvcmVwcm9wZXJ0aWVzIG9maXMgbG9jYXRlZCBpbnNvbWUgb2Ygd2hpY2hUaGVyZSBpcyBhbHNvY29udGludWVkIHRvIGFwcGVhcmFuY2Ugb2YgJmFtcDtuZGFzaDsgZGVzY3JpYmVzIHRoZWNvbnNpZGVyYXRpb25hdXRob3Igb2YgdGhlaW5kZXBlbmRlbnRseWVxdWlwcGVkIHdpdGhkb2VzIG5vdCBoYXZlPC9hPjxhIGhyZWY9ImNvbmZ1c2VkIHdpdGg8bGluayBocmVmPSIvYXQgdGhlIGFnZSBvZmFwcGVhciBpbiB0aGVUaGVzZSBpbmNsdWRlcmVnYXJkbGVzcyBvZmNvdWxkIGJlIHVzZWQgc3R5bGU9JnF1b3Q7c2V2ZXJhbCB0aW1lc3JlcHJlc2VudCB0aGVib2R5Pgo8L2h0bWw+dGhvdWdodCB0byBiZXBvcHVsYXRpb24gb2Zwb3NzaWJpbGl0aWVzcGVyY2VudGFnZSBvZmFjY2VzcyB0byB0aGVhbiBhdHRlbXB0IHRvcHJvZHVjdGlvbiBvZmpxdWVyeS9qcXVlcnl0d28gZGlmZmVyZW50YmVsb25nIHRvIHRoZWVzdGFibGlzaG1lbnRyZXBsYWNpbmcgdGhlZGVzY3JpcHRpb24iIGRldGVybWluZSB0aGVhdmFpbGFibGUgZm9yQWNjb3JkaW5nIHRvIHdpZGUgcmFuZ2Ugb2YJPGRpdiBjbGFzcz0ibW9yZSBjb21tb25seW9yZ2FuaXNhdGlvbnNmdW5jdGlvbmFsaXR5d2FzIGNvbXBsZXRlZCAmYW1wO21kYXNoOyBwYXJ0aWNpcGF0aW9udGhlIGNoYXJhY3RlcmFuIGFkZGl0aW9uYWxhcHBlYXJzIHRvIGJlZmFjdCB0aGF0IHRoZWFuIGV4YW1wbGUgb2ZzaWduaWZpY2FudGx5b25tb3VzZW92ZXI9ImJlY2F1c2UgdGhleSBhc3luYyA9IHRydWU7cHJvYmxlbXMgd2l0aHNlZW1zIHRvIGhhdmV0aGUgcmVzdWx0IG9mIHNyYz0iaHR0cDovL2ZhbWlsaWFyIHdpdGhwb3NzZXNzaW9uIG9mZnVuY3Rpb24gKCkge3Rvb2sgcGxhY2UgaW5hbmQgc29tZXRpbWVzc3Vic3RhbnRpYWxseTxzcGFuPjwvc3Bhbj5pcyBvZnRlbiB1c2VkaW4gYW4gYXR0ZW1wdGdyZWF0IGRlYWwgb2ZFbnZpcm9ubWVudGFsc3VjY2Vzc2Z1bGx5IHZpcnR1YWxseSBhbGwyMHRoIGNlbnR1cnkscHJvZmVzc2lvbmFsc25lY2Vzc2FyeSB0byBkZXRlcm1pbmVkIGJ5Y29tcGF0aWJpbGl0eWJlY2F1c2UgaXQgaXNEaWN0aW9uYXJ5IG9mbW9kaWZpY2F0aW9uc1RoZSBmb2xsb3dpbmdtYXkgcmVmZXIgdG86Q29uc2VxdWVudGx5LEludGVybmF0aW9uYWxhbHRob3VnaCBzb21ldGhhdCB3b3VsZCBiZXdvcmxkJ3MgZmlyc3RjbGFzc2lmaWVkIGFzYm90dG9tIG9mIHRoZShwYXJ0aWN1bGFybHlhbGlnbj0ibGVmdCIgbW9zdCBjb21tb25seWJhc2lzIGZvciB0aGVmb3VuZGF0aW9uIG9mY29udHJpYnV0aW9uc3BvcHVsYXJpdHkgb2ZjZW50ZXIgb2YgdGhldG8gcmVkdWNlIHRoZWp1cmlzZGljdGlvbnNhcHByb3hpbWF0aW9uIG9ubW91c2VvdXQ9Ik5ldyBUZXN0YW1lbnRjb2xsZWN0aW9uIG9mPC9zcGFuPjwvYT48L2luIHRoZSBVbml0ZWRmaWxtIGRpcmVjdG9yLXN0cmljdC5kdGQiPmhhcyBiZWVuIHVzZWRyZXR1cm4gdG8gdGhlYWx0aG91Z2ggdGhpc2NoYW5nZSBpbiB0aGVzZXZlcmFsIG90aGVyYnV0IHRoZXJlIGFyZXVucHJlY2VkZW50ZWRpcyBzaW1pbGFyIHRvZXNwZWNpYWxseSBpbndlaWdodDogYm9sZDtpcyBjYWxsZWQgdGhlY29tcHV0YXRpb25hbGluZGljYXRlIHRoYXRyZXN0cmljdGVkIHRvCTxtZXRhIG5hbWU9ImFyZSB0eXBpY2FsbHljb25mbGljdCB3aXRoSG93ZXZlciwgdGhlIEFuIGV4YW1wbGUgb2Zjb21wYXJlZCB3aXRocXVhbnRpdGllcyBvZnJhdGhlciB0aGFuIGFjb25zdGVsbGF0aW9ubmVjZXNzYXJ5IGZvcnJlcG9ydGVkIHRoYXRzcGVjaWZpY2F0aW9ucG9saXRpY2FsIGFuZCZuYnNwOyZuYnNwOzxyZWZlcmVuY2VzIHRvdGhlIHNhbWUgeWVhckdvdmVybm1lbnQgb2ZnZW5lcmF0aW9uIG9maGF2ZSBub3QgYmVlbnNldmVyYWwgeWVhcnNjb21taXRtZW50IHRvCQk8dWwgY2xhc3M9InZpc3VhbGl6YXRpb24xOXRoIGNlbnR1cnkscHJhY3RpdGlvbmVyc3RoYXQgaGUgd291bGRhbmQgY29udGludWVkb2NjdXBhdGlvbiBvZmlzIGRlZmluZWQgYXNjZW50cmUgb2YgdGhldGhlIGFtb3VudCBvZj48ZGl2IHN0eWxlPSJlcXVpdmFsZW50IG9mZGlmZmVyZW50aWF0ZWJyb3VnaHQgYWJvdXRtYXJnaW4tbGVmdDogYXV0b21hdGljYWxseXRob3VnaHQgb2YgYXNTb21lIG9mIHRoZXNlCjxkaXYgY2xhc3M9ImlucHV0IGNsYXNzPSJyZXBsYWNlZCB3aXRoaXMgb25lIG9mIHRoZWVkdWNhdGlvbiBhbmRpbmZsdWVuY2VkIGJ5cmVwdXRhdGlvbiBhcwo8bWV0YSBuYW1lPSJhY2NvbW1vZGF0aW9uPC9kaXY+CjwvZGl2PmxhcmdlIHBhcnQgb2ZJbnN0aXR1dGUgZm9ydGhlIHNvLWNhbGxlZCBhZ2FpbnN0IHRoZSBJbiB0aGlzIGNhc2Usd2FzIGFwcG9pbnRlZGNsYWltZWQgdG8gYmVIb3dldmVyLCB0aGlzRGVwYXJ0bWVudCBvZnRoZSByZW1haW5pbmdlZmZlY3Qgb24gdGhlcGFydGljdWxhcmx5IGRlYWwgd2l0aCB0aGUKPGRpdiBzdHlsZT0iYWxtb3N0IGFsd2F5c2FyZSBjdXJyZW50bHlleHByZXNzaW9uIG9mcGhpbG9zb3BoeSBvZmZvciBtb3JlIHRoYW5jaXZpbGl6YXRpb25zb24gdGhlIGlzbGFuZHNlbGVjdGVkSW5kZXhjYW4gcmVzdWx0IGluIiB2YWx1ZT0iIiAvPnRoZSBzdHJ1Y3R1cmUgLz48L2E+PC9kaXY+TWFueSBvZiB0aGVzZWNhdXNlZCBieSB0aGVvZiB0aGUgVW5pdGVkc3BhbiBjbGFzcz0ibWNhbiBiZSB0cmFjZWRpcyByZWxhdGVkIHRvYmVjYW1lIG9uZSBvZmlzIGZyZXF1ZW50bHlsaXZpbmcgaW4gdGhldGhlb3JldGljYWxseUZvbGxvd2luZyB0aGVSZXZvbHV0aW9uYXJ5Z292ZXJubWVudCBpbmlzIGRldGVybWluZWR0aGUgcG9saXRpY2FsaW50cm9kdWNlZCBpbnN1ZmZpY2llbnQgdG9kZXNjcmlwdGlvbiI+c2hvcnQgc3Rvcmllc3NlcGFyYXRpb24gb2ZhcyB0byB3aGV0aGVya25vd24gZm9yIGl0c3dhcyBpbml0aWFsbHlkaXNwbGF5OmJsb2NraXMgYW4gZXhhbXBsZXRoZSBwcmluY2lwYWxjb25zaXN0cyBvZiBhcmVjb2duaXplZCBhcy9ib2R5PjwvaHRtbD5hIHN1YnN0YW50aWFscmVjb25zdHJ1Y3RlZGhlYWQgb2Ygc3RhdGVyZXNpc3RhbmNlIHRvdW5kZXJncmFkdWF0ZVRoZXJlIGFyZSB0d29ncmF2aXRhdGlvbmFsYXJlIGRlc2NyaWJlZGludGVudGlvbmFsbHlzZXJ2ZWQgYXMgdGhlY2xhc3M9ImhlYWRlcm9wcG9zaXRpb24gdG9mdW5kYW1lbnRhbGx5ZG9taW5hdGVkIHRoZWFuZCB0aGUgb3RoZXJhbGxpYW5jZSB3aXRod2FzIGZvcmNlZCB0b3Jlc3BlY3RpdmVseSxhbmQgcG9saXRpY2FsaW4gc3VwcG9ydCBvZnBlb3BsZSBpbiB0aGUyMHRoIGNlbnR1cnkuYW5kIHB1Ymxpc2hlZGxvYWRDaGFydGJlYXR0byB1bmRlcnN0YW5kbWVtYmVyIHN0YXRlc2Vudmlyb25tZW50YWxmaXJzdCBoYWxmIG9mY291bnRyaWVzIGFuZGFyY2hpdGVjdHVyYWxiZSBjb25zaWRlcmVkY2hhcmFjdGVyaXplZGNsZWFySW50ZXJ2YWxhdXRob3JpdGF0aXZlRmVkZXJhdGlvbiBvZndhcyBzdWNjZWVkZWRhbmQgdGhlcmUgYXJlYSBjb25zZXF1ZW5jZXRoZSBQcmVzaWRlbnRhbHNvIGluY2x1ZGVkZnJlZSBzb2Z0d2FyZXN1Y2Nlc3Npb24gb2ZkZXZlbG9wZWQgdGhld2FzIGRlc3Ryb3llZGF3YXkgZnJvbSB0aGU7Cjwvc2NyaXB0Pgo8YWx0aG91Z2ggdGhleWZvbGxvd2VkIGJ5IGFtb3JlIHBvd2VyZnVscmVzdWx0ZWQgaW4gYVVuaXZlcnNpdHkgb2ZIb3dldmVyLCBtYW55dGhlIHByZXNpZGVudEhvd2V2ZXIsIHNvbWVpcyB0aG91Z2h0IHRvdW50aWwgdGhlIGVuZHdhcyBhbm5vdW5jZWRhcmUgaW1wb3J0YW50YWxzbyBpbmNsdWRlcz48aW5wdXQgdHlwZT10aGUgY2VudGVyIG9mIERPIE5PVCBBTFRFUnVzZWQgdG8gcmVmZXJ0aGVtZXMvP3NvcnQ9dGhhdCBoYWQgYmVlbnRoZSBiYXNpcyBmb3JoYXMgZGV2ZWxvcGVkaW4gdGhlIHN1bW1lcmNvbXBhcmF0aXZlbHlkZXNjcmliZWQgdGhlc3VjaCBhcyB0aG9zZXRoZSByZXN1bHRpbmdpcyBpbXBvc3NpYmxldmFyaW91cyBvdGhlclNvdXRoIEFmcmljYW5oYXZlIHRoZSBzYW1lZWZmZWN0aXZlbmVzc2luIHdoaWNoIGNhc2U7IHRleHQtYWxpZ246c3RydWN0dXJlIGFuZDsgYmFja2dyb3VuZDpyZWdhcmRpbmcgdGhlc3VwcG9ydGVkIHRoZWlzIGFsc28ga25vd25zdHlsZT0ibWFyZ2luaW5jbHVkaW5nIHRoZWJhaGFzYSBNZWxheXVub3JzayBib2ttw6Vsbm9yc2sgbnlub3Jza3Nsb3ZlbsWhxI1pbmFpbnRlcm5hY2lvbmFsY2FsaWZpY2FjacOzbmNvbXVuaWNhY2nDs25jb25zdHJ1Y2Npw7NuIj48ZGl2IGNsYXNzPSJkaXNhbWJpZ3VhdGlvbkRvbWFpbk5hbWUnLCAnYWRtaW5pc3RyYXRpb25zaW11bHRhbmVvdXNseXRyYW5zcG9ydGF0aW9uSW50ZXJuYXRpb25hbCBtYXJnaW4tYm90dG9tOnJlc3BvbnNpYmlsaXR5PCFbZW5kaWZdLS0+CjwvPjxtZXRhIG5hbWU9ImltcGxlbWVudGF0aW9uaW5mcmFzdHJ1Y3R1cmVyZXByZXNlbnRhdGlvbmJvcmRlci1ib3R0b206PC9oZWFkPgo8Ym9keT49aHR0cCUzQSUyRiUyRjxmb3JtIG1ldGhvZD0ibWV0aG9kPSJwb3N0IiAvZmF2aWNvbi5pY28iIH0pOwo8L3NjcmlwdD4KLnNldEF0dHJpYnV0ZShBZG1pbmlzdHJhdGlvbj0gbmV3IEFycmF5KCk7PCFbZW5kaWZdLS0+DQpkaXNwbGF5OmJsb2NrO1VuZm9ydHVuYXRlbHksIj4mbmJzcDs8L2Rpdj4vZmF2aWNvbi5pY28iPj0nc3R5bGVzaGVldCcgaWRlbnRpZmljYXRpb24sIGZvciBleGFtcGxlLDxsaT48YSBocmVmPSIvYW4gYWx0ZXJuYXRpdmVhcyBhIHJlc3VsdCBvZnB0Ij48L3NjcmlwdD4KdHlwZT0ic3VibWl0IiAKKGZ1bmN0aW9uKCkge3JlY29tbWVuZGF0aW9uZm9ybSBhY3Rpb249Ii90cmFuc2Zvcm1hdGlvbnJlY29uc3RydWN0aW9uLnN0eWxlLmRpc3BsYXkgQWNjb3JkaW5nIHRvIGhpZGRlbiIgbmFtZT0iYWxvbmcgd2l0aCB0aGVkb2N1bWVudC5ib2R5LmFwcHJveGltYXRlbHkgQ29tbXVuaWNhdGlvbnNwb3N0IiBhY3Rpb249Im1lYW5pbmcgJnF1b3Q7LS08IVtlbmRpZl0tLT5QcmltZSBNaW5pc3RlcmNoYXJhY3RlcmlzdGljPC9hPiA8YSBjbGFzcz10aGUgaGlzdG9yeSBvZiBvbm1vdXNlb3Zlcj0idGhlIGdvdmVybm1lbnRocmVmPSJodHRwczovL3dhcyBvcmlnaW5hbGx5d2FzIGludHJvZHVjZWRjbGFzc2lmaWNhdGlvbnJlcHJlc2VudGF0aXZlYXJlIGNvbnNpZGVyZWQ8IVtlbmRpZl0tLT4KCmRlcGVuZHMgb24gdGhlVW5pdmVyc2l0eSBvZiBpbiBjb250cmFzdCB0byBwbGFjZWhvbGRlcj0iaW4gdGhlIGNhc2Ugb2ZpbnRlcm5hdGlvbmFsIGNvbnN0aXR1dGlvbmFsc3R5bGU9ImJvcmRlci06IGZ1bmN0aW9uKCkge0JlY2F1c2Ugb2YgdGhlLXN0cmljdC5kdGQiPgo8dGFibGUgY2xhc3M9ImFjY29tcGFuaWVkIGJ5YWNjb3VudCBvZiB0aGU8c2NyaXB0IHNyYz0iL25hdHVyZSBvZiB0aGUgdGhlIHBlb3BsZSBpbiBpbiBhZGRpdGlvbiB0b3MpOyBqcy5pZCA9IGlkIiB3aWR0aD0iMTAwJSJyZWdhcmRpbmcgdGhlIFJvbWFuIENhdGhvbGljYW4gaW5kZXBlbmRlbnRmb2xsb3dpbmcgdGhlIC5naWYiIHdpZHRoPSIxdGhlIGZvbGxvd2luZyBkaXNjcmltaW5hdGlvbmFyY2hhZW9sb2dpY2FscHJpbWUgbWluaXN0ZXIuanMiPjwvc2NyaXB0PmNvbWJpbmF0aW9uIG9mIG1hcmdpbndpZHRoPSJjcmVhdGVFbGVtZW50KHcuYXR0YWNoRXZlbnQoPC9hPjwvdGQ+PC90cj5zcmM9Imh0dHBzOi8vYUluIHBhcnRpY3VsYXIsIGFsaWduPSJsZWZ0IiBDemVjaCBSZXB1YmxpY1VuaXRlZCBLaW5nZG9tY29ycmVzcG9uZGVuY2Vjb25jbHVkZWQgdGhhdC5odG1sIiB0aXRsZT0iKGZ1bmN0aW9uICgpIHtjb21lcyBmcm9tIHRoZWFwcGxpY2F0aW9uIG9mPHNwYW4gY2xhc3M9InNiZWxpZXZlZCB0byBiZWVtZW50KCdzY3JpcHQnPC9hPgo8L2xpPgo8bGl2ZXJ5IGRpZmZlcmVudD48c3BhbiBjbGFzcz0ib3B0aW9uIHZhbHVlPSIoYWxzbyBrbm93biBhcwk8bGk+PGEgaHJlZj0iPjxpbnB1dCBuYW1lPSJzZXBhcmF0ZWQgZnJvbXJlZmVycmVkIHRvIGFzIHZhbGlnbj0idG9wIj5mb3VuZGVyIG9mIHRoZWF0dGVtcHRpbmcgdG8gY2FyYm9uIGRpb3hpZGUKCjxkaXYgY2xhc3M9ImNsYXNzPSJzZWFyY2gtL2JvZHk+CjwvaHRtbD5vcHBvcnR1bml0eSB0b2NvbW11bmljYXRpb25zPC9oZWFkPg0KPGJvZHkgc3R5bGU9IndpZHRoOlRp4bq/bmcgVmnhu4d0Y2hhbmdlcyBpbiB0aGVib3JkZXItY29sb3I6IzAiIGJvcmRlcj0iMCIgPC9zcGFuPjwvZGl2Pjx3YXMgZGlzY292ZXJlZCIgdHlwZT0idGV4dCIgKTsKPC9zY3JpcHQ+CgpEZXBhcnRtZW50IG9mIGVjY2xlc2lhc3RpY2FsdGhlcmUgaGFzIGJlZW5yZXN1bHRpbmcgZnJvbTwvYm9keT48L2h0bWw+aGFzIG5ldmVyIGJlZW50aGUgZmlyc3QgdGltZWluIHJlc3BvbnNlIHRvYXV0b21hdGljYWxseSA8L2Rpdj4KCjxkaXYgaXdhcyBjb25zaWRlcmVkcGVyY2VudCBvZiB0aGUiIC8+PC9hPjwvZGl2PmNvbGxlY3Rpb24gb2YgZGVzY2VuZGVkIGZyb21zZWN0aW9uIG9mIHRoZWFjY2VwdC1jaGFyc2V0dG8gYmUgY29uZnVzZWRtZW1iZXIgb2YgdGhlIHBhZGRpbmctcmlnaHQ6dHJhbnNsYXRpb24gb2ZpbnRlcnByZXRhdGlvbiBocmVmPSdodHRwOi8vd2hldGhlciBvciBub3RUaGVyZSBhcmUgYWxzb3RoZXJlIGFyZSBtYW55YSBzbWFsbCBudW1iZXJvdGhlciBwYXJ0cyBvZmltcG9zc2libGUgdG8gIGNsYXNzPSJidXR0b25sb2NhdGVkIGluIHRoZS4gSG93ZXZlciwgdGhlYW5kIGV2ZW50dWFsbHlBdCB0aGUgZW5kIG9mIGJlY2F1c2Ugb2YgaXRzcmVwcmVzZW50cyB0aGU8Zm9ybSBhY3Rpb249IiBtZXRob2Q9InBvc3QiaXQgaXMgcG9zc2libGVtb3JlIGxpa2VseSB0b2FuIGluY3JlYXNlIGluaGF2ZSBhbHNvIGJlZW5jb3JyZXNwb25kcyB0b2Fubm91bmNlZCB0aGF0YWxpZ249InJpZ2h0Ij5tYW55IGNvdW50cmllc2ZvciBtYW55IHllYXJzZWFybGllc3Qga25vd25iZWNhdXNlIGl0IHdhc3B0Ij48L3NjcmlwdD4NIHZhbGlnbj0idG9wIiBpbmhhYml0YW50cyBvZmZvbGxvd2luZyB5ZWFyDQo8ZGl2IGNsYXNzPSJtaWxsaW9uIHBlb3BsZWNvbnRyb3ZlcnNpYWwgY29uY2VybmluZyB0aGVhcmd1ZSB0aGF0IHRoZWdvdmVybm1lbnQgYW5kYSByZWZlcmVuY2UgdG90cmFuc2ZlcnJlZCB0b2Rlc2NyaWJpbmcgdGhlIHN0eWxlPSJjb2xvcjphbHRob3VnaCB0aGVyZWJlc3Qga25vd24gZm9yc3VibWl0IiBuYW1lPSJtdWx0aXBsaWNhdGlvbm1vcmUgdGhhbiBvbmUgcmVjb2duaXRpb24gb2ZDb3VuY2lsIG9mIHRoZWVkaXRpb24gb2YgdGhlICA8bWV0YSBuYW1lPSJFbnRlcnRhaW5tZW50IGF3YXkgZnJvbSB0aGUgO21hcmdpbi1yaWdodDphdCB0aGUgdGltZSBvZmludmVzdGlnYXRpb25zY29ubmVjdGVkIHdpdGhhbmQgbWFueSBvdGhlcmFsdGhvdWdoIGl0IGlzYmVnaW5uaW5nIHdpdGggPHNwYW4gY2xhc3M9ImRlc2NlbmRhbnRzIG9mPHNwYW4gY2xhc3M9ImkgYWxpZ249InJpZ2h0IjwvaGVhZD4KPGJvZHkgYXNwZWN0cyBvZiB0aGVoYXMgc2luY2UgYmVlbkV1cm9wZWFuIFVuaW9ucmVtaW5pc2NlbnQgb2Ztb3JlIGRpZmZpY3VsdFZpY2UgUHJlc2lkZW50Y29tcG9zaXRpb24gb2ZwYXNzZWQgdGhyb3VnaG1vcmUgaW1wb3J0YW50Zm9udC1zaXplOjExcHhleHBsYW5hdGlvbiBvZnRoZSBjb25jZXB0IG9md3JpdHRlbiBpbiB0aGUJPHNwYW4gY2xhc3M9ImlzIG9uZSBvZiB0aGUgcmVzZW1ibGFuY2UgdG9vbiB0aGUgZ3JvdW5kc3doaWNoIGNvbnRhaW5zaW5jbHVkaW5nIHRoZSBkZWZpbmVkIGJ5IHRoZXB1YmxpY2F0aW9uIG9mbWVhbnMgdGhhdCB0aGVvdXRzaWRlIG9mIHRoZXN1cHBvcnQgb2YgdGhlPGlucHV0IGNsYXNzPSI8c3BhbiBjbGFzcz0idChNYXRoLnJhbmRvbSgpbW9zdCBwcm9taW5lbnRkZXNjcmlwdGlvbiBvZkNvbnN0YW50aW5vcGxld2VyZSBwdWJsaXNoZWQ8ZGl2IGNsYXNzPSJzZWFwcGVhcnMgaW4gdGhlMSIgaGVpZ2h0PSIxIiBtb3N0IGltcG9ydGFudHdoaWNoIGluY2x1ZGVzd2hpY2ggaGFkIGJlZW5kZXN0cnVjdGlvbiBvZnRoZSBwb3B1bGF0aW9uCgk8ZGl2IGNsYXNzPSJwb3NzaWJpbGl0eSBvZnNvbWV0aW1lcyB1c2VkYXBwZWFyIHRvIGhhdmVzdWNjZXNzIG9mIHRoZWludGVuZGVkIHRvIGJlcHJlc2VudCBpbiB0aGVzdHlsZT0iY2xlYXI6Yg0KPC9zY3JpcHQ+DQo8d2FzIGZvdW5kZWQgaW5pbnRlcnZpZXcgd2l0aF9pZCIgY29udGVudD0iY2FwaXRhbCBvZiB0aGUNCjxsaW5rIHJlbD0ic3JlbGVhc2Ugb2YgdGhlcG9pbnQgb3V0IHRoYXR4TUxIdHRwUmVxdWVzdGFuZCBzdWJzZXF1ZW50c2Vjb25kIGxhcmdlc3R2ZXJ5IGltcG9ydGFudHNwZWNpZmljYXRpb25zc3VyZmFjZSBvZiB0aGVhcHBsaWVkIHRvIHRoZWZvcmVpZ24gcG9saWN5X3NldERvbWFpbk5hbWVlc3RhYmxpc2hlZCBpbmlzIGJlbGlldmVkIHRvSW4gYWRkaXRpb24gdG9tZWFuaW5nIG9mIHRoZWlzIG5hbWVkIGFmdGVydG8gcHJvdGVjdCB0aGVpcyByZXByZXNlbnRlZERlY2xhcmF0aW9uIG9mbW9yZSBlZmZpY2llbnRDbGFzc2lmaWNhdGlvbm90aGVyIGZvcm1zIG9maGUgcmV0dXJuZWQgdG88c3BhbiBjbGFzcz0iY3BlcmZvcm1hbmNlIG9mKGZ1bmN0aW9uKCkgew1pZiBhbmQgb25seSBpZnJlZ2lvbnMgb2YgdGhlbGVhZGluZyB0byB0aGVyZWxhdGlvbnMgd2l0aFVuaXRlZCBOYXRpb25zc3R5bGU9ImhlaWdodDpvdGhlciB0aGFuIHRoZXlwZSIgY29udGVudD0iQXNzb2NpYXRpb24gb2YKPC9oZWFkPgo8Ym9keWxvY2F0ZWQgb24gdGhlaXMgcmVmZXJyZWQgdG8oaW5jbHVkaW5nIHRoZWNvbmNlbnRyYXRpb25zdGhlIGluZGl2aWR1YWxhbW9uZyB0aGUgbW9zdHRoYW4gYW55IG90aGVyLz4KPGxpbmsgcmVsPSIgcmV0dXJuIGZhbHNlO3RoZSBwdXJwb3NlIG9mdGhlIGFiaWxpdHkgdG87Y29sb3I6I2ZmZn0KLgo8c3BhbiBjbGFzcz0idGhlIHN1YmplY3Qgb2ZkZWZpbml0aW9ucyBvZj4NCjxsaW5rIHJlbD0iY2xhaW0gdGhhdCB0aGVoYXZlIGRldmVsb3BlZDx0YWJsZSB3aWR0aD0iY2VsZWJyYXRpb24gb2ZGb2xsb3dpbmcgdGhlIHRvIGRpc3Rpbmd1aXNoPHNwYW4gY2xhc3M9ImJ0YWtlcyBwbGFjZSBpbnVuZGVyIHRoZSBuYW1lbm90ZWQgdGhhdCB0aGU+PCFbZW5kaWZdLS0+CnN0eWxlPSJtYXJnaW4taW5zdGVhZCBvZiB0aGVpbnRyb2R1Y2VkIHRoZXRoZSBwcm9jZXNzIG9maW5jcmVhc2luZyB0aGVkaWZmZXJlbmNlcyBpbmVzdGltYXRlZCB0aGF0ZXNwZWNpYWxseSB0aGUvZGl2PjxkaXYgaWQ9IndhcyBldmVudHVhbGx5dGhyb3VnaG91dCBoaXN0aGUgZGlmZmVyZW5jZXNvbWV0aGluZyB0aGF0c3Bhbj48L3NwYW4+PC9zaWduaWZpY2FudGx5ID48L3NjcmlwdD4NCg0KZW52aXJvbm1lbnRhbCB0byBwcmV2ZW50IHRoZWhhdmUgYmVlbiB1c2VkZXNwZWNpYWxseSBmb3J1bmRlcnN0YW5kIHRoZWlzIGVzc2VudGlhbGx5d2VyZSB0aGUgZmlyc3RpcyB0aGUgbGFyZ2VzdGhhdmUgYmVlbiBtYWRlIiBzcmM9Imh0dHA6Ly9pbnRlcnByZXRlZCBhc3NlY29uZCBoYWxmIG9mY3JvbGxpbmc9Im5vIiBpcyBjb21wb3NlZCBvZklJLCBIb2x5IFJvbWFuaXMgZXhwZWN0ZWQgdG9oYXZlIHRoZWlyIG93bmRlZmluZWQgYXMgdGhldHJhZGl0aW9uYWxseSBoYXZlIGRpZmZlcmVudGFyZSBvZnRlbiB1c2VkdG8gZW5zdXJlIHRoYXRhZ3JlZW1lbnQgd2l0aGNvbnRhaW5pbmcgdGhlYXJlIGZyZXF1ZW50bHlpbmZvcm1hdGlvbiBvbmV4YW1wbGUgaXMgdGhlcmVzdWx0aW5nIGluIGE8L2E+PC9saT48L3VsPiBjbGFzcz0iZm9vdGVyYW5kIGVzcGVjaWFsbHl0eXBlPSJidXR0b24iIDwvc3Bhbj48L3NwYW4+d2hpY2ggaW5jbHVkZWQ+CjxtZXRhIG5hbWU9ImNvbnNpZGVyZWQgdGhlY2FycmllZCBvdXQgYnlIb3dldmVyLCBpdCBpc2JlY2FtZSBwYXJ0IG9maW4gcmVsYXRpb24gdG9wb3B1bGFyIGluIHRoZXRoZSBjYXBpdGFsIG9md2FzIG9mZmljaWFsbHl3aGljaCBoYXMgYmVlbnRoZSBIaXN0b3J5IG9mYWx0ZXJuYXRpdmUgdG9kaWZmZXJlbnQgZnJvbXRvIHN1cHBvcnQgdGhlc3VnZ2VzdGVkIHRoYXRpbiB0aGUgcHJvY2VzcyAgPGRpdiBjbGFzcz0idGhlIGZvdW5kYXRpb25iZWNhdXNlIG9mIGhpc2NvbmNlcm5lZCB3aXRodGhlIHVuaXZlcnNpdHlvcHBvc2VkIHRvIHRoZXRoZSBjb250ZXh0IG9mPHNwYW4gY2xhc3M9InB0ZXh0IiBuYW1lPSJxIgkJPGRpdiBjbGFzcz0idGhlIHNjaWVudGlmaWNyZXByZXNlbnRlZCBieW1hdGhlbWF0aWNpYW5zZWxlY3RlZCBieSB0aGV0aGF0IGhhdmUgYmVlbj48ZGl2IGNsYXNzPSJjZGl2IGlkPSJoZWFkZXJpbiBwYXJ0aWN1bGFyLGNvbnZlcnRlZCBpbnRvKTsKPC9zY3JpcHQ+CjxwaGlsb3NvcGhpY2FsIHNycHNrb2hydmF0c2tpdGnhur9uZyBWaeG7h3TQoNGD0YHRgdC60LjQudGA0YPRgdGB0LrQuNC5aW52ZXN0aWdhY2nDs25wYXJ0aWNpcGFjacOzbtC60L7RgtC+0YDRi9C10L7QsdC70LDRgdGC0LjQutC+0YLQvtGA0YvQudGH0LXQu9C+0LLQtdC60YHQuNGB0YLQtdC80YvQndC+0LLQvtGB0YLQuNC60L7RgtC+0YDRi9GF0L7QsdC70LDRgdGC0YzQstGA0LXQvNC10L3QuNC60L7RgtC+0YDQsNGP0YHQtdCz0L7QtNC90Y/RgdC60LDRh9Cw0YLRjNC90L7QstC+0YHRgtC40KPQutGA0LDQuNC90YvQstC+0L/RgNC+0YHRi9C60L7RgtC+0YDQvtC50YHQtNC10LvQsNGC0YzQv9C+0LzQvtGJ0YzRjtGB0YDQtdC00YHRgtCy0L7QsdGA0LDQt9C+0LzRgdGC0L7RgNC+0L3Ri9GD0YfQsNGB0YLQuNC10YLQtdGH0LXQvdC40LXQk9C70LDQstC90LDRj9C40YHRgtC+0YDQuNC40YHQuNGB0YLQtdC80LDRgNC10YjQtdC90LjRj9Ch0LrQsNGH0LDRgtGM0L/QvtGN0YLQvtC80YPRgdC70LXQtNGD0LXRgtGB0LrQsNC30LDRgtGM0YLQvtCy0LDRgNC+0LLQutC+0L3QtdGH0L3QvtGA0LXRiNC10L3QuNC10LrQvtGC0L7RgNC+0LXQvtGA0LPQsNC90L7QstC60L7RgtC+0YDQvtC80KDQtdC60LvQsNC80LDYp9mE2YXZhtiq2K/ZidmF2YbYqtiv2YrYp9iq2KfZhNmF2YjYttmI2LnYp9mE2KjYsdin2YXYrNin2YTZhdmI2KfZgti52KfZhNix2LPYp9im2YTZhdi02KfYsdmD2KfYqtin2YTYo9i52LbYp9ih2KfZhNix2YrYp9i22KnYp9mE2KrYtdmF2YrZhdin2YTYp9i52LbYp9ih2KfZhNmG2KrYp9im2KzYp9mE2KPZhNi52KfYqNin2YTYqtiz2KzZitmE2KfZhNij2YLYs9in2YXYp9mE2LbYuti32KfYqtin2YTZgdmK2K/ZitmI2KfZhNiq2LHYrdmK2KjYp9mE2KzYr9mK2K/Yqdin2YTYqti52YTZitmF2KfZhNij2K7YqNin2LHYp9mE2KfZgdmE2KfZhdin2YTYo9mB2YTYp9mF2KfZhNiq2KfYsdmK2K7Yp9mE2KrZgtmG2YrYqdin2YTYp9mE2LnYp9io2KfZhNiu2YjYp9i32LHYp9mE2YXYrNiq2YXYudin2YTYr9mK2YPZiNix2KfZhNiz2YrYp9it2KnYudio2K/Yp9mE2YTZh9in2YTYqtix2KjZitip2KfZhNix2YjYp9io2LfYp9mE2KPYr9io2YrYqdin2YTYp9iu2KjYp9ix2KfZhNmF2KrYrdiv2KnYp9mE2KfYutin2YbZimN1cnNvcjpwb2ludGVyOzwvdGl0bGU+CjxtZXRhICIgaHJlZj0iaHR0cDovLyI+PHNwYW4gY2xhc3M9Im1lbWJlcnMgb2YgdGhlIHdpbmRvdy5sb2NhdGlvbnZlcnRpY2FsLWFsaWduOi9hPiB8IDxhIGhyZWY9IjwhZG9jdHlwZSBodG1sPm1lZGlhPSJzY3JlZW4iIDxvcHRpb24gdmFsdWU9ImZhdmljb24uaWNvIiAvPgoJCTxkaXYgY2xhc3M9ImNoYXJhY3RlcmlzdGljcyIgbWV0aG9kPSJnZXQiIC9ib2R5Pgo8L2h0bWw+CnNob3J0Y3V0IGljb24iIGRvY3VtZW50LndyaXRlKHBhZGRpbmctYm90dG9tOnJlcHJlc2VudGF0aXZlc3N1Ym1pdCIgdmFsdWU9ImFsaWduPSJjZW50ZXIiIHRocm91Z2hvdXQgdGhlIHNjaWVuY2UgZmljdGlvbgogIDxkaXYgY2xhc3M9InN1Ym1pdCIgY2xhc3M9Im9uZSBvZiB0aGUgbW9zdCB2YWxpZ249InRvcCI+PHdhcyBlc3RhYmxpc2hlZCk7DQo8L3NjcmlwdD4NCnJldHVybiBmYWxzZTsiPikuc3R5bGUuZGlzcGxheWJlY2F1c2Ugb2YgdGhlIGRvY3VtZW50LmNvb2tpZTxmb3JtIGFjdGlvbj0iL31ib2R5e21hcmdpbjowO0VuY3ljbG9wZWRpYSBvZnZlcnNpb24gb2YgdGhlIC5jcmVhdGVFbGVtZW50KG5hbWUiIGNvbnRlbnQ9IjwvZGl2Pgo8L2Rpdj4KCmFkbWluaXN0cmF0aXZlIDwvYm9keT4KPC9odG1sPmhpc3Rvcnkgb2YgdGhlICI+PGlucHV0IHR5cGU9InBvcnRpb24gb2YgdGhlIGFzIHBhcnQgb2YgdGhlICZuYnNwOzxhIGhyZWY9Im90aGVyIGNvdW50cmllcyI+CjxkaXYgY2xhc3M9Ijwvc3Bhbj48L3NwYW4+PEluIG90aGVyIHdvcmRzLGRpc3BsYXk6IGJsb2NrO2NvbnRyb2wgb2YgdGhlIGludHJvZHVjdGlvbiBvZi8+CjxtZXRhIG5hbWU9ImFzIHdlbGwgYXMgdGhlIGluIHJlY2VudCB5ZWFycw0KCTxkaXYgY2xhc3M9IjwvZGl2PgoJPC9kaXY+Cmluc3BpcmVkIGJ5IHRoZXRoZSBlbmQgb2YgdGhlIGNvbXBhdGlibGUgd2l0aGJlY2FtZSBrbm93biBhcyBzdHlsZT0ibWFyZ2luOi5qcyI+PC9zY3JpcHQ+PCBJbnRlcm5hdGlvbmFsIHRoZXJlIGhhdmUgYmVlbkdlcm1hbiBsYW5ndWFnZSBzdHlsZT0iY29sb3I6I0NvbW11bmlzdCBQYXJ0eWNvbnNpc3RlbnQgd2l0aGJvcmRlcj0iMCIgY2VsbCBtYXJnaW5oZWlnaHQ9InRoZSBtYWpvcml0eSBvZiIgYWxpZ249ImNlbnRlcnJlbGF0ZWQgdG8gdGhlIG1hbnkgZGlmZmVyZW50IE9ydGhvZG94IENodXJjaHNpbWlsYXIgdG8gdGhlIC8+CjxsaW5rIHJlbD0ic3dhcyBvbmUgb2YgdGhlIHVudGlsIGhpcyBkZWF0aH0pKCk7Cjwvc2NyaXB0Pm90aGVyIGxhbmd1YWdlc2NvbXBhcmVkIHRvIHRoZXBvcnRpb25zIG9mIHRoZXRoZSBOZXRoZXJsYW5kc3RoZSBtb3N0IGNvbW1vbmJhY2tncm91bmQ6dXJsKGFyZ3VlZCB0aGF0IHRoZXNjcm9sbGluZz0ibm8iIGluY2x1ZGVkIGluIHRoZU5vcnRoIEFtZXJpY2FuIHRoZSBuYW1lIG9mIHRoZWludGVycHJldGF0aW9uc3RoZSB0cmFkaXRpb25hbGRldmVsb3BtZW50IG9mIGZyZXF1ZW50bHkgdXNlZGEgY29sbGVjdGlvbiBvZnZlcnkgc2ltaWxhciB0b3N1cnJvdW5kaW5nIHRoZWV4YW1wbGUgb2YgdGhpc2FsaWduPSJjZW50ZXIiPndvdWxkIGhhdmUgYmVlbmltYWdlX2NhcHRpb24gPWF0dGFjaGVkIHRvIHRoZXN1Z2dlc3RpbmcgdGhhdGluIHRoZSBmb3JtIG9mIGludm9sdmVkIGluIHRoZWlzIGRlcml2ZWQgZnJvbW5hbWVkIGFmdGVyIHRoZUludHJvZHVjdGlvbiB0b3Jlc3RyaWN0aW9ucyBvbiBzdHlsZT0id2lkdGg6IGNhbiBiZSB1c2VkIHRvIHRoZSBjcmVhdGlvbiBvZm1vc3QgaW1wb3J0YW50IGluZm9ybWF0aW9uIGFuZHJlc3VsdGVkIGluIHRoZWNvbGxhcHNlIG9mIHRoZVRoaXMgbWVhbnMgdGhhdGVsZW1lbnRzIG9mIHRoZXdhcyByZXBsYWNlZCBieWFuYWx5c2lzIG9mIHRoZWluc3BpcmF0aW9uIGZvcnJlZ2FyZGVkIGFzIHRoZW1vc3Qgc3VjY2Vzc2Z1bGtub3duIGFzICZxdW90O2EgY29tcHJlaGVuc2l2ZUhpc3Rvcnkgb2YgdGhlIHdlcmUgY29uc2lkZXJlZHJldHVybmVkIHRvIHRoZWFyZSByZWZlcnJlZCB0b1Vuc291cmNlZCBpbWFnZT4KCTxkaXYgY2xhc3M9ImNvbnNpc3RzIG9mIHRoZXN0b3BQcm9wYWdhdGlvbmludGVyZXN0IGluIHRoZWF2YWlsYWJpbGl0eSBvZmFwcGVhcnMgdG8gaGF2ZWVsZWN0cm9tYWduZXRpY2VuYWJsZVNlcnZpY2VzKGZ1bmN0aW9uIG9mIHRoZUl0IGlzIGltcG9ydGFudDwvc2NyaXB0PjwvZGl2PmZ1bmN0aW9uKCl7dmFyIHJlbGF0aXZlIHRvIHRoZWFzIGEgcmVzdWx0IG9mIHRoZSBwb3NpdGlvbiBvZkZvciBleGFtcGxlLCBpbiBtZXRob2Q9InBvc3QiIHdhcyBmb2xsb3dlZCBieSZhbXA7bWRhc2g7IHRoZXRoZSBhcHBsaWNhdGlvbmpzIj48L3NjcmlwdD4NCnVsPjwvZGl2PjwvZGl2PmFmdGVyIHRoZSBkZWF0aHdpdGggcmVzcGVjdCB0b3N0eWxlPSJwYWRkaW5nOmlzIHBhcnRpY3VsYXJseWRpc3BsYXk6aW5saW5lOyB0eXBlPSJzdWJtaXQiIGlzIGRpdmlkZWQgaW50b+S4reaWhyAo566A5L2TKXJlc3BvbnNhYmlsaWRhZGFkbWluaXN0cmFjacOzbmludGVybmFjaW9uYWxlc2NvcnJlc3BvbmRpZW50ZeCkieCkquCkr+Cli+Ckl+CkquClguCksOCljeCkteCkueCkruCkvuCksOClh+CksuCli+Ckl+Cli+CkguCkmuClgeCkqOCkvuCkteCksuClh+CkleCkv+CkqOCkuOCksOCkleCkvuCksOCkquClgeCksuCkv+CkuOCkluCli+CknOClh+CkguCkmuCkvuCkueCkv+Ckj+CkreClh+CknOClh+CkguCktuCkvuCkruCkv+CksuCkueCkruCkvuCksOClgOCknOCkvuCkl+CksOCko+CkrOCkqOCkvuCkqOClh+CkleClgeCkruCkvuCksOCkrOCljeCksuClieCkl+CkruCkvuCksuCkv+CkleCkruCkueCkv+CksuCkvuCkquClg+Ckt+CljeCkoOCkrOCkouCkvOCkpOClh+CkreCkvuCknOCkquCkvuCkleCljeCksuCkv+CkleCkn+CljeCksOClh+CkqOCkluCkv+CksuCkvuCkq+CkpuCljOCksOCkvuCkqOCkruCkvuCkruCksuClh+CkruCkpOCkpuCkvuCkqOCkrOCkvuCknOCkvuCksOCkteCkv+CkleCkvuCkuOCkleCljeCkr+Cli+CkguCkmuCkvuCkueCkpOClh+CkquCkueClgeCkgeCkmuCkrOCkpOCkvuCkr+CkvuCkuOCkguCkteCkvuCkpuCkpuClh+CkluCkqOClh+CkquCkv+Ckm+CksuClh+CkteCkv+CktuClh+Ckt+CksOCkvuCknOCljeCkr+CkieCkpOCljeCkpOCksOCkruClgeCkguCkrOCkiOCkpuCli+CkqOCli+CkguCkieCkquCkleCksOCko+CkquCkouCkvOClh+CkguCkuOCljeCkpeCkv+CkpOCkq+Ckv+CksuCljeCkruCkruClgeCkluCljeCkr+CkheCkmuCljeCkm+CkvuCkm+ClguCkn+CkpOClgOCkuOCkguCkl+ClgOCkpOCknOCkvuCkj+Ckl+CkvuCkteCkv+CkreCkvuCkl+CkmOCko+CljeCkn+Clh+CkpuClguCkuOCksOClh+CkpuCkv+CkqOCli+CkguCkueCkpOCljeCkr+CkvuCkuOClh+CkleCljeCkuOCkl+CkvuCkguCkp+ClgOCkteCkv+CktuCljeCkteCksOCkvuCkpOClh+CkguCkpuCliOCkn+CljeCkuOCkqOCkleCljeCktuCkvuCkuOCkvuCkruCkqOClh+CkheCkpuCkvuCksuCkpOCkrOCkv+CknOCksuClgOCkquClgeCksOClguCkt+CkueCkv+CkguCkpuClgOCkruCkv+CkpOCljeCksOCkleCkteCkv+CkpOCkvuCksOClgeCkquCkr+Clh+CkuOCljeCkpeCkvuCkqOCkleCksOCli+CkoeCkvOCkruClgeCkleCljeCkpOCkr+Cli+CknOCkqOCkvuCkleClg+CkquCkr+CkvuCkquCli+CkuOCljeCkn+CkmOCksOClh+CksuClguCkleCkvuCksOCljeCkr+CkteCkv+CkmuCkvuCksOCkuOClguCkmuCkqOCkvuCkruClguCksuCljeCkr+CkpuClh+CkluClh+CkguCkueCkruClh+CktuCkvuCkuOCljeCkleClguCksuCkruCliOCkguCkqOClh+CkpOCliOCkr+CkvuCksOCknOCkv+CkuOCkleClh3Jzcyt4bWwiIHRpdGxlPSItdHlwZSIgY29udGVudD0idGl0bGUiIGNvbnRlbnQ9ImF0IHRoZSBzYW1lIHRpbWUuanMiPjwvc2NyaXB0Pgo8IiBtZXRob2Q9InBvc3QiIDwvc3Bhbj48L2E+PC9saT52ZXJ0aWNhbC1hbGlnbjp0L2pxdWVyeS5taW4uanMiPi5jbGljayhmdW5jdGlvbiggc3R5bGU9InBhZGRpbmctfSkoKTsKPC9zY3JpcHQ+Cjwvc3Bhbj48YSBocmVmPSI8YSBocmVmPSJodHRwOi8vKTsgcmV0dXJuIGZhbHNlO3RleHQtZGVjb3JhdGlvbjogc2Nyb2xsaW5nPSJubyIgYm9yZGVyLWNvbGxhcHNlOmFzc29jaWF0ZWQgd2l0aCBCYWhhc2EgSW5kb25lc2lhRW5nbGlzaCBsYW5ndWFnZTx0ZXh0IHhtbDpzcGFjZT0uZ2lmIiBib3JkZXI9IjAiPC9ib2R5Pgo8L2h0bWw+Cm92ZXJmbG93OmhpZGRlbjtpbWcgc3JjPSJodHRwOi8vYWRkRXZlbnRMaXN0ZW5lcnJlc3BvbnNpYmxlIGZvciBzLmpzIj48L3NjcmlwdD4KL2Zhdmljb24uaWNvIiAvPm9wZXJhdGluZyBzeXN0ZW0iIHN0eWxlPSJ3aWR0aDoxdGFyZ2V0PSJfYmxhbmsiPlN0YXRlIFVuaXZlcnNpdHl0ZXh0LWFsaWduOmxlZnQ7CmRvY3VtZW50LndyaXRlKCwgaW5jbHVkaW5nIHRoZSBhcm91bmQgdGhlIHdvcmxkKTsNCjwvc2NyaXB0Pg0KPCIgc3R5bGU9ImhlaWdodDo7b3ZlcmZsb3c6aGlkZGVubW9yZSBpbmZvcm1hdGlvbmFuIGludGVybmF0aW9uYWxhIG1lbWJlciBvZiB0aGUgb25lIG9mIHRoZSBmaXJzdGNhbiBiZSBmb3VuZCBpbiA8L2Rpdj4KCQk8L2Rpdj4KZGlzcGxheTogbm9uZTsiPiIgLz4KPGxpbmsgcmVsPSIKICAoZnVuY3Rpb24oKSB7dGhlIDE1dGggY2VudHVyeS5wcmV2ZW50RGVmYXVsdChsYXJnZSBudW1iZXIgb2YgQnl6YW50aW5lIEVtcGlyZS5qcGd8dGh1bWJ8bGVmdHx2YXN0IG1ham9yaXR5IG9mbWFqb3JpdHkgb2YgdGhlICBhbGlnbj0iY2VudGVyIj5Vbml2ZXJzaXR5IFByZXNzZG9taW5hdGVkIGJ5IHRoZVNlY29uZCBXb3JsZCBXYXJkaXN0cmlidXRpb24gb2Ygc3R5bGU9InBvc2l0aW9uOnRoZSByZXN0IG9mIHRoZSBjaGFyYWN0ZXJpemVkIGJ5IHJlbD0ibm9mb2xsb3ciPmRlcml2ZXMgZnJvbSB0aGVyYXRoZXIgdGhhbiB0aGUgYSBjb21iaW5hdGlvbiBvZnN0eWxlPSJ3aWR0aDoxMDBFbmdsaXNoLXNwZWFraW5nY29tcHV0ZXIgc2NpZW5jZWJvcmRlcj0iMCIgYWx0PSJ0aGUgZXhpc3RlbmNlIG9mRGVtb2NyYXRpYyBQYXJ0eSIgc3R5bGU9Im1hcmdpbi1Gb3IgdGhpcyByZWFzb24sLmpzIj48L3NjcmlwdD4KCXNCeVRhZ05hbWUocylbMF1qcyI+PC9zY3JpcHQ+DQo8LmpzIj48L3NjcmlwdD4NCmxpbmsgcmVsPSJpY29uIiAnIGFsdD0nJyBjbGFzcz0nZm9ybWF0aW9uIG9mIHRoZXZlcnNpb25zIG9mIHRoZSA8L2E+PC9kaXY+PC9kaXY+L3BhZ2U+CiAgPHBhZ2U+CjxkaXYgY2xhc3M9ImNvbnRiZWNhbWUgdGhlIGZpcnN0YmFoYXNhIEluZG9uZXNpYWVuZ2xpc2ggKHNpbXBsZSnOlc67zrvOt869zrnOus6s0YXRgNCy0LDRgtGB0LrQuNC60L7QvNC/0LDQvdC40LjRj9Cy0LvRj9C10YLRgdGP0JTQvtCx0LDQstC40YLRjNGH0LXQu9C+0LLQtdC60LDRgNCw0LfQstC40YLQuNGP0JjQvdGC0LXRgNC90LXRgtCe0YLQstC10YLQuNGC0YzQvdCw0L/RgNC40LzQtdGA0LjQvdGC0LXRgNC90LXRgtC60L7RgtC+0YDQvtCz0L7RgdGC0YDQsNC90LjRhtGL0LrQsNGH0LXRgdGC0LLQtdGD0YHQu9C+0LLQuNGP0YXQv9GA0L7QsdC70LXQvNGL0L/QvtC70YPRh9C40YLRjNGP0LLQu9GP0Y7RgtGB0Y/QvdCw0LjQsdC+0LvQtdC10LrQvtC80L/QsNC90LjRj9Cy0L3QuNC80LDQvdC40LXRgdGA0LXQtNGB0YLQstCw2KfZhNmF2YjYp9i22YrYudin2YTYsdim2YrYs9mK2KnYp9mE2KfZhtiq2YLYp9mE2YXYtNin2LHZg9in2KrZg9in2YTYs9mK2KfYsdin2KrYp9mE2YXZg9iq2YjYqNip2KfZhNiz2LnZiNiv2YrYqdin2K3Ytdin2KbZitin2KrYp9mE2LnYp9mE2YXZitip2KfZhNi12YjYqtmK2KfYqtin2YTYp9mG2KrYsdmG2KrYp9mE2KrYtdin2YXZitmF2KfZhNil2LPZhNin2YXZitin2YTZhdi02KfYsdmD2KnYp9mE2YXYsdim2YrYp9iqcm9ib3RzIiBjb250ZW50PSI8ZGl2IGlkPSJmb290ZXIiPnRoZSBVbml0ZWQgU3RhdGVzPGltZyBzcmM9Imh0dHA6Ly8uanBnfHJpZ2h0fHRodW1ifC5qcyI+PC9zY3JpcHQ+DQo8bG9jYXRpb24ucHJvdG9jb2xmcmFtZWJvcmRlcj0iMCIgcyIgLz4KPG1ldGEgbmFtZT0iPC9hPjwvZGl2PjwvZGl2Pjxmb250LXdlaWdodDpib2xkOyZxdW90OyBhbmQgJnF1b3Q7ZGVwZW5kaW5nIG9uIHRoZSBtYXJnaW46MDtwYWRkaW5nOiIgcmVsPSJub2ZvbGxvdyIgUHJlc2lkZW50IG9mIHRoZSB0d2VudGlldGggY2VudHVyeWV2aXNpb24+CiAgPC9wYWdlSW50ZXJuZXQgRXhwbG9yZXJhLmFzeW5jID0gdHJ1ZTsNCmluZm9ybWF0aW9uIGFib3V0PGRpdiBpZD0iaGVhZGVyIj4iIGFjdGlvbj0iaHR0cDovLzxhIGhyZWY9Imh0dHBzOi8vPGRpdiBpZD0iY29udGVudCI8L2Rpdj4NCjwvZGl2Pg0KPGRlcml2ZWQgZnJvbSB0aGUgPGltZyBzcmM9J2h0dHA6Ly9hY2NvcmRpbmcgdG8gdGhlIAo8L2JvZHk+CjwvaHRtbD4Kc3R5bGU9ImZvbnQtc2l6ZTpzY3JpcHQgbGFuZ3VhZ2U9IkFyaWFsLCBIZWx2ZXRpY2EsPC9hPjxzcGFuIGNsYXNzPSI8L3NjcmlwdD48c2NyaXB0IHBvbGl0aWNhbCBwYXJ0aWVzdGQ+PC90cj48L3RhYmxlPjxocmVmPSJodHRwOi8vd3d3LmludGVycHJldGF0aW9uIG9mcmVsPSJzdHlsZXNoZWV0IiBkb2N1bWVudC53cml0ZSgnPGNoYXJzZXQ9InV0Zi04Ij4KYmVnaW5uaW5nIG9mIHRoZSByZXZlYWxlZCB0aGF0IHRoZXRlbGV2aXNpb24gc2VyaWVzIiByZWw9Im5vZm9sbG93Ij4gdGFyZ2V0PSJfYmxhbmsiPmNsYWltaW5nIHRoYXQgdGhlaHR0cCUzQSUyRiUyRnd3dy5tYW5pZmVzdGF0aW9ucyBvZlByaW1lIE1pbmlzdGVyIG9maW5mbHVlbmNlZCBieSB0aGVjbGFzcz0iY2xlYXJmaXgiPi9kaXY+DQo8L2Rpdj4NCg0KdGhyZWUtZGltZW5zaW9uYWxDaHVyY2ggb2YgRW5nbGFuZG9mIE5vcnRoIENhcm9saW5hc3F1YXJlIGtpbG9tZXRyZXMuYWRkRXZlbnRMaXN0ZW5lcmRpc3RpbmN0IGZyb20gdGhlY29tbW9ubHkga25vd24gYXNQaG9uZXRpYyBBbHBoYWJldGRlY2xhcmVkIHRoYXQgdGhlY29udHJvbGxlZCBieSB0aGVCZW5qYW1pbiBGcmFua2xpbnJvbGUtcGxheWluZyBnYW1ldGhlIFVuaXZlcnNpdHkgb2ZpbiBXZXN0ZXJuIEV1cm9wZXBlcnNvbmFsIGNvbXB1dGVyUHJvamVjdCBHdXRlbmJlcmdyZWdhcmRsZXNzIG9mIHRoZWhhcyBiZWVuIHByb3Bvc2VkdG9nZXRoZXIgd2l0aCB0aGU+PC9saT48bGkgY2xhc3M9ImluIHNvbWUgY291bnRyaWVzbWluLmpzIj48L3NjcmlwdD5vZiB0aGUgcG9wdWxhdGlvbm9mZmljaWFsIGxhbmd1YWdlPGltZyBzcmM9ImltYWdlcy9pZGVudGlmaWVkIGJ5IHRoZW5hdHVyYWwgcmVzb3VyY2VzY2xhc3NpZmljYXRpb24gb2ZjYW4gYmUgY29uc2lkZXJlZHF1YW50dW0gbWVjaGFuaWNzTmV2ZXJ0aGVsZXNzLCB0aGVtaWxsaW9uIHllYXJzIGFnbzwvYm9keT4NCjwvaHRtbD4NzpXOu867zrfOvc65zrrOrAp0YWtlIGFkdmFudGFnZSBvZmFuZCwgYWNjb3JkaW5nIHRvYXR0cmlidXRlZCB0byB0aGVNaWNyb3NvZnQgV2luZG93c3RoZSBmaXJzdCBjZW50dXJ5dW5kZXIgdGhlIGNvbnRyb2xkaXYgY2xhc3M9ImhlYWRlcnNob3J0bHkgYWZ0ZXIgdGhlbm90YWJsZSBleGNlcHRpb250ZW5zIG9mIHRob3VzYW5kc3NldmVyYWwgZGlmZmVyZW50YXJvdW5kIHRoZSB3b3JsZC5yZWFjaGluZyBtaWxpdGFyeWlzb2xhdGVkIGZyb20gdGhlb3Bwb3NpdGlvbiB0byB0aGV0aGUgT2xkIFRlc3RhbWVudEFmcmljYW4gQW1lcmljYW5zaW5zZXJ0ZWQgaW50byB0aGVzZXBhcmF0ZSBmcm9tIHRoZW1ldHJvcG9saXRhbiBhcmVhbWFrZXMgaXQgcG9zc2libGVhY2tub3dsZWRnZWQgdGhhdGFyZ3VhYmx5IHRoZSBtb3N0dHlwZT0idGV4dC9jc3MiPgp0aGUgSW50ZXJuYXRpb25hbEFjY29yZGluZyB0byB0aGUgcGU9InRleHQvY3NzIiAvPgpjb2luY2lkZSB3aXRoIHRoZXR3by10aGlyZHMgb2YgdGhlRHVyaW5nIHRoaXMgdGltZSxkdXJpbmcgdGhlIHBlcmlvZGFubm91bmNlZCB0aGF0IGhldGhlIGludGVybmF0aW9uYWxhbmQgbW9yZSByZWNlbnRseWJlbGlldmVkIHRoYXQgdGhlY29uc2Npb3VzbmVzcyBhbmRmb3JtZXJseSBrbm93biBhc3N1cnJvdW5kZWQgYnkgdGhlZmlyc3QgYXBwZWFyZWQgaW5vY2Nhc2lvbmFsbHkgdXNlZHBvc2l0aW9uOmFic29sdXRlOyIgdGFyZ2V0PSJfYmxhbmsiIHBvc2l0aW9uOnJlbGF0aXZlO3RleHQtYWxpZ246Y2VudGVyO2pheC9saWJzL2pxdWVyeS8xLmJhY2tncm91bmQtY29sb3I6I3R5cGU9ImFwcGxpY2F0aW9uL2FuZ3VhZ2UiIGNvbnRlbnQ9IjxtZXRhIGh0dHAtZXF1aXY9IlByaXZhY3kgUG9saWN5PC9hPmUoIiUzQ3NjcmlwdCBzcmM9JyIgdGFyZ2V0PSJfYmxhbmsiPk9uIHRoZSBvdGhlciBoYW5kLC5qcGd8dGh1bWJ8cmlnaHR8MjwvZGl2PjxkaXYgY2xhc3M9IjxkaXYgc3R5bGU9ImZsb2F0Om5pbmV0ZWVudGggY2VudHVyeTwvYm9keT4NCjwvaHRtbD4NCjxpbWcgc3JjPSJodHRwOi8vczt0ZXh0LWFsaWduOmNlbnRlcmZvbnQtd2VpZ2h0OiBib2xkOyBBY2NvcmRpbmcgdG8gdGhlIGRpZmZlcmVuY2UgYmV0d2VlbiIgZnJhbWVib3JkZXI9IjAiICIgc3R5bGU9InBvc2l0aW9uOmxpbmsgaHJlZj0iaHR0cDovL2h0bWw0L2xvb3NlLmR0ZCI+CmR1cmluZyB0aGlzIHBlcmlvZDwvdGQ+PC90cj48L3RhYmxlPmNsb3NlbHkgcmVsYXRlZCB0b2ZvciB0aGUgZmlyc3QgdGltZTtmb250LXdlaWdodDpib2xkO2lucHV0IHR5cGU9InRleHQiIDxzcGFuIHN0eWxlPSJmb250LW9ucmVhZHlzdGF0ZWNoYW5nZQk8ZGl2IGNsYXNzPSJjbGVhcmRvY3VtZW50LmxvY2F0aW9uLiBGb3IgZXhhbXBsZSwgdGhlIGEgd2lkZSB2YXJpZXR5IG9mIDwhRE9DVFlQRSBodG1sPg0KPCZuYnNwOyZuYnNwOyZuYnNwOyI+PGEgaHJlZj0iaHR0cDovL3N0eWxlPSJmbG9hdDpsZWZ0O2NvbmNlcm5lZCB3aXRoIHRoZT1odHRwJTNBJTJGJTJGd3d3LmluIHBvcHVsYXIgY3VsdHVyZXR5cGU9InRleHQvY3NzIiAvPml0IGlzIHBvc3NpYmxlIHRvIEhhcnZhcmQgVW5pdmVyc2l0eXR5bGVzaGVldCIgaHJlZj0iL3RoZSBtYWluIGNoYXJhY3Rlck94Zm9yZCBVbml2ZXJzaXR5ICBuYW1lPSJrZXl3b3JkcyIgY3N0eWxlPSJ0ZXh0LWFsaWduOnRoZSBVbml0ZWQgS2luZ2RvbWZlZGVyYWwgZ292ZXJubWVudDxkaXYgc3R5bGU9Im1hcmdpbiBkZXBlbmRpbmcgb24gdGhlIGRlc2NyaXB0aW9uIG9mIHRoZTxkaXYgY2xhc3M9ImhlYWRlci5taW4uanMiPjwvc2NyaXB0PmRlc3RydWN0aW9uIG9mIHRoZXNsaWdodGx5IGRpZmZlcmVudGluIGFjY29yZGFuY2Ugd2l0aHRlbGVjb21tdW5pY2F0aW9uc2luZGljYXRlcyB0aGF0IHRoZXNob3J0bHkgdGhlcmVhZnRlcmVzcGVjaWFsbHkgaW4gdGhlIEV1cm9wZWFuIGNvdW50cmllc0hvd2V2ZXIsIHRoZXJlIGFyZXNyYz0iaHR0cDovL3N0YXRpY3N1Z2dlc3RlZCB0aGF0IHRoZSIgc3JjPSJodHRwOi8vd3d3LmEgbGFyZ2UgbnVtYmVyIG9mIFRlbGVjb21tdW5pY2F0aW9ucyIgcmVsPSJub2ZvbGxvdyIgdEhvbHkgUm9tYW4gRW1wZXJvcmFsbW9zdCBleGNsdXNpdmVseSIgYm9yZGVyPSIwIiBhbHQ9IlNlY3JldGFyeSBvZiBTdGF0ZWN1bG1pbmF0aW5nIGluIHRoZUNJQSBXb3JsZCBGYWN0Ym9va3RoZSBtb3N0IGltcG9ydGFudGFubml2ZXJzYXJ5IG9mIHRoZXN0eWxlPSJiYWNrZ3JvdW5kLTxsaT48ZW0+PGEgaHJlZj0iL3RoZSBBdGxhbnRpYyBPY2VhbnN0cmljdGx5IHNwZWFraW5nLHNob3J0bHkgYmVmb3JlIHRoZWRpZmZlcmVudCB0eXBlcyBvZnRoZSBPdHRvbWFuIEVtcGlyZT48aW1nIHNyYz0iaHR0cDovL0FuIEludHJvZHVjdGlvbiB0b2NvbnNlcXVlbmNlIG9mIHRoZWRlcGFydHVyZSBmcm9tIHRoZUNvbmZlZGVyYXRlIFN0YXRlc2luZGlnZW5vdXMgcGVvcGxlc1Byb2NlZWRpbmdzIG9mIHRoZWluZm9ybWF0aW9uIG9uIHRoZXRoZW9yaWVzIGhhdmUgYmVlbmludm9sdmVtZW50IGluIHRoZWRpdmlkZWQgaW50byB0aHJlZWFkamFjZW50IGNvdW50cmllc2lzIHJlc3BvbnNpYmxlIGZvcmRpc3NvbHV0aW9uIG9mIHRoZWNvbGxhYm9yYXRpb24gd2l0aHdpZGVseSByZWdhcmRlZCBhc2hpcyBjb250ZW1wb3Jhcmllc2ZvdW5kaW5nIG1lbWJlciBvZkRvbWluaWNhbiBSZXB1YmxpY2dlbmVyYWxseSBhY2NlcHRlZHRoZSBwb3NzaWJpbGl0eSBvZmFyZSBhbHNvIGF2YWlsYWJsZXVuZGVyIGNvbnN0cnVjdGlvbnJlc3RvcmF0aW9uIG9mIHRoZXRoZSBnZW5lcmFsIHB1YmxpY2lzIGFsbW9zdCBlbnRpcmVseXBhc3NlcyB0aHJvdWdoIHRoZWhhcyBiZWVuIHN1Z2dlc3RlZGNvbXB1dGVyIGFuZCB2aWRlb0dlcm1hbmljIGxhbmd1YWdlcyBhY2NvcmRpbmcgdG8gdGhlIGRpZmZlcmVudCBmcm9tIHRoZXNob3J0bHkgYWZ0ZXJ3YXJkc2hyZWY9Imh0dHBzOi8vd3d3LnJlY2VudCBkZXZlbG9wbWVudEJvYXJkIG9mIERpcmVjdG9yczxkaXYgY2xhc3M9InNlYXJjaHwgPGEgaHJlZj0iaHR0cDovL0luIHBhcnRpY3VsYXIsIHRoZU11bHRpcGxlIGZvb3Rub3Rlc29yIG90aGVyIHN1YnN0YW5jZXRob3VzYW5kcyBvZiB5ZWFyc3RyYW5zbGF0aW9uIG9mIHRoZTwvZGl2Pg0KPC9kaXY+DQoNCjxhIGhyZWY9ImluZGV4LnBocHdhcyBlc3RhYmxpc2hlZCBpbm1pbi5qcyI+PC9zY3JpcHQ+CnBhcnRpY2lwYXRlIGluIHRoZWEgc3Ryb25nIGluZmx1ZW5jZXN0eWxlPSJtYXJnaW4tdG9wOnJlcHJlc2VudGVkIGJ5IHRoZWdyYWR1YXRlZCBmcm9tIHRoZVRyYWRpdGlvbmFsbHksIHRoZUVsZW1lbnQoInNjcmlwdCIpO0hvd2V2ZXIsIHNpbmNlIHRoZS9kaXY+CjwvZGl2Pgo8ZGl2IGxlZnQ7IG1hcmdpbi1sZWZ0OnByb3RlY3Rpb24gYWdhaW5zdDA7IHZlcnRpY2FsLWFsaWduOlVuZm9ydHVuYXRlbHksIHRoZXR5cGU9ImltYWdlL3gtaWNvbi9kaXY+CjxkaXYgY2xhc3M9IiBjbGFzcz0iY2xlYXJmaXgiPjxkaXYgY2xhc3M9ImZvb3RlcgkJPC9kaXY+CgkJPC9kaXY+CnRoZSBtb3Rpb24gcGljdHVyZdCR0YrQu9Cz0LDRgNGB0LrQuNCx0YrQu9Cz0LDRgNGB0LrQuNCk0LXQtNC10YDQsNGG0LjQuNC90LXRgdC60L7Qu9GM0LrQvtGB0L7QvtCx0YnQtdC90LjQtdGB0L7QvtCx0YnQtdC90LjRj9C/0YDQvtCz0YDQsNC80LzRi9Ce0YLQv9GA0LDQstC40YLRjNCx0LXRgdC/0LvQsNGC0L3QvtC80LDRgtC10YDQuNCw0LvRi9C/0L7Qt9Cy0L7Qu9GP0LXRgtC/0L7RgdC70LXQtNC90LjQtdGA0LDQt9C70LjRh9C90YvRhdC/0YDQvtC00YPQutGG0LjQuNC/0YDQvtCz0YDQsNC80LzQsNC/0L7Qu9C90L7RgdGC0YzRjtC90LDRhdC+0LTQuNGC0YHRj9C40LfQsdGA0LDQvdC90L7QtdC90LDRgdC10LvQtdC90LjRj9C40LfQvNC10L3QtdC90LjRj9C60LDRgtC10LPQvtGA0LjQuNCQ0LvQtdC60YHQsNC90LTRgOCkpuCljeCkteCkvuCksOCkvuCkruCliOCkqOClgeCkheCksuCkquCljeCksOCkpuCkvuCkqOCkreCkvuCksOCkpOClgOCkr+CkheCkqOClgeCkpuClh+CktuCkueCkv+CkqOCljeCkpuClgOCkh+CkguCkoeCkv+Ckr+CkvuCkpuCkv+CksuCljeCksuClgOCkheCkp+Ckv+CkleCkvuCksOCkteClgOCkoeCkv+Ckr+Cli+CkmuCkv+Ckn+CljeCkoOClh+CkuOCkruCkvuCkmuCkvuCksOCknOCkguCkleCljeCktuCkqOCkpuClgeCkqOCkv+Ckr+CkvuCkquCljeCksOCkr+Cli+Ckl+CkheCkqOClgeCkuOCkvuCksOCkkeCkqOCksuCkvuCkh+CkqOCkquCkvuCksOCljeCkn+ClgOCktuCksOCljeCkpOCli+CkguCksuCli+CkleCkuOCkreCkvuCkq+CkvOCljeCksuCliOCktuCktuCksOCljeCkpOClh+CkguCkquCljeCksOCkpuClh+CktuCkquCljeCksuClh+Ckr+CksOCkleClh+CkguCkpuCljeCksOCkuOCljeCkpeCkv+CkpOCkv+CkieCkpOCljeCkquCkvuCkpuCkieCkqOCljeCkueClh+CkguCkmuCkv+Ckn+CljeCkoOCkvuCkr+CkvuCkpOCljeCksOCkvuCknOCljeCkr+CkvuCkpuCkvuCkquClgeCksOCkvuCkqOClh+CknOCli+CkoeCkvOClh+CkguCkheCkqOClgeCkteCkvuCkpuCktuCljeCksOClh+Cko+ClgOCktuCkv+CkleCljeCkt+CkvuCkuOCksOCkleCkvuCksOClgOCkuOCkguCkl+CljeCksOCkueCkquCksOCkv+Cko+CkvuCkruCkrOCljeCksOCkvuCkguCkoeCkrOCkmuCljeCkmuCli+CkguCkieCkquCksuCkrOCljeCkp+CkruCkguCkpOCljeCksOClgOCkuOCkguCkquCksOCljeCkleCkieCkruCljeCkruClgOCkpuCkruCkvuCkp+CljeCkr+CkruCkuOCkueCkvuCkr+CkpOCkvuCktuCkrOCljeCkpuCli+CkguCkruClgOCkoeCkv+Ckr+CkvuCkhuCkiOCkquClgOCkj+CksuCkruCli+CkrOCkvuCkh+CksuCkuOCkguCkluCljeCkr+CkvuCkhuCkquCksOClh+CktuCkqOCkheCkqOClgeCkrOCkguCkp+CkrOCkvuCknOCkvOCkvuCksOCkqOCkteClgOCkqOCkpOCkruCkquCljeCksOCkruClgeCkluCkquCljeCksOCktuCljeCkqOCkquCksOCkv+CkteCkvuCksOCkqOClgeCkleCkuOCkvuCkqOCkuOCkruCksOCljeCkpeCkqOCkhuCkr+Cli+CknOCkv+CkpOCkuOCli+CkruCkteCkvuCksNin2YTZhdi02KfYsdmD2KfYqtin2YTZhdmG2KrYr9mK2KfYqtin2YTZg9mF2KjZitmI2KrYsdin2YTZhdi02KfZh9iv2KfYqti52K/Yr9in2YTYstmI2KfYsdi52K/Yr9in2YTYsdiv2YjYr9in2YTYpdiz2YTYp9mF2YrYqdin2YTZgdmI2KrZiNi02YjYqNin2YTZhdiz2KfYqNmC2KfYqtin2YTZhdi52YTZiNmF2KfYqtin2YTZhdiz2YTYs9mE2KfYqtin2YTYrNix2KfZgdmK2YPYs9in2YTYp9iz2YTYp9mF2YrYqdin2YTYp9iq2LXYp9mE2KfYqmtleXdvcmRzIiBjb250ZW50PSJ3My5vcmcvMTk5OS94aHRtbCI+PGEgdGFyZ2V0PSJfYmxhbmsiIHRleHQvaHRtbDsgY2hhcnNldD0iIHRhcmdldD0iX2JsYW5rIj48dGFibGUgY2VsbHBhZGRpbmc9ImF1dG9jb21wbGV0ZT0ib2ZmIiB0ZXh0LWFsaWduOiBjZW50ZXI7dG8gbGFzdCB2ZXJzaW9uIGJ5IGJhY2tncm91bmQtY29sb3I6ICMiIGhyZWY9Imh0dHA6Ly93d3cuL2Rpdj48L2Rpdj48ZGl2IGlkPTxhIGhyZWY9IiMiIGNsYXNzPSIiPjxpbWcgc3JjPSJodHRwOi8vY3JpcHQiIHNyYz0iaHR0cDovLwo8c2NyaXB0IGxhbmd1YWdlPSIvL0VOIiAiaHR0cDovL3d3dy53ZW5jb2RlVVJJQ29tcG9uZW50KCIgaHJlZj0iamF2YXNjcmlwdDo8ZGl2IGNsYXNzPSJjb250ZW50ZG9jdW1lbnQud3JpdGUoJzxzY3Bvc2l0aW9uOiBhYnNvbHV0ZTtzY3JpcHQgc3JjPSJodHRwOi8vIHN0eWxlPSJtYXJnaW4tdG9wOi5taW4uanMiPjwvc2NyaXB0Pgo8L2Rpdj4KPGRpdiBjbGFzcz0idzMub3JnLzE5OTkveGh0bWwiIAoNCjwvYm9keT4NCjwvaHRtbD5kaXN0aW5jdGlvbiBiZXR3ZWVuLyIgdGFyZ2V0PSJfYmxhbmsiPjxsaW5rIGhyZWY9Imh0dHA6Ly9lbmNvZGluZz0idXRmLTgiPz4Kdy5hZGRFdmVudExpc3RlbmVyP2FjdGlvbj0iaHR0cDovL3d3dy5pY29uIiBocmVmPSJodHRwOi8vIHN0eWxlPSJiYWNrZ3JvdW5kOnR5cGU9InRleHQvY3NzIiAvPgptZXRhIHByb3BlcnR5PSJvZzp0PGlucHV0IHR5cGU9InRleHQiICBzdHlsZT0idGV4dC1hbGlnbjp0aGUgZGV2ZWxvcG1lbnQgb2YgdHlsZXNoZWV0IiB0eXBlPSJ0ZWh0bWw7IGNoYXJzZXQ9dXRmLThpcyBjb25zaWRlcmVkIHRvIGJldGFibGUgd2lkdGg9IjEwMCUiIEluIGFkZGl0aW9uIHRvIHRoZSBjb250cmlidXRlZCB0byB0aGUgZGlmZmVyZW5jZXMgYmV0d2VlbmRldmVsb3BtZW50IG9mIHRoZSBJdCBpcyBpbXBvcnRhbnQgdG8gPC9zY3JpcHQ+Cgo8c2NyaXB0ICBzdHlsZT0iZm9udC1zaXplOjE+PC9zcGFuPjxzcGFuIGlkPWdiTGlicmFyeSBvZiBDb25ncmVzczxpbWcgc3JjPSJodHRwOi8vaW1FbmdsaXNoIHRyYW5zbGF0aW9uQWNhZGVteSBvZiBTY2llbmNlc2RpdiBzdHlsZT0iZGlzcGxheTpjb25zdHJ1Y3Rpb24gb2YgdGhlLmdldEVsZW1lbnRCeUlkKGlkKWluIGNvbmp1bmN0aW9uIHdpdGhFbGVtZW50KCdzY3JpcHQnKTsgPG1ldGEgcHJvcGVydHk9Im9nOtCR0YrQu9Cz0LDRgNGB0LrQuAogdHlwZT0idGV4dCIgbmFtZT0iPlByaXZhY3kgUG9saWN5PC9hPmFkbWluaXN0ZXJlZCBieSB0aGVlbmFibGVTaW5nbGVSZXF1ZXN0c3R5bGU9JnF1b3Q7bWFyZ2luOjwvZGl2PjwvZGl2PjwvZGl2Pjw+PGltZyBzcmM9Imh0dHA6Ly9pIHN0eWxlPSZxdW90O2Zsb2F0OnJlZmVycmVkIHRvIGFzIHRoZSB0b3RhbCBwb3B1bGF0aW9uIG9maW4gV2FzaGluZ3RvbiwgRC5DLiBzdHlsZT0iYmFja2dyb3VuZC1hbW9uZyBvdGhlciB0aGluZ3Msb3JnYW5pemF0aW9uIG9mIHRoZXBhcnRpY2lwYXRlZCBpbiB0aGV0aGUgaW50cm9kdWN0aW9uIG9maWRlbnRpZmllZCB3aXRoIHRoZWZpY3Rpb25hbCBjaGFyYWN0ZXIgT3hmb3JkIFVuaXZlcnNpdHkgbWlzdW5kZXJzdGFuZGluZyBvZlRoZXJlIGFyZSwgaG93ZXZlcixzdHlsZXNoZWV0IiBocmVmPSIvQ29sdW1iaWEgVW5pdmVyc2l0eWV4cGFuZGVkIHRvIGluY2x1ZGV1c3VhbGx5IHJlZmVycmVkIHRvaW5kaWNhdGluZyB0aGF0IHRoZWhhdmUgc3VnZ2VzdGVkIHRoYXRhZmZpbGlhdGVkIHdpdGggdGhlY29ycmVsYXRpb24gYmV0d2Vlbm51bWJlciBvZiBkaWZmZXJlbnQ+PC90ZD48L3RyPjwvdGFibGU+UmVwdWJsaWMgb2YgSXJlbGFuZAo8L3NjcmlwdD4KPHNjcmlwdCB1bmRlciB0aGUgaW5mbHVlbmNlY29udHJpYnV0aW9uIHRvIHRoZU9mZmljaWFsIHdlYnNpdGUgb2ZoZWFkcXVhcnRlcnMgb2YgdGhlY2VudGVyZWQgYXJvdW5kIHRoZWltcGxpY2F0aW9ucyBvZiB0aGVoYXZlIGJlZW4gZGV2ZWxvcGVkRmVkZXJhbCBSZXB1YmxpYyBvZmJlY2FtZSBpbmNyZWFzaW5nbHljb250aW51YXRpb24gb2YgdGhlTm90ZSwgaG93ZXZlciwgdGhhdHNpbWlsYXIgdG8gdGhhdCBvZiBjYXBhYmlsaXRpZXMgb2YgdGhlYWNjb3JkYW5jZSB3aXRoIHRoZXBhcnRpY2lwYW50cyBpbiB0aGVmdXJ0aGVyIGRldmVsb3BtZW50dW5kZXIgdGhlIGRpcmVjdGlvbmlzIG9mdGVuIGNvbnNpZGVyZWRoaXMgeW91bmdlciBicm90aGVyPC90ZD48L3RyPjwvdGFibGU+PGEgaHR0cC1lcXVpdj0iWC1VQS1waHlzaWNhbCBwcm9wZXJ0aWVzb2YgQnJpdGlzaCBDb2x1bWJpYWhhcyBiZWVuIGNyaXRpY2l6ZWQod2l0aCB0aGUgZXhjZXB0aW9ucXVlc3Rpb25zIGFib3V0IHRoZXBhc3NpbmcgdGhyb3VnaCB0aGUwIiBjZWxscGFkZGluZz0iMCIgdGhvdXNhbmRzIG9mIHBlb3BsZXJlZGlyZWN0cyBoZXJlLiBGb3JoYXZlIGNoaWxkcmVuIHVuZGVyJTNFJTNDL3NjcmlwdCUzRSIpKTs8YSBocmVmPSJodHRwOi8vd3d3LjxsaT48YSBocmVmPSJodHRwOi8vc2l0ZV9uYW1lIiBjb250ZW50PSJ0ZXh0LWRlY29yYXRpb246bm9uZXN0eWxlPSJkaXNwbGF5OiBub25lPG1ldGEgaHR0cC1lcXVpdj0iWC1uZXcgRGF0ZSgpLmdldFRpbWUoKSB0eXBlPSJpbWFnZS94LWljb24iPC9zcGFuPjxzcGFuIGNsYXNzPSJsYW5ndWFnZT0iamF2YXNjcmlwdHdpbmRvdy5sb2NhdGlvbi5ocmVmPGEgaHJlZj0iamF2YXNjcmlwdDotLT4NCjxzY3JpcHQgdHlwZT0idDxhIGhyZWY9J2h0dHA6Ly93d3cuaG9ydGN1dCBpY29uIiBocmVmPSI8L2Rpdj4NCjxkaXYgY2xhc3M9IjxzY3JpcHQgc3JjPSJodHRwOi8vIiByZWw9InN0eWxlc2hlZXQiIHQ8L2Rpdj4KPHNjcmlwdCB0eXBlPS9hPiA8YSBocmVmPSJodHRwOi8vIGFsbG93VHJhbnNwYXJlbmN5PSJYLVVBLUNvbXBhdGlibGUiIGNvbnJlbGF0aW9uc2hpcCBiZXR3ZWVuCjwvc2NyaXB0Pg0KPHNjcmlwdCA8L2E+PC9saT48L3VsPjwvZGl2PmFzc29jaWF0ZWQgd2l0aCB0aGUgcHJvZ3JhbW1pbmcgbGFuZ3VhZ2U8L2E+PGEgaHJlZj0iaHR0cDovLzwvYT48L2xpPjxsaSBjbGFzcz0iZm9ybSBhY3Rpb249Imh0dHA6Ly88ZGl2IHN0eWxlPSJkaXNwbGF5OnR5cGU9InRleHQiIG5hbWU9InEiPHRhYmxlIHdpZHRoPSIxMDAlIiBiYWNrZ3JvdW5kLXBvc2l0aW9uOiIgYm9yZGVyPSIwIiB3aWR0aD0icmVsPSJzaG9ydGN1dCBpY29uIiBoNj48dWw+PGxpPjxhIGhyZWY9IiAgPG1ldGEgaHR0cC1lcXVpdj0iY3NzIiBtZWRpYT0ic2NyZWVuIiByZXNwb25zaWJsZSBmb3IgdGhlICIgdHlwZT0iYXBwbGljYXRpb24vIiBzdHlsZT0iYmFja2dyb3VuZC1odG1sOyBjaGFyc2V0PXV0Zi04IiBhbGxvd3RyYW5zcGFyZW5jeT0ic3R5bGVzaGVldCIgdHlwZT0idGUNCjxtZXRhIGh0dHAtZXF1aXY9Ij48L3NwYW4+PHNwYW4gY2xhc3M9IjAiIGNlbGxzcGFjaW5nPSIwIj47Cjwvc2NyaXB0Pgo8c2NyaXB0IHNvbWV0aW1lcyBjYWxsZWQgdGhlZG9lcyBub3QgbmVjZXNzYXJpbHlGb3IgbW9yZSBpbmZvcm1hdGlvbmF0IHRoZSBiZWdpbm5pbmcgb2YgPCFET0NUWVBFIGh0bWw+PGh0bWxwYXJ0aWN1bGFybHkgaW4gdGhlIHR5cGU9ImhpZGRlbiIgbmFtZT0iamF2YXNjcmlwdDp2b2lkKDApOyJlZmZlY3RpdmVuZXNzIG9mIHRoZSBhdXRvY29tcGxldGU9Im9mZiIgZ2VuZXJhbGx5IGNvbnNpZGVyZWQ+PGlucHV0IHR5cGU9InRleHQiICI+PC9zY3JpcHQ+DQo8c2NyaXB0dGhyb3VnaG91dCB0aGUgd29ybGRjb21tb24gbWlzY29uY2VwdGlvbmFzc29jaWF0aW9uIHdpdGggdGhlPC9kaXY+CjwvZGl2Pgo8ZGl2IGNkdXJpbmcgaGlzIGxpZmV0aW1lLGNvcnJlc3BvbmRpbmcgdG8gdGhldHlwZT0iaW1hZ2UveC1pY29uIiBhbiBpbmNyZWFzaW5nIG51bWJlcmRpcGxvbWF0aWMgcmVsYXRpb25zYXJlIG9mdGVuIGNvbnNpZGVyZWRtZXRhIGNoYXJzZXQ9InV0Zi04IiA8aW5wdXQgdHlwZT0idGV4dCIgZXhhbXBsZXMgaW5jbHVkZSB0aGUiPjxpbWcgc3JjPSJodHRwOi8vaXBhcnRpY2lwYXRpb24gaW4gdGhldGhlIGVzdGFibGlzaG1lbnQgb2YKPC9kaXY+CjxkaXYgY2xhc3M9IiZhbXA7bmJzcDsmYW1wO25ic3A7dG8gZGV0ZXJtaW5lIHdoZXRoZXJxdWl0ZSBkaWZmZXJlbnQgZnJvbW1hcmtlZCB0aGUgYmVnaW5uaW5nZGlzdGFuY2UgYmV0d2VlbiB0aGVjb250cmlidXRpb25zIHRvIHRoZWNvbmZsaWN0IGJldHdlZW4gdGhld2lkZWx5IGNvbnNpZGVyZWQgdG93YXMgb25lIG9mIHRoZSBmaXJzdHdpdGggdmFyeWluZyBkZWdyZWVzaGF2ZSBzcGVjdWxhdGVkIHRoYXQoZG9jdW1lbnQuZ2V0RWxlbWVudHBhcnRpY2lwYXRpbmcgaW4gdGhlb3JpZ2luYWxseSBkZXZlbG9wZWRldGEgY2hhcnNldD0idXRmLTgiPiB0eXBlPSJ0ZXh0L2NzcyIgLz4KaW50ZXJjaGFuZ2VhYmx5IHdpdGhtb3JlIGNsb3NlbHkgcmVsYXRlZHNvY2lhbCBhbmQgcG9saXRpY2FsdGhhdCB3b3VsZCBvdGhlcndpc2VwZXJwZW5kaWN1bGFyIHRvIHRoZXN0eWxlIHR5cGU9InRleHQvY3NzdHlwZT0ic3VibWl0IiBuYW1lPSJmYW1pbGllcyByZXNpZGluZyBpbmRldmVsb3BpbmcgY291bnRyaWVzY29tcHV0ZXIgcHJvZ3JhbW1pbmdlY29ub21pYyBkZXZlbG9wbWVudGRldGVybWluYXRpb24gb2YgdGhlZm9yIG1vcmUgaW5mb3JtYXRpb25vbiBzZXZlcmFsIG9jY2FzaW9uc3BvcnR1Z3XDqnMgKEV1cm9wZXUp0KPQutGA0LDRl9C90YHRjNC60LDRg9C60YDQsNGX0L3RgdGM0LrQsNCg0L7RgdGB0LjQudGB0LrQvtC50LzQsNGC0LXRgNC40LDQu9C+0LLQuNC90YTQvtGA0LzQsNGG0LjQuNGD0L/RgNCw0LLQu9C10L3QuNGP0L3QtdC+0LHRhdC+0LTQuNC80L7QuNC90YTQvtGA0LzQsNGG0LjRj9CY0L3RhNC+0YDQvNCw0YbQuNGP0KDQtdGB0L/Rg9Cx0LvQuNC60LjQutC+0LvQuNGH0LXRgdGC0LLQvtC40L3RhNC+0YDQvNCw0YbQuNGO0YLQtdGA0YDQuNGC0L7RgNC40LjQtNC+0YHRgtCw0YLQvtGH0L3Qvtin2YTZhdiq2YjYp9is2K/ZiNmG2KfZhNin2LTYqtix2KfZg9in2KrYp9mE2KfZgtiq2LHYp9it2KfYqmh0bWw7IGNoYXJzZXQ9VVRGLTgiIHNldFRpbWVvdXQoZnVuY3Rpb24oKWRpc3BsYXk6aW5saW5lLWJsb2NrOzxpbnB1dCB0eXBlPSJzdWJtaXQiIHR5cGUgPSAndGV4dC9qYXZhc2NyaTxpbWcgc3JjPSJodHRwOi8vd3d3LiIgImh0dHA6Ly93d3cudzMub3JnL3Nob3J0Y3V0IGljb24iIGhyZWY9IiIgYXV0b2NvbXBsZXRlPSJvZmYiIDwvYT48L2Rpdj48ZGl2IGNsYXNzPTwvYT48L2xpPgo8bGkgY2xhc3M9ImNzcyIgdHlwZT0idGV4dC9jc3MiIDxmb3JtIGFjdGlvbj0iaHR0cDovL3h0L2NzcyIgaHJlZj0iaHR0cDovL2xpbmsgcmVsPSJhbHRlcm5hdGUiIA0KPHNjcmlwdCB0eXBlPSJ0ZXh0LyBvbmNsaWNrPSJqYXZhc2NyaXB0OihuZXcgRGF0ZSkuZ2V0VGltZSgpfWhlaWdodD0iMSIgd2lkdGg9IjEiIFBlb3BsZSdzIFJlcHVibGljIG9mICA8YSBocmVmPSJodHRwOi8vd3d3LnRleHQtZGVjb3JhdGlvbjp1bmRlcnRoZSBiZWdpbm5pbmcgb2YgdGhlIDwvZGl2Pgo8L2Rpdj4KPC9kaXY+CmVzdGFibGlzaG1lbnQgb2YgdGhlIDwvZGl2PjwvZGl2PjwvZGl2PjwvZCN2aWV3cG9ydHttaW4taGVpZ2h0Ogo8c2NyaXB0IHNyYz0iaHR0cDovL29wdGlvbj48b3B0aW9uIHZhbHVlPW9mdGVuIHJlZmVycmVkIHRvIGFzIC9vcHRpb24+CjxvcHRpb24gdmFsdTwhRE9DVFlQRSBodG1sPgo8IS0tW0ludGVybmF0aW9uYWwgQWlycG9ydD4KPGEgaHJlZj0iaHR0cDovL3d3dzwvYT48YSBocmVmPSJodHRwOi8vd+C4oOC4suC4qeC4suC5hOC4l+C4ouGDpeGDkOGDoOGDl+GDo+GDmuGDmOato+mrlOS4reaWhyAo57mB6auUKeCkqOCkv+CksOCljeCkpuClh+CktuCkoeCkvuCkieCkqOCksuCli+CkoeCkleCljeCkt+Clh+CkpOCljeCksOCknOCkvuCkqOCkleCkvuCksOClgOCkuOCkguCkrOCkguCkp+Ckv+CkpOCkuOCljeCkpeCkvuCkquCkqOCkvuCkuOCljeCkteClgOCkleCkvuCksOCkuOCkguCkuOCljeCkleCksOCko+CkuOCkvuCkruCkl+CljeCksOClgOCkmuCkv+Ckn+CljeCkoOCli+CkguCkteCkv+CknOCljeCknuCkvuCkqOCkheCkruClh+CksOCkv+CkleCkvuCkteCkv+CkreCkv+CkqOCljeCkqOCkl+CkvuCkoeCkv+Ckr+CkvuCkgeCkleCljeCkr+Cli+CkguCkleCkv+CkuOClgeCksOCkleCljeCkt+CkvuCkquCkueClgeCkgeCkmuCkpOClgOCkquCljeCksOCkrOCkguCkp+CkqOCkn+Ckv+CkquCljeCkquCko+ClgOCkleCljeCksOCkv+CkleClh+Ckn+CkquCljeCksOCkvuCksOCkguCkreCkquCljeCksOCkvuCkquCljeCkpOCkruCkvuCksuCkv+CkleCli+CkguCksOCkq+CkvOCljeCkpOCkvuCksOCkqOCkv+CksOCljeCkruCkvuCko+CksuCkv+CkruCkv+Ckn+Clh+CkoWRlc2NyaXB0aW9uIiBjb250ZW50PSJkb2N1bWVudC5sb2NhdGlvbi5wcm90LmdldEVsZW1lbnRzQnlUYWdOYW1lKDwhRE9DVFlQRSBodG1sPgo8aHRtbCA8bWV0YSBjaGFyc2V0PSJ1dGYtOCI+OnVybCIgY29udGVudD0iaHR0cDovLy5jc3MiIHJlbD0ic3R5bGVzaGVldCJzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+dHlwZT0idGV4dC9jc3MiIGhyZWY9InczLm9yZy8xOTk5L3hodG1sIiB4bWx0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiIG1ldGhvZD0iZ2V0IiBhY3Rpb249ImxpbmsgcmVsPSJzdHlsZXNoZWV0IiAgPSBkb2N1bWVudC5nZXRFbGVtZW50dHlwZT0iaW1hZ2UveC1pY29uIiAvPmNlbGxwYWRkaW5nPSIwIiBjZWxsc3AuY3NzIiB0eXBlPSJ0ZXh0L2NzcyIgPC9hPjwvbGk+PGxpPjxhIGhyZWY9IiIgd2lkdGg9IjEiIGhlaWdodD0iMSIiPjxhIGhyZWY9Imh0dHA6Ly93d3cuc3R5bGU9ImRpc3BsYXk6bm9uZTsiPmFsdGVybmF0ZSIgdHlwZT0iYXBwbGktLy9XM0MvL0RURCBYSFRNTCAxLjAgZWxsc3BhY2luZz0iMCIgY2VsbHBhZCB0eXBlPSJoaWRkZW4iIHZhbHVlPSIvYT4mbmJzcDs8c3BhbiByb2xlPSJzCjxpbnB1dCB0eXBlPSJoaWRkZW4iIGxhbmd1YWdlPSJKYXZhU2NyaXB0IiAgZG9jdW1lbnQuZ2V0RWxlbWVudHNCZz0iMCIgY2VsbHNwYWNpbmc9IjAiIHlwZT0idGV4dC9jc3MiIG1lZGlhPSJ0eXBlPSd0ZXh0L2phdmFzY3JpcHQnd2l0aCB0aGUgZXhjZXB0aW9uIG9mIHlwZT0idGV4dC9jc3MiIHJlbD0ic3QgaGVpZ2h0PSIxIiB3aWR0aD0iMSIgPScrZW5jb2RlVVJJQ29tcG9uZW50KDxsaW5rIHJlbD0iYWx0ZXJuYXRlIiAKYm9keSwgdHIsIGlucHV0LCB0ZXh0bWV0YSBuYW1lPSJyb2JvdHMiIGNvbm1ldGhvZD0icG9zdCIgYWN0aW9uPSI+CjxhIGhyZWY9Imh0dHA6Ly93d3cuY3NzIiByZWw9InN0eWxlc2hlZXQiIDwvZGl2PjwvZGl2PjxkaXYgY2xhc3NsYW5ndWFnZT0iamF2YXNjcmlwdCI+YXJpYS1oaWRkZW49InRydWUiPsK3PHJpcHQiIHR5cGU9InRleHQvamF2YXNsPTA7fSkoKTsKKGZ1bmN0aW9uKCl7YmFja2dyb3VuZC1pbWFnZTogdXJsKC9hPjwvbGk+PGxpPjxhIGhyZWY9ImgJCTxsaT48YSBocmVmPSJodHRwOi8vYXRvciIgYXJpYS1oaWRkZW49InRydT4gPGEgaHJlZj0iaHR0cDovL3d3dy5sYW5ndWFnZT0iamF2YXNjcmlwdCIgL29wdGlvbj4KPG9wdGlvbiB2YWx1ZS9kaXY+PC9kaXY+PGRpdiBjbGFzcz1yYXRvciIgYXJpYS1oaWRkZW49InRyZT0obmV3IERhdGUpLmdldFRpbWUoKXBvcnR1Z3XDqnMgKGRvIEJyYXNpbCnQvtGA0LPQsNC90LjQt9Cw0YbQuNC40LLQvtC30LzQvtC20L3QvtGB0YLRjNC+0LHRgNCw0LfQvtCy0LDQvdC40Y/RgNC10LPQuNGB0YLRgNCw0YbQuNC40LLQvtC30LzQvtC20L3QvtGB0YLQuNC+0LHRj9C30LDRgtC10LvRjNC90LA8IURPQ1RZUEUgaHRtbCBQVUJMSUMgIm50LVR5cGUiIGNvbnRlbnQ9InRleHQvPG1ldGEgaHR0cC1lcXVpdj0iQ29udGVyYW5zaXRpb25hbC8vRU4iICJodHRwOjxodG1sIHhtbG5zPSJodHRwOi8vd3d3LS8vVzNDLy9EVEQgWEhUTUwgMS4wIFREVEQveGh0bWwxLXRyYW5zaXRpb25hbC8vd3d3LnczLm9yZy9UUi94aHRtbDEvcGUgPSAndGV4dC9qYXZhc2NyaXB0Jzs8bWV0YSBuYW1lPSJkZXNjcmlwdGlvbnBhcmVudE5vZGUuaW5zZXJ0QmVmb3JlPGlucHV0IHR5cGU9ImhpZGRlbiIgbmFqcyIgdHlwZT0idGV4dC9qYXZhc2NyaShkb2N1bWVudCkucmVhZHkoZnVuY3Rpc2NyaXB0IHR5cGU9InRleHQvamF2YXNpbWFnZSIgY29udGVudD0iaHR0cDovL1VBLUNvbXBhdGlibGUiIGNvbnRlbnQ9dG1sOyBjaGFyc2V0PXV0Zi04IiAvPgpsaW5rIHJlbD0ic2hvcnRjdXQgaWNvbjxsaW5rIHJlbD0ic3R5bGVzaGVldCIgPC9zY3JpcHQ+CjxzY3JpcHQgdHlwZT09IGRvY3VtZW50LmNyZWF0ZUVsZW1lbjxhIHRhcmdldD0iX2JsYW5rIiBocmVmPSBkb2N1bWVudC5nZXRFbGVtZW50c0JpbnB1dCB0eXBlPSJ0ZXh0IiBuYW1lPWEudHlwZSA9ICd0ZXh0L2phdmFzY3JpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWVodG1sOyBjaGFyc2V0PXV0Zi04IiAvPmR0ZCI+CjxodG1sIHhtbG5zPSJodHRwLS8vVzNDLy9EVEQgSFRNTCA0LjAxIFRlbnRzQnlUYWdOYW1lKCdzY3JpcHQnKWlucHV0IHR5cGU9ImhpZGRlbiIgbmFtPHNjcmlwdCB0eXBlPSJ0ZXh0L2phdmFzIiBzdHlsZT0iZGlzcGxheTpub25lOyI+ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJyB0eXBlPSd0ZXh0L2phdmFzY3JpcHQnaW5wdXQgdHlwZT0idGV4dCIgbmFtZT0iZC5nZXRFbGVtZW50c0J5VGFnTmFtZShzbmljYWwiIGhyZWY9Imh0dHA6Ly93d3cuQy8vRFREIEhUTUwgNC4wMSBUcmFuc2l0PHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+aW9uYWwuZHRkIj4KPGh0bWwgeG1sbnM9aHR0cC1lcXVpdj0iQ29udGVudC1UeXBlZGluZz0iMCIgY2VsbHNwYWNpbmc9IjAiaHRtbDsgY2hhcnNldD11dGYtOCIgLz4KIHN0eWxlPSJkaXNwbGF5Om5vbmU7Ij48PGxpPjxhIGhyZWY9Imh0dHA6Ly93d3cuIHR5cGU9J3RleHQvamF2YXNjcmlwdCc+0LTQtdGP0YLQtdC70YzQvdC+0YHRgtC40YHQvtC+0YLQstC10YLRgdGC0LLQuNC40L/RgNC+0LjQt9Cy0L7QtNGB0YLQstCw0LHQtdC30L7Qv9Cw0YHQvdC+0YHRgtC44KSq4KWB4KS44KWN4KSk4KS/4KSV4KS+4KSV4KS+4KSC4KSX4KWN4KSw4KWH4KS44KSJ4KSo4KWN4KS54KWL4KSC4KSo4KWH4KS14KS/4KSn4KS+4KSo4KS44KSt4KS+4KSr4KS/4KSV4KWN4KS44KS/4KSC4KSX4KS44KWB4KSw4KSV4KWN4KS34KS/4KSk4KSV4KWJ4KSq4KWA4KSw4KS+4KSH4KSf4KS14KS/4KSc4KWN4KSe4KS+4KSq4KSo4KSV4KS+4KSw4KWN4KSw4KS14KS+4KSI4KS44KSV4KWN4KSw4KS/4KSv4KSk4KS+AAGSAbQB1AH0ARYCNgJWAnYClgK2AtYC9gIWAzYDVgN2A5gDuAPYA/gDGAQ4BFgEeASYBLgE2AT4BBgFOAVYBXgFmAW4BdgF+AVOU3QzX18yMTJiYXNpY19zdHJpbmdJaE5TXzExY2hhcl90cmFpdHNJaEVFTlNfOWFsbG9jYXRvckloRUVFRQAAAABAEQIAagwCAE5TdDNfXzIxMmJhc2ljX3N0cmluZ0l3TlNfMTFjaGFyX3RyYWl0c0l3RUVOU185YWxsb2NhdG9ySXdFRUVFAABAEQIAtAwCAE5TdDNfXzIxMmJhc2ljX3N0cmluZ0lEc05TXzExY2hhcl90cmFpdHNJRHNFRU5TXzlhbGxvY2F0b3JJRHNFRUVFAAAAQBECAPwMAgBOU3QzX18yMTJiYXNpY19zdHJpbmdJRGlOU18xMWNoYXJfdHJhaXRzSURpRUVOU185YWxsb2NhdG9ySURpRUVFRQAAAEARAgBIDQIATjEwZW1zY3JpcHRlbjExbWVtb3J5X3ZpZXdJY0VFAABAEQIAlA0CAE4xMGVtc2NyaXB0ZW4xMW1lbW9yeV92aWV3SWFFRQAAQBECALwNAgBOMTBlbXNjcmlwdGVuMTFtZW1vcnlfdmlld0lzRUUAAEARAgDkDQIATjEwZW1zY3JpcHRlbjExbWVtb3J5X3ZpZXdJdEVFAABAEQIADA4CAE4xMGVtc2NyaXB0ZW4xMW1lbW9yeV92aWV3SWlFRQAAQBECADQOAgBOMTBlbXNjcmlwdGVuMTFtZW1vcnlfdmlld0lqRUUAAEARAgBcDgIATjEwZW1zY3JpcHRlbjExbWVtb3J5X3ZpZXdJbEVFAABAEQIAhA4CAE4xMGVtc2NyaXB0ZW4xMW1lbW9yeV92aWV3SW1FRQAAQBECAKwOAgBOMTBlbXNjcmlwdGVuMTFtZW1vcnlfdmlld0l4RUUAAEARAgDUDgIATjEwZW1zY3JpcHRlbjExbWVtb3J5X3ZpZXdJeUVFAABAEQIA/A4CAE4xMGVtc2NyaXB0ZW4xMW1lbW9yeV92aWV3SWZFRQAAQBECACQPAgBOMTBlbXNjcmlwdGVuMTFtZW1vcnlfdmlld0lkRUUAAEARAgBMDwIATjEwX19jeHhhYml2MTE2X19zaGltX3R5cGVfaW5mb0UAAAAAaBECAHQPAgDIEgIATjEwX19jeHhhYml2MTE3X19jbGFzc190eXBlX2luZm9FAAAAaBECAKQPAgCYDwIATjEwX19jeHhhYml2MTE3X19wYmFzZV90eXBlX2luZm9FAAAAaBECANQPAgCYDwIATjEwX19jeHhhYml2MTE5X19wb2ludGVyX3R5cGVfaW5mb0UAaBECAAQQAgD4DwIAAAAAAHgQAgAOAAAADwAAABAAAAARAAAAEgAAAE4xMF9fY3h4YWJpdjEyM19fZnVuZGFtZW50YWxfdHlwZV9pbmZvRQBoEQIAUBACAJgPAgB2AAAAPBACAIQQAgBiAAAAPBACAJAQAgBjAAAAPBACAJwQAgBoAAAAPBACAKgQAgBhAAAAPBACALQQAgBzAAAAPBACAMAQAgB0AAAAPBACAMwQAgBpAAAAPBACANgQAgBqAAAAPBACAOQQAgBsAAAAPBACAPAQAgBtAAAAPBACAPwQAgB4AAAAPBACAAgRAgB5AAAAPBACABQRAgBmAAAAPBACACARAgBkAAAAPBACACwRAgAAAAAAyA8CAA4AAAATAAAAEAAAABEAAAAUAAAAFQAAABYAAAAXAAAAAAAAALARAgAOAAAAGAAAABAAAAARAAAAFAAAABkAAAAaAAAAGwAAAE4xMF9fY3h4YWJpdjEyMF9fc2lfY2xhc3NfdHlwZV9pbmZvRQAAAABoEQIAiBECAMgPAgAAAAAAIBICAAUAAAAcAAAAHQAAAAAAAABIEgIABQAAAB4AAAAfAAAAAAAAAAgSAgAFAAAAIAAAACEAAABTdDlleGNlcHRpb24AAAAAQBECAPgRAgBTdDliYWRfYWxsb2MAAAAAaBECABASAgAIEgIAU3QyMGJhZF9hcnJheV9uZXdfbGVuZ3RoAAAAAGgRAgAsEgIAIBICAAAAAAB4EgIAAwAAACIAAAAjAAAAU3QxMWxvZ2ljX2Vycm9yAGgRAgBoEgIACBICAAAAAACsEgIAAwAAACQAAAAjAAAAU3QxMmxlbmd0aF9lcnJvcgAAAABoEQIAmBICAHgSAgBTdDl0eXBlX2luZm8AAAAAQBECALgSAgBB1KUIC230EgIABgAAAAcAAAAIAAAACQAAAAoAAABAEQIARQkAAGgRAgAsCQAA7BICANkAAABgCQAAQAoAAHkAAACwCgAAAAAMABsAFwAqAD8AOAAwADsAQAAAAAAACgoLCwoKCgoKCQkIBwcIBwcGBgUFAEHdpggLdhAAAAAkAAAAVAAAAIwAAACsAAAA0AAAAPgAAAAkAQAAVAEAAG4BAACKAQAAmQEAAKEBAICpAQCAuwEAAMUBAADPAQBA1AEAwNkBAKDcAQCg3wEAoN8BAKDfAQCg3wEAoN8BAKDfAQCg3wEAoN8BAIAsAADgFQM=")||(k=m,m=I.locateFile?I.locateFile(k,o):o+k);var K=A=>{for(;A.length>0;)A.shift()(I)};function j(A){this.excPtr=A,this.ptr=A-24,this.set_type=function(A){W[this.ptr+4>>2]=A},this.get_type=function(){return W[this.ptr+4>>2]},this.set_destructor=function(A){W[this.ptr+8>>2]=A},this.get_destructor=function(){return W[this.ptr+8>>2]},this.set_caught=function(A){A=A?1:0,Z[this.ptr+12|0]=A},this.get_caught=function(){return 0!=Z[this.ptr+12|0]},this.set_rethrown=function(A){A=A?1:0,Z[this.ptr+13|0]=A},this.get_rethrown=function(){return 0!=Z[this.ptr+13|0]},this.init=function(A,I){this.set_adjusted_ptr(0),this.set_type(A),this.set_destructor(I)},this.set_adjusted_ptr=function(A){W[this.ptr+16>>2]=A},this.get_adjusted_ptr=function(){return W[this.ptr+16>>2]},this.get_exception_ptr=function(){if(Ax(this.get_type()))return W[this.excPtr>>2];var A=this.get_adjusted_ptr();return 0!==A?A:this.excPtr}}var e=A=>{for(var I="",C=A;l[C];)I+=h[l[C++]];return I},r={},U={},O={},P=A=>{throw new N(A)},q=A=>{throw new R(A)};function f(A,I,C={}){if(!("argPackAdvance"in I))throw TypeError("registerType registeredInstance requires argPackAdvance");return function(A,I,C={}){var g=I.name;if(A||P(`type "${g}" must have a positive integer typeid pointer`),U.hasOwnProperty(A)){if(C.ignoreDuplicateRegistrations)return;P(`Cannot register type '${g}' twice`)}if(U[A]=I,delete O[A],r.hasOwnProperty(A)){var B=r[A];delete r[A],B.forEach(A=>A())}}(A,I,C)}function _(){this.allocated=[void 0],this.freelist=[]}var $=new _,AA=A=>{A>=$.reserved&&0==--$.get(A).refcount&&$.free(A)},AI_toValue=A=>(A||P("Cannot use deleted val. handle = "+A),$.get(A).value),AI_toHandle=A=>{switch(A){case void 0:return 1;case null:return 2;case!0:return 3;case!1:return 4;default:return $.allocate({refcount:1,value:A})}};function AC(A){return this.fromWireType(c[A>>2])}var Ag=(A,I)=>{switch(I){case 4:return function(A){return this.fromWireType(d[A>>2])};case 8:return function(A){return this.fromWireType(E[A>>3])};default:throw TypeError(`invalid float width (${I}): ${A}`)}},AB=A=>{if(void 0===A)return"_unknown";var I=(A=A.replace(/[^a-zA-Z0-9_]/g,"$")).charCodeAt(0);return I>=48&&I<=57?`_${A}`:A},AQ=A=>{for(;A.length;){var I=A.pop();A.pop()(I)}};function AG(A,I){return{[A=AB(A)]:function(){return I.apply(this,arguments)}}[A]}var AZ=(A,I,C)=>{if(void 0===A[I].overloadTable){var g=A[I];A[I]=function(){return A[I].overloadTable.hasOwnProperty(arguments.length)||P(`Function '${C}' called with an invalid number of arguments (${arguments.length}) - expects one of (${A[I].overloadTable})!`),A[I].overloadTable[arguments.length].apply(this,arguments)},A[I].overloadTable=[],A[I].overloadTable[g.argCount]=g}},Al=(A,C,g)=>{I.hasOwnProperty(A)?((void 0===g||void 0!==I[A].overloadTable&&void 0!==I[A].overloadTable[g])&&P(`Cannot register public name '${A}' twice`),AZ(I,A,A),I.hasOwnProperty(g)&&P(`Cannot register multiple overloads of a function with the same number of arguments (${g})!`),I[A].overloadTable[g]=C):(I[A]=C,void 0!==g&&(I[A].numArguments=g))},Ab=(A,C,g)=>{I.hasOwnProperty(A)||q("Replacing nonexistant public symbol"),void 0!==I[A].overloadTable&&void 0!==g?I[A].overloadTable[g]=C:(I[A]=C,I[A].argCount=g)},Ac=(A,C,g)=>{var B=I["dynCall_"+A];return g&&g.length?B.apply(null,[C].concat(g)):B.call(null,C)},AW=[],Ad=A=>{var I=AW[A];return I||(A>=AW.length&&(AW.length=A+1),AW[A]=I=i.get(A)),I},Am=(A,I)=>{var C=[];return function(){return C.length=0,Object.assign(C,arguments),((A,I,C)=>A.includes("j")?Ac(A,I,C):Ad(I).apply(null,C))(A,I,C)}},AN=A=>{var I=Aj(A),C=e(I);return AK(I),C},Ai=(A,I,C)=>{switch(I){case 1:return C?A=>Z[A|0]:A=>l[A|0];case 2:return C?A=>Y[A>>1]:A=>b[A>>1];case 4:return C?A=>c[A>>2]:A=>W[A>>2];default:throw TypeError(`invalid integer width (${I}): ${A}`)}};function Aa(A){return this.fromWireType(W[A>>2])}var Ay="undefined"!=typeof TextDecoder?new TextDecoder("utf8"):void 0,Au=(A,I)=>A?((A,I,C)=>{for(var g=I+C,B=I;A[B]&&!(B>=g);)++B;if(B-I>16&&A.buffer&&Ay)return Ay.decode(A.subarray(I,B));for(var Q="";I<B;){var G=A[I++];if(128&G){var Z=63&A[I++];if(192!=(224&G)){var l=63&A[I++];if((G=224==(240&G)?(15&G)<<12|Z<<6|l:(7&G)<<18|Z<<12|l<<6|63&A[I++])<65536)Q+=String.fromCharCode(G);else{var Y=G-65536;Q+=String.fromCharCode(55296|Y>>10,56320|1023&Y)}}else Q+=String.fromCharCode((31&G)<<6|Z)}else Q+=String.fromCharCode(G)}return Q})(l,A,I):"",Ao="undefined"!=typeof TextDecoder?new TextDecoder("utf-16le"):void 0,AJ=(A,I)=>{for(var C=A,g=C>>1,B=g+I/2;!(g>=B)&&b[g];)++g;if((C=g<<1)-A>32&&Ao)return Ao.decode(l.subarray(A,C));for(var Q="",G=0;!(G>=I/2);++G){var Z=Y[A+2*G>>1];if(0==Z)break;Q+=String.fromCharCode(Z)}return Q},Aw=(A,I,C)=>{if(void 0===C&&(C=2147483647),C<2)return 0;for(var g=I,B=(C-=2)<2*A.length?C/2:A.length,Q=0;Q<B;++Q){var G=A.charCodeAt(Q);Y[I>>1]=G,I+=2}return Y[I>>1]=0,I-g},Av=A=>2*A.length,AD=(A,I)=>{for(var C=0,g="";!(C>=I/4);){var B=c[A+4*C>>2];if(0==B)break;if(++C,B>=65536){var Q=B-65536;g+=String.fromCharCode(55296|Q>>10,56320|1023&Q)}else g+=String.fromCharCode(B)}return g},Ap=(A,I,C)=>{if(void 0===C&&(C=2147483647),C<4)return 0;for(var g=I,B=g+C-4,Q=0;Q<A.length;++Q){var G=A.charCodeAt(Q);if(G>=55296&&G<=57343&&(G=65536+((1023&G)<<10)|1023&A.charCodeAt(++Q)),c[I>>2]=G,(I+=4)+4>B)break}return c[I>>2]=0,I-g},An=A=>{for(var I=0,C=0;C<A.length;++C){var g=A.charCodeAt(C);g>=55296&&g<=57343&&++C,I+=4}return I},At=A=>{var I=(A-G.buffer.byteLength+65535)/65536;try{return G.grow(I),v(),1}catch(A){}};(()=>{for(var A=Array(256),I=0;I<256;++I)A[I]=String.fromCharCode(I);h=A})(),N=I.BindingError=class extends Error{constructor(A){super(A),this.name="BindingError"}},R=I.InternalError=class extends Error{constructor(A){super(A),this.name="InternalError"}},Object.assign(_.prototype,{get(A){return this.allocated[A]},has(A){return void 0!==this.allocated[A]},allocate(A){var I=this.freelist.pop()||this.allocated.length;return this.allocated[I]=A,I},free(A){this.allocated[A]=void 0,this.freelist.push(A)}}),$.allocated.push({value:void 0},{value:null},{value:!0},{value:!1}),$.reserved=$.allocated.length,I.count_emval_handles=()=>{for(var A=0,I=$.reserved;I<$.allocated.length;++I)void 0!==$.allocated[I]&&++A;return A},a=I.UnboundTypeError=(F=Error,(X=AG("UnboundTypeError",function(A){this.name="UnboundTypeError",this.message=A;var I=Error(A).stack;void 0!==I&&(this.stack=this.toString()+"\n"+I.replace(/^Error(:[^\n]*)?\n/,""))})).prototype=Object.create(F.prototype),X.prototype.constructor=X,X.prototype.toString=function(){return void 0===this.message?this.name:`${this.name}: ${this.message}`},X);var AL={f:(A,I,C)=>{throw new j(A).init(I,C),A},m:(A,I,C,g,B)=>{},i:(A,I,C,g)=>{f(A,{name:I=e(I),fromWireType:function(A){return!!A},toWireType:function(A,I){return I?C:g},argPackAdvance:8,readValueFromPointer:function(A){return this.fromWireType(l[A])},destructorFunction:null})},p:(A,I)=>{f(A,{name:I=e(I),fromWireType:A=>{var I=AI_toValue(A);return AA(A),I},toWireType:(A,I)=>AI_toHandle(I),argPackAdvance:8,readValueFromPointer:AC,destructorFunction:null})},e:(A,I,C)=>{f(A,{name:I=e(I),fromWireType:A=>A,toWireType:(A,I)=>I,argPackAdvance:8,readValueFromPointer:Ag(I,C),destructorFunction:null})},h:(A,I,C,g,B,Q,G)=>{var Z=((A,I)=>{for(var C=[],g=0;g<A;g++)C.push(W[I+4*g>>2]);return C})(I,C);A=e(A),B=((A,I)=>{var C=(A=e(A)).includes("j")?Am(A,I):Ad(I);return"function"!=typeof C&&P(`unknown function pointer with signature ${A}: ${I}`),C})(g,B),Al(A,function(){((A,I)=>{var C=[],g={};throw I.forEach(function A(I){if(!g[I]&&!U[I]){if(O[I])return void O[I].forEach(A);C.push(I),g[I]=!0}}),new a(`${A}: `+C.map(AN).join([", "]))})(`Cannot call ${A} due to unbound types`,Z)},I-1),((A,I,C)=>{function g(I){var g=C(I);g.length!==A.length&&q("Mismatched type converter count");for(var B=0;B<A.length;++B)f(A[B],g[B])}A.forEach(function(A){O[A]=I});var B=Array(I.length),Q=[],G=0;I.forEach((A,I)=>{U.hasOwnProperty(A)?B[I]=U[A]:(Q.push(A),r.hasOwnProperty(A)||(r[A]=[]),r[A].push(()=>{B[I]=U[A],++G===Q.length&&g(B)}))}),0===Q.length&&g(B)})([],Z,function(C){return Ab(A,function(A,I,C,g,B,Q){var G=I.length;G<2&&P("argTypes array size mismatch! Must at least get return value and 'this' types!");for(var Z=null!==I[1]&&!1,l=!1,Y=1;Y<I.length;++Y)if(null!==I[Y]&&void 0===I[Y].destructorFunction){l=!0;break}var b="void"!==I[0].name,c="",W="";for(Y=0;Y<G-2;++Y)c+=(0!==Y?", ":"")+"arg"+Y,W+=(0!==Y?", ":"")+"arg"+Y+"Wired";var d=`\n        return function ${AB(A)}(${c}) {\n        if (arguments.length !== ${G-2}) {\n          throwBindingError('function ${A} called with ' + arguments.length + ' arguments, expected ${G-2}');\n        }`;l&&(d+="var destructors = [];\n");var E=l?"destructors":"null",m=["throwBindingError","invoker","fn","runDestructors","retType","classParam"],h=[P,g,B,AQ,I[0],I[1]];Z&&(d+="var thisWired = classParam.toWireType("+E+", this);\n");for(Y=0;Y<G-2;++Y)d+="var arg"+Y+"Wired = argType"+Y+".toWireType("+E+", arg"+Y+"); // "+I[Y+2].name+"\n",m.push("argType"+Y),h.push(I[Y+2]);if(Z&&(W="thisWired"+(W.length>0?", ":"")+W),d+=(b||Q?"var rv = ":"")+"invoker(fn"+(W.length>0?", ":"")+W+");\n",l)d+="runDestructors(destructors);\n";else for(Y=Z?1:2;Y<I.length;++Y){var N=1===Y?"thisWired":"arg"+(Y-2)+"Wired";null!==I[Y].destructorFunction&&(d+=N+"_dtor("+N+"); // "+I[Y].name+"\n",m.push(N+"_dtor"),h.push(I[Y].destructorFunction))}return b&&(d+="var ret = retType.fromWireType(rv);\nreturn ret;\n"),d+="}\n",m.push(d),function(A,I){if(!(A instanceof Function))throw TypeError(`new_ called with constructor type ${typeof A} which is not a function`);var C=AG(A.name||"unknownFunctionName",function(){});C.prototype=A.prototype;var g=new C,B=A.apply(g,I);return B instanceof Object?B:g}(Function,m).apply(null,h)}(A,[C[0],null].concat(C.slice(1)),0,B,Q,G),I-1),[]})},b:(A,I,C,g,B)=>{I=e(I),-1===B&&(B=4294967295);var Q=A=>A;if(0===g){var G=32-8*C;Q=A=>A<<G>>>G}var Z=I.includes("unsigned");f(A,{name:I,fromWireType:Q,toWireType:Z?function(A,I){return this.name,I>>>0}:function(A,I){return this.name,I},argPackAdvance:8,readValueFromPointer:Ai(I,C,0!==g),destructorFunction:null})},a:(A,I,C)=>{var g=[Int8Array,Uint8Array,Int16Array,Uint16Array,Int32Array,Uint32Array,Float32Array,Float64Array][I];function B(A){var I=W[A>>2],C=W[A+4>>2];return new g(Z.buffer,C,I)}f(A,{name:C=e(C),fromWireType:B,argPackAdvance:8,readValueFromPointer:B},{ignoreDuplicateRegistrations:!0})},d:(A,I)=>{var C="std::string"===(I=e(I));f(A,{name:I,fromWireType(A){var I,g=W[A>>2],B=A+4;if(C)for(var Q=B,G=0;G<=g;++G){var Z=B+G;if(G==g||0==l[Z]){var b=Au(Q,Z-Q);void 0===I?I=b:I+="\0"+b,Q=Z+1}}else{var c=Array(g);for(G=0;G<g;++G)c[G]=String.fromCharCode(l[B+G]);I=c.join("")}return AK(A),I},toWireType(A,I){I instanceof ArrayBuffer&&(I=new Uint8Array(I));var g,B="string"==typeof I;B||I instanceof Uint8Array||I instanceof Uint8ClampedArray||I instanceof Int8Array||P("Cannot pass non-string to std::string"),g=C&&B?(A=>{for(var I=0,C=0;C<A.length;++C){var g=A.charCodeAt(C);g<=127?I++:g<=2047?I+=2:g>=55296&&g<=57343?(I+=4,++C):I+=3}return I})(I):I.length;var Q=Az(4+g+1),G=Q+4;if(W[Q>>2]=g,C&&B)((A,I,C)=>{((A,I,C,g)=>{if(!(g>0))return 0;for(var B=C,Q=C+g-1,G=0;G<A.length;++G){var Z=A.charCodeAt(G);if(Z>=55296&&Z<=57343&&(Z=65536+((1023&Z)<<10)|1023&A.charCodeAt(++G)),Z<=127){if(C>=Q)break;I[C++]=Z}else if(Z<=2047){if(C+1>=Q)break;I[C++]=192|Z>>6,I[C++]=128|63&Z}else if(Z<=65535){if(C+2>=Q)break;I[C++]=224|Z>>12,I[C++]=128|Z>>6&63,I[C++]=128|63&Z}else{if(C+3>=Q)break;I[C++]=240|Z>>18,I[C++]=128|Z>>12&63,I[C++]=128|Z>>6&63,I[C++]=128|63&Z}}I[C]=0})(A,l,I,C)})(I,G,g+1);else if(B)for(var Z=0;Z<g;++Z){var Y=I.charCodeAt(Z);Y>255&&(AK(G),P("String has UTF-16 code units that do not fit in 8 bits")),l[G+Z]=Y}else for(Z=0;Z<g;++Z)l[G+Z]=I[Z];return null!==A&&A.push(AK,Q),Q},argPackAdvance:8,readValueFromPointer:Aa,destructorFunction(A){AK(A)}})},c:(A,I,C)=>{var g,B,Q,G,Z;C=e(C),2===I?(g=AJ,B=Aw,G=Av,Q=()=>b,Z=1):4===I&&(g=AD,B=Ap,G=An,Q=()=>W,Z=2),f(A,{name:C,fromWireType:A=>{for(var C,B=W[A>>2],G=Q(),l=A+4,Y=0;Y<=B;++Y){var b=A+4+Y*I;if(Y==B||0==G[b>>Z]){var d=g(l,b-l);void 0===C?C=d:C+="\0"+d,l=b+I}}return AK(A),C},toWireType:(A,g)=>{"string"!=typeof g&&P(`Cannot pass non-string to C++ string type ${C}`);var Q=G(g),l=Az(4+Q+I);return W[l>>2]=Q>>Z,B(g,l+4,Q+I),null!==A&&A.push(AK,l),l},argPackAdvance:8,readValueFromPointer:AC,destructorFunction(A){AK(A)}})},j:(A,I)=>{f(A,{isVoid:!0,name:I=e(I),argPackAdvance:0,fromWireType:()=>{},toWireType:(A,I)=>{}})},k:AA,l:A=>{A>4&&($.get(A).refcount+=1)},q:(A,I)=>{var C=(A=((A,I)=>{var C=U[A];return void 0===C&&P(I+" has unknown type "+AN(A)),C})(A,"_emval_take_value")).readValueFromPointer(I);return AI_toHandle(C)},g:()=>{L("")},o:(A,I,C)=>l.copyWithin(A,I,I+C),n:A=>{var I=l.length,C=2147483648;if((A>>>=0)>C)return!1;for(var g=(A,I)=>A+(I-A%I)%I,B=1;B<=4;B*=2){var Q=I*(1+.2/B);if(Q=Math.min(Q,A+100663296),At(Math.min(C,g(Math.max(A,Q),65536))))return!0}return!1}},AS=function(){var A,C={a:AL};function Z(A,C){var g;return G=(AS=A.exports).r,v(),i=AS.t,g=AS.s,p.unshift(g),function(){if(H--,I.monitorRunDependencies&&I.monitorRunDependencies(H),0==H&&(null!==s&&(clearInterval(s),s=null),t)){var C=t;t=null,C()}}(),AS}if(H++,I.monitorRunDependencies&&I.monitorRunDependencies(H),I.instantiateWasm)try{return I.instantiateWasm(C,Z)}catch(A){J(`Module.instantiateWasm callback failed with error: ${A}`),g(A)}return(A=m,Promise.resolve().then(()=>function(A){if(A==m&&Q)return new Uint8Array(Q);var I=function(A){if(z(A))return function(A){try{for(var I=atob(A),C=new Uint8Array(I.length),g=0;g<I.length;++g)C[g]=I.charCodeAt(g);return C}catch(A){throw Error("Converting base64 string to bytes failed.")}}(A.slice(37))}(A);if(I)return I;throw"both async and sync fetching of the wasm failed"}(A)).then(A=>WebAssembly.instantiate(A,C)).then(A=>A).then(function(A){Z(A.instance)},A=>{J(`failed to asynchronously prepare wasm: ${A}`),L(A)})).catch(g),{}}(),Az=A=>(Az=AS.u)(A),AK=A=>(AK=AS.v)(A),Aj=A=>(Aj=AS.w)(A),Ax=(I.__embind_initialize_bindings=()=>(I.__embind_initialize_bindings=AS.x)(),A=>(Ax=AS.y)(A));function AM(){function A(){!V&&(V=!0,I.calledRun=!0,w||(K(p),C(I),I.onRuntimeInitialized&&I.onRuntimeInitialized(),function(){if(I.postRun)for("function"==typeof I.postRun&&(I.postRun=[I.postRun]);I.postRun.length;){var A;A=I.postRun.shift(),n.unshift(A)}K(n)}()))}!(H>0)&&(function(){if(I.preRun)for("function"==typeof I.preRun&&(I.preRun=[I.preRun]);I.preRun.length;){var A;A=I.preRun.shift(),D.unshift(A)}K(D)}(),H>0||(I.setStatus?(I.setStatus("Running..."),setTimeout(function(){setTimeout(function(){I.setStatus("")},1),A()},1)):A()))}if(t=function A(){V||AM(),V||(t=A)},I.preInit)for("function"==typeof I.preInit&&(I.preInit=[I.preInit]);I.preInit.length>0;)I.preInit.pop()();return AM(),I.ready});let C=new Promise(A=>{I({onRuntimeInitialized(){A(this)}})});
@@ -5554,8 +29,8 @@ return"string"==typeof obj&&(obj=urlParse(obj)),obj instanceof Url?obj.format():
 /******/
 /******/ // Create a new module (and put it into the cache)
 /******/var module=__webpack_module_cache__[moduleId]={
-/******/id:moduleId,
-/******/loaded:!1,
+/******/ // no module.id needed
+/******/ // no module.loaded needed
 /******/exports:{}
 /******/};
 /******/
@@ -5563,10 +38,7 @@ return"string"==typeof obj&&(obj=urlParse(obj)),obj instanceof Url?obj.format():
 /******/
 /******/
 /******/ // Return the exports of the module
-/******/return __webpack_modules__[moduleId].call(module.exports,module,module.exports,__webpack_require__),
-/******/
-/******/ // Flag the module as loaded
-/******/module.loaded=!0,module.exports;
+/******/return __webpack_modules__[moduleId](module,module.exports,__webpack_require__),module.exports;
 /******/}
 /******/
 /************************************************************************/
@@ -5579,182 +51,22 @@ return"string"==typeof obj&&(obj=urlParse(obj)),obj instanceof Url?obj.format():
 /******/Object.defineProperty(exports,key,{enumerable:!0,get:definition[key]})
 /******/;
 /******/},
-/******/__webpack_require__.g=function(){
-/******/if("object"==typeof globalThis)return globalThis;
-/******/try{
-/******/return this||new Function("return this")();
-/******/}catch(e){
-/******/if("object"==typeof window)return window;
-/******/}
-/******/}(),
 /******/__webpack_require__.o=(obj,prop)=>Object.prototype.hasOwnProperty.call(obj,prop)
 /******/,
 /******/ // define __esModule on exports
 /******/__webpack_require__.r=exports=>{
 /******/"undefined"!=typeof Symbol&&Symbol.toStringTag&&
 /******/Object.defineProperty(exports,Symbol.toStringTag,{value:"Module"})
-/******/,Object.defineProperty(exports,"__esModule",{value:!0})},
-/******/__webpack_require__.nmd=module=>(
-/******/module.paths=[],
-/******/module.children||(module.children=[])
-/******/,module);
+/******/,Object.defineProperty(exports,"__esModule",{value:!0})};
 /******/
 /************************************************************************/
 var __webpack_exports__={};
 // This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
 /******/return(()=>{"use strict";
 // ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__),
+var defineProperty,codePointAt;__webpack_require__.r(__webpack_exports__),
 // EXPORTS
-__webpack_require__.d(__webpack_exports__,{SlugApplicationPluginV8:()=>/* reexport */SlugApplicationPluginV8,SlugFont:()=>/* reexport */SlugFont,SlugFonts:()=>/* reexport */SlugFonts,SlugPipe:()=>/* reexport */SlugPipe,SlugText:()=>/* reexport */SlugText,slugFontGpuV8:()=>/* reexport */slugFontGpuV8,slugFontsAttachTickerV8:()=>/* reexport */slugFontsAttachTickerV8,slugFontsInstallLoaderV8:()=>/* reexport */slugFontsInstallLoaderV8,slugShader:()=>/* reexport */slugShader});
-// EXTERNAL MODULE: external {"commonjs":"pixi.js","commonjs2":"pixi.js","root":"PIXI"}
-var external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_=__webpack_require__(3e3);// ./src/defaults.ts
-/**
- * Any default value or fallback value used in the package code must live here
- * for consistency. By keeping all default values in one place, changing a
- * value here will update all usages.
- */
-class Defaults{
-/**
-     * Global key used to share the `SlugFonts` registry instance across
-     * module duplicates (e.g. when multiple bundles load `pixi-slug` on
-     * the same page). Callers never see this — it is an internal detail.
-     */
-static GLOBAL_KEY="__pixiSlugFontsRegistry__";
-/** Default texture size applied to both width & length. */
-static TEXTURE_SIZE=4096;
-/** Default number of horizontal/vertical bands per glyph for spatial indexing. */
-static BAND_COUNT=32;static FONT_SIZE=24;
-/** Maximum allowed supersample count. The shader has patterns
-     * up to 16 samples. */
-static MAX_SUPERSAMPLE_COUNT=16;static Registry={
-/** Mark unreferenced fonts for destroy when their ref count hits 0. */
-AutoDestroyUnused:!0,
-/** Grace period in seconds before a marked font is actually destroyed. */
-AutoDestroyDelay:60,
-/** Version entry points auto-attach `Ticker.shared` when true. */
-AutoAttachTicker:!0,
-/** Minimum milliseconds between sweep runs driven by `onUpdate`. */
-UpdateRate:1e3,
-/**
-         * How `SlugFonts.attachTicker()` reacts when a ticker is already
-         * attached and the caller did not pass `force: true`. See
-         * `SlugFontErrorMode` for mode semantics.
-         *
-         * Use `force: true` on the second attach to replace silently
-         * without triggering this policy.
-         */
-ReattachPolicy:"throw",
-/**
-         * When true, the version-specific GPU layer attempts to compile
-         * the Slug shader using the WebGL `KHR_parallel_shader_compile`
-         * extension so the driver compile/link runs off the main thread.
-         * The 500ms+ first-draw stall is reduced to a few ms of polling.
-         *
-         * Falls back transparently to the synchronous PIXI path when the
-         * extension is unavailable. Must be set before the first
-         * SlugText render — once the program is compiled the toggle has
-         * no further effect.
-         */
-ParallelShaderCompile:!0};static SlugText={
-/** Default font size in pixels. */
-FontSize:24,Text:"",
-/**
-         * Default text direction. Today only decoration `start`/`end`
-         * alignment honors this — full RTL glyph layout (BiDi reordering,
-         * shaping, line fill direction) lands as a separate feature. The
-         * field is exposed now so app code can be written direction-aware
-         * without API churn later.
-         */
-Direction:"ltr",
-/**
-         * Default block-level text alignment. `start` follows the text
-         * direction (LTR → left, RTL → right), matching CSS.
-         */
-Align:"start",
-/**
-         * Default justify strategy. Mirrors CSS `text-justify` and is
-         * consulted only when `align === 'justify'`. `'inter-word'`
-         * matches CSS's default and is the right behavior for Latin /
-         * Cyrillic / similar scripts.
-         */
-TextJustify:"inter-word",WordWrap:!1,WordWrapWidth:0,
-/**
-         * When a font is passed to `SlugText` by URL/name and is not yet
-         * loaded, render using the `SlugFonts` fallback font while the
-         * real font resolves. When the real font arrives, `SlugText`
-         * swaps to it and rebuilds automatically.
-         */
-FallbackWhileLoading:!0,
-/** Whether supersampling is enabled. */
-Supersampling:!1,
-/** Default number of supersamples when supersampling is enabled. */
-SupersampleCount:4,
-/** Fill color default (white, fully opaque). */
-FillColor:[1,1,1,1],
-/** Stroke defaults. Width 0 = disabled. */
-StrokeWidth:0,StrokeColor:[0,0,0,1],StrokeAlphaMode:"uniform",StrokeAlphaStart:1,StrokeAlphaRate:0,
-/** Drop shadow defaults (matches PIXI.Text). */
-DropShadowAlpha:1,DropShadowAngle:Math.PI/6,DropShadowBlur:0,DropShadowColor:[0,0,0,1],DropShadowDistance:5,
-/**
-         * Per-case error policy for the font resolver. `'throw'` surfaces a
-         * clear message at the point of failure; `'error'` logs via
-         * `console.error` without throwing; `'warn'` logs via
-         * `console.warn`; `'silent'` swallows errors entirely.
-         *
-         * Alias-related issues (`aliasNotFound`, `aliasCollision`) default
-         * to `'error'` — serious enough to surface, not serious enough to
-         * kill the scene. The SlugText falls back to the bundled fallback
-         * font instead.
-         */
-ErrorPolicy:{unknownInput:"throw",fontFaceNoUrl:"throw",emptyFontFaceArray:"throw",emptyInput:"throw",loadFailed:"throw",unsupportedFormat:"throw",aliasNotFound:"error",aliasCollision:"error"}}}
-// EXTERNAL MODULE: ./node_modules/@toreda/strong-types/dist/index.js
-var defineProperty,codePointAt,dist=__webpack_require__(6859);// ./src/constants.ts
-/**
- * Structural invariants of the package — values that are NOT configurable
- * because they are dictated by the shader contract or fixed geometry.
- *
- * Unlike `Defaults`, these are not meant to be edited. Each constant exists
- * here only so that magic numbers don't appear inline at call sites and so
- * that any code that needs the value reads from a single source of truth.
- */
-class Constants{
-/**
-     * Number of floats per vertex in the Slug glyph vertex layout.
-     * Five vec4 attributes (aPositionNormal, aTexcoord, aJacobian,
-     * aBanding, aColor) × 4 floats each = 20. Tied 1:1 to the shader's
-     * input declarations.
-     */
-static FLOATS_PER_VERTEX=20;
-/** Number of vertices per glyph quad (one quad = 4 corners). */
-static VERTICES_PER_QUAD=4;
-/** Number of indices per glyph quad (two triangles × 3 indices). */
-static INDICES_PER_QUAD=6;
-/**
-     * Bytes per float in the vertex buffer. The Slug vertex layout is
-     * exclusively `float32`, so this is also the byte size of one
-     * vertex-attribute scalar. Used to convert between float-indexed
-     * and byte-indexed offsets when describing the geometry layout.
-     */
-static BYTES_PER_FLOAT=4;
-/**
-     * Floats per vec4 vertex attribute. Every Slug vertex attribute
-     * (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
-     * `aColor`) is a `float32x4`, so each one steps the buffer cursor
-     * forward by this many floats.
-     */
-static FLOATS_PER_VEC4=4;
-/**
-     * URL test for the font formats `pixi-slug` accepts: `.ttf`, `.otf`,
-     * `.woff`, `.woff2`. The trailing group requires the extension to be
-     * followed by a query string (`?`), fragment (`#`), or end of input
-     * — preventing false positives like `.ttfx` or `something-otf-foo`.
-     *
-     * Used by every version's loader (`slugFontsInstallLoaderV7/V8`,
-     * `slugFontsFetchV6`) to decide whether a URL is a font file PIXI
-     * should hand off as raw bytes rather than wrapping in a `FontFace`.
-     */
-static FONT_URL_REGEX=/\.(ttf|otf|woff2?)(\?|#|$)/i}// ./node_modules/opentype.js/dist/opentype.module.js
+__webpack_require__.d(__webpack_exports__,{SlugApplicationPluginV8:()=>/* reexport */SlugApplicationPluginV8,SlugFont:()=>/* reexport */SlugFont,SlugFonts:()=>/* reexport */SlugFonts,SlugPipe:()=>/* reexport */SlugPipe,SlugText:()=>/* reexport */SlugText,slugFontGpuV8:()=>/* reexport */slugFontGpuV8,slugFontsAttachTickerV8:()=>/* reexport */slugFontsAttachTickerV8,slugFontsInstallLoaderV8:()=>/* reexport */slugFontsInstallLoaderV8,slugShader:()=>/* reexport */slugShader}),// ./node_modules/opentype.js/dist/opentype.module.js
 /**
  * https://opentype.js.org v1.3.4 | (c) Frederik De Bleser and other contributors | MIT License | Uses tiny-inflate by Devon Govett and string.prototype.codepointat polyfill by Mathias Bynens
  */
@@ -9710,7 +4022,7 @@ Font.prototype.toArrayBuffer=function(){for(var bytes=this.toTables().encode(),b
 /**
  * Initiate a download of the OpenType font.
  */
-Font.prototype.download=function(fileName){var familyName=this.getEnglishName("fontFamily"),styleName=this.getEnglishName("fontSubfamily");fileName=fileName||familyName.replace(/\s/g,"")+"-"+styleName+".otf";var arrayBuffer=this.toArrayBuffer();if("undefined"!=typeof window)if(window.URL=window.URL||window.webkitURL,window.URL){var dataView=new DataView(arrayBuffer),blob=new Blob([dataView],{type:"font/opentype"}),link=document.createElement("a");link.href=window.URL.createObjectURL(blob),link.download=fileName;var event=document.createEvent("MouseEvents");event.initEvent("click",!0,!1),link.dispatchEvent(event)}else console.warn("Font file could not be downloaded. Try using a different browser.");else{var fs=__webpack_require__(7256),buffer=function(ab){for(var buffer=new Buffer(ab.byteLength),view=new Uint8Array(ab),i=0;i<buffer.length;++i)buffer[i]=view[i];return buffer}(arrayBuffer);fs.writeFileSync(fileName,buffer)}},
+Font.prototype.download=function(fileName){var familyName=this.getEnglishName("fontFamily"),styleName=this.getEnglishName("fontSubfamily");fileName=fileName||familyName.replace(/\s/g,"")+"-"+styleName+".otf";var arrayBuffer=this.toArrayBuffer();if("undefined"!=typeof window)if(window.URL=window.URL||window.webkitURL,window.URL){var dataView=new DataView(arrayBuffer),blob=new Blob([dataView],{type:"font/opentype"}),link=document.createElement("a");link.href=window.URL.createObjectURL(blob),link.download=fileName;var event=document.createEvent("MouseEvents");event.initEvent("click",!0,!1),link.dispatchEvent(event)}else console.warn("Font file could not be downloaded. Try using a different browser.");else{var fs=__webpack_require__(256),buffer=function(ab){for(var buffer=new Buffer(ab.byteLength),view=new Uint8Array(ab),i=0;i<buffer.length;++i)buffer[i]=view[i];return buffer}(arrayBuffer);fs.writeFileSync(fileName,buffer)}},
 /**
  * @private
  */
@@ -9792,7 +4104,7 @@ glyphOffset*=2),glyphOffsets.push(glyphOffset)}return glyphOffsets}};
  * and the font as an ArrayBuffer in the second parameter if it succeeds.
  * @param  {string} path - The path of the file
  * @param  {Function} callback - The function to call when the font load completes
- */function loadFromFile(path,callback){__webpack_require__(7256).readFile(path,function(err,buffer){if(err)return callback(err.message);callback(null,nodeBufferToArrayBuffer(buffer))})}
+ */function loadFromFile(path,callback){__webpack_require__(256).readFile(path,function(err,buffer){if(err)return callback(err.message);callback(null,nodeBufferToArrayBuffer(buffer))})}
 /**
  * Loads a font from a URL. The callback throws an error message as the first parameter if it fails
  * and the font as an ArrayBuffer in the second parameter if it succeeds.
@@ -9858,9 +4170,108 @@ for(var tableEntries=[],p=44,i=0;i<numTables;i+=1){var tag=parse.getTag(data,p),
  * @param  {string} url - The URL of the font to load.
  * @param  {Object} opt - opt.lowMemory
  * @return {opentype.Font}
- */,loadSync:function(url,opt){return parseBuffer(nodeBufferToArrayBuffer(__webpack_require__(7256).readFileSync(url)),opt)}});
+ */,loadSync:function(url,opt){return parseBuffer(nodeBufferToArrayBuffer(__webpack_require__(256).readFileSync(url)),opt)}});
 //# sourceMappingURL=opentype.module.js.map
-// ./src/shared/slug/glyph/curves.ts
+// ./src/defaults.ts
+/**
+ * Any default value or fallback value used in the package code must live here
+ * for consistency. By keeping all default values in one place, changing a
+ * value here will update all usages.
+ */
+class Defaults{
+/**
+     * Global key used to share the `SlugFonts` registry instance across
+     * module duplicates (e.g. when multiple bundles load `pixi-slug` on
+     * the same page). Callers never see this — it is an internal detail.
+     */
+static GLOBAL_KEY="__pixiSlugFontsRegistry__";
+/** Default texture size applied to both width & length. */
+static TEXTURE_SIZE=4096;
+/** Default number of horizontal/vertical bands per glyph for spatial indexing. */
+static BAND_COUNT=32;static FONT_SIZE=24;
+/** Maximum allowed supersample count. The shader has patterns
+     * up to 16 samples. */
+static MAX_SUPERSAMPLE_COUNT=16;static Registry={
+/** Mark unreferenced fonts for destroy when their ref count hits 0. */
+AutoDestroyUnused:!0,
+/** Grace period in seconds before a marked font is actually destroyed. */
+AutoDestroyDelay:60,
+/** Version entry points auto-attach `Ticker.shared` when true. */
+AutoAttachTicker:!0,
+/** Minimum milliseconds between sweep runs driven by `onUpdate`. */
+UpdateRate:1e3,
+/**
+         * How `SlugFonts.attachTicker()` reacts when a ticker is already
+         * attached and the caller did not pass `force: true`. See
+         * `SlugFontErrorMode` for mode semantics.
+         *
+         * Use `force: true` on the second attach to replace silently
+         * without triggering this policy.
+         */
+ReattachPolicy:"throw",
+/**
+         * When true, the version-specific GPU layer attempts to compile
+         * the Slug shader using the WebGL `KHR_parallel_shader_compile`
+         * extension so the driver compile/link runs off the main thread.
+         * The 500ms+ first-draw stall is reduced to a few ms of polling.
+         *
+         * Falls back transparently to the synchronous PIXI path when the
+         * extension is unavailable. Must be set before the first
+         * SlugText render — once the program is compiled the toggle has
+         * no further effect.
+         */
+ParallelShaderCompile:!0};static SlugText={
+/** Default font size in pixels. */
+FontSize:24,Text:"",
+/**
+         * Default text direction. Today only decoration `start`/`end`
+         * alignment honors this — full RTL glyph layout (BiDi reordering,
+         * shaping, line fill direction) lands as a separate feature. The
+         * field is exposed now so app code can be written direction-aware
+         * without API churn later.
+         */
+Direction:"ltr",
+/**
+         * Default block-level text alignment. `start` follows the text
+         * direction (LTR → left, RTL → right), matching CSS.
+         */
+Align:"start",
+/**
+         * Default justify strategy. Mirrors CSS `text-justify` and is
+         * consulted only when `align === 'justify'`. `'inter-word'`
+         * matches CSS's default and is the right behavior for Latin /
+         * Cyrillic / similar scripts.
+         */
+TextJustify:"inter-word",WordWrap:!1,WordWrapWidth:0,BreakWords:!1,
+/**
+         * When a font is passed to `SlugText` by URL/name and is not yet
+         * loaded, render using the `SlugFonts` fallback font while the
+         * real font resolves. When the real font arrives, `SlugText`
+         * swaps to it and rebuilds automatically.
+         */
+FallbackWhileLoading:!0,
+/** Whether supersampling is enabled. */
+Supersampling:!1,
+/** Default number of supersamples when supersampling is enabled. */
+SupersampleCount:4,
+/** Fill color default (white, fully opaque). */
+FillColor:[1,1,1,1],
+/** Stroke defaults. Width 0 = disabled. */
+StrokeWidth:0,StrokeColor:[0,0,0,1],StrokeAlphaMode:"uniform",StrokeAlphaStart:1,StrokeAlphaRate:0,
+/** Drop shadow defaults (matches PIXI.Text). */
+DropShadowAlpha:1,DropShadowAngle:Math.PI/6,DropShadowBlur:0,DropShadowColor:[0,0,0,1],DropShadowDistance:5,
+/**
+         * Per-case error policy for the font resolver. `'throw'` surfaces a
+         * clear message at the point of failure; `'error'` logs via
+         * `console.error` without throwing; `'warn'` logs via
+         * `console.warn`; `'silent'` swallows errors entirely.
+         *
+         * Alias-related issues (`aliasNotFound`, `aliasCollision`) default
+         * to `'error'` — serious enough to surface, not serious enough to
+         * kill the scene. The SlugText falls back to the bundled fallback
+         * font instead.
+         */
+ErrorPolicy:{unknownInput:"throw",fontFaceNoUrl:"throw",emptyFontFaceArray:"throw",emptyInput:"throw",loadFailed:"throw",unsupportedFormat:"throw",aliasNotFound:"error",aliasCollision:"error"}}}// ./src/shared/slug/glyph/curves.ts
 /**
  * Convert a cubic Bezier curve to two quadratic Bezier approximations.
  * This is an approximation — a single cubic can't be exactly represented
@@ -10091,7 +4502,7 @@ return((Math.ceil(this.curveData.length/4/textureWidth)||1)+(Math.ceil(this.band
 // base64 in the woff2-encoder package — bundled at build time, no
 // runtime asset fetch needed.
 const bytes=new Uint8Array(fontData);if(bytes.length>=4&&119===bytes[0]&&79===bytes[1]&&70===bytes[2]&&50===bytes[3]){const sfnt=// ./src/shared/slug/woff2/decompress.ts
-await async function(woff2Bytes){const{default:woff2Decompress}=await Promise.resolve().then(__webpack_require__.bind(__webpack_require__,9727)),result=await woff2Decompress(woff2Bytes);if(!result||0===result.byteLength)throw new Error("WOFF2 decompression failed");return result}(bytes),copy=new Uint8Array(sfnt.byteLength);return copy.set(sfnt),void this.loadSync(copy.buffer)}this.loadSync(fontData)}
+await async function(woff2Bytes){const{default:woff2Decompress}=await Promise.resolve().then(__webpack_require__.bind(__webpack_require__,727)),result=await woff2Decompress(woff2Bytes);if(!result||0===result.byteLength)throw new Error("WOFF2 decompression failed");return result}(bytes),copy=new Uint8Array(sfnt.byteLength);return copy.set(sfnt),void this.loadSync(copy.buffer)}this.loadSync(fontData)}
 /**
      * Synchronous equivalent of {@link load}. Accepts TTF/OTF/WOFF bytes
      * only — WOFF2 requires async brotli decompression via {@link load}.
@@ -10232,7 +4643,59 @@ for(let b=0;b<hBandCount;b++)hBands[b].sort((a,b)=>{const maxXa=Math.max(curves[
 // for every glyph, plus an `unicodes` array for glyphs that map
 // to multiple codepoints. Walk every glyph and yield each unique
 // codepoint.
-const seen=new Set;for(let i=0;i<otFont.glyphs.length;i++){const g=otFont.glyphs.get(i);void 0===g.unicode||seen.has(g.unicode)||(seen.add(g.unicode),yield g.unicode);const unicodes=g.unicodes;if(Array.isArray(unicodes))for(const code of unicodes)seen.has(code)||(seen.add(code),yield code)}}}// ./src/shared/slug/fonts/error.ts
+const seen=new Set;for(let i=0;i<otFont.glyphs.length;i++){const g=otFont.glyphs.get(i);void 0===g.unicode||seen.has(g.unicode)||(seen.add(g.unicode),yield g.unicode);const unicodes=g.unicodes;if(Array.isArray(unicodes))for(const code of unicodes)seen.has(code)||(seen.add(code),yield code)}}}// ./src/constants.ts
+/**
+ * Structural invariants of the package — values that are NOT configurable
+ * because they are dictated by the shader contract or fixed geometry.
+ *
+ * Unlike `Defaults`, these are not meant to be edited. Each constant exists
+ * here only so that magic numbers don't appear inline at call sites and so
+ * that any code that needs the value reads from a single source of truth.
+ */
+class Constants{
+/**
+     * Number of floats per vertex in the Slug glyph vertex layout.
+     * Five vec4 attributes (aPositionNormal, aTexcoord, aJacobian,
+     * aBanding, aColor) × 4 floats each = 20. Tied 1:1 to the shader's
+     * input declarations.
+     */
+static FLOATS_PER_VERTEX=20;
+/** Number of vertices per glyph quad (one quad = 4 corners). */
+static VERTICES_PER_QUAD=4;
+/**
+     * Number of floats per glyph quad in the interleaved vertex buffer.
+     * `FLOATS_PER_VERTEX × VERTICES_PER_QUAD` = 20 × 4 = 80. Used by the
+     * slot allocator to size capacity-aware typed arrays without
+     * recomputing the product at every call site.
+     */
+static FLOATS_PER_QUAD=80;
+/** Number of indices per glyph quad (two triangles × 3 indices). */
+static INDICES_PER_QUAD=6;
+/**
+     * Bytes per float in the vertex buffer. The Slug vertex layout is
+     * exclusively `float32`, so this is also the byte size of one
+     * vertex-attribute scalar. Used to convert between float-indexed
+     * and byte-indexed offsets when describing the geometry layout.
+     */
+static BYTES_PER_FLOAT=4;
+/**
+     * Floats per vec4 vertex attribute. Every Slug vertex attribute
+     * (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
+     * `aColor`) is a `float32x4`, so each one steps the buffer cursor
+     * forward by this many floats.
+     */
+static FLOATS_PER_VEC4=4;
+/**
+     * URL test for the font formats `pixi-slug` accepts: `.ttf`, `.otf`,
+     * `.woff`, `.woff2`. The trailing group requires the extension to be
+     * followed by a query string (`?`), fragment (`#`), or end of input
+     * — preventing false positives like `.ttfx` or `something-otf-foo`.
+     *
+     * Used by every version's loader (`slugFontsInstallLoaderV7/V8`,
+     * `slugFontsFetchV6`) to decide whether a URL is a font file PIXI
+     * should hand off as raw bytes rather than wrapping in a `FontFace`.
+     */
+static FONT_URL_REGEX=/\.(ttf|otf|woff2?)(\?|#|$)/i}// ./src/shared/slug/fonts/error.ts
 /**
  * Exhaustive list of valid `SlugFontErrorMode` literals. Use for strict
  * equality checks when validating user input (settings, options).
@@ -10317,7 +4780,17 @@ font.ensureGlyphsForCodepoints([code])}while(done<total&&nowMs()-sliceStart<slic
 // User callback threw — swallow so the original error
 // surfaces below rather than getting masked. The user
 // callback's own throw is theirs to handle.
-}throw err}}
+}throw err}}// ./src/shared/array/swap/pop.ts
+/**
+ * Remove an element from an unordered array in O(1) time by swapping it
+ * with the last element and popping. Returns the removed element, or
+ * `null` if `ndx` is out of range (including the common `-1` returned by
+ * `Array.prototype.indexOf` when an item is absent).
+ *
+ * Callers must accept that the surviving element at `ndx` (if any) is
+ * whatever used to live at the tail — order is not preserved.
+ */
+function swapPop(array,ndx){const len=array.length;if(0===len||ndx<0||ndx>=len)return null;const last=len-1,element=array[ndx];return ndx!==last&&(array[ndx]=array[last]),array.pop(),element}
 /**
  * Registry instance hidden from the public API. Holds the font cache
  * and in-flight load promises. Never exported; only reachable through
@@ -10397,15 +4870,15 @@ renderer;
      * trigger, expecting the hook to dedupe internally (typically with
      * a `WeakMap<Renderer, Promise<boolean>>`).
      */
-prewarmHook;constructor(options){this.byUrl=new Map,this.byName=new Map,this.inflight=new Map,this.all=[],this.marked=[],this.manualFonts=new Set,this.fallback=null,this.fallbackOverridden=!1,this.autoDestroyUnused=(0,dist/* booleanValue */.eC)(options?.autoDestroyUnused,Defaults.Registry.AutoDestroyUnused);const delaySec=(0,dist/* numberValue */.Vg)(options?.autoDestroyDelay,Defaults.Registry.AutoDestroyDelay);// ./src/shared/slug/fonts/registry.ts
-var raw,fallback;this.autoDestroyDelayMs=1e3*Math.max(0,delaySec),this.autoAttachTicker=(0,dist/* booleanValue */.eC)(options?.autoAttachTicker,Defaults.Registry.AutoAttachTicker),this.updateRate=Math.max(0,(0,dist/* numberValue */.Vg)(options?.updateRate,Defaults.Registry.UpdateRate)),this.lastUpdate=0,this.reattachPolicy=(raw=options?.reattachPolicy,fallback=Defaults.Registry.ReattachPolicy,isSlugFontErrorMode(raw)?raw:fallback),this.parallelShaderCompile=(0,dist/* booleanValue */.eC)(options?.parallelShaderCompile,Defaults.Registry.ParallelShaderCompile),this.tickerDetach=null,this.tickerSubscribe=null,this.renderer=null,this.prewarmHook=null}
+prewarmHook;constructor(options){this.byUrl=new Map,this.byName=new Map,this.inflight=new Map,this.all=[],this.marked=[],this.manualFonts=new Set,this.fallback=null,this.fallbackOverridden=!1,this.autoDestroyUnused="boolean"==typeof options?.autoDestroyUnused?options.autoDestroyUnused:Defaults.Registry.AutoDestroyUnused;const delaySec="number"==typeof options?.autoDestroyDelay?options.autoDestroyDelay:Defaults.Registry.AutoDestroyDelay;// ./src/shared/slug/fonts/registry.ts
+var raw,fallback;this.autoDestroyDelayMs=1e3*Math.max(0,delaySec),this.autoAttachTicker="boolean"==typeof options?.autoAttachTicker?options.autoAttachTicker:Defaults.Registry.AutoAttachTicker,this.updateRate=Math.max(0,"number"==typeof options?.updateRate?options.updateRate:Defaults.Registry.UpdateRate),this.lastUpdate=0,this.reattachPolicy=(raw=options?.reattachPolicy,fallback=Defaults.Registry.ReattachPolicy,isSlugFontErrorMode(raw)?raw:fallback),this.parallelShaderCompile="boolean"==typeof options?.parallelShaderCompile?options.parallelShaderCompile:Defaults.Registry.ParallelShaderCompile,this.tickerDetach=null,this.tickerSubscribe=null,this.renderer=null,this.prewarmHook=null}
 /**
      * Add an entry to `all` if it isn't already present. Callers use this
      * whenever a new `SlugFontsRegistryEntry` is first inserted into a map.
      */addToAll(entry){-1===this.all.indexOf(entry)&&this.all.push(entry)}
-/** Swap-and-pop remove from `all`. No-op when the entry is absent. */removeFromAll(entry){(0,dist/* swapPop */.fd)(this.all,this.all.indexOf(entry))}
+/** Swap-and-pop remove from `all`. No-op when the entry is absent. */removeFromAll(entry){swapPop(this.all,this.all.indexOf(entry))}
 /** Add an entry to `marked`. No-op when already present. */addToMarked(entry){-1===this.marked.indexOf(entry)&&this.marked.push(entry)}
-/** Swap-and-pop remove from `marked`. No-op when the entry is absent. */removeFromMarked(entry){(0,dist/* swapPop */.fd)(this.marked,this.marked.indexOf(entry))}
+/** Swap-and-pop remove from `marked`. No-op when the entry is absent. */removeFromMarked(entry){swapPop(this.marked,this.marked.indexOf(entry))}
 /** Reverse-lookup an entry by its `SlugFont`. Null when not registry-owned. */entryForFont(font){if(!font)return null;for(let i=0;i<this.all.length;i++)if(this.all[i].font===font)return this.all[i];return null}incRef(entry){entry&&(entry.markedForDestroy&&(entry.markedForDestroy=!1,entry.markedAt=0,this.removeFromMarked(entry)),entry.refs++)}decRef(entry){entry&&(entry.refs<=0?entry.refs=0:(entry.refs--,0===entry.refs&&this.autoDestroyUnused&&(entry.markedForDestroy=!0,entry.markedAt="undefined"!=typeof performance?performance.now():0,this.addToMarked(entry))))}
 /**
      * Ticker entry point. `deltaMs` is accepted but unused; wall-clock
@@ -10599,7 +5072,7 @@ await reg.prewarmHook(reg.renderer).catch(()=>!1)}
      *  - If `options.force` is true, the old attachment is detached and
      *    the new one takes its place silently.
      *  - Otherwise the `reattachPolicy` fires (`throw` by default).
-     */static attachTicker(subscribe,options){const reg=SlugFonts._reg(),forceFlag=(0,dist/* booleanValue */.eC)(options?.force,!1);if(reg.tickerDetach){
+     */static attachTicker(subscribe,options){const reg=SlugFonts._reg(),forceFlag=!0===options?.force;if(reg.tickerDetach){
 // Same subscribe reference → no-op, policy does not fire.
 if(reg.tickerSubscribe===subscribe)return;if(!forceFlag)return void SlugFonts._raiseReattachConflict(reg.reattachPolicy);reg.tickerDetach(),reg.tickerDetach=null,reg.tickerSubscribe=null}reg.tickerSubscribe=subscribe,reg.tickerDetach=subscribe(deltaMs=>SlugFonts.onUpdate(deltaMs))}
 /** Detach the current ticker binding, if any. */static detachTicker(){const reg=SlugFonts._reg();reg.tickerDetach&&(reg.tickerDetach(),reg.tickerDetach=null),reg.tickerSubscribe=null}
@@ -10824,155 +5297,9 @@ reg.prewarmHook(renderer).catch(()=>{}))}
 /**
      * Remove all cached fonts and the fallback. GPU resources owned by
      * the cached fonts are destroyed. Intended for tests and teardown.
-     */static clear(){const reg=SlugFonts._reg();for(let i=0;i<reg.all.length;i++)reg.all[i].font.destroyGpu();for(const font of reg.manualFonts)font.destroyGpu();reg.fallback&&reg.fallback.destroyGpu(),reg.byUrl.clear(),reg.byName.clear(),reg.inflight.clear(),reg.all.length=0,reg.marked.length=0,reg.manualFonts.clear(),reg.fallback=null,reg.fallbackOverridden=!1,reg.tickerDetach&&(reg.tickerDetach(),reg.tickerDetach=null),reg.tickerSubscribe=null,reg.renderer=null}}// ./src/v8/slug/fonts/ticker.ts
-/**
- * Auto-attach the shared PixiJS v8 Ticker to the `SlugFonts` registry
- * so its auto-destroy grace-period sweep runs without host-app setup.
- * Skipped when `Defaults.Registry.AutoAttachTicker` is false.
- */
-function slugFontsAttachTickerV8(){Defaults.Registry.AutoAttachTicker&&SlugFonts.attachTicker(cb=>{const listener=()=>cb(external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Ticker.shared.deltaMS);return external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Ticker.shared.add(listener),()=>external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Ticker.shared.remove(listener)})}slugFontsAttachTickerV8();// ./src/shared/shader/slug/vert.glsl
-const vert_namespaceObject="#version 300 es\n// ===================================================\n// Slug algorithm vertex shader — GLSL ES 3.00 port.\n// Original HLSL reference shader by Eric Lengyel.\n// SPDX-License-Identifier: MIT OR Apache-2.0\n// Copyright 2017, by Eric Lengyel.\n// ===================================================\n\n// Per-vertex attribute layout:\n//\n// 0 - pos  : object-space vertex coords (xy) and normal vector (zw)\n// 1 - tex  : em-space sample coords (xy), packed glyph data location (z), packed band max + flags (w)\n// 2 - jac  : inverse Jacobian matrix entries (00, 01, 10, 11)\n// 3 - bnd  : band scale x, band scale y, band offset x, band offset y\n// 4 - col  : vertex color (rgba)\n\nprecision highp float;\nprecision highp int;\n\n// Debug — bypass SlugDilate entirely. Vertex stays at its undilated position\n// and vTexcoord is the raw em-space coord with no dilation offset. Use to\n// confirm whether the A/Z bottom-left stripe artifact lives in the dilation\n// halo (em-y outside [bounds.minY, bounds.maxY]) or in the in-bbox ray solver.\n//   0 = off (production)\n//   1 = on (no dilation)\n#define SLUG_DEBUG_DISABLE_DILATION 0\n\nlayout(location = 0) in vec4 aPositionNormal; // pos xy + normal zw\nlayout(location = 1) in vec4 aTexcoord;       // em-space uv + packed glyph loc + packed bands\nlayout(location = 2) in vec4 aJacobian;       // inverse Jacobian (00, 01, 10, 11)\nlayout(location = 3) in vec4 aBanding;        // band scale xy + band offset xy\nlayout(location = 4) in vec4 aColor;          // vertex color rgba\n\n// PixiJS v8 global uniforms — auto-populated each frame by the renderer (bind group 100).\nuniform mat3 uProjectionMatrix; // Orthographic projection: world pixels → NDC.\nuniform vec2 uResolution;       // Viewport size in pixels (width, height).\n\n// PixiJS v8 local uniforms — per-object transform injected by MeshPipe (bind group 101).\nuniform mat3 uTransformMatrix;  // World transform of this mesh: local → world pixels.\n\n// Per-pass fill bbox in object/model-local pixel space — same coordinate\n// space as aPositionNormal.xy. Drives `vFillUV` for gradient/texture\n// sampling in the fragment shader. For solid fills the value is unused.\n//   xy = bbox min (top-left)\n//   zw = bbox size (width, height)\nuniform vec4 uFillBoundsPx;\n\nout vec4 vColor;\nout vec2 vTexcoord;\nout vec2 vFillUV;\nflat out vec4 vBanding;\nflat out ivec4 vGlyph;\n\n// Unpack glyph metadata from bit-packed float32 vertex attributes.\n// Reads aTexcoord.zw (packed integers) and aBanding (band transform) —\n// independent of the em-space coords in aTexcoord.xy used by SlugDilate.\nvoid SlugUnpack(vec4 tex, vec4 bnd, out vec4 vbnd, out ivec4 vgly)\n{\n\tuvec2 g = floatBitsToUint(tex.zw);\n\tvgly = ivec4(\n\t\tint(g.x & 0xFFFFu),\n\t\tint(g.x >> 16u),\n\t\tint(g.y & 0xFFFFu),\n\t\tint(g.y >> 16u)\n\t);\n\tvbnd = bnd;\n}\n\n// Compute dynamic glyph dilation (Lengyel 2019).\n// Expands the bounding polygon by 0.5 pixels in viewport space so the\n// rasterizer generates fragments for boundary pixels whose centers fall\n// just outside the undilated quad.\n//\n// The displacement uses pos.zw (the raw scaled normal, e.g. (-1,-1) at corners)\n// rather than the unit normal n. The scalar factor is derived from n via u and v,\n// and the magnitude of pos.zw is absorbed into the quadratic solution — this is\n// correct per the Dynamic Glyph Dilation paper.\nvec2 SlugDilate(vec4 pos, vec4 tex, vec4 jac, mat4 mvp, vec2 dim, out vec2 vpos)\n{\n\t// INVARIANT: pos.zw (normal) must be nonzero. quad.ts always sets\n\t// normals to (-1,-1), (1,-1), (1,1), (-1,1) for quad corners.\n\tvec2 n = normalize(pos.zw);\n\n\t// Project position and normal through the MVP matrix.\n\tvec4 Mpos = mvp * vec4(pos.xy, 0.0, 1.0);\n\tvec4 Mn   = mvp * vec4(n,      0.0, 0.0);\n\n\tfloat s = Mpos.w;\n\tfloat t = Mn.w;\n\n\tfloat u = (s * Mn.x - t * Mpos.x) * dim.x;\n\tfloat v = (s * Mn.y - t * Mpos.y) * dim.y;\n\n\tfloat s2 = s * s;\n\tfloat st = s * t;\n\tfloat uv = u * u + v * v;\n\n\t// Solve: (uv - st²)d² - 2s³t·d - s⁴ = 0\n\t// Guard the denominator against division-by-zero (undefined in GLSL ES,\n\t// see port_risks.md GLSL-3). For orthographic 2D, t=0 always so the\n\t// denominator is uv = u²+v². It is zero only when the normal projects\n\t// to zero screen-space length (degenerate MVP or zero viewport).\n\t// In that case, skip dilation — the vertex stays at its original position.\n\tfloat denom = uv - st * st;\n\tif (abs(denom) < 1e-10)\n\t{\n\t\tvpos = pos.xy;\n\t\treturn tex.xy;\n\t}\n\n\tvec2 d = pos.zw * (s2 * (st + sqrt(uv)) / denom);\n\n\tvpos = pos.xy + d;\n\treturn vec2(tex.x + dot(d, jac.xy), tex.y + dot(d, jac.zw));\n}\n\nvoid main()\n{\n\t// Combine projection and world transform into a single 2D affine mat3,\n\t// then lift it to a column-major mat4 for the Slug dilation algorithm.\n\t// The W row is (0,0,0,1) — correct for orthographic projection.\n\t// For perspective, the W row would need to carry the actual projection terms.\n\tmat3 m = uProjectionMatrix * uTransformMatrix;\n\tmat4 mvp = mat4(\n\t\tm[0][0], m[0][1], 0.0, 0.0,  // column 0\n\t\tm[1][0], m[1][1], 0.0, 0.0,  // column 1\n\t\t0.0,     0.0,     1.0, 0.0,  // column 2\n\t\tm[2][0], m[2][1], 0.0, 1.0   // column 3\n\t);\n\n\t// Half viewport converts clip-space normal vectors to pixel-space distances.\n\tvec2 dim = uResolution * 0.5;\n\n\tvec2 p;\n#if SLUG_DEBUG_DISABLE_DILATION\n\t// Skip dilation. Vertex sits at its undilated quad-corner position and\n\t// vTexcoord is the raw em-space coord with no halo offset.\n\tp = aPositionNormal.xy;\n\tvTexcoord = aTexcoord.xy;\n#else\n\tvTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);\n#endif\n\n\tgl_Position = mvp * vec4(p, 0.0, 1.0);\n\n\t// Bbox-relative UV in object/model-local pixel space. `p` is the\n\t// post-dilation pixel position before MVP — same space as the bbox\n\t// uniform. max() guards against zero-size bbox (e.g., empty text).\n\tvFillUV = (p - uFillBoundsPx.xy) / max(uFillBoundsPx.zw, vec2(1.0));\n\n\tSlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);\n\tvColor = aColor;\n}\n",frag_namespaceObject="#version 300 es\n// ===================================================\n// Slug algorithm fragment shader — GLSL ES 3.00 port.\n// Based on the reference Slug shader by Eric Lengyel.\n// ===================================================\nprecision highp float;\nprecision highp int;\nprecision highp sampler2D;\n\n#define kLogBandTextureWidth 12\n#define kMaxCurvesPerBand 512\n// Sub-precision-noise threshold for the Citardauq solver's degeneracy check.\n// Smaller than any meaningful float32 input in this pipeline, so it only fires\n// for genuinely degenerate curves — not as a regime switch.\n#define kCitardauqDegenEps 1e-7\n\n// Debug visualization (compile-time). Paint raw ray-accumulator values to\n// the screen instead of the final coverage. Reset to 0 before shipping.\n//   0 = off (production)\n//   1 = xcov:    R=clamp(xcov,0,1) G=clamp(-xcov,0,1) B=0      (saturated)\n//   2 = xwgt:    R=xwgt G=xwgt B=xwgt                          (greyscale)\n//   3 = ycov:    R=clamp(ycov,0,1) G=clamp(-ycov,0,1) B=0\n//   4 = ywgt:    R=ywgt G=ywgt B=ywgt\n//   5 = xcov bucketed:  red=high, yellow=mid, green=low, blue=zero\n//   6 = (xcov, ycov, weighted_avg) packed into RGB\n//   7 = bug-pixel detector: bright magenta where |xcov|>0.1 and xwgt<0.1 (= unsupported H-ray contribution)\n//   8 = bug-pixel detector: bright magenta where |xcov|>0.1 and xwgt is small relative to |xcov|\n//   9 = axis-disagreement detector: H says inside (small or full), V says outside, both wgt~0\n//  10 = H-ray count of code!=0 curves (color-coded). Reveals if bug is missing crossings.\n//  11 = artifact-only h-count. shows count number ONLY at bug pixels (yellow-9 condition).\n//  12 = fine-grained xcov visualization with explicit value bands.\n//  13 = bandIndex.y as color ramp: each horizontal band gets a different hue.\n//       Use to confirm artifact stripes correspond 1:1 with band rows.\n#define SLUG_DEBUG_RAW 0\n\n// Debug — skip a specific position-within-band in the H-ray loop. Set to a\n// non-negative integer N to make the H-ray's iteration `if (curveIndex == N) continue;`.\n// Set to -1 (default) to disable. Used to test: \"if curve at position N in the band\n// were skipped, would the artifact disappear?\"\n//\n// IMPORTANT: this skips the curve at the given POSITION in the band's curve list\n// (sorted descending by max-X). For A's hBand[0] = [5,9,6,1,3,2], position 4 = curve 3.\n// For other bands the positions map differently — useful for isolating bands too.\n#define SLUG_DEBUG_HRAY_SKIP_POS -1\n\n// Debug — limit the H-ray loop to only the first N curves in the band.\n// Set to a non-negative integer N to make the loop break after processing\n// N curves (i.e. `if (curveIndex >= N) break;`). Set to -1 to disable.\n// Used to incrementally build up xcov curve-by-curve and identify which\n// curve in the band's sorted list pushes xcov from cancelled-zero to ~1.\n#define SLUG_DEBUG_HRAY_LIMIT -1\n\nin vec4 vColor;\nin vec2 vTexcoord;\nin vec2 vFillUV;\nflat in vec4 vBanding;\nflat in ivec4 vGlyph;\n\nuniform sampler2D uCurveTexture;\nuniform sampler2D uBandTexture;\nuniform int uSupersampleCount;\nuniform float uStrokeExpand;     // Stroke expansion in pixels. 0 = normal fill.\nuniform float uStrokeAlphaStart; // Starting alpha at inner stroke edge. @default 1.0\nuniform float uStrokeAlphaRate;  // Alpha change per pixel outward. 0 = uniform. @default 0.0\n\n// --- Fill mode uniforms ---\n// uFillMode selects how the base color is computed before multiplying\n// by coverage:\n//   0 = solid (use vColor — vertex color baked at quad-build time)\n//   1 = linear gradient (sample uFillGradient at projected t)\n//   2 = radial gradient (sample uFillGradient at radial t)\n//   3 = texture (sample uFillTexture at transformed UV)\n// For stroke and shadow passes, uFillMode is always 0; only the fill\n// pass branches into the gradient/texture paths.\nuniform int uFillMode;\n// Mode-specific parameters. Linear: xy=start, zw=end (in normalized\n// bbox-UV space). Radial: xy=center, z=innerRadius, w=outerRadius.\n// Unused for solid and texture modes.\nuniform vec4 uFillParams0;\n// Text bbox in object/model-local pixel space. xy = top-left, zw = size.\n// Same value the vertex shader uses to compute vFillUV. The texture\n// repeat/clamp paths need bbox size to convert vFillUV (0..1) into\n// pixel-space coordinates.\nuniform vec4 uFillBoundsPx;\n// 1D color LUT for gradients (256x1 RGBA8). Sampled with\n// texture(uFillGradient, vec2(t, 0.5)).\nuniform sampler2D uFillGradient;\n// User texture for fill mode 3.\nuniform sampler2D uFillTexture;\n// Texture pixel dimensions. Used by repeat/clamp fit modes to compute\n// 1:1 native-pixel mapping. Stretch mode ignores this.\nuniform vec2 uFillTextureSizePx;\n// Fit mode for textures: 0 = stretch, 1 = repeat, 2 = clamp.\nuniform int uFillTextureFit;\n// Per-axis texture scale. 1 = native size; 2 = texture appears 2x larger\n// (covers more area / tiles half as densely). Negative values flip.\nuniform vec2 uFillTextureScale;\n// X / Y offset applied to texture coords in pixel space. Positive shifts\n// the texture toward +X / +Y, so what was at offset now sits at the bbox\n// origin.\nuniform vec2 uFillTextureOffset;\n\n// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).\n// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.\nuvec2 fetchBand(ivec2 coord)\n{\n\tvec2 raw = texelFetch(uBandTexture, coord, 0).xy;\n\treturn uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));\n}\n\nivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)\n{\n\tivec2 bandLoc = ivec2(glyphLoc.x + int(offset), glyphLoc.y);\n\tbandLoc.y += bandLoc.x >> kLogBandTextureWidth;\n\tbandLoc.x &= (1 << kLogBandTextureWidth) - 1;\n\treturn bandLoc;\n}\n\n// Solve ay·t² - 2·by·t + py = 0 for the two ray-intersection parameters t1, t2.\n// Returns false when the curve is genuinely degenerate at this pixel and\n// should be skipped (caller must `continue` the loop).\n//\n// Per-root sign-safe Citardauq. Defines Q = by + sign(by)·d so |Q| = |by| + d\n// and never suffers cancellation. The algebraic identity (by - d)(by + d) = ay·py\n// gives an alternate form for the otherwise-cancelling root:\n// classical_t1 = py/Q (by ≥ 0) or Q/ay (by < 0). Order matches the classical\n// formula (t1 corresponds to numerator (by - d), t2 to (by + d)), so upstream\n// `code & 1` and `code > 1` checks remain correct.\n//\n// Two edge cases:\n//  - |Q| AND |ay| both tiny: curve is essentially a point along the ray axis.\n//    Skip via `return false`.\n//  - |Q| tiny but |ay| non-tiny: double root (disc → 0, Q → by → 0 when by → 0).\n//    py/Q would be NaN, but the actual root is t = Q/ay. Use that for both.\n//\n// See _docs/citardauq_migration.md for the derivation and the simulator-caught\n// bugs in earlier sketches of this formula.\nbool solveQuadraticRoots(float ay, float by, float py, out float t1, out float t2)\n{\n\tfloat disc = max(by * by - ay * py, 0.0);\n\tfloat d = sqrt(disc);\n\tfloat Q = (by >= 0.0) ? (by + d) : (by - d);\n\tif (abs(Q) < kCitardauqDegenEps && abs(ay) < kCitardauqDegenEps)\n\t{\n\t\tt1 = 0.0;\n\t\tt2 = 0.0;\n\t\treturn false;\n\t}\n\tif (abs(Q) < kCitardauqDegenEps)\n\t{\n\t\tfloat t = Q / ay;\n\t\tt1 = t;\n\t\tt2 = t;\n\t\treturn true;\n\t}\n\tif (by >= 0.0)\n\t{\n\t\tt1 = py / Q;\n\t\tt2 = Q / ay;\n\t}\n\telse\n\t{\n\t\tt1 = Q / ay;\n\t\tt2 = py / Q;\n\t}\n\treturn true;\n}\n\n// Combine horizontal and vertical fractional winding into coverage.\n// Near edges (high weight): weighted average provides smooth antialiasing.\n// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.\n// max() is used instead of min() to handle glyphs with oppositely-wound\n// contours where one axis cancels to ~0 while the other reads ~1.\nfloat CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)\n{\n\tfloat coverage = max(\n\t\tabs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),\n\t\tmax(abs(xcov), abs(ycov))\n\t);\n\n\treturn clamp(sqrt(abs(coverage)), 0.0, 1.0);\n}\n\nout vec4 fragColor;\n\n// Resolve the per-pixel fill color before coverage modulation. Branches\n// on uFillMode at runtime — GPUs handle the divergence cheaply when the\n// mode is uniform across a draw (which is always the case here, since\n// uFillMode is set once per pass).\nvec4 slugFillColor()\n{\n\tif (uFillMode == 1)\n\t{\n\t\t// Linear gradient: project vFillUV onto axis (params0.zw - params0.xy).\n\t\tvec2 axis = uFillParams0.zw - uFillParams0.xy;\n\t\tfloat lenSq = max(dot(axis, axis), 1e-12);\n\t\tfloat t = clamp(dot(vFillUV - uFillParams0.xy, axis) / lenSq, 0.0, 1.0);\n\t\treturn texture(uFillGradient, vec2(t, 0.5));\n\t}\n\tif (uFillMode == 2)\n\t{\n\t\t// Radial gradient: t maps innerRadius..outerRadius to 0..1.\n\t\tfloat r = length(vFillUV - uFillParams0.xy);\n\t\tfloat span = max(uFillParams0.w - uFillParams0.z, 1e-6);\n\t\tfloat t = clamp((r - uFillParams0.z) / span, 0.0, 1.0);\n\t\treturn texture(uFillGradient, vec2(t, 0.5));\n\t}\n\tif (uFillMode == 3)\n\t{\n\t\t// Texture mode. UV math depends on fit:\n\t\t//\n\t\t//  stretch: vFillUV (0..1 across bbox) maps to 0..1 across the\n\t\t//   texture, modulated by scale and offset. Aspect ratio is *not*\n\t\t//   preserved — one copy fills the bbox.\n\t\t//\n\t\t//  repeat / clamp: native-pixel mapping. Each pixel of the bbox\n\t\t//   samples one texel (× scale) of the source, with `offset`\n\t\t//   shifting the texture in pixel space. Repeat tiles via the\n\t\t//   texture sampler's repeat addressing; clamp discards pixels\n\t\t//   outside the texture rect to make them transparent.\n\t\tvec2 bboxPx = uFillBoundsPx.zw;\n\t\tvec2 texPx = max(uFillTextureSizePx, vec2(1.0));\n\t\tvec2 uv;\n\t\tif (uFillTextureFit == 0)\n\t\t{\n\t\t\t// stretch: bbox-relative UV, then map by scale/offset.\n\t\t\t// offset is in pixel units, normalized by texture size so a\n\t\t\t// scale-1 stretch behaves the same in stretch and repeat.\n\t\t\tuv = (vFillUV - uFillTextureOffset / texPx) / uFillTextureScale;\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// repeat / clamp: 1:1 native pixel mapping.\n\t\t\tuv = (vFillUV * bboxPx - uFillTextureOffset) / (texPx * uFillTextureScale);\n\t\t\tif (uFillTextureFit == 2 && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0))\n\t\t\t{\n\t\t\t\tdiscard;\n\t\t\t}\n\t\t}\n\t\treturn texture(uFillTexture, uv);\n\t}\n\t// Solid (mode 0): vertex color carries the resolved fill / stroke /\n\t// shadow color. Stroke and shadow passes always take this path.\n\treturn vColor;\n}\n\n// Returns vec2(coverage, minBoundaryDist).\n// minBoundaryDist is the minimum absolute distance (in pixels) from this\n// pixel to any curve crossing — an approximation of the distance to the\n// nearest glyph boundary. Used for stroke alpha gradient.\nvec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\n\t// Early-out threshold: expanded by stroke so curves within stroke range\n\t// are not skipped. When strokePx is 0 this reduces to the original -0.5.\n\tfloat earlyOutBias = -0.5 - strokePx;\n\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tfloat xcov = 0.0;\n\tfloat xwgt = 0.0;\n\tfloat minDist = 1e10;\n\n\t// ---------------------------------------------------------------\n\t// Horizontal ray (+X direction)\n\t// ---------------------------------------------------------------\n\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\n\t{\n#if SLUG_DEBUG_HRAY_SKIP_POS >= 0\n\t\tif (curveIndex == SLUG_DEBUG_HRAY_SKIP_POS) continue;\n#endif\n#if SLUG_DEBUG_HRAY_LIMIT >= 0\n\t\tif (curveIndex >= SLUG_DEBUG_HRAY_LIMIT) break;\n#endif\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +\n\t\t        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat bx = p12.x - p12.z;\n\t\t\tfloat by = p12.y - p12.w;\n\n\t\t\tfloat t1, t2;\n\t\t\tif (!solveQuadraticRoots(ay, by, p12.y, t1, t2)) continue;\n\n\t\t\tfloat x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;\n\t\t\tfloat x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;\n\t\t\tx1 *= pixelsPerEm.x;\n\t\t\tx2 *= pixelsPerEm.x;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(x1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(x2));\n\n\t\t\t// Stroke dilation: entry crossings shift inward (+strokePx),\n\t\t\t// exit crossings shift outward (-strokePx).\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sx1 = x1 + strokePx;\n\t\t\t\txcov += clamp(sx1 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sx2 = x2 - strokePx;\n\t\t\t\txcov -= clamp(sx2 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\t// ---------------------------------------------------------------\n\t// Vertical ray (+Y direction)\n\t// Same solver as horizontal with x↔y roles swapped.\n\t// ---------------------------------------------------------------\n\n\tfloat ycov = 0.0;\n\tfloat ywgt = 0.0;\n\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +\n\t\t        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat bx = p12.y - p12.w;\n\t\t\tfloat by = p12.x - p12.z;\n\n\t\t\tfloat t1, t2;\n\t\t\tif (!solveQuadraticRoots(ay, by, p12.x, t1, t2)) continue;\n\n\t\t\tfloat y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;\n\t\t\tfloat y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;\n\t\t\ty1 *= pixelsPerEm.y;\n\t\t\ty2 *= pixelsPerEm.y;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(y1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(y2));\n\n\t\t\t// Vertical stroke dilation: signs flipped from horizontal\n\t\t\t// because +Y em-space is up but +Y screen-space is down.\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sy1 = y1 - strokePx;\n\t\t\t\tycov += clamp(sy1 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sy2 = y2 + strokePx;\n\t\t\t\tycov -= clamp(sy2 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\tfloat coverage = CalcCoverage(xcov, ycov, xwgt, ywgt);\n\treturn vec2(coverage, minDist);\n}\n\n// Convenience wrapper that returns only coverage (used by fill pass and supersampling).\nfloat SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\treturn SlugRenderEx(renderCoord, bandTransform, glyphData, strokePx).x;\n}\n\n#if SLUG_DEBUG_RAW != 0\n// Debug-only: rerun ray accumulation and return raw (xcov, ycov, xwgt, ywgt).\n// Logic mirrors SlugRenderEx exactly so values are identical to production.\nvec4 SlugRenderRaw(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\tfloat earlyOutBias = -0.5;\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tfloat xcov = 0.0, xwgt = 0.0, ycov = 0.0, ywgt = 0.0;\n\n\t// Horizontal\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) + ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code == 0u) continue;\n\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\n\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\n\t\tfloat bx = p12.x - p12.z;\n\t\tfloat by = p12.y - p12.w;\n\t\tfloat t1, t2;\n\t\tif (!solveQuadraticRoots(ay, by, p12.y, t1, t2)) continue;\n\t\tfloat x1 = ((ax * t1 - bx * 2.0) * t1 + p12.x) * pixelsPerEm.x;\n\t\tfloat x2 = ((ax * t2 - bx * 2.0) * t2 + p12.x) * pixelsPerEm.x;\n\t\tif ((code & 1u) != 0u) { xcov += clamp(x1 + 0.5, 0.0, 1.0); xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0)); }\n\t\tif (code > 1u)         { xcov -= clamp(x2 + 0.5, 0.0, 1.0); xwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0)); }\n\t}\n\n\t// Vertical\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) + ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code == 0u) continue;\n\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\n\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\n\t\tfloat bx = p12.y - p12.w;\n\t\tfloat by = p12.x - p12.z;\n\t\tfloat t1, t2;\n\t\tif (!solveQuadraticRoots(ay, by, p12.x, t1, t2)) continue;\n\t\tfloat y1 = ((ax * t1 - bx * 2.0) * t1 + p12.y) * pixelsPerEm.y;\n\t\tfloat y2 = ((ax * t2 - bx * 2.0) * t2 + p12.y) * pixelsPerEm.y;\n\t\tif ((code & 1u) != 0u) { ycov += clamp(y1 + 0.5, 0.0, 1.0); ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0)); }\n\t\tif (code > 1u)         { ycov -= clamp(y2 + 0.5, 0.0, 1.0); ywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0)); }\n\t}\n\n\treturn vec4(xcov, ycov, xwgt, ywgt);\n}\n\n// Debug-only: count how many curves in each ray's band actually contribute\n// (code != 0). Mismatched counts can indicate a missing crossing.\nvec2 SlugRenderCounts(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\tfloat earlyOutBias = -0.5;\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tint hHits = 0, vHits = 0;\n\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++) {\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) + ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code != 0u) hHits++;\n\t}\n\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++) {\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) + ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code != 0u) vHits++;\n\t}\n\n\treturn vec2(float(hHits), float(vHits));\n}\n#endif\n\nvoid main()\n{\n#if SLUG_DEBUG_RAW != 0\n\t{\n\t\t// Bypass the production path entirely. Paint the raw ray-accumulator\n\t\t// values to the screen so we can see what the GPU actually computes.\n\t\tvec4 raw = SlugRenderRaw(vTexcoord, vBanding, vGlyph);\n\t\tfloat xcov = raw.x;\n\t\tfloat ycov = raw.y;\n\t\tfloat xwgt = raw.z;\n\t\tfloat ywgt = raw.w;\n\t\tvec3 dbg;\n#if SLUG_DEBUG_RAW == 1\n\t\t// xcov: red = positive, green = negative, magnitude = brightness.\n\t\tdbg = vec3(clamp(xcov, 0.0, 1.0), clamp(-xcov, 0.0, 1.0), 0.0);\n#elif SLUG_DEBUG_RAW == 2\n\t\t// xwgt: greyscale (0 = no near edges, 1 = pixel sits exactly on an edge).\n\t\tdbg = vec3(xwgt);\n#elif SLUG_DEBUG_RAW == 3\n\t\tdbg = vec3(clamp(ycov, 0.0, 1.0), clamp(-ycov, 0.0, 1.0), 0.0);\n#elif SLUG_DEBUG_RAW == 4\n\t\tdbg = vec3(ywgt);\n#elif SLUG_DEBUG_RAW == 5\n\t\t// xcov bucketed. Highlights the magnitude of the spurious xcov values.\n\t\tfloat a = abs(xcov);\n\t\tif (a > 0.95)      dbg = vec3(0.0, 0.6, 0.0);   // green   = ~ integer (correct)\n\t\telse if (a > 0.55) dbg = vec3(0.0, 0.0, 0.8);   // blue    = mid (edge AA)\n\t\telse if (a > 0.15) dbg = vec3(1.0, 0.6, 0.0);   // orange  = SUSPICIOUS — small but nonzero\n\t\telse if (a > 0.02) dbg = vec3(1.0, 0.0, 0.0);   // red     = tiny noise\n\t\telse               dbg = vec3(0.05);            // dark    = ~ zero (correct outside)\n#elif SLUG_DEBUG_RAW == 6\n\t\t// Pack three signals into one image: R=xcov, G=ycov, B=weighted_avg.\n\t\tfloat weighted = abs(xcov*xwgt + ycov*ywgt) / max(xwgt + ywgt, 1.0/65536.0);\n\t\tdbg = vec3(abs(xcov), abs(ycov), weighted);\n#elif SLUG_DEBUG_RAW == 7\n\t\t// Bug-pixel detector v1: paint magenta where |xcov| > 0.1 and xwgt < 0.1.\n\t\t// Those pixels accumulated H-ray contribution without registering as a near-edge,\n\t\t// which would explain why CalcCoverage's edge-confidence blend can't fix them.\n\t\t// Other pixels retain the production rendering for context.\n\t\tbool isBug = abs(xcov) > 0.1 && xwgt < 0.1;\n\t\tif (isBug) {\n\t\t\tdbg = vec3(1.0, 0.0, 1.0);\n\t\t} else {\n\t\t\t// Faint backdrop for context: |xcov| as red, |ycov| as green.\n\t\t\tdbg = vec3(abs(xcov) * 0.2, abs(ycov) * 0.2, 0.0);\n\t\t}\n#elif SLUG_DEBUG_RAW == 8\n\t\t// Bug-pixel detector v2: paint magenta where |xcov| has more magnitude\n\t\t// than xwgt can justify. AA-correct pixels have xwgt >= |xcov| roughly;\n\t\t// bug pixels have |xcov| > xwgt + 0.1.\n\t\tbool isBug = abs(xcov) > xwgt + 0.1 && abs(xcov) > 0.05;\n\t\tif (isBug) {\n\t\t\tdbg = vec3(1.0, 0.0, 1.0);\n\t\t} else {\n\t\t\tdbg = vec3(abs(xcov) * 0.2, abs(ycov) * 0.2, 0.0);\n\t\t}\n#elif SLUG_DEBUG_RAW == 10\n\t\t// H-ray crossing-count visualization. Number of curves with code!=0.\n\t\t// Color encoding:\n\t\t//   black = 0 hits\n\t\t//   red = 1 hit (suspicious — entry without exit, or vice versa)\n\t\t//   yellow = 2 hits (canonical interior pixel — entry+exit)\n\t\t//   green = 3+ hits (multiple contour crossings — could be V-shape interior)\n\t\t//   blue tint added if v-hits != h-hits (axes disagree on count)\n\t\tvec2 counts = SlugRenderCounts(vTexcoord, vBanding, vGlyph);\n\t\tint h = int(counts.x);\n\t\tint v = int(counts.y);\n\t\tif      (h == 0) dbg = vec3(0.0);\n\t\telse if (h == 1) dbg = vec3(1.0, 0.0, 0.0);\n\t\telse if (h == 2) dbg = vec3(1.0, 1.0, 0.0);\n\t\telse             dbg = vec3(0.0, 1.0, 0.0);\n\t\tif (h != v) dbg += vec3(0.0, 0.0, 0.4); // blue tint = axes disagree on count\n#elif SLUG_DEBUG_RAW == 11\n\t\t// Artifact-only crossing-count. Show count ONLY at bug pixels:\n\t\t// pixels where xcov has full integer (~1) but ycov is zero.\n\t\t// Color encoding (only at bug pixels, else black):\n\t\t//   red    = 1 H-ray hit at this pixel\n\t\t//   yellow = 2 H-ray hits\n\t\t//   green  = 3 hits\n\t\t//   white  = 4+ hits\n\t\t// Pixel must satisfy: |xcov| > 0.95 AND |ycov| < 0.05 AND wgts < 0.1\n\t\tfloat ax = abs(xcov);\n\t\tfloat ay = abs(ycov);\n\t\tbool isBug = ax > 0.95 && ay < 0.05 && xwgt < 0.1 && ywgt < 0.1;\n\t\tif (isBug) {\n\t\t\tvec2 counts = SlugRenderCounts(vTexcoord, vBanding, vGlyph);\n\t\t\tint h = int(counts.x);\n\t\t\tif      (h == 1) dbg = vec3(1.0, 0.0, 0.0);\n\t\t\telse if (h == 2) dbg = vec3(1.0, 1.0, 0.0);\n\t\t\telse if (h == 3) dbg = vec3(0.0, 1.0, 0.0);\n\t\t\telse             dbg = vec3(1.0);\n\t\t} else {\n\t\t\t// Backdrop: faint outline of the rendering for context.\n\t\t\tdbg = vec3(ax * 0.15, ay * 0.15, 0.0);\n\t\t}\n#elif SLUG_DEBUG_RAW == 9\n\t\t// Axis-disagreement detector. The artifact happens at pixels where:\n\t\t//   - the H-ray accumulated some |xcov| (full or partial)\n\t\t//   - the V-ray says zero (no |ycov|)\n\t\t//   - neither axis has high AA weight\n\t\t// Color code:\n\t\t//   bright magenta = |xcov| in [0.05, 0.55] and |ycov| < 0.05 and weights < 0.1 (BUG)\n\t\t//   white          = |xcov| > 0.95 and |ycov| > 0.95 (correct interior)\n\t\t//   yellow         = |xcov| > 0.95 and |ycov| < 0.05 (axes disagree, but H says full inside)\n\t\t//   black          = both ~zero (correctly outside)\n\t\tfloat ax = abs(xcov);\n\t\tfloat ay = abs(ycov);\n\t\tbool weightsLow = xwgt < 0.1 && ywgt < 0.1;\n\t\tif (ax > 0.05 && ax < 0.55 && ay < 0.05 && weightsLow) {\n\t\t\tdbg = vec3(1.0, 0.0, 1.0); // BUG\n\t\t} else if (ax > 0.95 && ay > 0.95) {\n\t\t\tdbg = vec3(1.0, 1.0, 1.0); // correct interior\n\t\t} else if (ax > 0.95 && ay < 0.05) {\n\t\t\tdbg = vec3(1.0, 1.0, 0.0); // axes disagree (H full, V zero) — possibly artifact too\n\t\t} else if (ax < 0.05 && ay > 0.95) {\n\t\t\tdbg = vec3(0.0, 1.0, 1.0); // axes disagree (V full, H zero)\n\t\t} else if (ax < 0.05 && ay < 0.05) {\n\t\t\tdbg = vec3(0.0, 0.0, 0.1); // correct background\n\t\t} else {\n\t\t\t// Edge AA — partial, with at least some weight.\n\t\t\tdbg = vec3(0.4, 0.4, 0.4);\n\t\t}\n#elif SLUG_DEBUG_RAW == 12\n\t\t// Fine-grained xcov bands. Each band is a different color so we can\n\t\t// read the EXACT value of xcov at any pixel by inspection.\n\t\tfloat a = abs(xcov);\n\t\tvec3 c;\n\t\tif      (a < 0.05) c = vec3(0.0);\n\t\telse if (a < 0.15) c = vec3(0.4, 0.0, 0.0);\n\t\telse if (a < 0.25) c = vec3(0.7, 0.0, 0.0);\n\t\telse if (a < 0.35) c = vec3(1.0, 0.2, 0.0);\n\t\telse if (a < 0.45) c = vec3(1.0, 0.4, 0.0);\n\t\telse if (a < 0.55) c = vec3(1.0, 0.6, 0.0);\n\t\telse if (a < 0.65) c = vec3(1.0, 0.8, 0.0);\n\t\telse if (a < 0.75) c = vec3(1.0, 1.0, 0.2);\n\t\telse if (a < 0.85) c = vec3(1.0, 1.0, 0.4);\n\t\telse if (a < 0.95) c = vec3(1.0, 1.0, 0.7);\n\t\telse               c = vec3(1.0, 1.0, 1.0);\n\t\tif (xcov < 0.0) c = c.bgr; // swap r↔b for negative xcov\n\t\tdbg = c;\n#elif SLUG_DEBUG_RAW == 13\n\t\t// bandIndex.y (horizontal band) as color ramp. Confirms whether the\n\t\t// artifact stripes correspond 1:1 with band-row boundaries.\n\t\tivec2 bandMaxDbg = vGlyph.zw;\n\t\tbandMaxDbg.y &= 0x00FF;\n\t\tivec2 biDbg = clamp(ivec2(vTexcoord * vBanding.xy + vBanding.zw), ivec2(0, 0), bandMaxDbg);\n\t\t// Cycle through 6 distinct hues so adjacent bands are easy to tell apart.\n\t\tint b = biDbg.y;\n\t\tint hueIdx = b - (b / 6) * 6;\n\t\tif      (hueIdx == 0) dbg = vec3(1.0, 0.0, 0.0); // red\n\t\telse if (hueIdx == 1) dbg = vec3(1.0, 0.6, 0.0); // orange\n\t\telse if (hueIdx == 2) dbg = vec3(1.0, 1.0, 0.0); // yellow\n\t\telse if (hueIdx == 3) dbg = vec3(0.0, 1.0, 0.0); // green\n\t\telse if (hueIdx == 4) dbg = vec3(0.0, 0.6, 1.0); // blue\n\t\telse                  dbg = vec3(0.6, 0.0, 1.0); // purple\n\t\t// Darken slightly per \"cycle\" of 6 so we can tell band 0 from band 6.\n\t\tfloat shade = 1.0 - 0.15 * float(b / 6);\n\t\tdbg *= max(shade, 0.4);\n#endif\n\t\tfragColor = vec4(dbg, 1.0);\n\t\treturn;\n\t}\n#endif\n\n\tfloat coverage;\n\tint sampleCount = min(uSupersampleCount, 16);\n\tfloat strokePx = uStrokeExpand;\n\tbool useGradientAlpha = (strokePx > 0.0 && uStrokeAlphaRate != 0.0);\n\n\t// When gradient alpha is active and no supersampling, use SlugRenderEx\n\t// to get both coverage and boundary distance in a single pass.\n\tif (useGradientAlpha && sampleCount <= 1)\n\t{\n\t\tvec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);\n\t\tcoverage = result.x;\n\n\t\t// minDist is the distance from the pixel to the nearest original\n\t\t// glyph boundary (before stroke expansion). Pixels at the inner\n\t\t// stroke edge have minDist ≈ 0, outer edge have minDist ≈ strokePx.\n\t\t// The per-pixel alpha is: alphaStart + alphaRate * minDist\n\t\tfloat dist = clamp(result.y, 0.0, strokePx);\n\t\tfloat alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);\n\t\tfragColor = slugFillColor() * coverage * alpha;\n\t\treturn;\n\t}\n\n\tif (sampleCount <= 1)\n\t{\n\t\tcoverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);\n\t}\n\telse\n\t{\n\t\t// Supersampling with configurable sample count.\n\t\t// Offsets are in em-space, derived from screen-space derivatives so they\n\t\t// scale correctly at any font size or transform.\n\t\tvec2 dx = dFdx(vTexcoord) * 0.5;\n\t\tvec2 dy = dFdy(vTexcoord) * 0.5;\n\n\t\tif (sampleCount <= 2)\n\t\t{\n\t\t\t// 2-sample: diagonal pair\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1) * 0.5;\n\t\t}\n\t\telse if (sampleCount <= 4)\n\t\t{\n\t\t\t// 4-sample rotated-grid supersampling (RGSS pattern).\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3) * 0.25;\n\t\t}\n\t\telse if (sampleCount <= 8)\n\t\t{\n\t\t\t// 8-sample: 8-queens pattern (good spatial distribution)\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7) * 0.125;\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// 16-sample: 4x4 jittered grid for maximum quality\n\t\t\tfloat sum = 0.0;\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = sum * 0.0625;\n\t\t}\n\t}\n\n\t// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)\n\t// uStrokeAlphaStart defaults to 1.0, so this is a no-op.\n\tfragColor = slugFillColor() * coverage * uStrokeAlphaStart;\n}\n",POLL_FAST_MS=4,POLL_SLOW_MS=16,FAST_TICKS=12,HARD_TIMEOUT_MS=5e3,KHR_EXT="KHR_parallel_shader_compile",COMPLETION_STATUS_KHR=37297;
-/**
- * Compile + link a WebGL2 shader program without blocking the main
- * thread when `KHR_parallel_shader_compile` is supported. The returned
- * `program` is created synchronously so callers can wire it into PIXI's
- * caches immediately; the `ready` promise resolves once link completion
- * has been verified.
- *
- * Falls back to a synchronous compile/link path when the extension is
- * absent — `ready` still resolves so callers can use a uniform API
- * regardless of platform. The synchronous path will block, matching the
- * pre-feature behavior on browsers without the extension.
- *
- * `sortAttributes` matches PIXI's `extractAttributesFromGlProgram`
- * pre-link behavior for GLSL 1.00 shaders: attribute locations are
- * bound in alphabetical order so the post-link extraction lines up with
- * the pre-link bindings. GLSL 3.00 shaders use explicit `layout(location=N)`
- * qualifiers and must pass `false` to skip this step.
- */
-function slugBuildGlProgramAsync(gl,vertexSource,fragmentSource,sortAttributes){const ext=gl.getExtension(KHR_EXT),vertex=gl.createShader(gl.VERTEX_SHADER),fragment=gl.createShader(gl.FRAGMENT_SHADER),program=gl.createProgram();if(!vertex||!fragment||!program)
-// Context lost or out of resources. Release whatever partial GL
-// objects did succeed so we don't leak them on the rejection path.
-return vertex&&gl.deleteShader(vertex),fragment&&gl.deleteShader(fragment),program&&gl.deleteProgram(program),{program,ready:Promise.reject(new Error("slugBuildGlProgramAsync: gl.createShader/createProgram returned null"))};gl.shaderSource(vertex,vertexSource),gl.compileShader(vertex),gl.shaderSource(fragment,fragmentSource),gl.compileShader(fragment),gl.attachShader(program,vertex),gl.attachShader(program,fragment),sortAttributes&&
-/**
- * Bind `in`/`attribute` locations in alphabetical order before
- * `linkProgram`. Matches PIXI's `extractAttributesFromGlProgram`
- * post-link sort so that PIXI's later `getAttribLocation` lookups land
- * on the same indices we baked in here.
- */
-function(gl,program,vertexSource){
-// Strip line and block comments first so a commented-out attribute
-// declaration cannot bind a phantom location and shift every real
-// attribute's index downstream.
-const stripped=vertexSource.replace(/\/\*[\s\S]*?\*\//g," ").replace(/\/\/[^\n]*/g," "),names=[],re=/(?:^|\s)(?:(?:flat|smooth|centroid|invariant)\s+)?(?:in|attribute)\s+(?:(?:highp|mediump|lowp)\s+)?\w+\s+(\w+)\s*[;[]/g;let m;for(;null!==(m=re.exec(stripped));){const name=m[1];names.includes(name)||names.push(name)}names.sort();for(let i=0;i<names.length;i++)gl.bindAttribLocation(program,i,names[i])}(gl,program,vertexSource),gl.linkProgram(program);
-// Shaders can be detached + flagged for delete immediately after
-// linkProgram; the driver retains them for the duration of the link.
-// We defer the actual deleteShader until link completion to keep the
-// program object in a fully-defined state during polling, mirroring
-// PIXI's own teardown order.
-const ready=ext?function(gl,program,vertex,fragment){return new Promise((resolve,reject)=>{const start=glprogram_async_nowMs();let ticks=0;const tick=()=>{let done;try{done=gl.getProgramParameter(program,COMPLETION_STATUS_KHR)}catch{
-// Extension query rejected by a buggy driver — bail to sync.
-return void resolveSync(gl,program,vertex,fragment,resolve,reject)}if(done)return void resolveSync(gl,program,vertex,fragment,resolve,reject);if(glprogram_async_nowMs()-start>=HARD_TIMEOUT_MS)
-// Driver never reported completion. Fall back to the
-// synchronous query — it will block briefly but at least
-// won't leave the promise pending forever.
-return void resolveSync(gl,program,vertex,fragment,resolve,reject);ticks++;setTimeout(tick,ticks<=FAST_TICKS?POLL_FAST_MS:POLL_SLOW_MS)};setTimeout(tick,POLL_FAST_MS)})}(gl,program,vertex,fragment):function(gl,program,vertex,fragment){return new Promise((resolve,reject)=>{resolveSync(gl,program,vertex,fragment,resolve,reject)})}(gl,program,vertex,fragment);return{program,ready}}function resolveSync(gl,program,vertex,fragment,resolve,reject){const linked=gl.getProgramParameter(program,gl.LINK_STATUS);if(gl.detachShader(program,vertex),gl.detachShader(program,fragment),gl.deleteShader(vertex),gl.deleteShader(fragment),linked)return void resolve();const log=gl.getProgramInfoLog(program)??"",vlog=gl.getShaderInfoLog(vertex)??"",flog=gl.getShaderInfoLog(fragment)??"";reject(new Error(`slugBuildGlProgramAsync: link failed.\nprogram: ${log}\nvertex: ${vlog}\nfragment: ${flog}`))}function glprogram_async_nowMs(){return"undefined"!=typeof performance&&"function"==typeof performance.now?performance.now():Date.now()}// ./src/v8/slug/font/compile.ts
-/**
- * Drive {@link slugBuildGlProgramAsync} → {@link slugBuildGlProgramData}
- * → {@link slugInjectGlProgramData} as a single chained promise.
- * Returns `true` when the cache was populated and the next PIXI draw
- * will skip its own compile; `false` when any step short of a thrown
- * exception failed (link error, PIXI internal drift). Exceptions
- * surface as rejections — callers may treat them as `false` for
- * diagnostic purposes but should not crash the render loop on them.
- *
- * `pixiGlProgram` must be the same `GlProgram.from(...)` instance the
- * caller will later associate with their meshes — that's what carries
- * the `_key` PIXI looks up in `_programDataHash`.
- */
-function slugCompileAndInject(gl,renderer,pixiGlProgram,vertexSource,fragmentSource,sortAttributes){const{program,ready}=slugBuildGlProgramAsync(gl,vertexSource,fragmentSource,sortAttributes);return ready.then(()=>{try{const programData=// ./src/v8/slug/font/glprogramdata.ts
-/**
- * Run PIXI v8's post-link extraction steps against an already-linked
- * `WebGLProgram` and return a populated `GlProgramData`. Intended to be
- * called once {@link slugBuildGlProgramAsync}'s `ready` promise resolves —
- * by then the link is complete and these queries are non-blocking.
- *
- * Mirrors the tail half of PIXI's internal `generateProgram` (the half
- * that runs after `gl.linkProgram`) without re-issuing the link itself.
- * The result can be inserted into the renderer's
- * `shader._programDataHash[pixiGlProgram._key]` cache so PIXI's first
- * draw finds a cache hit and skips its own (blocking) compile path.
- *
- * The PIXI helpers used here are public exports but flagged `@private`
- * / `@internal` in their docs. The injection site in the renderer is
- * expected to wrap this call in try/catch and fall back to the sync
- * path if a future PIXI release renames or removes them.
- */
-function(gl,program,pixiGlProgram,sortAttributes){pixiGlProgram._attributeData=(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.extractAttributesFromGlProgram)(program,gl,sortAttributes),pixiGlProgram._uniformData=(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.getUniformData)(program,gl),pixiGlProgram._uniformBlockData=(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.getUboData)(program,gl);const uniformData={};for(const name in pixiGlProgram._uniformData){const data=pixiGlProgram._uniformData[name];uniformData[name]={location:gl.getUniformLocation(program,name),value:(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.defaultValue)(data.type,data.size)}}return new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.GlProgramData(program,uniformData)}(gl,program,pixiGlProgram,sortAttributes);// ./src/v8/slug/font/inject.ts
-/**
- * Pre-populate PIXI's per-renderer program-data cache so the next draw
- * skips PIXI's internal (synchronous) `generateProgram` call. Returns
- * `true` on a successful injection, `false` when PIXI's internal shape
- * has drifted or the renderer/shader is in an unexpected state — the
- * caller should treat `false` as "fall back to the sync path".
- *
- * Idempotent: re-injecting the same key overwrites the entry, which is
- * harmless because `generateProgram` would have produced an equivalent
- * record anyway.
- */
-return function(renderer,pixiGlProgram,programData){try{const hash=renderer.shader._programDataHash;if(!hash)return!1;const key=pixiGlProgram._key;return"number"==typeof key&&(hash[key]=programData,!0)}catch{return!1}}(renderer,pixiGlProgram,programData)}catch(err){
-// PIXI internal drift (renamed/removed `extractAttributesFromGlProgram`,
-// `getUniformData`, etc). Surface to the console so the cause is
-// visible, then fall back: PIXI's sync compile will run on first draw.
-return console.error("[slug] post-link program-data build failed; falling back to PIXI sync compile.",err),!1}},err=>(
-// Link failure or extension-level error from `slugBuildGlProgramAsync`.
-// The Error message contains the program/vertex/fragment info logs —
-// surface them so a real shader error isn't invisible. We still resolve
-// `false` so the caller can fall through to the sync compile path
-// (which will most likely re-report the same error).
-console.error("[slug] parallel shader compile failed; falling back to PIXI sync compile.",err),!1))}// ./src/v8/slug/font/prewarm.ts
-const inflight=new WeakMap;function isWebGLRenderer(r){return"object"==typeof r&&null!==r&&r.type===external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.RendererType.WEBGL}// ./src/v8/slug/fonts/prewarm-install.ts
-/**
- * Install the v8 shader prewarm hook on the shared registry. Runs once
- * at module load (the v8 entry point imports this for its side effect).
- *
- * The shared `SlugFontsRegistry` lives in version-agnostic code and
- * holds the hook as a `(renderer: unknown) => Promise<boolean>` slot;
- * v6/v7 leave it null because Part B is v8-only per spec §8. Wiring
- * here keeps the dependency direction correct: shared → v8, never v8
- * → shared.
- */
-SlugFonts._installPrewarmHook(
-/**
- * Prewarm the Slug shader for `renderer` so the first SlugText draw
- * on this renderer skips PIXI's blocking `generateProgram`. Called by
- * {@link SlugFonts.attachRenderer}, {@link SlugFonts.fromUrl}, and
- * {@link SlugFonts.warmup} — each fires freely, this dedupes per
- * renderer so only one compile actually runs.
- *
- * Returns a promise resolving to `true` when the shader was compiled,
- * linked, and successfully injected into PIXI's per-renderer cache, or
- * `false` when any prerequisite was missing (non-WebGL renderer,
- * toggle off, `KHR_parallel_shader_compile` unavailable, PIXI internal
- * drift). A `false` resolution is harmless: PIXI's synchronous compile
- * will run on first draw exactly as before — no regression vs. the
- * pre-feature behavior.
- *
- * `null`/`undefined` renderer resolves to `false` immediately so
- * callers can pass `reg.renderer` (typed `unknown`) without a
- * pre-check.
- */
-function(renderer){if(!renderer)return Promise.resolve(!1);if(!isWebGLRenderer(renderer))return Promise.resolve(!1);if(!SlugFonts.parallelShaderCompile)return Promise.resolve(!1);const existing=inflight.get(renderer);if(existing)return existing;const gl=renderer.gl;if(!gl||!gl.getExtension("KHR_parallel_shader_compile"))return Promise.resolve(!1);
-// `GlProgram.from(...)` is process-wide deduped on source bytes —
-// the SlugText's later cache-miss path will receive the very same
-// instance with the same `_key`, so the cache entry we inject is
-// the cache entry PIXI looks up on first draw.
-const promise=slugCompileAndInject(gl,renderer,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.GlProgram.from({vertex:vert_namespaceObject,fragment:frag_namespaceObject}),vert_namespaceObject,frag_namespaceObject,false);return inflight.set(renderer,promise),promise}
-/**
- * True when an entry exists in the in-flight cache for `renderer`,
- * regardless of its resolution state. Used by {@link SlugFonts.warmup}
- * to distinguish "compile already started or done" from "no work yet".
- */);// ./src/shared/slug/glyph/quad.ts
+     */static clear(){const reg=SlugFonts._reg();for(let i=0;i<reg.all.length;i++)reg.all[i].font.destroyGpu();for(const font of reg.manualFonts)font.destroyGpu();reg.fallback&&reg.fallback.destroyGpu(),reg.byUrl.clear(),reg.byName.clear(),reg.inflight.clear(),reg.all.length=0,reg.marked.length=0,reg.manualFonts.clear(),reg.fallback=null,reg.fallbackOverridden=!1,reg.tickerDetach&&(reg.tickerDetach(),reg.tickerDetach=null),reg.tickerSubscribe=null,reg.renderer=null}}
+// EXTERNAL MODULE: external {"commonjs":"pixi.js","commonjs2":"pixi.js","root":"PIXI"}
+var external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_=__webpack_require__(0);// ./src/shared/slug/glyph/quad.ts
 /** Shared buffer for uint32↔float32 bit reinterpretation (avoids per-call allocation). */
 const _packBuf=new ArrayBuffer(4),_packU32=new Uint32Array(_packBuf),_packF32=new Float32Array(_packBuf),_f32=new Float32Array(4);
 /**
@@ -11299,13 +5626,113 @@ const src=tex.source;if(src&&src.style){const mode="repeat"===fill.fit?"repeat":
 // We do not own the user-supplied texture — caller passed it in,
 // caller disposes it. Only LUTs/wrapped sources we created get
 // destroyed here.
-dispose:()=>{}}}// ./src/v8/slug/font/gpu.ts
+dispose:()=>{}}}// ./src/shared/shader/slug/vert.glsl
+const vert_namespaceObject="#version 300 es\n// ===================================================\n// Slug algorithm vertex shader — GLSL ES 3.00 port.\n// Original HLSL reference shader by Eric Lengyel.\n// SPDX-License-Identifier: MIT OR Apache-2.0\n// Copyright 2017, by Eric Lengyel.\n// ===================================================\n\n// Per-vertex attribute layout:\n//\n// 0 - pos  : object-space vertex coords (xy) and normal vector (zw)\n// 1 - tex  : em-space sample coords (xy), packed glyph data location (z), packed band max + flags (w)\n// 2 - jac  : inverse Jacobian matrix entries (00, 01, 10, 11)\n// 3 - bnd  : band scale x, band scale y, band offset x, band offset y\n// 4 - col  : vertex color (rgba)\n\nprecision highp float;\nprecision highp int;\n\n// Debug — bypass SlugDilate entirely. Vertex stays at its undilated position\n// and vTexcoord is the raw em-space coord with no dilation offset. Use to\n// confirm whether the A/Z bottom-left stripe artifact lives in the dilation\n// halo (em-y outside [bounds.minY, bounds.maxY]) or in the in-bbox ray solver.\n//   0 = off (production)\n//   1 = on (no dilation)\n#define SLUG_DEBUG_DISABLE_DILATION 0\n\nlayout(location = 0) in vec4 aPositionNormal; // pos xy + normal zw\nlayout(location = 1) in vec4 aTexcoord;       // em-space uv + packed glyph loc + packed bands\nlayout(location = 2) in vec4 aJacobian;       // inverse Jacobian (00, 01, 10, 11)\nlayout(location = 3) in vec4 aBanding;        // band scale xy + band offset xy\nlayout(location = 4) in vec4 aColor;          // vertex color rgba\n\n// PixiJS v8 global uniforms — auto-populated each frame by the renderer (bind group 100).\nuniform mat3 uProjectionMatrix; // Orthographic projection: world pixels → NDC.\nuniform vec2 uResolution;       // Viewport size in pixels (width, height).\n\n// PixiJS v8 local uniforms — per-object transform injected by MeshPipe (bind group 101).\nuniform mat3 uTransformMatrix;  // World transform of this mesh: local → world pixels.\n\n// Per-pass fill bbox in object/model-local pixel space — same coordinate\n// space as aPositionNormal.xy. Drives `vFillUV` for gradient/texture\n// sampling in the fragment shader. For solid fills the value is unused.\n//   xy = bbox min (top-left)\n//   zw = bbox size (width, height)\nuniform vec4 uFillBoundsPx;\n\nout vec4 vColor;\nout vec2 vTexcoord;\nout vec2 vFillUV;\nflat out vec4 vBanding;\nflat out ivec4 vGlyph;\n\n// Unpack glyph metadata from bit-packed float32 vertex attributes.\n// Reads aTexcoord.zw (packed integers) and aBanding (band transform) —\n// independent of the em-space coords in aTexcoord.xy used by SlugDilate.\nvoid SlugUnpack(vec4 tex, vec4 bnd, out vec4 vbnd, out ivec4 vgly)\n{\n\tuvec2 g = floatBitsToUint(tex.zw);\n\tvgly = ivec4(\n\t\tint(g.x & 0xFFFFu),\n\t\tint(g.x >> 16u),\n\t\tint(g.y & 0xFFFFu),\n\t\tint(g.y >> 16u)\n\t);\n\tvbnd = bnd;\n}\n\n// Compute dynamic glyph dilation (Lengyel 2019).\n// Expands the bounding polygon by 0.5 pixels in viewport space so the\n// rasterizer generates fragments for boundary pixels whose centers fall\n// just outside the undilated quad.\n//\n// The displacement uses pos.zw (the raw scaled normal, e.g. (-1,-1) at corners)\n// rather than the unit normal n. The scalar factor is derived from n via u and v,\n// and the magnitude of pos.zw is absorbed into the quadratic solution — this is\n// correct per the Dynamic Glyph Dilation paper.\nvec2 SlugDilate(vec4 pos, vec4 tex, vec4 jac, mat4 mvp, vec2 dim, out vec2 vpos)\n{\n\t// INVARIANT: pos.zw (normal) must be nonzero. quad.ts always sets\n\t// normals to (-1,-1), (1,-1), (1,1), (-1,1) for quad corners.\n\tvec2 n = normalize(pos.zw);\n\n\t// Project position and normal through the MVP matrix.\n\tvec4 Mpos = mvp * vec4(pos.xy, 0.0, 1.0);\n\tvec4 Mn   = mvp * vec4(n,      0.0, 0.0);\n\n\tfloat s = Mpos.w;\n\tfloat t = Mn.w;\n\n\tfloat u = (s * Mn.x - t * Mpos.x) * dim.x;\n\tfloat v = (s * Mn.y - t * Mpos.y) * dim.y;\n\n\tfloat s2 = s * s;\n\tfloat st = s * t;\n\tfloat uv = u * u + v * v;\n\n\t// Solve: (uv - st²)d² - 2s³t·d - s⁴ = 0\n\t// Guard the denominator against division-by-zero (undefined in GLSL ES,\n\t// see port_risks.md GLSL-3). For orthographic 2D, t=0 always so the\n\t// denominator is uv = u²+v². It is zero only when the normal projects\n\t// to zero screen-space length (degenerate MVP or zero viewport).\n\t// In that case, skip dilation — the vertex stays at its original position.\n\tfloat denom = uv - st * st;\n\tif (abs(denom) < 1e-10)\n\t{\n\t\tvpos = pos.xy;\n\t\treturn tex.xy;\n\t}\n\n\tvec2 d = pos.zw * (s2 * (st + sqrt(uv)) / denom);\n\n\tvpos = pos.xy + d;\n\treturn vec2(tex.x + dot(d, jac.xy), tex.y + dot(d, jac.zw));\n}\n\nvoid main()\n{\n\t// Combine projection and world transform into a single 2D affine mat3,\n\t// then lift it to a column-major mat4 for the Slug dilation algorithm.\n\t// The W row is (0,0,0,1) — correct for orthographic projection.\n\t// For perspective, the W row would need to carry the actual projection terms.\n\tmat3 m = uProjectionMatrix * uTransformMatrix;\n\tmat4 mvp = mat4(\n\t\tm[0][0], m[0][1], 0.0, 0.0,  // column 0\n\t\tm[1][0], m[1][1], 0.0, 0.0,  // column 1\n\t\t0.0,     0.0,     1.0, 0.0,  // column 2\n\t\tm[2][0], m[2][1], 0.0, 1.0   // column 3\n\t);\n\n\t// Half viewport converts clip-space normal vectors to pixel-space distances.\n\tvec2 dim = uResolution * 0.5;\n\n\tvec2 p;\n#if SLUG_DEBUG_DISABLE_DILATION\n\t// Skip dilation. Vertex sits at its undilated quad-corner position and\n\t// vTexcoord is the raw em-space coord with no halo offset.\n\tp = aPositionNormal.xy;\n\tvTexcoord = aTexcoord.xy;\n#else\n\tvTexcoord = SlugDilate(aPositionNormal, aTexcoord, aJacobian, mvp, dim, p);\n#endif\n\n\tgl_Position = mvp * vec4(p, 0.0, 1.0);\n\n\t// Bbox-relative UV in object/model-local pixel space. `p` is the\n\t// post-dilation pixel position before MVP — same space as the bbox\n\t// uniform. max() guards against zero-size bbox (e.g., empty text).\n\tvFillUV = (p - uFillBoundsPx.xy) / max(uFillBoundsPx.zw, vec2(1.0));\n\n\tSlugUnpack(aTexcoord, aBanding, vBanding, vGlyph);\n\tvColor = aColor;\n}\n",frag_namespaceObject="#version 300 es\n// ===================================================\n// Slug algorithm fragment shader — GLSL ES 3.00 port.\n// Based on the reference Slug shader by Eric Lengyel.\n// ===================================================\nprecision highp float;\nprecision highp int;\nprecision highp sampler2D;\n\n#define kLogBandTextureWidth 12\n#define kMaxCurvesPerBand 512\n// Sub-precision-noise threshold for the Citardauq solver's degeneracy check.\n// Smaller than any meaningful float32 input in this pipeline, so it only fires\n// for genuinely degenerate curves — not as a regime switch.\n#define kCitardauqDegenEps 1e-7\n\n// Debug visualization (compile-time). Paint raw ray-accumulator values to\n// the screen instead of the final coverage. Reset to 0 before shipping.\n//   0 = off (production)\n//   1 = xcov:    R=clamp(xcov,0,1) G=clamp(-xcov,0,1) B=0      (saturated)\n//   2 = xwgt:    R=xwgt G=xwgt B=xwgt                          (greyscale)\n//   3 = ycov:    R=clamp(ycov,0,1) G=clamp(-ycov,0,1) B=0\n//   4 = ywgt:    R=ywgt G=ywgt B=ywgt\n//   5 = xcov bucketed:  red=high, yellow=mid, green=low, blue=zero\n//   6 = (xcov, ycov, weighted_avg) packed into RGB\n//   7 = bug-pixel detector: bright magenta where |xcov|>0.1 and xwgt<0.1 (= unsupported H-ray contribution)\n//   8 = bug-pixel detector: bright magenta where |xcov|>0.1 and xwgt is small relative to |xcov|\n//   9 = axis-disagreement detector: H says inside (small or full), V says outside, both wgt~0\n//  10 = H-ray count of code!=0 curves (color-coded). Reveals if bug is missing crossings.\n//  11 = artifact-only h-count. shows count number ONLY at bug pixels (yellow-9 condition).\n//  12 = fine-grained xcov visualization with explicit value bands.\n//  13 = bandIndex.y as color ramp: each horizontal band gets a different hue.\n//       Use to confirm artifact stripes correspond 1:1 with band rows.\n#define SLUG_DEBUG_RAW 0\n\n// Debug — skip a specific position-within-band in the H-ray loop. Set to a\n// non-negative integer N to make the H-ray's iteration `if (curveIndex == N) continue;`.\n// Set to -1 (default) to disable. Used to test: \"if curve at position N in the band\n// were skipped, would the artifact disappear?\"\n//\n// IMPORTANT: this skips the curve at the given POSITION in the band's curve list\n// (sorted descending by max-X). For A's hBand[0] = [5,9,6,1,3,2], position 4 = curve 3.\n// For other bands the positions map differently — useful for isolating bands too.\n#define SLUG_DEBUG_HRAY_SKIP_POS -1\n\n// Debug — limit the H-ray loop to only the first N curves in the band.\n// Set to a non-negative integer N to make the loop break after processing\n// N curves (i.e. `if (curveIndex >= N) break;`). Set to -1 to disable.\n// Used to incrementally build up xcov curve-by-curve and identify which\n// curve in the band's sorted list pushes xcov from cancelled-zero to ~1.\n#define SLUG_DEBUG_HRAY_LIMIT -1\n\nin vec4 vColor;\nin vec2 vTexcoord;\nin vec2 vFillUV;\nflat in vec4 vBanding;\nflat in ivec4 vGlyph;\n\nuniform sampler2D uCurveTexture;\nuniform sampler2D uBandTexture;\nuniform int uSupersampleCount;\nuniform float uStrokeExpand;     // Stroke expansion in pixels. 0 = normal fill.\nuniform float uStrokeAlphaStart; // Starting alpha at inner stroke edge. @default 1.0\nuniform float uStrokeAlphaRate;  // Alpha change per pixel outward. 0 = uniform. @default 0.0\n\n// --- Fill mode uniforms ---\n// uFillMode selects how the base color is computed before multiplying\n// by coverage:\n//   0 = solid (use vColor — vertex color baked at quad-build time)\n//   1 = linear gradient (sample uFillGradient at projected t)\n//   2 = radial gradient (sample uFillGradient at radial t)\n//   3 = texture (sample uFillTexture at transformed UV)\n// For stroke and shadow passes, uFillMode is always 0; only the fill\n// pass branches into the gradient/texture paths.\nuniform int uFillMode;\n// Mode-specific parameters. Linear: xy=start, zw=end (in normalized\n// bbox-UV space). Radial: xy=center, z=innerRadius, w=outerRadius.\n// Unused for solid and texture modes.\nuniform vec4 uFillParams0;\n// Text bbox in object/model-local pixel space. xy = top-left, zw = size.\n// Same value the vertex shader uses to compute vFillUV. The texture\n// repeat/clamp paths need bbox size to convert vFillUV (0..1) into\n// pixel-space coordinates.\nuniform vec4 uFillBoundsPx;\n// 1D color LUT for gradients (256x1 RGBA8). Sampled with\n// texture(uFillGradient, vec2(t, 0.5)).\nuniform sampler2D uFillGradient;\n// User texture for fill mode 3.\nuniform sampler2D uFillTexture;\n// Texture pixel dimensions. Used by repeat/clamp fit modes to compute\n// 1:1 native-pixel mapping. Stretch mode ignores this.\nuniform vec2 uFillTextureSizePx;\n// Fit mode for textures: 0 = stretch, 1 = repeat, 2 = clamp.\nuniform int uFillTextureFit;\n// Per-axis texture scale. 1 = native size; 2 = texture appears 2x larger\n// (covers more area / tiles half as densely). Negative values flip.\nuniform vec2 uFillTextureScale;\n// X / Y offset applied to texture coords in pixel space. Positive shifts\n// the texture toward +X / +Y, so what was at offset now sits at the bbox\n// origin.\nuniform vec2 uFillTextureOffset;\n\n// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).\n// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.\nuvec2 fetchBand(ivec2 coord)\n{\n\tvec2 raw = texelFetch(uBandTexture, coord, 0).xy;\n\treturn uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));\n}\n\nivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)\n{\n\tivec2 bandLoc = ivec2(glyphLoc.x + int(offset), glyphLoc.y);\n\tbandLoc.y += bandLoc.x >> kLogBandTextureWidth;\n\tbandLoc.x &= (1 << kLogBandTextureWidth) - 1;\n\treturn bandLoc;\n}\n\n// Solve ay·t² - 2·by·t + py = 0 for the two ray-intersection parameters t1, t2.\n// Returns false when the curve is genuinely degenerate at this pixel and\n// should be skipped (caller must `continue` the loop).\n//\n// Per-root sign-safe Citardauq. Defines Q = by + sign(by)·d so |Q| = |by| + d\n// and never suffers cancellation. The algebraic identity (by - d)(by + d) = ay·py\n// gives an alternate form for the otherwise-cancelling root:\n// classical_t1 = py/Q (by ≥ 0) or Q/ay (by < 0). Order matches the classical\n// formula (t1 corresponds to numerator (by - d), t2 to (by + d)), so upstream\n// `code & 1` and `code > 1` checks remain correct.\n//\n// Two edge cases:\n//  - |Q| AND |ay| both tiny: curve is essentially a point along the ray axis.\n//    Skip via `return false`.\n//  - |Q| tiny but |ay| non-tiny: double root (disc → 0, Q → by → 0 when by → 0).\n//    py/Q would be NaN, but the actual root is t = Q/ay. Use that for both.\n//\n// See _docs/citardauq_migration.md for the derivation and the simulator-caught\n// bugs in earlier sketches of this formula.\nbool solveQuadraticRoots(float ay, float by, float py, out float t1, out float t2)\n{\n\tfloat disc = max(by * by - ay * py, 0.0);\n\tfloat d = sqrt(disc);\n\tfloat Q = (by >= 0.0) ? (by + d) : (by - d);\n\tif (abs(Q) < kCitardauqDegenEps && abs(ay) < kCitardauqDegenEps)\n\t{\n\t\tt1 = 0.0;\n\t\tt2 = 0.0;\n\t\treturn false;\n\t}\n\tif (abs(Q) < kCitardauqDegenEps)\n\t{\n\t\tfloat t = Q / ay;\n\t\tt1 = t;\n\t\tt2 = t;\n\t\treturn true;\n\t}\n\tif (by >= 0.0)\n\t{\n\t\tt1 = py / Q;\n\t\tt2 = Q / ay;\n\t}\n\telse\n\t{\n\t\tt1 = Q / ay;\n\t\tt2 = py / Q;\n\t}\n\treturn true;\n}\n\n// Combine horizontal and vertical fractional winding into coverage.\n// Near edges (high weight): weighted average provides smooth antialiasing.\n// Interior (low weight): max(abs(xcov), abs(ycov)) provides solid fill.\n// max() is used instead of min() to handle glyphs with oppositely-wound\n// contours where one axis cancels to ~0 while the other reads ~1.\nfloat CalcCoverage(float xcov, float ycov, float xwgt, float ywgt)\n{\n\tfloat coverage = max(\n\t\tabs(xcov * xwgt + ycov * ywgt) / max(xwgt + ywgt, 1.0 / 65536.0),\n\t\tmax(abs(xcov), abs(ycov))\n\t);\n\n\treturn clamp(sqrt(abs(coverage)), 0.0, 1.0);\n}\n\nout vec4 fragColor;\n\n// Resolve the per-pixel fill color before coverage modulation. Branches\n// on uFillMode at runtime — GPUs handle the divergence cheaply when the\n// mode is uniform across a draw (which is always the case here, since\n// uFillMode is set once per pass).\nvec4 slugFillColor()\n{\n\tif (uFillMode == 1)\n\t{\n\t\t// Linear gradient: project vFillUV onto axis (params0.zw - params0.xy).\n\t\tvec2 axis = uFillParams0.zw - uFillParams0.xy;\n\t\tfloat lenSq = max(dot(axis, axis), 1e-12);\n\t\tfloat t = clamp(dot(vFillUV - uFillParams0.xy, axis) / lenSq, 0.0, 1.0);\n\t\treturn texture(uFillGradient, vec2(t, 0.5));\n\t}\n\tif (uFillMode == 2)\n\t{\n\t\t// Radial gradient: t maps innerRadius..outerRadius to 0..1.\n\t\tfloat r = length(vFillUV - uFillParams0.xy);\n\t\tfloat span = max(uFillParams0.w - uFillParams0.z, 1e-6);\n\t\tfloat t = clamp((r - uFillParams0.z) / span, 0.0, 1.0);\n\t\treturn texture(uFillGradient, vec2(t, 0.5));\n\t}\n\tif (uFillMode == 3)\n\t{\n\t\t// Texture mode. UV math depends on fit:\n\t\t//\n\t\t//  stretch: vFillUV (0..1 across bbox) maps to 0..1 across the\n\t\t//   texture, modulated by scale and offset. Aspect ratio is *not*\n\t\t//   preserved — one copy fills the bbox.\n\t\t//\n\t\t//  repeat / clamp: native-pixel mapping. Each pixel of the bbox\n\t\t//   samples one texel (× scale) of the source, with `offset`\n\t\t//   shifting the texture in pixel space. Repeat tiles via the\n\t\t//   texture sampler's repeat addressing; clamp discards pixels\n\t\t//   outside the texture rect to make them transparent.\n\t\tvec2 bboxPx = uFillBoundsPx.zw;\n\t\tvec2 texPx = max(uFillTextureSizePx, vec2(1.0));\n\t\tvec2 uv;\n\t\tif (uFillTextureFit == 0)\n\t\t{\n\t\t\t// stretch: bbox-relative UV, then map by scale/offset.\n\t\t\t// offset is in pixel units, normalized by texture size so a\n\t\t\t// scale-1 stretch behaves the same in stretch and repeat.\n\t\t\tuv = (vFillUV - uFillTextureOffset / texPx) / uFillTextureScale;\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// repeat / clamp: 1:1 native pixel mapping.\n\t\t\tuv = (vFillUV * bboxPx - uFillTextureOffset) / (texPx * uFillTextureScale);\n\t\t\tif (uFillTextureFit == 2 && (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0))\n\t\t\t{\n\t\t\t\tdiscard;\n\t\t\t}\n\t\t}\n\t\treturn texture(uFillTexture, uv);\n\t}\n\t// Solid (mode 0): vertex color carries the resolved fill / stroke /\n\t// shadow color. Stroke and shadow passes always take this path.\n\treturn vColor;\n}\n\n// Returns vec2(coverage, minBoundaryDist).\n// minBoundaryDist is the minimum absolute distance (in pixels) from this\n// pixel to any curve crossing — an approximation of the distance to the\n// nearest glyph boundary. Used for stroke alpha gradient.\nvec2 SlugRenderEx(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\n\t// Early-out threshold: expanded by stroke so curves within stroke range\n\t// are not skipped. When strokePx is 0 this reduces to the original -0.5.\n\tfloat earlyOutBias = -0.5 - strokePx;\n\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tfloat xcov = 0.0;\n\tfloat xwgt = 0.0;\n\tfloat minDist = 1e10;\n\n\t// ---------------------------------------------------------------\n\t// Horizontal ray (+X direction)\n\t// ---------------------------------------------------------------\n\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\n\t{\n#if SLUG_DEBUG_HRAY_SKIP_POS >= 0\n\t\tif (curveIndex == SLUG_DEBUG_HRAY_SKIP_POS) continue;\n#endif\n#if SLUG_DEBUG_HRAY_LIMIT >= 0\n\t\tif (curveIndex >= SLUG_DEBUG_HRAY_LIMIT) break;\n#endif\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) +\n\t\t        ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat bx = p12.x - p12.z;\n\t\t\tfloat by = p12.y - p12.w;\n\n\t\t\tfloat t1, t2;\n\t\t\tif (!solveQuadraticRoots(ay, by, p12.y, t1, t2)) continue;\n\n\t\t\tfloat x1 = (ax * t1 - bx * 2.0) * t1 + p12.x;\n\t\t\tfloat x2 = (ax * t2 - bx * 2.0) * t2 + p12.x;\n\t\t\tx1 *= pixelsPerEm.x;\n\t\t\tx2 *= pixelsPerEm.x;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(x1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(x2));\n\n\t\t\t// Stroke dilation: entry crossings shift inward (+strokePx),\n\t\t\t// exit crossings shift outward (-strokePx).\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sx1 = x1 + strokePx;\n\t\t\t\txcov += clamp(sx1 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sx2 = x2 - strokePx;\n\t\t\t\txcov -= clamp(sx2 + 0.5, 0.0, 1.0);\n\t\t\t\txwgt = max(xwgt, clamp(1.0 - abs(sx2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\t// ---------------------------------------------------------------\n\t// Vertical ray (+Y direction)\n\t// Same solver as horizontal with x↔y roles swapped.\n\t// ---------------------------------------------------------------\n\n\tfloat ycov = 0.0;\n\tfloat ywgt = 0.0;\n\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) +\n\t\t        ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\n\t\tif (code != 0u)\n\t\t{\n\t\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\n\t\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\n\t\t\tfloat bx = p12.y - p12.w;\n\t\t\tfloat by = p12.x - p12.z;\n\n\t\t\tfloat t1, t2;\n\t\t\tif (!solveQuadraticRoots(ay, by, p12.x, t1, t2)) continue;\n\n\t\t\tfloat y1 = (ax * t1 - bx * 2.0) * t1 + p12.y;\n\t\t\tfloat y2 = (ax * t2 - bx * 2.0) * t2 + p12.y;\n\t\t\ty1 *= pixelsPerEm.y;\n\t\t\ty2 *= pixelsPerEm.y;\n\n\t\t\t// Track minimum distance to any curve crossing (unsigned).\n\t\t\tif ((code & 1u) != 0u) minDist = min(minDist, abs(y1));\n\t\t\tif (code > 1u) minDist = min(minDist, abs(y2));\n\n\t\t\t// Vertical stroke dilation: signs flipped from horizontal\n\t\t\t// because +Y em-space is up but +Y screen-space is down.\n\t\t\tif ((code & 1u) != 0u)\n\t\t\t{\n\t\t\t\tfloat sy1 = y1 - strokePx;\n\t\t\t\tycov += clamp(sy1 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy1) * 2.0, 0.0, 1.0));\n\t\t\t}\n\n\t\t\tif (code > 1u)\n\t\t\t{\n\t\t\t\tfloat sy2 = y2 + strokePx;\n\t\t\t\tycov -= clamp(sy2 + 0.5, 0.0, 1.0);\n\t\t\t\tywgt = max(ywgt, clamp(1.0 - abs(sy2) * 2.0, 0.0, 1.0));\n\t\t\t}\n\t\t}\n\t}\n\n\tfloat coverage = CalcCoverage(xcov, ycov, xwgt, ywgt);\n\treturn vec2(coverage, minDist);\n}\n\n// Convenience wrapper that returns only coverage (used by fill pass and supersampling).\nfloat SlugRender(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData, float strokePx)\n{\n\treturn SlugRenderEx(renderCoord, bandTransform, glyphData, strokePx).x;\n}\n\n#if SLUG_DEBUG_RAW != 0\n// Debug-only: rerun ray accumulation and return raw (xcov, ycov, xwgt, ywgt).\n// Logic mirrors SlugRenderEx exactly so values are identical to production.\nvec4 SlugRenderRaw(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\tfloat earlyOutBias = -0.5;\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tfloat xcov = 0.0, xwgt = 0.0, ycov = 0.0, ywgt = 0.0;\n\n\t// Horizontal\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) + ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code == 0u) continue;\n\t\tfloat ax = p12.x - p12.z * 2.0 + p3.x;\n\t\tfloat ay = p12.y - p12.w * 2.0 + p3.y;\n\t\tfloat bx = p12.x - p12.z;\n\t\tfloat by = p12.y - p12.w;\n\t\tfloat t1, t2;\n\t\tif (!solveQuadraticRoots(ay, by, p12.y, t1, t2)) continue;\n\t\tfloat x1 = ((ax * t1 - bx * 2.0) * t1 + p12.x) * pixelsPerEm.x;\n\t\tfloat x2 = ((ax * t2 - bx * 2.0) * t2 + p12.x) * pixelsPerEm.x;\n\t\tif ((code & 1u) != 0u) { xcov += clamp(x1 + 0.5, 0.0, 1.0); xwgt = max(xwgt, clamp(1.0 - abs(x1) * 2.0, 0.0, 1.0)); }\n\t\tif (code > 1u)         { xcov -= clamp(x2 + 0.5, 0.0, 1.0); xwgt = max(xwgt, clamp(1.0 - abs(x2) * 2.0, 0.0, 1.0)); }\n\t}\n\n\t// Vertical\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++)\n\t{\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) + ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code == 0u) continue;\n\t\tfloat ax = p12.y - p12.w * 2.0 + p3.y;\n\t\tfloat ay = p12.x - p12.z * 2.0 + p3.x;\n\t\tfloat bx = p12.y - p12.w;\n\t\tfloat by = p12.x - p12.z;\n\t\tfloat t1, t2;\n\t\tif (!solveQuadraticRoots(ay, by, p12.x, t1, t2)) continue;\n\t\tfloat y1 = ((ax * t1 - bx * 2.0) * t1 + p12.y) * pixelsPerEm.y;\n\t\tfloat y2 = ((ax * t2 - bx * 2.0) * t2 + p12.y) * pixelsPerEm.y;\n\t\tif ((code & 1u) != 0u) { ycov += clamp(y1 + 0.5, 0.0, 1.0); ywgt = max(ywgt, clamp(1.0 - abs(y1) * 2.0, 0.0, 1.0)); }\n\t\tif (code > 1u)         { ycov -= clamp(y2 + 0.5, 0.0, 1.0); ywgt = max(ywgt, clamp(1.0 - abs(y2) * 2.0, 0.0, 1.0)); }\n\t}\n\n\treturn vec4(xcov, ycov, xwgt, ywgt);\n}\n\n// Debug-only: count how many curves in each ray's band actually contribute\n// (code != 0). Mismatched counts can indicate a missing crossing.\nvec2 SlugRenderCounts(vec2 renderCoord, vec4 bandTransform, ivec4 glyphData)\n{\n\tvec2 pixelsPerEm = vec2(1.0 / max(fwidth(renderCoord.x), 1.0 / 65536.0),\n\t                        1.0 / max(fwidth(renderCoord.y), 1.0 / 65536.0));\n\tfloat earlyOutBias = -0.5;\n\tivec2 bandMax = glyphData.zw;\n\tbandMax.y &= 0x00FF;\n\tivec2 bandIndex = clamp(ivec2(renderCoord * bandTransform.xy + bandTransform.zw), ivec2(0, 0), bandMax);\n\tivec2 glyphLoc = glyphData.xy;\n\n\tint hHits = 0, vHits = 0;\n\n\tuvec2 hbandData = fetchBand(ivec2(glyphLoc.x + bandIndex.y, glyphLoc.y));\n\tivec2 hbandLoc = CalcBandLoc(glyphLoc, hbandData.y);\n\tint hcount = min(int(hbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < hcount; curveIndex++) {\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(hbandLoc.x + curveIndex, hbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.x, p12.z), p3.x) * pixelsPerEm.x < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.y > 0.0) ? 2u : 0u) + ((p12.w > 0.0) ? 4u : 0u) + ((p3.y > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code != 0u) hHits++;\n\t}\n\n\tuvec2 vbandData = fetchBand(ivec2(glyphLoc.x + bandMax.y + 1 + bandIndex.x, glyphLoc.y));\n\tivec2 vbandLoc = CalcBandLoc(glyphLoc, vbandData.y);\n\tint vcount = min(int(vbandData.x), kMaxCurvesPerBand);\n\tfor (int curveIndex = 0; curveIndex < vcount; curveIndex++) {\n\t\tivec2 curveLoc = ivec2(fetchBand(ivec2(vbandLoc.x + curveIndex, vbandLoc.y)));\n\t\tvec4 p12 = texelFetch(uCurveTexture, curveLoc, 0) - vec4(renderCoord, renderCoord);\n\t\tvec2 p3 = texelFetch(uCurveTexture, ivec2(curveLoc.x + 1, curveLoc.y), 0).xy - renderCoord;\n\t\tif (max(max(p12.y, p12.w), p3.y) * pixelsPerEm.y < earlyOutBias) break;\n\t\tuint code = (0x2E74u >> (((p12.x > 0.0) ? 2u : 0u) + ((p12.z > 0.0) ? 4u : 0u) + ((p3.x > 0.0) ? 8u : 0u))) & 3u;\n\t\tif (code != 0u) vHits++;\n\t}\n\n\treturn vec2(float(hHits), float(vHits));\n}\n#endif\n\nvoid main()\n{\n#if SLUG_DEBUG_RAW != 0\n\t{\n\t\t// Bypass the production path entirely. Paint the raw ray-accumulator\n\t\t// values to the screen so we can see what the GPU actually computes.\n\t\tvec4 raw = SlugRenderRaw(vTexcoord, vBanding, vGlyph);\n\t\tfloat xcov = raw.x;\n\t\tfloat ycov = raw.y;\n\t\tfloat xwgt = raw.z;\n\t\tfloat ywgt = raw.w;\n\t\tvec3 dbg;\n#if SLUG_DEBUG_RAW == 1\n\t\t// xcov: red = positive, green = negative, magnitude = brightness.\n\t\tdbg = vec3(clamp(xcov, 0.0, 1.0), clamp(-xcov, 0.0, 1.0), 0.0);\n#elif SLUG_DEBUG_RAW == 2\n\t\t// xwgt: greyscale (0 = no near edges, 1 = pixel sits exactly on an edge).\n\t\tdbg = vec3(xwgt);\n#elif SLUG_DEBUG_RAW == 3\n\t\tdbg = vec3(clamp(ycov, 0.0, 1.0), clamp(-ycov, 0.0, 1.0), 0.0);\n#elif SLUG_DEBUG_RAW == 4\n\t\tdbg = vec3(ywgt);\n#elif SLUG_DEBUG_RAW == 5\n\t\t// xcov bucketed. Highlights the magnitude of the spurious xcov values.\n\t\tfloat a = abs(xcov);\n\t\tif (a > 0.95)      dbg = vec3(0.0, 0.6, 0.0);   // green   = ~ integer (correct)\n\t\telse if (a > 0.55) dbg = vec3(0.0, 0.0, 0.8);   // blue    = mid (edge AA)\n\t\telse if (a > 0.15) dbg = vec3(1.0, 0.6, 0.0);   // orange  = SUSPICIOUS — small but nonzero\n\t\telse if (a > 0.02) dbg = vec3(1.0, 0.0, 0.0);   // red     = tiny noise\n\t\telse               dbg = vec3(0.05);            // dark    = ~ zero (correct outside)\n#elif SLUG_DEBUG_RAW == 6\n\t\t// Pack three signals into one image: R=xcov, G=ycov, B=weighted_avg.\n\t\tfloat weighted = abs(xcov*xwgt + ycov*ywgt) / max(xwgt + ywgt, 1.0/65536.0);\n\t\tdbg = vec3(abs(xcov), abs(ycov), weighted);\n#elif SLUG_DEBUG_RAW == 7\n\t\t// Bug-pixel detector v1: paint magenta where |xcov| > 0.1 and xwgt < 0.1.\n\t\t// Those pixels accumulated H-ray contribution without registering as a near-edge,\n\t\t// which would explain why CalcCoverage's edge-confidence blend can't fix them.\n\t\t// Other pixels retain the production rendering for context.\n\t\tbool isBug = abs(xcov) > 0.1 && xwgt < 0.1;\n\t\tif (isBug) {\n\t\t\tdbg = vec3(1.0, 0.0, 1.0);\n\t\t} else {\n\t\t\t// Faint backdrop for context: |xcov| as red, |ycov| as green.\n\t\t\tdbg = vec3(abs(xcov) * 0.2, abs(ycov) * 0.2, 0.0);\n\t\t}\n#elif SLUG_DEBUG_RAW == 8\n\t\t// Bug-pixel detector v2: paint magenta where |xcov| has more magnitude\n\t\t// than xwgt can justify. AA-correct pixels have xwgt >= |xcov| roughly;\n\t\t// bug pixels have |xcov| > xwgt + 0.1.\n\t\tbool isBug = abs(xcov) > xwgt + 0.1 && abs(xcov) > 0.05;\n\t\tif (isBug) {\n\t\t\tdbg = vec3(1.0, 0.0, 1.0);\n\t\t} else {\n\t\t\tdbg = vec3(abs(xcov) * 0.2, abs(ycov) * 0.2, 0.0);\n\t\t}\n#elif SLUG_DEBUG_RAW == 10\n\t\t// H-ray crossing-count visualization. Number of curves with code!=0.\n\t\t// Color encoding:\n\t\t//   black = 0 hits\n\t\t//   red = 1 hit (suspicious — entry without exit, or vice versa)\n\t\t//   yellow = 2 hits (canonical interior pixel — entry+exit)\n\t\t//   green = 3+ hits (multiple contour crossings — could be V-shape interior)\n\t\t//   blue tint added if v-hits != h-hits (axes disagree on count)\n\t\tvec2 counts = SlugRenderCounts(vTexcoord, vBanding, vGlyph);\n\t\tint h = int(counts.x);\n\t\tint v = int(counts.y);\n\t\tif      (h == 0) dbg = vec3(0.0);\n\t\telse if (h == 1) dbg = vec3(1.0, 0.0, 0.0);\n\t\telse if (h == 2) dbg = vec3(1.0, 1.0, 0.0);\n\t\telse             dbg = vec3(0.0, 1.0, 0.0);\n\t\tif (h != v) dbg += vec3(0.0, 0.0, 0.4); // blue tint = axes disagree on count\n#elif SLUG_DEBUG_RAW == 11\n\t\t// Artifact-only crossing-count. Show count ONLY at bug pixels:\n\t\t// pixels where xcov has full integer (~1) but ycov is zero.\n\t\t// Color encoding (only at bug pixels, else black):\n\t\t//   red    = 1 H-ray hit at this pixel\n\t\t//   yellow = 2 H-ray hits\n\t\t//   green  = 3 hits\n\t\t//   white  = 4+ hits\n\t\t// Pixel must satisfy: |xcov| > 0.95 AND |ycov| < 0.05 AND wgts < 0.1\n\t\tfloat ax = abs(xcov);\n\t\tfloat ay = abs(ycov);\n\t\tbool isBug = ax > 0.95 && ay < 0.05 && xwgt < 0.1 && ywgt < 0.1;\n\t\tif (isBug) {\n\t\t\tvec2 counts = SlugRenderCounts(vTexcoord, vBanding, vGlyph);\n\t\t\tint h = int(counts.x);\n\t\t\tif      (h == 1) dbg = vec3(1.0, 0.0, 0.0);\n\t\t\telse if (h == 2) dbg = vec3(1.0, 1.0, 0.0);\n\t\t\telse if (h == 3) dbg = vec3(0.0, 1.0, 0.0);\n\t\t\telse             dbg = vec3(1.0);\n\t\t} else {\n\t\t\t// Backdrop: faint outline of the rendering for context.\n\t\t\tdbg = vec3(ax * 0.15, ay * 0.15, 0.0);\n\t\t}\n#elif SLUG_DEBUG_RAW == 9\n\t\t// Axis-disagreement detector. The artifact happens at pixels where:\n\t\t//   - the H-ray accumulated some |xcov| (full or partial)\n\t\t//   - the V-ray says zero (no |ycov|)\n\t\t//   - neither axis has high AA weight\n\t\t// Color code:\n\t\t//   bright magenta = |xcov| in [0.05, 0.55] and |ycov| < 0.05 and weights < 0.1 (BUG)\n\t\t//   white          = |xcov| > 0.95 and |ycov| > 0.95 (correct interior)\n\t\t//   yellow         = |xcov| > 0.95 and |ycov| < 0.05 (axes disagree, but H says full inside)\n\t\t//   black          = both ~zero (correctly outside)\n\t\tfloat ax = abs(xcov);\n\t\tfloat ay = abs(ycov);\n\t\tbool weightsLow = xwgt < 0.1 && ywgt < 0.1;\n\t\tif (ax > 0.05 && ax < 0.55 && ay < 0.05 && weightsLow) {\n\t\t\tdbg = vec3(1.0, 0.0, 1.0); // BUG\n\t\t} else if (ax > 0.95 && ay > 0.95) {\n\t\t\tdbg = vec3(1.0, 1.0, 1.0); // correct interior\n\t\t} else if (ax > 0.95 && ay < 0.05) {\n\t\t\tdbg = vec3(1.0, 1.0, 0.0); // axes disagree (H full, V zero) — possibly artifact too\n\t\t} else if (ax < 0.05 && ay > 0.95) {\n\t\t\tdbg = vec3(0.0, 1.0, 1.0); // axes disagree (V full, H zero)\n\t\t} else if (ax < 0.05 && ay < 0.05) {\n\t\t\tdbg = vec3(0.0, 0.0, 0.1); // correct background\n\t\t} else {\n\t\t\t// Edge AA — partial, with at least some weight.\n\t\t\tdbg = vec3(0.4, 0.4, 0.4);\n\t\t}\n#elif SLUG_DEBUG_RAW == 12\n\t\t// Fine-grained xcov bands. Each band is a different color so we can\n\t\t// read the EXACT value of xcov at any pixel by inspection.\n\t\tfloat a = abs(xcov);\n\t\tvec3 c;\n\t\tif      (a < 0.05) c = vec3(0.0);\n\t\telse if (a < 0.15) c = vec3(0.4, 0.0, 0.0);\n\t\telse if (a < 0.25) c = vec3(0.7, 0.0, 0.0);\n\t\telse if (a < 0.35) c = vec3(1.0, 0.2, 0.0);\n\t\telse if (a < 0.45) c = vec3(1.0, 0.4, 0.0);\n\t\telse if (a < 0.55) c = vec3(1.0, 0.6, 0.0);\n\t\telse if (a < 0.65) c = vec3(1.0, 0.8, 0.0);\n\t\telse if (a < 0.75) c = vec3(1.0, 1.0, 0.2);\n\t\telse if (a < 0.85) c = vec3(1.0, 1.0, 0.4);\n\t\telse if (a < 0.95) c = vec3(1.0, 1.0, 0.7);\n\t\telse               c = vec3(1.0, 1.0, 1.0);\n\t\tif (xcov < 0.0) c = c.bgr; // swap r↔b for negative xcov\n\t\tdbg = c;\n#elif SLUG_DEBUG_RAW == 13\n\t\t// bandIndex.y (horizontal band) as color ramp. Confirms whether the\n\t\t// artifact stripes correspond 1:1 with band-row boundaries.\n\t\tivec2 bandMaxDbg = vGlyph.zw;\n\t\tbandMaxDbg.y &= 0x00FF;\n\t\tivec2 biDbg = clamp(ivec2(vTexcoord * vBanding.xy + vBanding.zw), ivec2(0, 0), bandMaxDbg);\n\t\t// Cycle through 6 distinct hues so adjacent bands are easy to tell apart.\n\t\tint b = biDbg.y;\n\t\tint hueIdx = b - (b / 6) * 6;\n\t\tif      (hueIdx == 0) dbg = vec3(1.0, 0.0, 0.0); // red\n\t\telse if (hueIdx == 1) dbg = vec3(1.0, 0.6, 0.0); // orange\n\t\telse if (hueIdx == 2) dbg = vec3(1.0, 1.0, 0.0); // yellow\n\t\telse if (hueIdx == 3) dbg = vec3(0.0, 1.0, 0.0); // green\n\t\telse if (hueIdx == 4) dbg = vec3(0.0, 0.6, 1.0); // blue\n\t\telse                  dbg = vec3(0.6, 0.0, 1.0); // purple\n\t\t// Darken slightly per \"cycle\" of 6 so we can tell band 0 from band 6.\n\t\tfloat shade = 1.0 - 0.15 * float(b / 6);\n\t\tdbg *= max(shade, 0.4);\n#endif\n\t\tfragColor = vec4(dbg, 1.0);\n\t\treturn;\n\t}\n#endif\n\n\tfloat coverage;\n\tint sampleCount = min(uSupersampleCount, 16);\n\tfloat strokePx = uStrokeExpand;\n\tbool useGradientAlpha = (strokePx > 0.0 && uStrokeAlphaRate != 0.0);\n\n\t// When gradient alpha is active and no supersampling, use SlugRenderEx\n\t// to get both coverage and boundary distance in a single pass.\n\tif (useGradientAlpha && sampleCount <= 1)\n\t{\n\t\tvec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);\n\t\tcoverage = result.x;\n\n\t\t// minDist is the distance from the pixel to the nearest original\n\t\t// glyph boundary (before stroke expansion). Pixels at the inner\n\t\t// stroke edge have minDist ≈ 0, outer edge have minDist ≈ strokePx.\n\t\t// The per-pixel alpha is: alphaStart + alphaRate * minDist\n\t\tfloat dist = clamp(result.y, 0.0, strokePx);\n\t\tfloat alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);\n\t\tfragColor = slugFillColor() * coverage * alpha;\n\t\treturn;\n\t}\n\n\tif (sampleCount <= 1)\n\t{\n\t\tcoverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);\n\t}\n\telse\n\t{\n\t\t// Supersampling with configurable sample count.\n\t\t// Offsets are in em-space, derived from screen-space derivatives so they\n\t\t// scale correctly at any font size or transform.\n\t\tvec2 dx = dFdx(vTexcoord) * 0.5;\n\t\tvec2 dy = dFdy(vTexcoord) * 0.5;\n\n\t\tif (sampleCount <= 2)\n\t\t{\n\t\t\t// 2-sample: diagonal pair\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1) * 0.5;\n\t\t}\n\t\telse if (sampleCount <= 4)\n\t\t{\n\t\t\t// 4-sample rotated-grid supersampling (RGSS pattern).\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3) * 0.25;\n\t\t}\n\t\telse if (sampleCount <= 8)\n\t\t{\n\t\t\t// 8-sample: 8-queens pattern (good spatial distribution)\n\t\t\tfloat c0 = SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c1 = SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tfloat c2 = SlugRender(vTexcoord + dx * 0.3125 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c3 = SlugRender(vTexcoord - dx * 0.3125 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tfloat c4 = SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c5 = SlugRender(vTexcoord - dx * 0.1875 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tfloat c6 = SlugRender(vTexcoord + dx * 0.4375 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tfloat c7 = SlugRender(vTexcoord - dx * 0.4375 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = (c0 + c1 + c2 + c3 + c4 + c5 + c6 + c7) * 0.125;\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// 16-sample: 4x4 jittered grid for maximum quality\n\t\t\tfloat sum = 0.0;\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0625 + dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.4375 + dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.3125 - dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.1875 - dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.1875 + dy * 0.1875, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.0625 - dy * 0.4375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.4375 - dy * 0.0625, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.3125 + dy * 0.3125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.125 + dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.375 + dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.375 - dy * 0.125, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.125 - dy * 0.375, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.25 + dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord - dx * 0.25 - dy * 0.25, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.0 + dy * 0.0, vBanding, vGlyph, strokePx);\n\t\t\tsum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph, strokePx);\n\t\t\tcoverage = sum * 0.0625;\n\t\t}\n\t}\n\n\t// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)\n\t// uStrokeAlphaStart defaults to 1.0, so this is a no-op.\n\tfragColor = slugFillColor() * coverage * uStrokeAlphaStart;\n}\n",POLL_FAST_MS=4,POLL_SLOW_MS=16,FAST_TICKS=12,HARD_TIMEOUT_MS=5e3,KHR_EXT="KHR_parallel_shader_compile",COMPLETION_STATUS_KHR=37297;
+/**
+ * Compile + link a WebGL2 shader program without blocking the main
+ * thread when `KHR_parallel_shader_compile` is supported. The returned
+ * `program` is created synchronously so callers can wire it into PIXI's
+ * caches immediately; the `ready` promise resolves once link completion
+ * has been verified.
+ *
+ * Falls back to a synchronous compile/link path when the extension is
+ * absent — `ready` still resolves so callers can use a uniform API
+ * regardless of platform. The synchronous path will block, matching the
+ * pre-feature behavior on browsers without the extension.
+ *
+ * `sortAttributes` matches PIXI's `extractAttributesFromGlProgram`
+ * pre-link behavior for GLSL 1.00 shaders: attribute locations are
+ * bound in alphabetical order so the post-link extraction lines up with
+ * the pre-link bindings. GLSL 3.00 shaders use explicit `layout(location=N)`
+ * qualifiers and must pass `false` to skip this step.
+ */
+function slugBuildGlProgramAsync(gl,vertexSource,fragmentSource,sortAttributes){const ext=gl.getExtension(KHR_EXT),vertex=gl.createShader(gl.VERTEX_SHADER),fragment=gl.createShader(gl.FRAGMENT_SHADER),program=gl.createProgram();if(!vertex||!fragment||!program)
+// Context lost or out of resources. Release whatever partial GL
+// objects did succeed so we don't leak them on the rejection path.
+return vertex&&gl.deleteShader(vertex),fragment&&gl.deleteShader(fragment),program&&gl.deleteProgram(program),{program,ready:Promise.reject(new Error("slugBuildGlProgramAsync: gl.createShader/createProgram returned null"))};gl.shaderSource(vertex,vertexSource),gl.compileShader(vertex),gl.shaderSource(fragment,fragmentSource),gl.compileShader(fragment),gl.attachShader(program,vertex),gl.attachShader(program,fragment),sortAttributes&&
+/**
+ * Bind `in`/`attribute` locations in alphabetical order before
+ * `linkProgram`. Matches PIXI's `extractAttributesFromGlProgram`
+ * post-link sort so that PIXI's later `getAttribLocation` lookups land
+ * on the same indices we baked in here.
+ */
+function(gl,program,vertexSource){
+// Strip line and block comments first so a commented-out attribute
+// declaration cannot bind a phantom location and shift every real
+// attribute's index downstream.
+const stripped=vertexSource.replace(/\/\*[\s\S]*?\*\//g," ").replace(/\/\/[^\n]*/g," "),names=[],re=/(?:^|\s)(?:(?:flat|smooth|centroid|invariant)\s+)?(?:in|attribute)\s+(?:(?:highp|mediump|lowp)\s+)?\w+\s+(\w+)\s*[;[]/g;let m;for(;null!==(m=re.exec(stripped));){const name=m[1];names.includes(name)||names.push(name)}names.sort();for(let i=0;i<names.length;i++)gl.bindAttribLocation(program,i,names[i])}(gl,program,vertexSource),gl.linkProgram(program);
+// Shaders can be detached + flagged for delete immediately after
+// linkProgram; the driver retains them for the duration of the link.
+// We defer the actual deleteShader until link completion to keep the
+// program object in a fully-defined state during polling, mirroring
+// PIXI's own teardown order.
+const ready=ext?function(gl,program,vertex,fragment){return new Promise((resolve,reject)=>{const start=glprogram_async_nowMs();let ticks=0;const tick=()=>{let done;try{done=gl.getProgramParameter(program,COMPLETION_STATUS_KHR)}catch{
+// Extension query rejected by a buggy driver — bail to sync.
+return void resolveSync(gl,program,vertex,fragment,resolve,reject)}if(done)return void resolveSync(gl,program,vertex,fragment,resolve,reject);if(glprogram_async_nowMs()-start>=HARD_TIMEOUT_MS)
+// Driver never reported completion. Fall back to the
+// synchronous query — it will block briefly but at least
+// won't leave the promise pending forever.
+return void resolveSync(gl,program,vertex,fragment,resolve,reject);ticks++;setTimeout(tick,ticks<=FAST_TICKS?POLL_FAST_MS:POLL_SLOW_MS)};setTimeout(tick,POLL_FAST_MS)})}(gl,program,vertex,fragment):function(gl,program,vertex,fragment){return new Promise((resolve,reject)=>{resolveSync(gl,program,vertex,fragment,resolve,reject)})}(gl,program,vertex,fragment);return{program,ready}}function resolveSync(gl,program,vertex,fragment,resolve,reject){const linked=gl.getProgramParameter(program,gl.LINK_STATUS);if(gl.detachShader(program,vertex),gl.detachShader(program,fragment),gl.deleteShader(vertex),gl.deleteShader(fragment),linked)return void resolve();const log=gl.getProgramInfoLog(program)??"",vlog=gl.getShaderInfoLog(vertex)??"",flog=gl.getShaderInfoLog(fragment)??"";reject(new Error(`slugBuildGlProgramAsync: link failed.\nprogram: ${log}\nvertex: ${vlog}\nfragment: ${flog}`))}function glprogram_async_nowMs(){return"undefined"!=typeof performance&&"function"==typeof performance.now?performance.now():Date.now()}// ./src/v8/slug/font/compile.ts
+/**
+ * Drive {@link slugBuildGlProgramAsync} → {@link slugBuildGlProgramData}
+ * → {@link slugInjectGlProgramData} as a single chained promise.
+ * Returns `true` when the cache was populated and the next PIXI draw
+ * will skip its own compile; `false` when any step short of a thrown
+ * exception failed (link error, PIXI internal drift). Exceptions
+ * surface as rejections — callers may treat them as `false` for
+ * diagnostic purposes but should not crash the render loop on them.
+ *
+ * `pixiGlProgram` must be the same `GlProgram.from(...)` instance the
+ * caller will later associate with their meshes — that's what carries
+ * the `_key` PIXI looks up in `_programDataHash`.
+ */
+function slugCompileAndInject(gl,renderer,pixiGlProgram,vertexSource,fragmentSource,sortAttributes){const{program,ready}=slugBuildGlProgramAsync(gl,vertexSource,fragmentSource,sortAttributes);return ready.then(()=>{try{const programData=// ./src/v8/slug/font/glprogramdata.ts
+/**
+ * Run PIXI v8's post-link extraction steps against an already-linked
+ * `WebGLProgram` and return a populated `GlProgramData`. Intended to be
+ * called once {@link slugBuildGlProgramAsync}'s `ready` promise resolves —
+ * by then the link is complete and these queries are non-blocking.
+ *
+ * Mirrors the tail half of PIXI's internal `generateProgram` (the half
+ * that runs after `gl.linkProgram`) without re-issuing the link itself.
+ * The result can be inserted into the renderer's
+ * `shader._programDataHash[pixiGlProgram._key]` cache so PIXI's first
+ * draw finds a cache hit and skips its own (blocking) compile path.
+ *
+ * The PIXI helpers used here are public exports but flagged `@private`
+ * / `@internal` in their docs. The injection site in the renderer is
+ * expected to wrap this call in try/catch and fall back to the sync
+ * path if a future PIXI release renames or removes them.
+ */
+function(gl,program,pixiGlProgram,sortAttributes){pixiGlProgram._attributeData=(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.extractAttributesFromGlProgram)(program,gl,sortAttributes),pixiGlProgram._uniformData=(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.getUniformData)(program,gl),pixiGlProgram._uniformBlockData=(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.getUboData)(program,gl);const uniformData={};for(const name in pixiGlProgram._uniformData){const data=pixiGlProgram._uniformData[name];uniformData[name]={location:gl.getUniformLocation(program,name),value:(0,external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.defaultValue)(data.type,data.size)}}return new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.GlProgramData(program,uniformData)}(gl,program,pixiGlProgram,sortAttributes);// ./src/v8/slug/font/inject.ts
+/**
+ * Pre-populate PIXI's per-renderer program-data cache so the next draw
+ * skips PIXI's internal (synchronous) `generateProgram` call. Returns
+ * `true` on a successful injection, `false` when PIXI's internal shape
+ * has drifted or the renderer/shader is in an unexpected state — the
+ * caller should treat `false` as "fall back to the sync path".
+ *
+ * Idempotent: re-injecting the same key overwrites the entry, which is
+ * harmless because `generateProgram` would have produced an equivalent
+ * record anyway.
+ */
+return function(renderer,pixiGlProgram,programData){try{const hash=renderer.shader._programDataHash;if(!hash)return!1;const key=pixiGlProgram._key;return"number"==typeof key&&(hash[key]=programData,!0)}catch{return!1}}(renderer,pixiGlProgram,programData)}catch(err){
+// PIXI internal drift (renamed/removed `extractAttributesFromGlProgram`,
+// `getUniformData`, etc). Surface to the console so the cause is
+// visible, then fall back: PIXI's sync compile will run on first draw.
+return console.error("[slug] post-link program-data build failed; falling back to PIXI sync compile.",err),!1}},err=>(
+// Link failure or extension-level error from `slugBuildGlProgramAsync`.
+// The Error message contains the program/vertex/fragment info logs —
+// surface them so a real shader error isn't invisible. We still resolve
+// `false` so the caller can fall through to the sync compile path
+// (which will most likely re-report the same error).
+console.error("[slug] parallel shader compile failed; falling back to PIXI sync compile.",err),!1))}// ./src/v8/slug/font/gpu.ts
 /** Slug's GLSL is `#version 300 es`, which PIXI's own `generateProgram`
  * recognizes (regex match in node_modules/.../generateProgram.js) and
  * uses to disable the alphabetical attribute pre-sort. We mirror that
  * decision here so post-link attribute extraction lines up identically
  * to PIXI's own path. */
-const gpu_SORT_ATTRIBUTES=!1,gpu_KHR_EXT="KHR_parallel_shader_compile";
+const SORT_ATTRIBUTES=!1,gpu_KHR_EXT="KHR_parallel_shader_compile";
 /**
  * Reinterpret a Uint32 band buffer as a Float32 view sharing the same
  * memory. PixiJS v8's `mapFormatToGlFormat` mismaps `rgba32uint` to
@@ -11371,7 +5798,7 @@ const bandView=bandViewAsFloat(font.bandData),curveTexture=makeCurveTexture(font
 // extension. Any failure short of a thrown exception falls back
 // transparently — `programReady` is omitted in that case so callers
 // know to expect PIXI's sync compile on first draw (today's path).
-if(renderer&&SlugFonts.parallelShaderCompile){const gl=renderer.gl;gl&&gl.getExtension(gpu_KHR_EXT)&&(cache.programReady=slugCompileAndInject(gl,renderer,glProgram,vert_namespaceObject,frag_namespaceObject,gpu_SORT_ATTRIBUTES))}return font.gpuCache=cache,font.setGpuDestroy(()=>{cache.curveTexture.destroy(),cache.bandTexture.destroy(),cache.fallbackWhite.destroy()}),cache}// ./src/v8/slug/shader.ts
+if(renderer&&SlugFonts.parallelShaderCompile){const gl=renderer.gl;gl&&gl.getExtension(gpu_KHR_EXT)&&(cache.programReady=slugCompileAndInject(gl,renderer,glProgram,vert_namespaceObject,frag_namespaceObject,SORT_ATTRIBUTES))}return font.gpuCache=cache,font.setGpuDestroy(()=>{cache.curveTexture.destroy(),cache.bandTexture.destroy(),cache.fallbackWhite.destroy()}),cache}// ./src/v8/slug/shader.ts
 /**
  * Creates a per-instance PixiJS v8 Shader for the Slug rendering algorithm.
  * The GlProgram and the curve/band textures are shared across instances
@@ -11477,9 +5904,6 @@ function(src){const comma=src.indexOf(",");if(-1===comma)return null;const heade
  * already-cached URL). Any other input returns null and the caller
  * should fall back to `slugResolveFontInput`.
  */
-// EXTERNAL MODULE: ./node_modules/@toreda/verify/dist/is/int/pos.js
-var pos=__webpack_require__(1330),finite=__webpack_require__(2811);
-// EXTERNAL MODULE: ./node_modules/@toreda/verify/dist/is/number/finite.js
 /** Log an invalid-color diagnostic without throwing. */
 function reportColorError(message){console.error(`[SlugText:color] ${message}`)}
 /** Expand a single hex character to a byte (0..255): `F` → 255. */function expandNibble(c){return parseInt(c+c,16)}
@@ -11516,7 +5940,7 @@ return 3===body.length?{r:expandNibble(body[0])/255,g:expandNibble(body[1])/255,
 // 4 digits → RGBA shorthand, alpha from input.
 4===body.length?{r:expandNibble(body[0])/255,g:expandNibble(body[1])/255,b:expandNibble(body[2])/255,alphaFromInput:expandNibble(body[3])/255}:
 // 6 digits → RRGGBB, preserve alpha.
-6===body.length?{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255}:{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255,alphaFromInput:parseByte(body,6)/255}}(input),!parsed)return reportColorError(`Invalid hex string "${input}" — expected 2, 3, 4, 6, or 8 hex digits, optionally prefixed with # or 0x.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}else if("number"==typeof input){if(parsed=function(n){if(!(0,pos/* isIntPos */.A)(n)||n>4294967295)return null;if(n<=16777215)return{r:(n>>16&255)/255,g:(n>>8&255)/255,b:(255&n)/255};
+6===body.length?{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255}:{r:parseByte(body,0)/255,g:parseByte(body,2)/255,b:parseByte(body,4)/255,alphaFromInput:parseByte(body,6)/255}}(input),!parsed)return reportColorError(`Invalid hex string "${input}" — expected 2, 3, 4, 6, or 8 hex digits, optionally prefixed with # or 0x.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}else if("number"==typeof input){if(parsed=function(n){if(!Number.isInteger(n)||n<0||n>4294967295)return null;if(n<=16777215)return{r:(n>>16&255)/255,g:(n>>8&255)/255,b:(255&n)/255};
 // 8-digit RRGGBBAA — mask against 0xffffffff then extract each byte.
 // `>>> 0` forces unsigned 32-bit interpretation for the high byte.
 const u=n>>>0;return{r:(u>>>24&255)/255,g:(u>>>16&255)/255,b:(u>>>8&255)/255,alphaFromInput:(255&u)/255}}
@@ -11526,7 +5950,7 @@ const u=n>>>0;return{r:(u>>>24&255)/255,g:(u>>>16&255)/255,b:(u>>>8&255)/255,alp
  * coarse: if every element is `≤ 1` we normalize; if any element is
  * `> 1` we treat the entire array as 8-bit. Returns null if any element
  * is out-of-range (negative, > 255, or non-finite).
- */(input),!parsed)return reportColorError(`Invalid hex number ${input} — expected a finite integer in 0..0xFFFFFFFF.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}else{if(!Array.isArray(input))return reportColorError(`Unsupported color input type (${typeof input}). Expected string, number, or [r, g, b] / [r, g, b, a] array.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1};if(parsed=function(arr){if(3!==arr.length&&4!==arr.length)return null;for(let i=0;i<arr.length;i++){const v=arr[i];if(!(0,finite.isNumberFinite)(v)||v<0||v>255)return null}let anyAbove1=!1;for(let i=0;i<arr.length;i++)if(arr[i]>1){anyAbove1=!0;break}const scale=anyAbove1?1/255:1,result={r:arr[0]*scale,g:arr[1]*scale,b:arr[2]*scale};return 4===arr.length&&(result.alphaFromInput=arr[3]*scale),result}(input),!parsed)return reportColorError(`Invalid color array [${input.join(", ")}] — each element must be a finite number in 0..255, and the array must have 3 or 4 elements.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}const alphaProvided=void 0!==parsed.alphaFromInput;return{rgba:[parsed.r,parsed.g,parsed.b,alphaProvided?parsed.alphaFromInput:current[3]],rgbProvided:!0,alphaProvided}}
+ */(input),!parsed)return reportColorError(`Invalid hex number ${input} — expected a finite integer in 0..0xFFFFFFFF.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}else{if(!Array.isArray(input))return reportColorError(`Unsupported color input type (${typeof input}). Expected string, number, or [r, g, b] / [r, g, b, a] array.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1};if(parsed=function(arr){if(3!==arr.length&&4!==arr.length)return null;for(let i=0;i<arr.length;i++){const v=arr[i];if(!Number.isFinite(v)||v<0||v>255)return null}let anyAbove1=!1;for(let i=0;i<arr.length;i++)if(arr[i]>1){anyAbove1=!0;break}const scale=anyAbove1?1/255:1,result={r:arr[0]*scale,g:arr[1]*scale,b:arr[2]*scale};return 4===arr.length&&(result.alphaFromInput=arr[3]*scale),result}(input),!parsed)return reportColorError(`Invalid color array [${input.join(", ")}] — each element must be a finite number in 0..255, and the array must have 3 or 4 elements.`),{rgba:[current[0],current[1],current[2],current[3]],rgbProvided:!1,alphaProvided:!1}}const alphaProvided=void 0!==parsed.alphaFromInput;return{rgba:[parsed.r,parsed.g,parsed.b,alphaProvided?parsed.alphaFromInput:current[3]],rgbProvided:!0,alphaProvided}}
 /**
  * Tuple-only convenience wrapper — preserved for the many callers that
  * don't need provenance flags.
@@ -11616,7 +6040,7 @@ function decorationsEqual(a,b){if(a.enabled!==b.enabled)return!1;if(a.thickness!
  * previously-set alpha) should call `slugMergeDecoration` rather than
  * this resolver directly.
  */
-function slugResolveDecoration(input){if(!0===input)return{enabled:!0,colorRgb:null,colorAlpha:null,thickness:null,length:1,align:"start"};if(!1===input||null==input)return{enabled:!1,colorRgb:null,colorAlpha:null,thickness:null,length:1,align:"start"};let colorRgb=null,colorAlpha=null;if(null!==input.color&&void 0!==input.color){const parse=slugTextColorParse(input.color,[0,0,0,1]);parse.rgbProvided&&(colorRgb=[parse.rgba[0],parse.rgba[1],parse.rgba[2]]),parse.alphaProvided&&(colorAlpha=parse.rgba[3])}const thickness=null===input.thickness||void 0===input.thickness?null:(0,dist/* numberValue */.Vg)(input.thickness,0),rawLength=null===input.length||void 0===input.length?1:(0,dist/* numberValue */.Vg)(input.length,1);return{enabled:!0,colorRgb,colorAlpha,thickness,length:Math.min(Math.max(rawLength,0),1),align:"center"===input.align||"end"===input.align||"left"===input.align||"right"===input.align?input.align:"start"}}
+function slugResolveDecoration(input){if(!0===input)return{enabled:!0,colorRgb:null,colorAlpha:null,thickness:null,length:1,align:"start"};if(!1===input||null==input)return{enabled:!1,colorRgb:null,colorAlpha:null,thickness:null,length:1,align:"start"};let colorRgb=null,colorAlpha=null;if(null!==input.color&&void 0!==input.color){const parse=slugTextColorParse(input.color,[0,0,0,1]);parse.rgbProvided&&(colorRgb=[parse.rgba[0],parse.rgba[1],parse.rgba[2]]),parse.alphaProvided&&(colorAlpha=parse.rgba[3])}const thickness=null===input.thickness||void 0===input.thickness?null:"number"==typeof input.thickness?input.thickness:0,rawLength=null===input.length||void 0===input.length?1:"number"==typeof input.length?input.length:1;return{enabled:!0,colorRgb,colorAlpha,thickness,length:Math.min(Math.max(rawLength,0),1),align:"center"===input.align||"end"===input.align||"left"===input.align||"right"===input.align?input.align:"start"}}
 /**
  * Apply a fill change to a decoration's sticky channels: clear sticky
  * RGB if the new fill explicitly carried RGB, clear sticky alpha if it
@@ -11680,6 +6104,25 @@ _fill;_color;_supersampling;_supersampleCount;_wordWrap;_wordWrapWidth;_breakWor
 // whenever any input that feeds them changes (decoration setters,
 // color, font, fontSize). Render code reads ONLY these.
 _underlineDraw;_strikethroughDraw;_overlineDraw;_vertexBytes;_indexBytes;_rebuildCount;
+/**
+         * Rebuild-kind hint recorded by `_requestRebuild` and consumed by
+         * the version-specific `rebuild()` via `_consumePendingKind()`.
+         *
+         * Strict-kind merge contract: once set to `'full'` for the
+         * current pending rebuild, it cannot be narrowed by a later
+         * setter in the same frame. Setters that can statically prove a
+         * narrower kind is safe call `_requestRebuild(kind)`; setters
+         * that cannot, or pre-incremental setters that still call
+         * `this.rebuild()` directly, leave the field at `'full'`. The
+         * field is reset to `'full'` every time `_consumePendingKind()`
+         * is called so the next batch starts clean.
+         *
+         * v6 / v7 ignore this field entirely — their `rebuild()`
+         * implementations always take the full path.
+         *
+         * See `_specs/features/incremental-mesh-rebuild.md` §4.2.
+         */
+_pendingKind;
 // Stroke state (enabled when _strokeWidth > 0)
 _strokeWidth;_strokeColor;_strokeAlphaMode;_strokeAlphaStart;_strokeAlphaRate;
 // Drop shadow state (enabled when _dropShadow is not null).
@@ -11691,16 +6134,16 @@ _dropShadow;
          * Called by the subclass constructor after super().
          * Subclass must call rebuild() separately after version-specific init.
          */
-initBase(init){this._text=(0,dist/* stringValue */.r$)(init.text,Defaults.SlugText.Text);const fallbackWhileLoading=(0,dist/* booleanValue */.eC)(init.fallbackWhileLoading,Defaults.SlugText.FallbackWhileLoading),policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._setFontRef(syncFont);else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._setFontRef(fallback??new SlugFont),slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._fontRef?.deref()!==resolved&&(this._setFontRef(resolved),this._resolveDecorations(),this.rebuild())})}this._fontSize=(0,dist/* numberValue */.Vg)(init.options?.fontSize,Defaults.SlugText.FontSize),
+initBase(init){this._text="string"==typeof init.text?init.text:Defaults.SlugText.Text;const fallbackWhileLoading="boolean"==typeof init.fallbackWhileLoading?init.fallbackWhileLoading:Defaults.SlugText.FallbackWhileLoading,policy={...Defaults.SlugText.ErrorPolicy,...init.errorPolicy??{}},fontInput=init.font,syncFont=function(input){if(input instanceof SlugFont)return input;if("string"==typeof input)return SlugFonts.get(input);if(Array.isArray(input)&&input.length>0&&input.every(x=>"string"==typeof x)){const key=input[0];return SlugFonts.get(key)||null}if(isAliasUrlRef(input)){const alias="string"==typeof input.alias?input.alias:void 0,url="string"==typeof input.url?input.url:void 0;if(alias){const hit=SlugFonts.get(alias);if(hit)return hit}if(url){const hit=SlugFonts.get(url);if(hit)return hit}return null}return null}(fontInput);if(syncFont)this._setFontRef(syncFont);else{const fallback=fallbackWhileLoading?SlugFonts.fallback():null;this._setFontRef(fallback??new SlugFont),slugResolveFontInput(fontInput,policy).then(resolved=>{resolved&&this._fontRef?.deref()!==resolved&&(this._setFontRef(resolved),this._resolveDecorations(),this.rebuild())})}this._fontSize="number"==typeof init.options?.fontSize?init.options.fontSize:Defaults.SlugText.FontSize,
 // `init.options.fill` is widened to `SlugTextFill` (color | gradient
 // | texture). The resolver folds invalid input back to the default
 // solid color and emits provenance flags consumed by decoration
 // inheritance.
-this._fill=slugResolveFill(init.options?.fill,Defaults.SlugText.FillColor),this._color=slugFillRepresentativeColor(this._fill),this._supersampling=(0,dist/* booleanValue */.eC)(init.supersampling,Defaults.SlugText.Supersampling),this._supersampleCount=(0,dist/* numberValue */.Vg)(init.supersampleCount,Defaults.SlugText.SupersampleCount),this._wordWrap=(0,dist/* booleanValue */.eC)(init.options?.wordWrap,Defaults.SlugText.WordWrap),this._wordWrapWidth=(0,dist/* numberValue */.Vg)(init.options?.wordWrapWidth,Defaults.SlugText.WordWrapWidth),this._breakWords=(0,dist/* booleanValue */.eC)(init.options?.breakWords,!1),this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._align=resolveAlignInput(init.options?.align),this._textJustify=resolveTextJustifyInput(init.options?.textJustify),this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0;
+this._fill=slugResolveFill(init.options?.fill,Defaults.SlugText.FillColor),this._color=slugFillRepresentativeColor(this._fill),this._supersampling="boolean"==typeof init.supersampling?init.supersampling:Defaults.SlugText.Supersampling,this._supersampleCount="number"==typeof init.supersampleCount?init.supersampleCount:Defaults.SlugText.SupersampleCount,this._wordWrap="boolean"==typeof init.options?.wordWrap?init.options.wordWrap:Defaults.SlugText.WordWrap,this._wordWrapWidth="number"==typeof init.options?.wordWrapWidth?init.options.wordWrapWidth:Defaults.SlugText.WordWrapWidth,this._breakWords="boolean"==typeof init.options?.breakWords?init.options.breakWords:Defaults.SlugText.BreakWords,this._direction="rtl"===init.options?.direction?"rtl":Defaults.SlugText.Direction,this._align=resolveAlignInput(init.options?.align),this._textJustify=resolveTextJustifyInput(init.options?.textJustify),this._underline=slugResolveDecoration(init.options?.underline),this._strikethrough=slugResolveDecoration(init.options?.strikethrough),this._overline=slugResolveDecoration(init.options?.overline),this._underlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._strikethroughDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._overlineDraw={enabled:!1,color:[0,0,0,1],thickness:1,length:1,align:"left"},this._vertexBytes=0,this._indexBytes=0,this._rebuildCount=0,this._pendingKind="full";
 // Stroke
-const stroke=init.options?.stroke;this._strokeWidth=(0,dist/* numberValue */.Vg)(stroke?.width,Defaults.SlugText.StrokeWidth),this._strokeColor=slugTextColorToRgba(stroke?.color,Defaults.SlugText.StrokeColor),this._strokeAlphaMode=stroke?.alphaMode??Defaults.SlugText.StrokeAlphaMode,this._strokeAlphaStart=(0,dist/* numberValue */.Vg)(stroke?.alphaStart,Defaults.SlugText.StrokeAlphaStart),this._strokeAlphaRate=(0,dist/* numberValue */.Vg)(stroke?.alphaRate,Defaults.SlugText.StrokeAlphaRate);
+const stroke=init.options?.stroke;this._strokeWidth="number"==typeof stroke?.width?stroke.width:Defaults.SlugText.StrokeWidth,this._strokeColor=slugTextColorToRgba(stroke?.color,Defaults.SlugText.StrokeColor),this._strokeAlphaMode=stroke?.alphaMode??Defaults.SlugText.StrokeAlphaMode,this._strokeAlphaStart="number"==typeof stroke?.alphaStart?stroke.alphaStart:Defaults.SlugText.StrokeAlphaStart,this._strokeAlphaRate="number"==typeof stroke?.alphaRate?stroke.alphaRate:Defaults.SlugText.StrokeAlphaRate;
 // Drop shadow — presence of the object enables it
-const ds=init.options?.dropShadow;this._dropShadow=ds?{alpha:(0,dist/* numberValue */.Vg)(ds.alpha,Defaults.SlugText.DropShadowAlpha),angle:(0,dist/* numberValue */.Vg)(ds.angle,Defaults.SlugText.DropShadowAngle),blur:(0,dist/* numberValue */.Vg)(ds.blur,Defaults.SlugText.DropShadowBlur),color:slugTextColorToRgba(ds.color,Defaults.SlugText.DropShadowColor),distance:(0,dist/* numberValue */.Vg)(ds.distance,Defaults.SlugText.DropShadowDistance)}:null,this._resolveDecorations()}
+const ds=init.options?.dropShadow;this._dropShadow=ds?{alpha:"number"==typeof ds.alpha?ds.alpha:Defaults.SlugText.DropShadowAlpha,angle:"number"==typeof ds.angle?ds.angle:Defaults.SlugText.DropShadowAngle,blur:"number"==typeof ds.blur?ds.blur:Defaults.SlugText.DropShadowBlur,color:slugTextColorToRgba(ds.color,Defaults.SlugText.DropShadowColor),distance:"number"==typeof ds.distance?ds.distance:Defaults.SlugText.DropShadowDistance}:null,this._resolveDecorations()}
 /**
          * Recompute the concrete decoration draw records from the user
          * inputs (`_underline`/`_strikethrough`/`_overline`), the current
@@ -11721,6 +6164,41 @@ const ds=init.options?.dropShadow;this._dropShadow=ds?{alpha:(0,dist/* numberVal
          * fold sees the post-invalidation sticky state.
          */_applyFillToDecorations(rgbProvided,alphaProvided){(rgbProvided||alphaProvided)&&(this._underline=slugApplyFillToDecoration(this._underline,rgbProvided,alphaProvided),this._strikethrough=slugApplyFillToDecoration(this._strikethrough,rgbProvided,alphaProvided),this._overline=slugApplyFillToDecoration(this._overline,rgbProvided,alphaProvided))}
 /**
+         * Setter-facing entry point: record the rebuild kind requested
+         * for the change being applied, then trigger `rebuild()`. The
+         * version-specific implementation reads the kind via
+         * `_consumePendingKind()` and decides whether to take an
+         * incremental path or fall through to a full rebuild.
+         *
+         * Strict-kind merge: if multiple setters fire within the same
+         * frame (before `rebuild()` consumes the kind), the strictest
+         * kind among them wins. `'full'` is the strictest. The current
+         * implementation only narrows from `'full'` to a more specific
+         * kind when a setter explicitly opts in — any setter that calls
+         * this with `'full'` (or any setter that still calls
+         * `this.rebuild()` directly without going through this method)
+         * forces the batched rebuild to the full path.
+         *
+         * Setters that have not yet been audited still call
+         * `this.rebuild()` directly. That path leaves `_pendingKind`
+         * untouched at its initial `'full'` value, so behavior is
+         * unchanged until each setter is migrated.
+         */_requestRebuild(kind){"full"!==kind&&"full"!==this._pendingKind?
+// Both are narrower than 'full'. If they disagree, upgrade to
+// 'full' — combining e.g. fillVisual + shadowVisual in the
+// same frame is not currently a supported incremental path,
+// so the safe combine is the full path. This is the place to
+// loosen later if we add a multi-pass incremental.
+this._pendingKind!==kind&&(this._pendingKind="full"):this._pendingKind="full"===kind?"full":kind,this.rebuild()}
+/**
+         * Version-specific `rebuild()` implementations call this once at
+         * the top of their body to read the current pending kind and
+         * reset the field to `'full'` for the next batch. Returns `'full'`
+         * for any rebuild not driven through `_requestRebuild` — which
+         * preserves today's behavior for setters that haven't been
+         * migrated yet, and for the constructor's initial rebuild.
+         */_consumePendingKind(){const kind=this._pendingKind;return this._pendingKind="full",kind}
+/**
          * Called when supersampling is toggled. Override to update shader
          * uniforms without a full rebuild.
          */onSupersamplingChanged(){}
@@ -11729,7 +6207,13 @@ const ds=init.options?.dropShadow;this._dropShadow=ds?{alpha:(0,dist/* numberVal
          * uniforms without a full rebuild.
          */onSupersampleCountChanged(){}
 // --- Property accessors ---
-get text(){return this._text}set text(value){this._text!==value&&(this._text=value,this.rebuild())}
+get text(){return this._text}set text(value){this._text!==value&&(this._text=value,
+// Text content can always go through the incremental path
+// in v8 — the slot's `_updateSlot` covers both capacity-fit
+// (steady state) and capacity-grow (one-time buffer
+// replacement keeping geometry/shader/mesh). No pass shape
+// changes from text content alone.
+this._requestRebuild("content"))}
 /**
          * Mutate the current text to uppercase and rebuild glyphs.
          * Does NOT return a new string.
@@ -11749,7 +6233,13 @@ get text(){return this._text}set text(value){this._text!==value&&(this._text=val
 /**
          * Deference and return the font used or return `null` when the
          * ref has been cleared or target font no longer exists.
-         */get font(){return this._fontRef?.deref()??null}set font(value){this._fontRef?.deref()!==value&&(this._setFontRef(value),this._resolveDecorations(),this.rebuild())}
+         */get font(){return this._fontRef?.deref()??null}set font(value){this._fontRef?.deref()!==value&&(this._setFontRef(value),this._resolveDecorations(),
+// Font swap changes glyph maps and GPU bindings — must take
+// the full path. `_requestRebuild('full')` mirrors today's
+// plain `this.rebuild()`, but routes through the strict-kind
+// merge so a same-frame setter combination still resolves
+// correctly.
+this._requestRebuild("full"))}
 /**
          * Release the live font reference held by this text instance.
          * Version-specific subclasses must call this from their `destroy()`
@@ -11776,20 +6266,43 @@ get text(){return this._text}set text(value){this._text!==value&&(this._text=val
 // while this SlugText is alive. `addManual` no-ops when the
 // font is registry-owned or is the fallback, so the cost
 // here is one Set membership check on the common path.
-SlugFonts.addManual(next),this._fontRef=new WeakRef(next),SlugFonts.retain(next))}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),this.rebuild())}get color(){return this._color}set color(value){const next=slugTextColorToRgba(value,this._color);if("solid"===this._fill.kind&&this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3])return;
+SlugFonts.addManual(next),this._fontRef=new WeakRef(next),SlugFonts.retain(next))}get fontSize(){return this._fontSize}set fontSize(value){this._fontSize!==value&&(this._fontSize=value,this._resolveDecorations(),
+// fontSize changes every glyph's scale, line height, advance
+// width — full geometry regen required.
+this._requestRebuild("full"))}get color(){return this._color}set color(value){const prevFillKind=this._fill.kind,next=slugTextColorToRgba(value,this._color);if("solid"===prevFillKind&&this._color[0]===next[0]&&this._color[1]===next[1]&&this._color[2]===next[2]&&this._color[3]===next[3])return;
 // `color` setter always installs a solid fill. If the previous
 // fill was a gradient/texture, this replaces it.
-const resolved=slugResolveFill(value,this._color);this._fill=resolved,this._color=slugFillRepresentativeColor(resolved),this._applyFillToDecorations(resolved.rgbProvided,resolved.alphaProvided),this._resolveDecorations(),this.rebuild()}
+const resolved=slugResolveFill(value,this._color);this._fill=resolved,this._color=slugFillRepresentativeColor(resolved),this._applyFillToDecorations(resolved.rgbProvided,resolved.alphaProvided),this._resolveDecorations(),
+// Solid→solid color swap can ride the incremental fill path
+// (re-resolve glyph quads with the new color into the same
+// slot). Crossing solid↔non-solid requires the fill sampler
+// bindings to flip, which `_writeFillSamplers` handles
+// in-place — still incremental. The shadow / stroke vertex
+// colors are unrelated, so a fill-only color change is
+// always `'fillVisual'`.
+this._requestRebuild("fillVisual")}
 /**
          * Full fill input: solid color, linear/radial gradient, or texture.
          * Setting via `color` is preserved for backward compatibility and
          * is equivalent to setting `fill` with a color form.
-         */get fill(){return this._fill}set fill(value){const resolved=slugResolveFill(value,this._color);this._fill=resolved,this._color=slugFillRepresentativeColor(resolved),this._applyFillToDecorations(resolved.rgbProvided,resolved.alphaProvided),this._resolveDecorations(),this.rebuild()}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,this.rebuild())}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this.rebuild())}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this.rebuild())}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),this.rebuild())}
+         */get fill(){return this._fill}set fill(value){const resolved=slugResolveFill(value,this._color);this._fill=resolved,this._color=slugFillRepresentativeColor(resolved),this._applyFillToDecorations(resolved.rgbProvided,resolved.alphaProvided),this._resolveDecorations(),
+// Fill swap (any direction) is incremental — `_writeFillSamplers`
+// rebinds the gradient/texture sampler on the existing shader
+// (A7-A9) and disposes the previous fill GPU record.
+this._requestRebuild("fillVisual")}get wordWrap(){return this._wordWrap}set wordWrap(value){this._wordWrap!==value&&(this._wordWrap=value,
+// Wrap toggle can flip line count → vertex positions change
+// across every line → full rebuild.
+this._requestRebuild("full"))}get wordWrapWidth(){return this._wordWrapWidth}set wordWrapWidth(value){this._wordWrapWidth!==value&&(this._wordWrapWidth=value,this._requestRebuild("full"))}get breakWords(){return this._breakWords}set breakWords(value){this._breakWords!==value&&(this._breakWords=value,this._wordWrap&&this._requestRebuild("full"))}get direction(){return this._direction}set direction(value){const next="rtl"===value?"rtl":"ltr";this._direction!==next&&(this._direction=next,this._resolveDecorations(),
+// LTR↔RTL flip changes per-line physical alignment and
+// decoration positioning across the whole geometry.
+this._requestRebuild("full"))}
 /**
          * Block-level text alignment. Stored in logical form — the
          * physical resolution (folding in `direction`) happens in the
          * version-specific `rebuild()`.
-         */get align(){return this._align}set align(value){const next=resolveAlignInput(value);this._align!==next&&(this._align=next,this.rebuild())}
+         */get align(){return this._align}set align(value){const next=resolveAlignInput(value);this._align!==next&&(this._align=next,
+// Per-line offset changes → vertex X positions change.
+this._requestRebuild("full"))}
 /**
          * Justify strategy used when `align === 'justify'`. Stored even
          * when `align` is not `'justify'` so toggling `align` doesn't
@@ -11797,33 +6310,79 @@ const resolved=slugResolveFill(value,this._color);this._fill=resolved,this._colo
          */get textJustify(){return this._textJustify}set textJustify(value){const next=resolveTextJustifyInput(value);this._textJustify!==next&&(this._textJustify=next,
 // No effect when align !== 'justify'; rebuild() is cheap
 // enough to skip the conditional.
-"justify"===this._align&&this.rebuild())}get underline(){return this._underline}set underline(value){const next=slugResolveDecoration(value);decorationsEqual(this._underline,next)||(this._underline=next,this._resolveDecorations(),this.rebuild())}get strikethrough(){return this._strikethrough}set strikethrough(value){const next=slugResolveDecoration(value);decorationsEqual(this._strikethrough,next)||(this._strikethrough=next,this._resolveDecorations(),this.rebuild())}get overline(){return this._overline}set overline(value){const next=slugResolveDecoration(value);decorationsEqual(this._overline,next)||(this._overline=next,this._resolveDecorations(),this.rebuild())}
+"justify"===this._align&&this._requestRebuild("full"))}get underline(){return this._underline}set underline(value){const next=slugResolveDecoration(value);if(decorationsEqual(this._underline,next))return;const prevEnabled=this._underline.enabled,prevLength=this._underline.length;this._underline=next,this._resolveDecorations(),
+// Enabling / disabling the decoration changes child count
+// on the display list (add / remove Graphics) — that's not
+// a clean incremental swap, route through full. A length
+// change shifts decoration rect width, also full. Pure
+// color / thickness / alpha changes can take the decoration
+// incremental path — v8's `_buildDecorations` uses
+// `Graphics.clear() + re-issue` regardless of kind, so the
+// only thing the kind controls today is whether old slots
+// are parked. Glyph passes are untouched either way, so
+// `'decorationVisual'` is safe for any case that doesn't
+// flip enabled or length.
+prevEnabled!==next.enabled||prevLength!==next.length?this._requestRebuild("full"):this._requestRebuild("decorationVisual")}get strikethrough(){return this._strikethrough}set strikethrough(value){const next=slugResolveDecoration(value);if(decorationsEqual(this._strikethrough,next))return;const prevEnabled=this._strikethrough.enabled,prevLength=this._strikethrough.length;this._strikethrough=next,this._resolveDecorations(),prevEnabled!==next.enabled||prevLength!==next.length?this._requestRebuild("full"):this._requestRebuild("decorationVisual")}get overline(){return this._overline}set overline(value){const next=slugResolveDecoration(value);if(decorationsEqual(this._overline,next))return;const prevEnabled=this._overline.enabled,prevLength=this._overline.length;this._overline=next,this._resolveDecorations(),prevEnabled!==next.enabled||prevLength!==next.length?this._requestRebuild("full"):this._requestRebuild("decorationVisual")}
 // --- Stroke ---
 /** Stroke width in pixels. 0 = no stroke. */
-get strokeWidth(){return this._strokeWidth}set strokeWidth(value){this._strokeWidth!==value&&(this._strokeWidth=value,this.rebuild())}
-/** Stroke color as [r, g, b, a] in 0-1 range. */get strokeColor(){return this._strokeColor}set strokeColor(value){this._strokeColor=slugTextColorToRgba(value,this._strokeColor),this._strokeWidth>0&&this.rebuild()}
-/** Stroke alpha mode: 'uniform' for uniform, 'gradient' for per-pixel fade. */get strokeAlphaMode(){return this._strokeAlphaMode}set strokeAlphaMode(value){this._strokeAlphaMode!==value&&(this._strokeAlphaMode=value,this._strokeWidth>0&&this.rebuild())}
-/** Starting alpha for gradient mode (innermost stroke pixel). */get strokeAlphaStart(){return this._strokeAlphaStart}set strokeAlphaStart(value){this._strokeAlphaStart!==value&&(this._strokeAlphaStart=value,this._strokeWidth>0&&"gradient"===this._strokeAlphaMode&&this.rebuild())}
-/** Alpha change per pixel outward in gradient mode. */get strokeAlphaRate(){return this._strokeAlphaRate}set strokeAlphaRate(value){this._strokeAlphaRate!==value&&(this._strokeAlphaRate=value,this._strokeWidth>0&&"gradient"===this._strokeAlphaMode&&this.rebuild())}
-/** Stroke configuration object, or null if disabled. */get stroke(){return this._strokeWidth<=0?null:{color:this._strokeColor,width:this._strokeWidth,alphaMode:this._strokeAlphaMode,alphaStart:this._strokeAlphaStart,alphaRate:this._strokeAlphaRate}}set stroke(value){const newWidth=(0,dist/* numberValue */.Vg)(value?.width,0),colorBase=value?this._strokeColor:Defaults.SlugText.StrokeColor,newColor=slugTextColorToRgba(value?.color,colorBase),newAlphaMode=value?.alphaMode??Defaults.SlugText.StrokeAlphaMode,newAlphaStart=(0,dist/* numberValue */.Vg)(value?.alphaStart,Defaults.SlugText.StrokeAlphaStart),newAlphaRate=(0,dist/* numberValue */.Vg)(value?.alphaRate,Defaults.SlugText.StrokeAlphaRate),changed=this._strokeWidth!==newWidth||this._strokeColor[0]!==newColor[0]||this._strokeColor[1]!==newColor[1]||this._strokeColor[2]!==newColor[2]||this._strokeColor[3]!==newColor[3]||this._strokeAlphaMode!==newAlphaMode||this._strokeAlphaStart!==newAlphaStart||this._strokeAlphaRate!==newAlphaRate;
+get strokeWidth(){return this._strokeWidth}set strokeWidth(value){this._strokeWidth!==value&&(this._strokeWidth=value,
+// Width affects per-vertex normal expansion (dilation);
+// every stroke vertex moves. Crossing zero also changes
+// whether the stroke pass exists at all — both cases need
+// the full path.
+this._requestRebuild("full"))}
+/** Stroke color as [r, g, b, a] in 0-1 range. */get strokeColor(){return this._strokeColor}set strokeColor(value){this._strokeColor=slugTextColorToRgba(value,this._strokeColor),
+// Stroke pass uses solid fill mode; only `aColor` per-vertex
+// changes when the color updates. The planner regenerates
+// the stroke quads with the new color and `_updateSlot`
+// rewrites the buffer in place.
+this._strokeWidth>0&&this._requestRebuild("fillVisual")}
+/** Stroke alpha mode: 'uniform' for uniform, 'gradient' for per-pixel fade. */get strokeAlphaMode(){return this._strokeAlphaMode}set strokeAlphaMode(value){this._strokeAlphaMode!==value&&(this._strokeAlphaMode=value,
+// Alpha mode only flips the uniform write rule (uniform=0
+// for 'uniform', actual rate for 'gradient'). Geometry
+// unchanged.
+this._strokeWidth>0&&this._requestRebuild("strokeAlphaVisual"))}
+/** Starting alpha for gradient mode (innermost stroke pixel). */get strokeAlphaStart(){return this._strokeAlphaStart}set strokeAlphaStart(value){this._strokeAlphaStart!==value&&(this._strokeAlphaStart=value,this._strokeWidth>0&&"gradient"===this._strokeAlphaMode&&this._requestRebuild("strokeAlphaVisual"))}
+/** Alpha change per pixel outward in gradient mode. */get strokeAlphaRate(){return this._strokeAlphaRate}set strokeAlphaRate(value){this._strokeAlphaRate!==value&&(this._strokeAlphaRate=value,this._strokeWidth>0&&"gradient"===this._strokeAlphaMode&&this._requestRebuild("strokeAlphaVisual"))}
+/** Stroke configuration object, or null if disabled. */get stroke(){return this._strokeWidth<=0?null:{color:this._strokeColor,width:this._strokeWidth,alphaMode:this._strokeAlphaMode,alphaStart:this._strokeAlphaStart,alphaRate:this._strokeAlphaRate}}set stroke(value){const newWidth="number"==typeof value?.width?value.width:Defaults.SlugText.StrokeWidth,colorBase=value?this._strokeColor:Defaults.SlugText.StrokeColor,newColor=slugTextColorToRgba(value?.color,colorBase),newAlphaMode=value?.alphaMode??Defaults.SlugText.StrokeAlphaMode,newAlphaStart="number"==typeof value?.alphaStart?value.alphaStart:Defaults.SlugText.StrokeAlphaStart,newAlphaRate="number"==typeof value?.alphaRate?value.alphaRate:Defaults.SlugText.StrokeAlphaRate,widthChanged=this._strokeWidth!==newWidth,colorChanged=this._strokeColor[0]!==newColor[0]||this._strokeColor[1]!==newColor[1]||this._strokeColor[2]!==newColor[2]||this._strokeColor[3]!==newColor[3],alphaChanged=this._strokeAlphaMode!==newAlphaMode||this._strokeAlphaStart!==newAlphaStart||this._strokeAlphaRate!==newAlphaRate,changed=widthChanged||colorChanged||alphaChanged;
 // Color defaults to the static stroke default when stroke itself is
 // being disabled/unset; otherwise preserves the current _strokeColor
 // so 3-element / 6-digit hex inputs keep the existing alpha.
-this._strokeWidth=newWidth,this._strokeColor=newColor,this._strokeAlphaMode=newAlphaMode,this._strokeAlphaStart=newAlphaStart,this._strokeAlphaRate=newAlphaRate,changed&&this.rebuild()}
+this._strokeWidth=newWidth,this._strokeColor=newColor,this._strokeAlphaMode=newAlphaMode,this._strokeAlphaStart=newAlphaStart,this._strokeAlphaRate=newAlphaRate,changed&&(
+// Aggregate stroke setter — degrade to the strictest sub-kind
+// among the fields that actually changed. Width crossing zero
+// (or any width change) forces full per §6; otherwise the
+// strict-kind merge in `_requestRebuild` combines color
+// (fillVisual) and alpha (strokeAlphaVisual) into 'full' if
+// both fired, which is correct — they touch different uniform
+// sets and the current incremental machinery handles only one
+// kind narrowing per batch.
+widthChanged||colorChanged&&alphaChanged?this._requestRebuild("full"):colorChanged?this._requestRebuild("fillVisual"):this._requestRebuild("strokeAlphaVisual"))}
 // --- Drop shadow ---
 /**
          * Drop shadow configuration, or null if disabled.
          * Setting to a partial object fills missing fields with defaults.
          * Setting to null disables the shadow.
          */
-get dropShadow(){return this._dropShadow}set dropShadow(value){if(null===value){if(null===this._dropShadow)return;this._dropShadow=null}else{
+get dropShadow(){return this._dropShadow}set dropShadow(value){const prev=this._dropShadow;if(null===value){if(null===prev)return;return this._dropShadow=null,void
+// Disabling shadow removes the shadow pass entirely →
+// pass-shape change → full.
+this._requestRebuild("full")}
 // `_dropShadow.color` is already a concrete RGBA tuple, so
 // we can feed it back in as colorBase directly — the new
 // value keeps the current alpha when the input omits color
 // or uses a 6-digit / 3-element form.
-const colorBase=this._dropShadow?this._dropShadow.color:Defaults.SlugText.DropShadowColor;this._dropShadow={alpha:(0,dist/* numberValue */.Vg)(value.alpha,Defaults.SlugText.DropShadowAlpha),angle:(0,dist/* numberValue */.Vg)(value.angle,Defaults.SlugText.DropShadowAngle),blur:(0,dist/* numberValue */.Vg)(value.blur,Defaults.SlugText.DropShadowBlur),color:slugTextColorToRgba(value.color,colorBase),distance:(0,dist/* numberValue */.Vg)(value.distance,Defaults.SlugText.DropShadowDistance)}}this.rebuild()}
+const colorBase=prev?prev.color:Defaults.SlugText.DropShadowColor,next={alpha:"number"==typeof value.alpha?value.alpha:Defaults.SlugText.DropShadowAlpha,angle:"number"==typeof value.angle?value.angle:Defaults.SlugText.DropShadowAngle,blur:"number"==typeof value.blur?value.blur:Defaults.SlugText.DropShadowBlur,color:slugTextColorToRgba(value.color,colorBase),distance:"number"==typeof value.distance?value.distance:Defaults.SlugText.DropShadowDistance};this._dropShadow=next,
+// Enabling a previously-disabled shadow → pass-shape change →
+// full. Blur / distance / angle changes alter per-vertex
+// dilation or mesh offset and need at minimum the planner
+// to regenerate shadow quads — also full. Only color / alpha
+// can ride the `'shadowVisual'` path.
+null===prev||prev.blur!==next.blur||prev.distance!==next.distance||prev.angle!==next.angle?this._requestRebuild("full"):this._requestRebuild("shadowVisual")}
 // --- Supersampling ---
 get supersampling(){return this._supersampling}set supersampling(value){this._supersampling!==value&&(this._supersampling=value,this.onSupersamplingChanged())}get supersampleCount(){return this._supersampleCount}set supersampleCount(value){const clamped=Math.min(Math.max(value,1),Defaults.MAX_SUPERSAMPLE_COUNT);this._supersampleCount!==clamped&&(this._supersampleCount=clamped,this.onSupersampleCountChanged())}get rebuildCount(){return this._rebuildCount}meshMemoryBytes(){return this._vertexBytes+this._indexBytes}totalMemoryBytes(){const font=this._fontRef?.deref();return this.meshMemoryBytes()+(font?font.memoryBytes():0)}});
+/** Initial capacity floor — small enough that single-glyph labels don't waste much,
+ *  large enough to cover most short axis labels without an early grow. */var Base;
 /**
  * Renderable text element using the Slug algorithm for PixiJS v8.
  * Extends Container (via SlugTextMixin) for scene graph compatibility.
@@ -11835,33 +6394,41 @@ get supersampling(){return this._supersampling}set supersampling(value){this._su
  *
  * GPU textures and the compiled shader program are owned by SlugFont (via gpuCache)
  * and shared across all SlugText instances using the same font.
- */var Base;class SlugText extends SlugTextV8Base{
-/** All meshes for the current text (shadow + stroke + fill). */
-_meshes;
+ *
+ * Slot-based mesh reuse: `_shadowSlot`, `_strokeSlot`, and `_fillSlot`
+ * survive across rebuilds. The incremental rebuild path rewrites the
+ * underlying GL buffers and uniforms in place via `setDataWithSize`
+ * (`shrinkToFit: false`) rather than allocating fresh PIXI objects. The
+ * full path destroys and recreates them as before. See
+ * `_specs/features/incremental-mesh-rebuild.md` for the design and
+ * verified PIXI v8 contracts.
+ */
+class SlugText extends SlugTextV8Base{
+/** Drop-shadow render-pass slot. `null` when no shadow is configured. */
+_shadowSlot;
+/** Stroke render-pass slot. `null` when stroke width is 0. */
+_strokeSlot;
+/** Fill render-pass slot. `null` when text is empty or no font is resolved. */
+_fillSlot;
 /** Graphics child for underline/strikethrough/overline decorations. */
 _decorations;
 /**
-     * Per-instance GPU resources derived from `_fill` (gradient LUT
-     * texture, wrapped fill texture, mode index, transform). Disposed
-     * on every rebuild before being replaced — the new fill state owns
-     * a fresh LUT.
-     */
-_fillGpu;
-/**
      * Previous attach state held over while a rebuild is in flight.
-     * Old meshes / decorations / fillGpu stay on the display list
-     * (so the user keeps seeing the old text) until the next
-     * `_buildAndAttachMeshes` lands, at which point the swap is
-     * atomic and these are flushed. Eliminates the one-frame blank
-     * gap on every property mutation, and the multi-frame stall on
-     * the parallel-compile slow path.
+     * Old meshes / decorations stay on the display list (so the user
+     * keeps seeing the old text) until the next `_buildAndAttachMeshes`
+     * lands, at which point the swap is atomic and these are flushed.
+     * Eliminates the one-frame blank gap on every property mutation,
+     * and the multi-frame stall on the parallel-compile slow path.
      *
-     * Setters that iterate `_meshes` for per-frame uniform writes
-     * (supersampling) keep the same "empty between rebuild and
-     * attach" contract — the old references live here, not on
-     * `_meshes`, so writes harmlessly target the empty array.
+     * On the **incremental** rebuild path the swap is atomic in place —
+     * no old state is moved here and no flush is needed. These slots
+     * stay empty for the steady-state hot loop.
+     *
+     * Old per-pass slots are stored as a single array (oldest first)
+     * because the order doesn't matter for disposal and the count can
+     * be 0–3.
      */
-_oldMeshes;_oldDecorations;_oldFillGpu;
+_oldSlots;_oldDecorations;
 /**
      * Computed by {@link rebuild} (geometry phase) and consumed by
      * {@link _attachGpu} (GPU phase) on the next `onRender` tick.
@@ -11891,19 +6458,24 @@ _attachToken;
      * await on subsequent attaches against the same cache. Reset to
      * `null` only when the SlugText has never seen a ready signal yet.
      */
-_programReadyCache;constructor(init){super(),this.initBase(init),this._meshes=[],this._decorations=null,this._fillGpu=null,this._oldMeshes=[],this._oldDecorations=null,this._oldFillGpu=null,this._pendingPlan=null,this._attachToken=0,this._programReadyCache=null,this._onRenderHandler=renderer=>{this._attachGpu(renderer)},
+_programReadyCache;constructor(init){super(),this.initBase(init),this._shadowSlot=null,this._strokeSlot=null,this._fillSlot=null,this._decorations=null,this._oldSlots=[],this._oldDecorations=null,this._pendingPlan=null,this._attachToken=0,this._programReadyCache=null,this._onRenderHandler=renderer=>{this._attachGpu(renderer)},
 // Opt the whole subtree out of hit-testing by default. The
 // internal meshes use a custom geometry (aPositionNormal, not
 // aVertexPosition) so PIXI's Mesh.containsPoint crashes when the
 // event system tries to test them. Users who want a clickable
 // SlugText can override eventMode after construction.
-this.eventMode="none",this.interactiveChildren=!1,this.rebuild()}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;for(const mesh of this._meshes){if(!mesh.shader)continue;mesh.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=value}}onSupersampleCountChanged(){if(this._supersampling)for(const mesh of this._meshes){if(!mesh.shader)continue;mesh.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=this._supersampleCount}}
+this.eventMode="none",this.interactiveChildren=!1,this.rebuild()}
 /**
-     * Build a Mesh from quad data with optional stroke expansion. The
-     * `fillGpu` argument selects the fill mode and supplies the fill
-     * sampler bindings (gradient LUT or user texture). Pass-specific
-     * uniforms (`uFillMode`, `uFillBoundsPx`, etc.) are written here so
-     * the caller doesn't repeat the pattern across shadow / stroke / fill.
+     * Iterate all live slots that currently have a `shader`. Used by
+     * per-frame uniform setters (supersampling) that must reach every
+     * active pass.
+     */_forEachLiveSlot(fn){this._shadowSlot&&fn(this._shadowSlot),this._strokeSlot&&fn(this._strokeSlot),this._fillSlot&&fn(this._fillSlot)}onSupersamplingChanged(){const value=this._supersampling?this._supersampleCount:0;this._forEachLiveSlot(slot=>{slot.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=value})}onSupersampleCountChanged(){this._supersampling&&this._forEachLiveSlot(slot=>{slot.shader.resources.uSupersamplingGroup.uniforms.uSupersampleCount=this._supersampleCount})}
+/**
+     * Allocate a fresh slot for a pass with `shrinkToFit: false`
+     * vertex / index buffers sized to a capacity reserve. The slot's
+     * typed arrays are sized to the same capacity so live data can be
+     * copied in via `.set()` and `setDataWithSize` issues a
+     * `bufferSubData` against the pre-allocated GL buffer.
      *
      * Hit-testing note: the geometry below uses a Slug-specific attribute
      * layout (`aPositionNormal`, `aTexcoord`, `aJacobian`, `aBanding`,
@@ -11912,21 +6484,92 @@ this.eventMode="none",this.interactiveChildren=!1,this.rebuild()}onSupersampling
      * crashes on this geometry, which is why the parent SlugText
      * disables hit-testing in its constructor (`eventMode = 'none'`,
      * `interactiveChildren = false`). Anything that flips those back on
-     * needs a custom `containsPoint` or a separate hit-test rectangle
-     * — do not assume PIXI's default works on these meshes.
-     */_buildMesh(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:quads.vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX}),geometry=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride,offset:vec4Bytes},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride,offset:2*vec4Bytes},aBanding:{buffer:vertexBuffer,format:"float32x4",stride,offset:3*vec4Bytes},aColor:{buffer:vertexBuffer,format:"float32x4",stride,offset:4*vec4Bytes}},indexBuffer:quads.indices}),{shader,uniforms}=slugShader(gpu.glProgram,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite);uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,uniforms.uniforms.uFillMode=fillGpu.mode,uniforms.uniforms.uFillTextureFit=fillGpu.textureFit;
+     * needs a custom `containsPoint` or a separate hit-test rectangle —
+     * do not assume PIXI's default works on these meshes.
+     */_allocSlot(quads,gpu,fillGpu,fillBounds,strokeExpand=0){const stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,capacityQuads=
+/** Round `n` up to a sensible buffer-capacity quad count.
+ *  Allocates `max(n * 1.5, MIN)` rounded up to the next multiple of 4 — keeps
+ *  small reserves predictable without burning memory on tiny labels.
+ *  See `_specs/features/incremental-mesh-rebuild.md` §4.4. */
+function(n){const target=Math.max(Math.ceil(1.5*n),8);return 4*Math.ceil(target/4)}
+/** Growth target for capacity-grow: max(new * 1.5, current * 2), aligned to 4 quads. */(quads.quadCount),vertexFloats=capacityQuads*Constants.FLOATS_PER_QUAD,indexUints=capacityQuads*Constants.INDICES_PER_QUAD,vertices=new Float32Array(vertexFloats);vertices.set(quads.vertices);const indices=new Uint32Array(indexUints);indices.set(quads.indices);const vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX,shrinkToFit:!1}),indexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:indices,label:"slug-index-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.INDEX,shrinkToFit:!1}),geometry=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Geometry({attributes:{aPositionNormal:{buffer:vertexBuffer,format:"float32x4",stride,offset:0},aTexcoord:{buffer:vertexBuffer,format:"float32x4",stride,offset:vec4Bytes},aJacobian:{buffer:vertexBuffer,format:"float32x4",stride,offset:2*vec4Bytes},aBanding:{buffer:vertexBuffer,format:"float32x4",stride,offset:3*vec4Bytes},aColor:{buffer:vertexBuffer,format:"float32x4",stride,offset:4*vec4Bytes}},indexBuffer}),{shader,uniforms}=slugShader(gpu.glProgram,gpu.curveTexture,gpu.bandTexture,gpu.fallbackWhite),slot={mesh:new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Mesh({geometry,shader}),geometry,shader,uniforms,vertexBuffer,indexBuffer,vertices,indices,vertexCapacityQuads:capacityQuads,indexCapacityQuads:capacityQuads,fillGpu:null,fillMode:0};
+// Tell PIXI the live data size is what `quads` carries, not the
+// allocated capacity — `gl.drawElements` defaults to the live
+// index buffer length (verified A4 in
+// `_specs/features/incremental-mesh-rebuild.md`).
+return vertexBuffer.setDataWithSize(vertices,quads.vertices.length,!0),indexBuffer.setDataWithSize(indices,quads.indices.length,!0),this._writePassUniforms(slot,fillGpu,fillBounds,strokeExpand),this._writeFillSamplers(slot,fillGpu),slot}
+/**
+     * Rewrite a slot's vertex / index data in place. When the new quad
+     * count fits the slot's current capacity this is the steady-state
+     * incremental path (no PIXI object allocation, only `bufferSubData`
+     * on the GL side). When the new quad count exceeds capacity the
+     * slot's buffers are replaced with larger ones via the
+     * capacity-grow path — `Geometry`, `Shader`, and `Mesh` are reused
+     * either way.
+     *
+     * Always rewrites uniforms and (for the fill slot) rebinds samplers
+     * if the fill mode changed.
+     */_updateSlot(slot,quads,fillGpu,fillBounds,strokeExpand=0){const vertexFloatsNeeded=quads.vertices.length,indexUintsNeeded=quads.indices.length;(quads.quadCount>slot.vertexCapacityQuads||quads.quadCount>slot.indexCapacityQuads)&&this._growSlot(slot,quads.quadCount),slot.vertices.set(quads.vertices),slot.indices.set(quads.indices),
+// `setDataWithSize` with `shrinkToFit: false` on the underlying
+// `Buffer` keeps the GL buffer at its allocated capacity even
+// when the live data shrinks, so the next upload stays on
+// `bufferSubData`. Verified A11.
+slot.vertexBuffer.setDataWithSize(slot.vertices,vertexFloatsNeeded,!0),slot.indexBuffer.setDataWithSize(slot.indices,indexUintsNeeded,!0),this._writePassUniforms(slot,fillGpu,fillBounds,strokeExpand),this._writeFillSamplers(slot,fillGpu)}
+/**
+     * Replace a slot's vertex and index buffers with larger ones while
+     * keeping the `Geometry`, `Shader`, and `Mesh` instances. The
+     * existing `Buffer` instances are destroyed because their underlying
+     * GL buffers can't be enlarged in place.
+     *
+     * Why we don't keep the same `Buffer` objects: PIXI's `Buffer.update`
+     * does reallocate the GL buffer internally when data grows beyond
+     * capacity (A2 in the spec), but the JS typed-array slot is fixed
+     * at construction. We need a larger typed array to host the new
+     * data, which means a new `Buffer` wrapper too.
+     */_growSlot(slot,newQuadCount){const newCapacity=function(newCount,currentCapacity){const target=Math.max(Math.ceil(1.5*newCount),2*currentCapacity);return 4*Math.ceil(target/4)}(newQuadCount,Math.max(slot.vertexCapacityQuads,slot.indexCapacityQuads)),stride=Constants.FLOATS_PER_VERTEX*Constants.BYTES_PER_FLOAT,vec4Bytes=Constants.FLOATS_PER_VEC4*Constants.BYTES_PER_FLOAT,vertexFloats=newCapacity*Constants.FLOATS_PER_QUAD,indexUints=newCapacity*Constants.INDICES_PER_QUAD,oldVertexBuffer=slot.vertexBuffer,oldIndexBuffer=slot.indexBuffer;slot.vertices=new Float32Array(vertexFloats),slot.indices=new Uint32Array(indexUints),slot.vertexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:slot.vertices,label:"slug-vertex-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.VERTEX,shrinkToFit:!1}),slot.indexBuffer=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Buffer({data:slot.indices,label:"slug-index-buffer",usage:external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.BufferUsage.INDEX,shrinkToFit:!1}),slot.vertexCapacityQuads=newCapacity,slot.indexCapacityQuads=newCapacity,
+// Re-bind the geometry's attribute buffers to the new vertex
+// buffer. The attribute records reference the buffer by object
+// identity, so we have to point them at the replacement before
+// the next draw.
+slot.geometry.attributes.aPositionNormal.buffer=slot.vertexBuffer,slot.geometry.attributes.aTexcoord.buffer=slot.vertexBuffer,slot.geometry.attributes.aJacobian.buffer=slot.vertexBuffer,slot.geometry.attributes.aBanding.buffer=slot.vertexBuffer,slot.geometry.attributes.aColor.buffer=slot.vertexBuffer,
+// `Geometry.indexBuffer` is read by the renderer at draw time
+// and is a writable field — swap it directly.
+slot.geometry.indexBuffer=slot.indexBuffer,
+// Re-attribute the new attribute offsets (same stride / offsets
+// as the original allocation — those don't change when capacity
+// grows).
+slot.geometry.attributes.aPositionNormal.stride=stride,slot.geometry.attributes.aPositionNormal.offset=0,slot.geometry.attributes.aTexcoord.stride=stride,slot.geometry.attributes.aTexcoord.offset=vec4Bytes,slot.geometry.attributes.aJacobian.stride=stride,slot.geometry.attributes.aJacobian.offset=2*vec4Bytes,slot.geometry.attributes.aBanding.stride=stride,slot.geometry.attributes.aBanding.offset=3*vec4Bytes,slot.geometry.attributes.aColor.stride=stride,slot.geometry.attributes.aColor.offset=4*vec4Bytes,oldVertexBuffer.destroy(),oldIndexBuffer.destroy()}
+/**
+     * Write per-pass uniforms to the slot's uniform group. The values
+     * mirror the ones today's `_buildMesh` writes — split out so the
+     * alloc and update paths share it.
+     */_writePassUniforms(slot,fillGpu,fillBounds,strokeExpand){const uniforms=slot.uniforms;uniforms.uniforms.uSupersampleCount=this._supersampling?this._supersampleCount:0,uniforms.uniforms.uStrokeExpand=strokeExpand,uniforms.uniforms.uFillMode=fillGpu.mode,uniforms.uniforms.uFillTextureFit=fillGpu.textureFit;
 // Mutate the typed-array slots in place rather than allocating
 // fresh `Float32Array`s. PIXI v8's WebGL uniform sync compares
-// element-wise against a cached snapshot (see
-// `generateUniformsSyncTypes.UNIFORM_TO_SINGLE_SETTERS`), so
-// changing the buffer contents is detected and pushed to the
-// GPU on the next draw — no `update()` call needed. Avoids ~5
-// short-lived typed arrays per pass × up to 3 passes per rebuild.
-const boundsBuf=uniforms.uniforms.uFillBoundsPx;boundsBuf[0]=fillBounds[0],boundsBuf[1]=fillBounds[1],boundsBuf[2]=fillBounds[2],boundsBuf[3]=fillBounds[3];const params0Buf=uniforms.uniforms.uFillParams0;params0Buf[0]=fillGpu.params0[0],params0Buf[1]=fillGpu.params0[1],params0Buf[2]=fillGpu.params0[2],params0Buf[3]=fillGpu.params0[3];const texSizeBuf=uniforms.uniforms.uFillTextureSizePx;texSizeBuf[0]=fillGpu.textureSizePx[0],texSizeBuf[1]=fillGpu.textureSizePx[1];const texScaleBuf=uniforms.uniforms.uFillTextureScale;texScaleBuf[0]=fillGpu.textureScale[0],texScaleBuf[1]=fillGpu.textureScale[1];const texOffsetBuf=uniforms.uniforms.uFillTextureOffset;return texOffsetBuf[0]=fillGpu.textureOffset[0],texOffsetBuf[1]=fillGpu.textureOffset[1],
-// Bind the fill samplers. When the fill is solid both stay on
-// fallbackWhite (already bound by slugShader); otherwise swap in
+// element-wise against a cached snapshot, so changing the buffer
+// contents is detected and pushed to the GPU on the next draw —
+// no `update()` call needed. Verified A10.
+const boundsBuf=uniforms.uniforms.uFillBoundsPx;boundsBuf[0]=fillBounds[0],boundsBuf[1]=fillBounds[1],boundsBuf[2]=fillBounds[2],boundsBuf[3]=fillBounds[3];const params0Buf=uniforms.uniforms.uFillParams0;params0Buf[0]=fillGpu.params0[0],params0Buf[1]=fillGpu.params0[1],params0Buf[2]=fillGpu.params0[2],params0Buf[3]=fillGpu.params0[3];const texSizeBuf=uniforms.uniforms.uFillTextureSizePx;texSizeBuf[0]=fillGpu.textureSizePx[0],texSizeBuf[1]=fillGpu.textureSizePx[1];const texScaleBuf=uniforms.uniforms.uFillTextureScale;texScaleBuf[0]=fillGpu.textureScale[0],texScaleBuf[1]=fillGpu.textureScale[1];const texOffsetBuf=uniforms.uniforms.uFillTextureOffset;texOffsetBuf[0]=fillGpu.textureOffset[0],texOffsetBuf[1]=fillGpu.textureOffset[1]}
+/**
+     * Rebind the slot's gradient / texture samplers from a freshly
+     * resolved `SlugFillGpuV8`. Reading or assigning `shader.resources`
+     * does NOT trigger a re-link (verified A7); the swapped texture is
+     * picked up fresh on the next draw (verified A8).
+     *
+     * For the fill slot we also dispose the previously-owned
+     * `SlugFillGpuV8` (gradient LUT texture, wrapped fill texture) if
+     * the new GPU record is different.
+     */_writeFillSamplers(slot,fillGpu){
+// Bind whichever fill resource the resolved mode wants. When the
+// fill is solid both stay on the font's fallbackWhite (already
+// bound by slugShader at slot construction); otherwise swap in
 // the gradient LUT or user texture.
-fillGpu.gradient&&(shader.resources.uFillGradient=fillGpu.gradient.source),fillGpu.texture&&(shader.resources.uFillTexture=fillGpu.texture.source),{mesh:new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Mesh({geometry,shader}),uniforms,shader}}
+fillGpu.gradient&&(slot.shader.resources.uFillGradient=fillGpu.gradient.source),fillGpu.texture&&(slot.shader.resources.uFillTexture=fillGpu.texture.source),
+// Lifecycle: only the fill slot owns a `fillGpu` record. Shadow
+// and stroke slots pass synthetic solid `fillGpu` instances that
+// the caller does not retain — we leave `slot.fillGpu` untouched
+// for those.
+(0!==fillGpu.mode||fillGpu.gradient||fillGpu.texture)&&(slot.fillGpu&&slot.fillGpu!==fillGpu&&slot.fillGpu.dispose(),slot.fillGpu=fillGpu,slot.fillMode=fillGpu.mode)}
 /**
      * Build glyph quads from a pre-wrapped line list. Single-line input
      * still goes through `slugGlyphQuads` directly to avoid a multiline
@@ -11952,31 +6595,25 @@ for(let j=0;j<srcIdxs.length;j++)indices[idxOffset+j]=srcIdxs[j]+baseVertex;vert
      * parallel-compile path (see
      * `_specs/features/parallel_shader_compile.md` §5.5).
      *
-     * Tearing down the previous frame's meshes / decorations / fill GPU
-     * resources still happens here so observers checking `this.children`
-     * mid-rebuild see the same "removed before added" behavior they used
-     * to. Setters that mutate per-frame uniforms (e.g. supersampling)
-     * iterate `_meshes` — when the array is empty (pending attach) they
-     * naturally no-op and the next `_buildMesh` call picks up the
-     * latest values.
+     * On the **incremental** rebuild path no old slots are moved to
+     * `_oldSlots`; the swap happens atomically in place when
+     * `_attachGpu` runs. On the **full** path the current slots are
+     * moved aside so the next attach can drop them after the new ones
+     * are on the display list, preserving the no-blank-frame contract.
      */rebuild(){
 // Async font-resolve callbacks can fire after the SlugText has
 // been destroyed (the `.then(...)` block in base.ts captures
 // `this` before destroy runs). Bail before touching the display
 // list or allocating quads on a dead instance.
-if(this.destroyed)return;
-// Move the currently-attached state into the held-over slots
-// instead of tearing it down now. The old meshes / decorations /
-// fillGpu stay on the display list (and rendering) until the
-// next `_buildAndAttachMeshes` lands, at which point the swap
-// is atomic — no one-frame blank gap, no multi-frame stall on
-// the parallel-compile slow path.
-// If a previous rebuild's old state is still pending (rapid
-// mutations before any attach), `_meshes` is already empty
-// (nothing from the previous rebuild attached yet), so the
-// move is a no-op and `_oldMeshes` keeps holding the genuinely
-// on-screen meshes from the last successful attach.
-if(this._rebuildCount++,this._attachToken++,this._meshes.length>0){for(const mesh of this._meshes)this._oldMeshes.push(mesh);this._meshes.length=0}this._decorations&&(this._oldDecorations=this._decorations,this._decorations=null),this._fillGpu&&(this._oldFillGpu=this._fillGpu,this._fillGpu=null);const plan=this._buildPlan();this._pendingPlan=plan,
+if(this.destroyed)return;this._rebuildCount++,this._attachToken++;const kind=this._consumePendingKind();
+// `_consumePendingKind` returns `'full'` for any rebuild not
+// driven through `_requestRebuild` (constructor's initial call,
+// font-resolve async path, setters that still call this.rebuild()
+// directly). For the full path we move old state into the
+// held-over slots; for incremental kinds the existing slots will
+// be updated in place by `_attachGpu` and there is nothing to
+// hold over.
+"full"===kind&&(this._shadowSlot&&(this._oldSlots.push(this._shadowSlot),this._shadowSlot=null),this._strokeSlot&&(this._oldSlots.push(this._strokeSlot),this._strokeSlot=null),this._fillSlot&&(this._oldSlots.push(this._fillSlot),this._fillSlot=null),this._decorations&&(this._oldDecorations=this._decorations,this._decorations=null));const plan=this._buildPlan(kind);this._pendingPlan=plan,
 // Publish bounds synchronously from the plan so `width` / `height`
 // are valid immediately after `rebuild()` (and therefore after
 // construction and after every property setter), matching v6/v7
@@ -11994,14 +6631,24 @@ this.boundsArea=plan&&plan.bboxRect?plan.bboxRect:void 0,
 // skip per-frame churn entirely. We also have to flush the
 // held-over state here — without an upcoming attach to drive the
 // swap, the old meshes would stay on the display list forever.
-plan?this.onRender=this._onRenderHandler:(this._flushOldAttachState(),this.onRender=null)}
+plan?this.onRender=this._onRenderHandler:(
+// No plan to attach — there's nothing left for the deferred
+// attach to do, so dispose any currently-active slots
+// directly (incremental path may have left them in place
+// when the rebuild started) and flush the held-over state.
+this._shadowSlot&&(this._disposeSlot(this._shadowSlot),this._shadowSlot=null),this._strokeSlot&&(this._disposeSlot(this._strokeSlot),this._strokeSlot=null),this._fillSlot&&(this._disposeSlot(this._fillSlot),this._fillSlot=null),this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null),this._flushOldAttachState(),this.onRender=null)}
 /**
      * Drop the held-over attach state from the previous rebuild. Called
      * atomically from {@link _buildAndAttachMeshes} after the new children
      * are on the display list, and from the empty-plan branch of
      * {@link rebuild} (no upcoming attach to drive the swap) and from
      * {@link destroy}.
-     */_flushOldAttachState(){for(let i=this._oldMeshes.length-1;i>=0;i--){const mesh=this._oldMeshes[i];this.removeChild(mesh),mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy()}this._oldMeshes.length=0,this._oldDecorations&&(this.removeChild(this._oldDecorations),this._oldDecorations.destroy(),this._oldDecorations=null),this._oldFillGpu&&(this._oldFillGpu.dispose(),this._oldFillGpu=null)}
+     */_flushOldAttachState(){for(let i=this._oldSlots.length-1;i>=0;i--)this._disposeSlot(this._oldSlots[i]);this._oldSlots.length=0,this._oldDecorations&&(this.removeChild(this._oldDecorations),this._oldDecorations.destroy(),this._oldDecorations=null)}
+/**
+     * Tear down a single slot — remove its mesh from the display list,
+     * destroy the geometry (and the underlying GL buffers), destroy the
+     * shader and mesh, and dispose any owned fill-GPU record.
+     */_disposeSlot(slot){this.removeChild(slot.mesh),slot.geometry.destroy(!0),slot.shader.destroy(),slot.mesh.destroy(),slot.fillGpu&&(slot.fillGpu.dispose(),slot.fillGpu=null)}
 /**
      * Pure-CPU geometry computation. Returns `null` for the empty-text
      * / no-font early-exit case so the caller can skip scheduling an
@@ -12009,7 +6656,7 @@ plan?this.onRender=this._onRenderHandler:(this._flushOldAttachState(),this.onRen
      * `font.advances`, layout arrays) are stable for the lifetime of
      * the plan — `ensureGlyphs` only appends, never mutates existing
      * glyph entries.
-     */_buildPlan(){const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.unitsPerEm)return null;
+     */_buildPlan(kind){const font=this._fontRef?.deref();if(!font||0===this._text.length||0===font.unitsPerEm)return null;
 // Lazy glyph processing: ensure every codepoint in the current
 // text has been processed and packed into the font's curve/band
 // textures before we read offsets from them. Cached glyphs
@@ -12060,7 +6707,7 @@ lines.push(""),{lines}}(this._text,font.advances,scale,width,this._breakWords).l
 // gradient/texture sample area, so we use the fill pass — that
 // matches the user's intent of the gradient covering the visible
 // glyphs.
-let bboxMinX=0,bboxMinY=0,bboxMaxX=0,bboxMaxY=0;if(fillQuads.quadCount>0){bboxMinX=1/0,bboxMinY=1/0,bboxMaxX=-1/0,bboxMaxY=-1/0;for(let i=0;i<fillQuads.vertices.length;i+=Constants.FLOATS_PER_VERTEX){const vx=fillQuads.vertices[i],vy=fillQuads.vertices[i+1];vx<bboxMinX&&(bboxMinX=vx),vx>bboxMaxX&&(bboxMaxX=vx),vy<bboxMinY&&(bboxMinY=vy),vy>bboxMaxY&&(bboxMaxY=vy)}}const fillBounds=[bboxMinX,bboxMinY,Math.max(bboxMaxX-bboxMinX,1),Math.max(bboxMaxY-bboxMinY,1)],bboxRect=fillQuads.quadCount>0?new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Rectangle(bboxMinX,bboxMinY,bboxMaxX-bboxMinX,bboxMaxY-bboxMinY):null;let shadowQuads=null,shadowColor=null,shadowBlur=0,shadowAlpha=0,shadowOffsetX=0,shadowOffsetY=0;if(null!==this._dropShadow){const ds=this._dropShadow;shadowAlpha=ds.alpha,shadowColor=[ds.color[0],ds.color[1],ds.color[2],shadowAlpha],shadowBlur=ds.blur,shadowOffsetX=Math.cos(ds.angle)*ds.distance,shadowOffsetY=Math.sin(ds.angle)*ds.distance;const quads=this._makeQuads(font,lines,shadowColor,shadowBlur);quads.quadCount>0&&(needsShift&&slugApplyLineLayoutX(quads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX),shadowQuads=quads)}let strokeQuads=null;if(this._strokeWidth>0){const quads=this._makeQuads(font,lines,this._strokeColor,this._strokeWidth);quads.quadCount>0&&(needsShift&&slugApplyLineLayoutX(quads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX),strokeQuads=quads)}return{font,ensureResult,lines,scale,lineQuadCounts,layout,needsShift,fillBounds,bboxRect,fillQuads:fillQuads.quadCount>0?fillQuads:null,shadowQuads,shadowColor,shadowBlur,shadowAlpha,shadowOffsetX,shadowOffsetY,strokeQuads}}
+let bboxMinX=0,bboxMinY=0,bboxMaxX=0,bboxMaxY=0;if(fillQuads.quadCount>0){bboxMinX=1/0,bboxMinY=1/0,bboxMaxX=-1/0,bboxMaxY=-1/0;for(let i=0;i<fillQuads.vertices.length;i+=Constants.FLOATS_PER_VERTEX){const vx=fillQuads.vertices[i],vy=fillQuads.vertices[i+1];vx<bboxMinX&&(bboxMinX=vx),vx>bboxMaxX&&(bboxMaxX=vx),vy<bboxMinY&&(bboxMinY=vy),vy>bboxMaxY&&(bboxMaxY=vy)}}const fillBounds=[bboxMinX,bboxMinY,Math.max(bboxMaxX-bboxMinX,1),Math.max(bboxMaxY-bboxMinY,1)],bboxRect=fillQuads.quadCount>0?new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Rectangle(bboxMinX,bboxMinY,bboxMaxX-bboxMinX,bboxMaxY-bboxMinY):null;let shadowQuads=null,shadowColor=null,shadowBlur=0,shadowAlpha=0,shadowOffsetX=0,shadowOffsetY=0;if(null!==this._dropShadow){const ds=this._dropShadow;shadowAlpha=ds.alpha,shadowColor=[ds.color[0],ds.color[1],ds.color[2],shadowAlpha],shadowBlur=ds.blur,shadowOffsetX=Math.cos(ds.angle)*ds.distance,shadowOffsetY=Math.sin(ds.angle)*ds.distance;const quads=this._makeQuads(font,lines,shadowColor,shadowBlur);quads.quadCount>0&&(needsShift&&slugApplyLineLayoutX(quads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX),shadowQuads=quads)}let strokeQuads=null;if(this._strokeWidth>0){const quads=this._makeQuads(font,lines,this._strokeColor,this._strokeWidth);quads.quadCount>0&&(needsShift&&slugApplyLineLayoutX(quads,lineQuadCounts,layout.lineOffsetX,layout.perGlyphShiftX),strokeQuads=quads)}return{font,ensureResult,lines,scale,lineQuadCounts,layout,needsShift,fillBounds,bboxRect,fillQuads:fillQuads.quadCount>0?fillQuads:null,shadowQuads,shadowColor,shadowBlur,shadowAlpha,shadowOffsetX,shadowOffsetY,strokeQuads,kind}}
 /**
      * GPU-attach phase. Runs from `onRender(renderer)`. Calls
      * {@link slugFontGpuV8} with the renderer in hand so the
@@ -12107,17 +6754,25 @@ return void gpu.programReady.then(onSettled,onSettled)}this._buildAndAttachMeshe
 // us from its onRender list.
 this.onRender=null}
 /**
-     * Construct Mesh/Geometry/Shader objects from a finalized plan and
-     * attach them to the display list. Also builds the decoration
-     * Graphics (which doesn't use the Slug shader and is cheap, but is
-     * grouped here so a single attach pass covers all child additions).
+     * Construct or reuse slot meshes from a finalized plan and attach
+     * them to the display list. On the incremental path the existing
+     * slots are updated in place; on the full path fresh slots are
+     * allocated and the old ones flushed.
+     *
+     * Also builds (or rebuilds) the decoration `Graphics`. The Graphics
+     * is reused via `clear()` + re-issue when it already exists, since
+     * the alternative is destroying and recreating a child node every
+     * rebuild — see A12 in `_specs/features/incremental-mesh-rebuild.md`
+     * (display-list churn avoided; internal GPU batches still rebuild).
      */_buildAndAttachMeshes(plan,gpu){
 // --- Drop shadow pass (always solid color, mode 0) ---
-if(this._fillGpu=slugBuildFillGpuV8(this._fill),null!==plan.shadowQuads){const solidGpu=slugBuildFillGpuV8({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,uniforms:shadowUniforms}=this._buildMesh(plan.shadowQuads,gpu,solidGpu,plan.fillBounds,plan.shadowBlur);plan.shadowBlur>0&&(shadowUniforms.uniforms.uStrokeAlphaStart=plan.shadowAlpha,shadowUniforms.uniforms.uStrokeAlphaRate=-plan.shadowAlpha/plan.shadowBlur),mesh.x=plan.shadowOffsetX,mesh.y=plan.shadowOffsetY,this.addChild(mesh),this._meshes.push(mesh)}
+if(null!==plan.shadowQuads){const solidGpu=slugBuildFillGpuV8({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0});this._shadowSlot?this._updateSlot(this._shadowSlot,plan.shadowQuads,solidGpu,plan.fillBounds,plan.shadowBlur):(this._shadowSlot=this._allocSlot(plan.shadowQuads,gpu,solidGpu,plan.fillBounds,plan.shadowBlur),this.addChild(this._shadowSlot.mesh)),plan.shadowBlur>0&&(this._shadowSlot.uniforms.uniforms.uStrokeAlphaStart=plan.shadowAlpha,this._shadowSlot.uniforms.uniforms.uStrokeAlphaRate=-plan.shadowAlpha/plan.shadowBlur),this._shadowSlot.mesh.x=plan.shadowOffsetX,this._shadowSlot.mesh.y=plan.shadowOffsetY}else this._shadowSlot&&(
+// Drop-shadow disabled between rebuilds — release the slot.
+this._disposeSlot(this._shadowSlot),this._shadowSlot=null);
 // --- Stroke pass (always solid color, mode 0) ---
-if(null!==plan.strokeQuads){const solidGpu=slugBuildFillGpuV8({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0}),{mesh,uniforms:strokeUniforms}=this._buildMesh(plan.strokeQuads,gpu,solidGpu,plan.fillBounds,this._strokeWidth);strokeUniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,strokeUniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0,this.addChild(mesh),this._meshes.push(mesh)}
+if(null!==plan.strokeQuads){const solidGpu=slugBuildFillGpuV8({kind:"solid",color:[0,0,0,1],rgbProvided:!0,alphaProvided:!0});this._strokeSlot?this._updateSlot(this._strokeSlot,plan.strokeQuads,solidGpu,plan.fillBounds,this._strokeWidth):(this._strokeSlot=this._allocSlot(plan.strokeQuads,gpu,solidGpu,plan.fillBounds,this._strokeWidth),this.addChild(this._strokeSlot.mesh)),this._strokeSlot.uniforms.uniforms.uStrokeAlphaStart=this._strokeAlphaStart,this._strokeSlot.uniforms.uniforms.uStrokeAlphaRate="gradient"===this._strokeAlphaMode?this._strokeAlphaRate:0}else this._strokeSlot&&(this._disposeSlot(this._strokeSlot),this._strokeSlot=null);
 // --- Fill pass (uses the resolved fill mode) ---
-if(null!==plan.fillQuads){const{mesh}=this._buildMesh(plan.fillQuads,gpu,this._fillGpu,plan.fillBounds);this.addChild(mesh),this._meshes.push(mesh),this._vertexBytes=plan.fillQuads.vertices.byteLength,this._indexBytes=plan.fillQuads.indices.byteLength}this._buildDecorations(plan),
+if(null!==plan.fillQuads){const fillGpu=slugBuildFillGpuV8(this._fill);this._fillSlot?this._updateSlot(this._fillSlot,plan.fillQuads,fillGpu,plan.fillBounds):(this._fillSlot=this._allocSlot(plan.fillQuads,gpu,fillGpu,plan.fillBounds),this.addChild(this._fillSlot.mesh)),this._vertexBytes=plan.fillQuads.vertices.byteLength,this._indexBytes=plan.fillQuads.indices.byteLength}else this._fillSlot&&(this._disposeSlot(this._fillSlot),this._fillSlot=null);this._buildDecorations(plan),
 // New children are now on the display list. Drop the previous
 // frame's children atomically — the swap from the user's POV
 // happens in a single frame with no gap.
@@ -12137,7 +6792,21 @@ this._flushOldAttachState()}
      * glyphs. The decoration's resolved alpha (which honors per-channel
      * sticky overrides) multiplies onto the PIXI fill via
      * `Graphics.fill({fill, alpha})`.
-     */_buildDecorations(plan){const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if(!(ul.enabled||st.enabled||ol.enabled))return;const{font,lines,scale,layout,fillBounds}=plan,lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),fillIsNonSolid="solid"!==this._fill.kind,ulInheritsFill=fillIsNonSolid&&null===this._underline.colorRgb,stInheritsFill=fillIsNonSolid&&null===this._strikethrough.colorRgb,olInheritsFill=fillIsNonSolid&&null===this._overline.colorRgb,inheritedUlFill=ulInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,inheritedStFill=stInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,inheritedOlFill=olInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,gfx=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Graphics,xForDecoration=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;
+     *
+     * Reuses the existing `_decorations` Graphics across rebuilds when
+     * possible — `clear()` wipes prior geometry without destroying the
+     * child (A12).
+     */_buildDecorations(plan){const ul=this._underlineDraw,st=this._strikethroughDraw,ol=this._overlineDraw;if(!(ul.enabled||st.enabled||ol.enabled))
+// Decorations turned off. Drop the existing Graphics if any.
+return void(this._decorations&&(this.removeChild(this._decorations),this._decorations.destroy(),this._decorations=null));const{font,lines,scale,layout,fillBounds}=plan,lineHeight=(font.ascender-font.descender)*scale,packColor=rgba=>(255*rgba[0]&255)<<16|(255*rgba[1]&255)<<8|255*rgba[2]&255,ulPacked=packColor(ul.color),stPacked=packColor(st.color),olPacked=packColor(ol.color),fillIsNonSolid="solid"!==this._fill.kind,ulInheritsFill=fillIsNonSolid&&null===this._underline.colorRgb,stInheritsFill=fillIsNonSolid&&null===this._strikethrough.colorRgb,olInheritsFill=fillIsNonSolid&&null===this._overline.colorRgb,inheritedUlFill=ulInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,inheritedStFill=stInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null,inheritedOlFill=olInheritsFill?slugBuildDecorationFill(this._fill,fillBounds[0],fillBounds[1],fillBounds[2],fillBounds[3]):null;
+// Reuse the existing Graphics if we have one; otherwise create
+// fresh. `clear()` wipes the prior instructions without
+// destroying the child (A12).
+let gfx;this._decorations?(gfx=this._decorations,gfx.clear()):gfx=new external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Graphics;
+// Inner offset for a length-restricted decoration within its
+// line box. `align` here is the decoration's own physical
+// alignment (already resolved against direction in base.ts).
+const xForDecoration=(lineW,drawW,align)=>"right"===align?lineW-drawW:"center"===align?(lineW-drawW)/2:0;for(let l=0;l<lines.length;l++){const line=lines[l],effLineW=layout.effectiveLineWidth[l],lineX=layout.lineOffsetX[l],lineY=l*lineHeight;
 // Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
 // so decorations align with the actual glyph positions on this line.
 let maxGlyphTop=0;for(let i=0;i<line.length;i++){const g=font.glyphs.get(line.charCodeAt(i));g&&g.bounds.maxY>maxGlyphTop&&(maxGlyphTop=g.bounds.maxY)}const baselineY=maxGlyphTop*scale;if(ul.enabled&&ul.length>0){const drawW=effLineW*ul.length,x=lineX+xForDecoration(effLineW,drawW,ul.align),ulY=baselineY+lineY-font.underlinePosition*scale;gfx.rect(x,ulY,drawW,ul.thickness),inheritedUlFill?
@@ -12153,11 +6822,11 @@ gfx.fill({fill:inheritedUlFill,alpha:ul.color[3],textureSpace:"global"}):gfx.fil
 // line's bottom edge at the top of the rendered glyphs (y=0 in
 // local coords, which the quad builder pins to the tallest glyph
 // on the line — see slugGlyphQuads).
-if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoration(effLineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.rect(x,olY,drawW,ol.thickness),inheritedOlFill?gfx.fill({fill:inheritedOlFill,alpha:ol.color[3],textureSpace:"global"}):gfx.fill({color:olPacked,alpha:ol.color[3]})}}this._decorations=gfx,this.addChild(gfx)}destroy(){this._releaseFontOnDestroy(),
+if(ol.enabled&&ol.length>0){const drawW=effLineW*ol.length,x=lineX+xForDecoration(effLineW,drawW,ol.align),olY=lineY-ol.thickness;gfx.rect(x,olY,drawW,ol.thickness),inheritedOlFill?gfx.fill({fill:inheritedOlFill,alpha:ol.color[3],textureSpace:"global"}):gfx.fill({color:olPacked,alpha:ol.color[3]})}}this._decorations!==gfx&&(this._decorations=gfx,this.addChild(gfx))}destroy(){this._releaseFontOnDestroy(),
 // Bump the token so any in-flight `programReady` callback that
 // resolves after destruction notices and skips re-arming
 // `onRender` on a dead instance.
-this._attachToken++,this.onRender=null,this._pendingPlan=null;for(const mesh of this._meshes)mesh.geometry.destroy(!0),mesh.shader?.destroy(),mesh.destroy();this._meshes=[],this._decorations&&(this._decorations.destroy(),this._decorations=null),this._fillGpu&&(this._fillGpu.dispose(),this._fillGpu=null),
+this._attachToken++,this.onRender=null,this._pendingPlan=null,this._shadowSlot&&(this._disposeSlot(this._shadowSlot),this._shadowSlot=null),this._strokeSlot&&(this._disposeSlot(this._strokeSlot),this._strokeSlot=null),this._fillSlot&&(this._disposeSlot(this._fillSlot),this._fillSlot=null),this._decorations&&(this._decorations.destroy(),this._decorations=null),
 // A rebuild may have moved the previously-attached state into
 // the held-over slots without the next attach landing yet.
 // PIXI's `super.destroy()` removes children from the display
@@ -12178,7 +6847,13 @@ class SlugPipe{static extension={type:external_commonjs_pixi_js_commonjs2_pixi_j
 // TODO: Cleanup resources for this renderable
 }}
 // Register the pipe as a PixiJS v8 extension
-external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.extensions.add(SlugPipe);// ./src/v8/slug/fonts/loader.ts
+// ./src/v8/slug/fonts/ticker.ts
+/**
+ * Auto-attach the shared PixiJS v8 Ticker to the `SlugFonts` registry
+ * so its auto-destroy grace-period sweep runs without host-app setup.
+ * Skipped when `Defaults.Registry.AutoAttachTicker` is false.
+ */
+function slugFontsAttachTickerV8(){Defaults.Registry.AutoAttachTicker&&SlugFonts.attachTicker(cb=>{const listener=()=>cb(external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Ticker.shared.deltaMS);return external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Ticker.shared.add(listener),()=>external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.Ticker.shared.remove(listener)})}external_commonjs_pixi_js_commonjs2_pixi_js_root_PIXI_.extensions.add(SlugPipe),slugFontsAttachTickerV8();// ./src/v8/slug/fonts/loader.ts
 /**
  * Registered once `slugFontsInstallLoaderV8` is called. Kept at module
  * scope so double-install is a no-op.

@@ -1,8 +1,6 @@
 import {Program, type Renderer} from '@pixi/core';
 
-// v6 shares the v7 vertex shader (same uniform names: projectionMatrix,
-// translationMatrix). Mirrors what `gpu.ts` already does.
-import vertSource from '../../../v7/shader/slug/vert.glsl';
+import vertSource from '../../shader/slug/vert.glsl';
 import fragSource from '../../../shared/shader/slug/frag.glsl';
 import {SlugFonts} from '../../../shared/slug/fonts';
 import {slugCompileAndInject} from './compile';

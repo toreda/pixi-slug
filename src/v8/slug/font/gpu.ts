@@ -45,6 +45,27 @@ export interface SlugFontGpuV8 {
 	 */
 	programReady?: Promise<boolean>;
 	/**
+	 * Bumped every time `curveTexture` or `bandTexture` is replaced
+	 * (i.e. a buffer grow forced a `Texture.destroy()` + recreate).
+	 * Every `SlugMeshSlot` records the generation it was last bound to;
+	 * on every `_attachGpu` pass the slot checks this counter and
+	 * rebinds its shader's curve/band sampler resources when the font
+	 * has moved past it.
+	 *
+	 * Without this, the first SlugText built on a font keeps its shader
+	 * pointing at the *original* texture sources — and any subsequent
+	 * SlugText (or the same SlugText on incremental rebuild) that grows
+	 * the font's curve/band buffers destroys those original sources,
+	 * orphaning the first SlugText's bindings. Symptom: any glyph added
+	 * to the font *after* the first SlugText's initial render either
+	 * renders as garbage (the source still exists but the new band
+	 * offsets reference data not present in it) or fails to render at
+	 * all (the source was destroyed by PIXI's GC). Most visible when
+	 * mixing two SlugFonts in a scene, but the same bug exists for a
+	 * single font when text grows mid-session.
+	 */
+	generation: number;
+	/**
 	 * Reference to the `Float32Array` currently owned by the curve
 	 * texture. When `font.curveData` no longer matches this reference,
 	 * the buffer was reallocated by an `ensureGlyphs` grow and the
@@ -170,22 +191,32 @@ export function slugFontGpuV8(
 			cached.curveTexture.destroy();
 			cached.curveTexture = makeCurveTexture(font);
 			cached._curveBuffer = font.curveData;
+			cached.generation++;
 			curveChanged = true;
 		}
 		if (cached._bandBuffer.buffer !== bandView.buffer) {
 			cached.bandTexture.destroy();
 			cached.bandTexture = makeBandTexture(font, bandView);
 			cached._bandBuffer = bandView;
+			cached.generation++;
 			bandChanged = true;
 		}
 
 		// In-place append (no grow) — same buffer reference, but the
-		// trailing bytes were just written by `slugTextureAppendGlyphs`.
-		// Tell PIXI to reupload so the GPU sees the new data.
-		if (!curveChanged && ensureResult?.addedAny) {
+		// trailing bytes may have been written by `slugTextureAppendGlyphs`
+		// EITHER on this call or by an earlier `_attachGpu` triggered by
+		// a different SlugText sharing this font. Cannot rely on
+		// `ensureResult?.addedAny` from THIS call: a second SlugText
+		// whose own `_buildPlan` saw all-cached glyphs (addedAny=false)
+		// can still need to render a glyph that the first SlugText
+		// appended a moment ago — that data is in the buffer but the
+		// curve/band texture source hasn't been told. Mark dirty on
+		// every cache hit; PIXI's renderer dedupes per frame (one
+		// `'update'` event = one re-upload).
+		if (!curveChanged) {
 			cached.curveTexture.source.update();
 		}
-		if (!bandChanged && ensureResult?.addedAny) {
+		if (!bandChanged) {
 			cached.bandTexture.source.update();
 		}
 
@@ -214,6 +245,7 @@ export function slugFontGpuV8(
 		bandTexture,
 		glProgram,
 		fallbackWhite,
+		generation: 0,
 		_curveBuffer: font.curveData,
 		_bandBuffer: bandView
 	};

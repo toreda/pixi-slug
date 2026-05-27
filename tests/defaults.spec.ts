@@ -1,5 +1,9 @@
-import {isInt, isIntNeg, isIntPos, isNumberFinite} from '@toreda/verify';
 import {Defaults} from '../src/defaults';
+
+const isInt = (v: unknown): boolean => Number.isInteger(v as number);
+const isIntPos = (v: unknown): boolean => Number.isInteger(v as number) && (v as number) >= 0;
+const isIntNeg = (v: unknown): boolean => Number.isInteger(v as number) && (v as number) < 0;
+const isNumberFinite = (v: unknown): boolean => Number.isFinite(v as number);
 
 type DefaultEntryType =
 	| 'string'

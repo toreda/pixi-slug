@@ -42,17 +42,26 @@ export class Defaults {
 		 */
 		ReattachPolicy: 'throw' as 'throw' | 'error' | 'warn' | 'silent',
 		/**
-		 * When true, the version-specific GPU layer attempts to compile
-		 * the Slug shader using the WebGL `KHR_parallel_shader_compile`
-		 * extension so the driver compile/link runs off the main thread.
-		 * The 500ms+ first-draw stall is reduced to a few ms of polling.
+		 * Internal "prewarm mode active" flag. **Default false.** The
+		 * library flips this to true automatically when the consumer
+		 * invokes one of the prewarm APIs:
 		 *
-		 * Falls back transparently to the synchronous PIXI path when the
-		 * extension is unavailable. Must be set before the first
-		 * SlugText render — once the program is compiled the toggle has
-		 * no further effect.
+		 *  - `SlugFonts.prewarmContext(gl)` — context-first prewarm
+		 *  - `SlugFonts.attachRenderer(renderer)` — renderer-driven prewarm
+		 *    (also fired by `SlugApplicationPluginV8` during `app.init`)
+		 *
+		 * While false, every compile path is synchronous: the cache-miss
+		 * compile inside `slugFontGpuV{6,7,8}` runs PIXI's blocking
+		 * `generateProgram` exactly as before this feature shipped. While
+		 * true, both the explicit prewarm APIs and the cache-miss path
+		 * use `KHR_parallel_shader_compile` for off-thread compile.
+		 *
+		 * Not a user-facing kill switch — consumers opt in by calling a
+		 * prewarm API, opt out by not calling one. Exposed in Defaults
+		 * for tests and for advanced consumers building a library variant
+		 * with prewarm-on by default.
 		 */
-		ParallelShaderCompile: true as const
+		ParallelShaderCompile: false as const
 	} as const;
 
 	public static readonly SlugText = {

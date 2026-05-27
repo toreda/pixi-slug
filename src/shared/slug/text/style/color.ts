@@ -1,7 +1,3 @@
-// Import submodule paths directly to avoid the @toreda/verify barrel,
-// which pulls in `@toreda/fate` as a runtime dependency.
-import {isIntPos} from '@toreda/verify/dist/is/int/pos';
-import {isNumberFinite} from '@toreda/verify/dist/is/number/finite';
 import type {Rgba, RgbaReadonly} from '../../../../rgba';
 
 /**
@@ -154,7 +150,7 @@ function parseHexString(raw: string): {r: number; g: number; b: number; alphaFro
 }
 
 function parseNumber(n: number): {r: number; g: number; b: number; alphaFromInput?: number} | null {
-	if (!isIntPos(n) || n > 0xffffffff) {
+	if (!Number.isInteger(n) || n < 0 || n > 0xffffffff) {
 		return null;
 	}
 
@@ -191,7 +187,7 @@ function parseArray(arr: readonly number[]): {r: number; g: number; b: number; a
 
 	for (let i = 0; i < arr.length; i++) {
 		const v = arr[i];
-		if (!isNumberFinite(v) || v < 0 || v > 255) {
+		if (!Number.isFinite(v) || v < 0 || v > 255) {
 			return null;
 		}
 	}

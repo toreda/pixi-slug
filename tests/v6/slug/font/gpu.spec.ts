@@ -49,7 +49,7 @@ jest.mock('@pixi/core', () => {
 	};
 });
 
-jest.mock('../../../../src/v7/shader/slug/vert.glsl', () => 'STUB_VERT', {virtual: true});
+jest.mock('../../../../src/v6/shader/slug/vert.glsl', () => 'STUB_VERT', {virtual: true});
 jest.mock('../../../../src/shared/shader/slug/frag.glsl', () => 'STUB_FRAG', {virtual: true});
 
 const mockCompileAndInject = jest.fn();

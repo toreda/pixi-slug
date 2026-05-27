@@ -48,23 +48,25 @@ Kick off the compile as early as possible — during font load when a renderer i
 
 ## 4. Public API
 
-### 4.1 Toggle (already implemented)
+### 4.1 Toggle (revised 2026-05-13)
 
-`SlugFontsRegistryOptions.parallelShaderCompile: boolean`. Default true. Set in the `SlugFontsRegistry` constructor:
+`SlugFontsRegistryOptions.parallelShaderCompile: boolean`. **Default false.** Internal flag indicating "prewarm mode is active." Set automatically by the library when the consumer invokes a prewarm-API entry point as the first `SlugFonts.*` operation. Not a user-facing kill switch — consumers opt in by calling a prewarm API, opt out by not calling one.
 
 ```typescript
-new SlugFontsRegistry({parallelShaderCompile: false});
+new SlugFontsRegistry({parallelShaderCompile: true});  // explicit override, e.g. for tests
 ```
 
-Once a registry exists, the value is read-only on the registry instance. Surfaced via `SlugFonts.parallelShaderCompile` getter (no setter).
+Once the registry exists, `parallelShaderCompile` is **read-only and immutable for the registry's lifetime**. Surfaced via `SlugFonts.parallelShaderCompile` getter (no setter, mostly useful for diagnostics).
 
-**Read-once contract:** the value is consulted on first compile of the Slug shader. Subsequent SlugFont/SlugText instances observe whatever path the first compile chose. The toggle has no effect after first compile fires.
+**First-call-order contract:** the value is locked in at registry construction. The prewarm-API entry points (`SlugFonts.prewarmContext`, `SlugFonts.attachRenderer`) pass `{parallelShaderCompile: true}` when they trigger lazy construction; every other `SlugFonts.*` operation triggers construction with defaults (`false`). If a prewarm API is called *after* the registry was already constructed in non-prewarm mode, it surfaces a one-time `console.warn` per api name and returns `Promise.resolve(false)` — the library cannot retroactively rescue the misordering.
 
-To override the default, either:
-1. Construct the registry with the option before any SlugFont is created, OR
-2. Mutate `Defaults.Registry.ParallelShaderCompile` before the first font load.
+Consumer contract: **call a prewarm API before any other `SlugFonts.*` operation if you want prewarm mode.** Misuse is observable via the warning; no behavioral rescue is attempted.
 
-### 4.2 Renderer registration (Part B only)
+To start the registry in prewarm mode without first invoking a prewarm API (e.g. for tests or for a library variant where prewarm is the default), either:
+1. Construct the registry directly with `parallelShaderCompile: true`, OR
+2. Mutate `Defaults.Registry.ParallelShaderCompile = true` before the registry is first accessed.
+
+### 4.2 Renderer registration — renderer-first prewarm path (Part B)
 
 ```typescript
 SlugFonts.attachRenderer(renderer);   // v8: WebGLRenderer; v6/v7: Renderer
@@ -72,9 +74,50 @@ SlugFonts.detachRenderer();
 SlugFonts.renderer;                    // getter — null until attached
 ```
 
-The application plugin auto-calls `attachRenderer(app.renderer)` in its `init` hook. Manual users (raw `new Application()` without the plugin) call it themselves.
+`attachRenderer` is a prewarm-API entry point. Calling it constructs the global registry with `parallelShaderCompile: true` if no registry exists yet. The `SlugApplicationPluginV8` calls `attachRenderer(app.renderer)` during `Application.init()`'s plugin chain — which is **after** `autoDetectRenderer` has finished. By the time the renderer-prewarm fires, PIXI's renderer setup is complete and prewarm runs in parallel with whatever the host does between `app.init()` resolving and first SlugText render (font loading, scene construction, asset prep).
 
-### 4.3 Optional explicit warmup (Part B only)
+For maximum parallelism, see §4.3 (context-first prewarm), which starts the compile *before* PIXI's renderer setup begins.
+
+### 4.3 Context-first prewarm — `SlugFonts.prewarmContext` (added 2026-05-13)
+
+```typescript
+SlugFonts.prewarmContext(gl: WebGL2RenderingContext | null | undefined): Promise<boolean>
+```
+
+The **earliest possible prewarm entry point.** Compile + link the Slug shader against a user-supplied WebGL2 context — before any PIXI renderer wraps it — then have the later `attachRenderer` call adopt the prewarmed program into PIXI's renderer cache without recompiling.
+
+Consumer flow:
+
+```typescript
+// 1. Create canvas + WebGL2 context yourself.
+const canvas = document.createElement('canvas');
+const gl = canvas.getContext('webgl2', {antialias: true});
+
+// 2. Fire prewarm immediately. The 500ms link runs in parallel with
+//    everything the host does next.
+SlugFonts.prewarmContext(gl);   // fire-and-forget
+
+// 3. Build PIXI Application around the SAME context. PIXI v8 accepts
+//    `context` in ApplicationOptions and uses our context instead of
+//    creating one.
+const app = new PIXI.Application();
+await app.init({context: gl, ...});
+
+// 4. Register the v8 application plugin so attachRenderer fires
+//    automatically. It finds the prewarmed gl on renderer.gl and
+//    adopts the linked program instead of recompiling.
+PIXI.extensions.add(SlugApplicationPluginV8);
+```
+
+Semantics:
+- Like `attachRenderer`, this is a prewarm-API entry point — calling it as the first `SlugFonts.*` operation constructs the global registry with `parallelShaderCompile: true`.
+- Per-context dedup via WeakMap: calling with the same `gl` twice returns the same in-flight promise.
+- Resolves `true` on a successful compile + link + program-data build; `false` on any short-circuit (registry already in non-prewarm mode, missing `KHR_parallel_shader_compile`, link error, prewarm hook not installed — v6/v7).
+- Errors are logged via `console.error` to surface real shader issues, then resolved to `false` so the consumer's flow doesn't crash; the renderer-prewarm path falls back to today's renderer-driven compile.
+
+Adoption mechanism: the v8 prewarm hook stores the linked `WebGLProgram` and `GlProgramData` keyed by the `gl` context in a WeakMap. When `slugPrewarmShader(renderer)` runs later and `renderer.gl` matches a prewarmed key, the program data is injected directly into PIXI's per-renderer `_programDataHash` — no recompile.
+
+### 4.4 Optional explicit warmup (Part B)
 
 ```typescript
 SlugFonts.warmup(): Promise<void>

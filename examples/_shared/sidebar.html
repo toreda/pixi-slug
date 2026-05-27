@@ -144,6 +144,68 @@
 	</div>
 </div>
 
+<div class="ctrl-group" data-collapsible data-collapsed="true">
+	<div class="ctrl-group-title">
+		<span>Transform</span>
+		<button type="button" class="group-toggle" aria-label="Toggle Transform section">+</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlRotation">Angle</label>
+		<input type="range" id="ctrlRotation" value="0" min="-180" max="180" step="1">
+		<input type="number" id="ctrlRotationVal" class="slider-val" value="0">
+		<button type="button" id="ctrlRotationReset" class="icon-btn" aria-label="Reset angle to 0" title="Reset to 0">↺</button>
+	</div>
+</div>
+
+<div class="ctrl-group" data-collapsible data-collapsed="false" data-requires="mathText">
+	<div class="ctrl-group-title">
+		<span>Math</span>
+		<button type="button" class="group-toggle" aria-label="Toggle Math section">−</button>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlMathPreset">Preset</label>
+		<select id="ctrlMathPreset" style="flex: 1;">
+			<option value="quadratic" selected>Quadratic formula</option>
+			<option value="summation">Summation over fraction</option>
+			<option value="matrix">2×2 matrix</option>
+			<option value="gaussian">Gaussian (normal) PDF</option>
+			<option value="cases">Piecewise (cases)</option>
+			<option value="pythagorean">Pythagorean (a² + b² = c²)</option>
+			<option value="braket">Braket / inner product</option>
+			<option value="tensor">Tensor indices</option>
+			<option value="trig">Trig identity</option>
+			<option value="system">Aligned equation system</option>
+		</select>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlMathSize">Size</label>
+		<input type="range" id="ctrlMathSize" value="48" min="12" max="200" step="1">
+		<input type="number" id="ctrlMathSizeVal" class="slider-val" value="48">
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlMathAlign">Align</label>
+		<select id="ctrlMathAlign">
+			<option value="left" selected>Left</option>
+			<option value="center">Center</option>
+			<option value="right">Right</option>
+			<option value="equals">Equals</option>
+		</select>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlMathLineSpacing">Line sp</label>
+		<input type="range" id="ctrlMathLineSpacing" value="1.2" min="0.8" max="2.5" step="0.05">
+		<input type="number" id="ctrlMathLineSpacingVal" class="slider-val" value="1.2" step="0.05">
+	</div>
+	<div class="ctrl-row">
+		<input type="checkbox" id="ctrlMathUseBodyFont" checked>
+		<label for="ctrlMathUseBodyFont">Use body font for variables</label>
+	</div>
+	<div class="ctrl-row">
+		<label for="ctrlMathFill">Fill</label>
+		<input type="color" id="ctrlMathFill" value="#ffffff">
+	</div>
+</div>
+
 <div class="ctrl-group" data-collapsible data-collapsed="true" data-enable="ctrlUnderline" data-requires="underline">
 	<div class="ctrl-group-title">
 		<input type="checkbox" id="ctrlUnderline">

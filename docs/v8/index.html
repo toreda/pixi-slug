@@ -33,8 +33,45 @@
 	<script>
 		(async function () {
 			var appContainer = document.getElementById('app');
+
+			// Create the canvas and WebGL2 context ourselves so we can
+			// start the Slug shader prewarm BEFORE PIXI's renderer setup.
+			// This is the maximum-parallelism prewarm path: the 500ms
+			// shader link runs concurrently with PIXI's autoDetectRenderer,
+			// stage construction, plugin chain, and any host-side work.
+			var canvas = document.createElement('canvas');
+			var gl = canvas.getContext('webgl2', {
+				antialias: true,
+				powerPreference: 'high-performance',
+				premultipliedAlpha: true,
+				preserveDrawingBuffer: false
+			});
+
+			// MUST be the first SlugFonts.* call — opts the global registry
+			// into prewarm mode and kicks off the off-thread compile.
+			// Fire-and-forget; the renderer-prewarm later will await this
+			// implicitly via the adoption WeakMap.
+			pixiSlug.SlugFonts.prewarmContext(gl);
+
+			// Register the v8 plugin BEFORE app.init so PIXI invokes it
+			// during initialization. The plugin's init hook calls
+			// SlugFonts.attachRenderer(app.renderer), which finds the
+			// already-prewarmed gl on renderer.gl and adopts the linked
+			// program into PIXI's per-renderer cache — no recompile.
+			//
+			// The v8 entry point auto-attaches Ticker.shared at module
+			// load. Detach it first so the plugin's app.ticker attach
+			// does not trigger the registry's reattach policy.
+			pixiSlug.SlugFonts.detachTicker();
+			PIXI.extensions.add(pixiSlug.SlugApplicationPluginV8);
+
+			// Build the PIXI Application around our pre-created context.
+			// PIXI v8 accepts `context` in ApplicationOptions and uses our
+			// gl instead of creating its own.
 			var app = new PIXI.Application();
 			await app.init({
+				context: gl,
+				canvas: canvas,
 				resizeTo: appContainer,
 				backgroundColor: 0x16213e,
 				preferWebGLVersion: 2,
@@ -44,28 +81,6 @@
 			window.__PIXI_APP__ = app;
 
 			appContainer.appendChild(app.canvas);
-
-			// PIXI's `resizeTo` only listens for window resize events, so any
-			// post-init layout shift (sidebar markup injecting, font load,
-			// flex re-measure) leaves the canvas backing buffer out of sync
-			// with its CSS display size — the browser then non-uniformly
-			// stretches the rendered output. Observe the container directly
-			// so we re-measure on every layout change.
-			if (typeof ResizeObserver !== 'undefined') {
-				new ResizeObserver(function () { app.resize(); }).observe(appContainer);
-			}
-
-			var gl = app.renderer.gl;
-			if (!gl || !(gl instanceof WebGL2RenderingContext)) {
-				var err = new PIXI.Text({
-					text: 'WebGL2 is required but not available.',
-					style: { fill: '#ff4444', fontSize: 16 }
-				});
-				err.x = 20;
-				err.y = Math.floor(app.screen.height / 2);
-				app.stage.addChild(err);
-				return;
-			}
 
 			window.SlugExample.run({
 				construct: function (cfg) {

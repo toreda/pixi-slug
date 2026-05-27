@@ -1,6 +1,5 @@
 import type {Rgba} from '../../../rgba';
 import {SlugFont} from '../font';
-import {TextStyleOptions} from 'pixi.js';
 import type {SlugFontErrorPolicy} from '../font/error/policy';
 import {SlugTextStyleAlign} from './style/align';
 import type {SlugTextColor} from './style/color';

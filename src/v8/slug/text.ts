@@ -309,7 +309,8 @@ export class SlugText extends SlugTextV8Base {
 			vertexCapacityQuads: capacityQuads,
 			indexCapacityQuads: capacityQuads,
 			fillGpu: null,
-			fillMode: 0
+			fillMode: 0,
+			_gpuGeneration: gpu.generation
 		};
 
 		// Tell PIXI the live data size is what `quads` carries, not the
@@ -699,6 +700,38 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	/**
+	 * Rebind the slot's `uCurveTexture` / `uBandTexture` sampler
+	 * resources to the font's current GPU cache texture sources when
+	 * the font's generation counter has moved past what this slot
+	 * recorded. Cheap no-op in the steady state (one integer compare).
+	 *
+	 * Why this is necessary: `slugFontGpuV8`'s cache-hit grow path
+	 * destroys and replaces the font's `curveTexture` / `bandTexture`
+	 * when `ensureGlyphs` reallocates the curve or band buffer
+	 * (triggered by ANY SlugText on the same font appending glyphs that
+	 * exceed current headroom). Slots not rebuilt in that same frame
+	 * still hold a `shader.resources.uCurveTexture` / `uBandTexture`
+	 * binding to the *destroyed* sources — PIXI's GC reclaims those
+	 * texture sources and the slot's draw call samples from invalid
+	 * memory (visual: glyph appears blank or garbled). The font's
+	 * `gpu.generation` is bumped on every replace; slots cache the
+	 * generation they were last bound to and rebind here when stale.
+	 * See multi-font audit recommendation Option A.
+	 *
+	 * Reading or assigning `shader.resources` does NOT trigger a re-link
+	 * (verified A7 in `_specs/features/incremental-mesh-rebuild.md`);
+	 * the swapped texture source is picked up fresh on the next draw
+	 * (verified A8).
+	 */
+	private _syncSlotToFontGeneration(slot: SlugMeshSlot, gpu: SlugFontGpuV8): void {
+		if (slot._gpuGeneration === gpu.generation) return;
+		const resources = slot.shader.resources as Record<string, unknown>;
+		resources.uCurveTexture = gpu.curveTexture.source;
+		resources.uBandTexture = gpu.bandTexture.source;
+		slot._gpuGeneration = gpu.generation;
+	}
+
+	/**
 	 * Pure-CPU geometry computation. Returns `null` for the empty-text
 	 * / no-font early-exit case so the caller can skip scheduling an
 	 * attach. All references the result holds (`font.glyphs`,
@@ -886,7 +919,28 @@ export class SlugText extends SlugTextV8Base {
 	 */
 	private _attachGpu(renderer: Renderer): void {
 		const plan = this._pendingPlan;
-		if (!plan) return;
+
+		// Pull-on-draw rebind path (A2 from the multi-font audit). Any
+		// frame in which this SlugText has no pending rebuild, we still
+		// need to check whether another SlugText sharing the same font
+		// grew the font's curve/band buffers since our last attach —
+		// that grow destroyed our shader's bound texture sources. Cheap:
+		// `slugFontGpuV8` short-circuits on cache hit when nothing
+		// changed, and `_syncSlotToFontGeneration` is one integer
+		// compare per live slot in the steady state. Without this
+		// rebind, stationary SlugTexts that share a font with a
+		// just-grown SlugText render as blank glyphs (the texture
+		// source they reference was destroyed by PIXI's GC).
+		if (!plan) {
+			const font = this._fontRef?.deref();
+			if (!font) return;
+			const gpuCache = font.gpuCache as SlugFontGpuV8 | null;
+			if (!gpuCache) return;
+			if (this._shadowSlot) this._syncSlotToFontGeneration(this._shadowSlot, gpuCache);
+			if (this._strokeSlot) this._syncSlotToFontGeneration(this._strokeSlot, gpuCache);
+			if (this._fillSlot) this._syncSlotToFontGeneration(this._fillSlot, gpuCache);
+			return;
+		}
 
 		const webglRenderer = renderer.type === RendererType.WEBGL ? (renderer as WebGLRenderer) : null;
 		const gpu = slugFontGpuV8(plan.font, plan.ensureResult, webglRenderer);
@@ -932,9 +986,13 @@ export class SlugText extends SlugTextV8Base {
 
 		this._buildAndAttachMeshes(plan, gpu);
 		this._pendingPlan = null;
-		// Per-frame `onRender` no longer needed — clear so PIXI removes
-		// us from its onRender list.
-		this.onRender = null;
+		// Keep `onRender` attached so the pull-on-draw generation check
+		// at the top of `_attachGpu` runs every frame. Steady-state cost
+		// is one map deref + one integer compare per live slot; cheaper
+		// than the alternative of pushing rebinds from the font (which
+		// would require SlugFont to track all its SlugText users — a
+		// pattern SlugText explicitly avoids). See multi-font audit
+		// option A2.
 	}
 
 	/**
@@ -966,6 +1024,7 @@ export class SlugText extends SlugTextV8Base {
 					plan.fillBounds,
 					plan.shadowBlur
 				);
+				this._syncSlotToFontGeneration(this._shadowSlot, gpu);
 			} else {
 				this._shadowSlot = this._allocSlot(
 					plan.shadowQuads,
@@ -1005,6 +1064,7 @@ export class SlugText extends SlugTextV8Base {
 					plan.fillBounds,
 					this._strokeWidth
 				);
+				this._syncSlotToFontGeneration(this._strokeSlot, gpu);
 			} else {
 				this._strokeSlot = this._allocSlot(
 					plan.strokeQuads,
@@ -1028,6 +1088,7 @@ export class SlugText extends SlugTextV8Base {
 			const fillGpu = slugBuildFillGpuV8(this._fill);
 			if (this._fillSlot) {
 				this._updateSlot(this._fillSlot, plan.fillQuads, fillGpu, plan.fillBounds);
+				this._syncSlotToFontGeneration(this._fillSlot, gpu);
 			} else {
 				this._fillSlot = this._allocSlot(plan.fillQuads, gpu, fillGpu, plan.fillBounds);
 				this.addChild(this._fillSlot.mesh);

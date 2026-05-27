@@ -30,11 +30,22 @@ export interface SlugFontsRegistryOptions {
 	 */
 	reattachPolicy: 'throw' | 'error' | 'warn' | 'silent';
 	/**
-	 * Compile the Slug shader using `KHR_parallel_shader_compile` when
-	 * the extension is available. Default true. Set false to force the
-	 * synchronous PIXI compile path (e.g. for debugging or strict
-	 * lock-step expectations in tests). Must be set before the first
-	 * SlugText render — once compile starts, the value is locked in.
+	 * Initial value of the internal "prewarm mode active" flag. Default
+	 * false. The library flips this to true automatically when the
+	 * consumer invokes one of the prewarm APIs:
+	 *
+	 *  - `SlugFonts.prewarmContext(gl)` — context-first prewarm
+	 *  - `SlugFonts.attachRenderer(renderer)` — renderer-driven prewarm
+	 *
+	 * Once true, cache-miss compiles inside `slugFontGpu*` also use
+	 * `KHR_parallel_shader_compile`. While false, every compile path is
+	 * synchronous (today's pre-prewarm behavior).
+	 *
+	 * Construct with `true` to start the registry in prewarm mode
+	 * without first calling a prewarm API — useful for tests and for
+	 * advanced consumers building a library variant where prewarm is
+	 * the default. Construct with `false` (the default) for normal
+	 * consumer usage; the flag flips itself when needed.
 	 */
 	parallelShaderCompile: boolean;
 }

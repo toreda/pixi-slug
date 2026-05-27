@@ -13,12 +13,18 @@ import {SlugFonts} from '../../../src/shared/slug/fonts';
  */
 describe('SlugFonts Part B (renderer registration + warmup)', () => {
 	beforeEach(() => {
-		SlugFonts.clear();
+		// Reset the global registry singleton so the first prewarm-API
+		// call in each test triggers fresh construction with the right
+		// options (`parallelShaderCompile: true` via `attachRenderer`).
+		// `_installPrewarmHook(null)` after the reset buffers a null
+		// hook — it does NOT auto-construct the registry, so the hook
+		// install + later attach work in either order.
+		SlugFonts._resetRegistry();
 		SlugFonts._installPrewarmHook(null);
 	});
 
 	afterAll(() => {
-		SlugFonts.clear();
+		SlugFonts._resetRegistry();
 		SlugFonts._installPrewarmHook(null);
 	});
 

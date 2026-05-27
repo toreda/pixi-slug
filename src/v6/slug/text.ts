@@ -12,11 +12,8 @@ import {slugComputeLineLayout} from '../../shared/slug/text/layout/align';
 import {slugResolvePhysicalAlign} from '../../shared/slug/text/style/align';
 import {slugMeasureText} from '../../shared/slug/text/measure';
 import {slugTextWrap} from '../../shared/slug/text/wrap';
-// v6 shares v7's fill GPU and decoration-fill modules — both PIXI
-// versions expose the same @pixi/core / @pixi/graphics surface
-// (BaseTexture.fromBuffer, WRAP_MODES, Graphics.beginTextureFill).
-import {slugBuildDecorationFillV7} from '../../v7/slug/decoration/fill';
-import {slugBuildFillGpuV7, type SlugFillGpuV7} from '../../v7/slug/fill/gpu';
+import {slugBuildDecorationFillV6} from './decoration/fill';
+import {slugBuildFillGpuV6, type SlugFillGpuV6} from './fill/gpu';
 import {slugFontGpuV6, type SlugFontGpuV6} from './font/gpu';
 import {slugShader} from './shader';
 import {SlugTextInit} from '../../shared/slug/text/init';
@@ -76,7 +73,7 @@ export class SlugText extends SlugTextV6Base {
 	 * Per-instance GPU resources derived from `_fill`. Disposed on every
 	 * rebuild before being replaced.
 	 */
-	private _fillGpu: SlugFillGpuV7 | null;
+	private _fillGpu: SlugFillGpuV6 | null;
 	/**
 	 * Computed by {@link rebuild} (geometry phase) and consumed by
 	 * {@link _attachGpu} (GPU phase) on the next `_render` tick.
@@ -100,6 +97,17 @@ export class SlugText extends SlugTextV6Base {
 	 * `null` only when the SlugText has never seen a ready signal yet.
 	 */
 	private _programReadyCache: SlugFontGpuV6 | null;
+	/**
+	 * Font GPU generation counter captured the last time this SlugText
+	 * bound its meshes' shaders to the font's curve/band textures.
+	 * Compared to `font.gpuCache.generation` on every `_render` so we
+	 * can detect when another SlugText sharing the same font has grown
+	 * the font's buffers (destroying the textures we still reference)
+	 * and rebind to the fresh ones before drawing. `-1` means "no
+	 * meshes attached yet"; set to the live generation by
+	 * `_buildAndAttachMeshes`.
+	 */
+	private _attachedGeneration: number;
 
 	constructor(init: SlugTextInit) {
 		super();
@@ -110,6 +118,7 @@ export class SlugText extends SlugTextV6Base {
 		this._pendingPlan = null;
 		this._attachToken = 0;
 		this._programReadyCache = null;
+		this._attachedGeneration = -1;
 
 		// Opt the whole subtree out of hit-testing by default. The
 		// internal meshes use a custom geometry so PIXI's
@@ -172,7 +181,7 @@ export class SlugText extends SlugTextV6Base {
 	private _buildMesh(
 		quads: SlugGlyphQuads,
 		gpu: ReturnType<typeof slugFontGpuV6>,
-		fillGpu: SlugFillGpuV7,
+		fillGpu: SlugFillGpuV6,
 		fillBounds: [number, number, number, number],
 		strokeExpand: number = 0
 	): {mesh: Mesh<Shader>; shader: Shader} {
@@ -410,7 +419,31 @@ export class SlugText extends SlugTextV6Base {
 	 */
 	protected _render(renderer: Renderer): void {
 		const plan = this._pendingPlan;
-		if (!plan) return;
+
+		// Pull-on-draw rebind path (multi-font audit option A2). When no
+		// rebuild is pending, still check whether another SlugText
+		// sharing the same font grew the font's curve/band buffers since
+		// our last attach — that grow destroyed our shader's bound
+		// texture sources. v6 has no slot model, so we rebind every
+		// mesh's `uCurveTexture` / `uBandTexture` directly. Cheap no-op
+		// in the steady state (one int compare). Without this,
+		// stationary SlugTexts sharing a font with a just-grown SlugText
+		// render blank or garbled glyphs.
+		if (!plan) {
+			const font = this._fontRef?.deref();
+			if (!font) return;
+			const gpuCache = font.gpuCache as SlugFontGpuV6 | null;
+			if (!gpuCache) return;
+			if (this._attachedGeneration !== gpuCache.generation) {
+				for (const mesh of this._meshes) {
+					const u = mesh.shader.uniforms as Record<string, unknown>;
+					u.uCurveTexture = gpuCache.curveTexture;
+					u.uBandTexture = gpuCache.bandTexture;
+				}
+				this._attachedGeneration = gpuCache.generation;
+			}
+			return;
+		}
 
 		const gpu = slugFontGpuV6(plan.font, plan.ensureResult, renderer);
 
@@ -434,14 +467,15 @@ export class SlugText extends SlugTextV6Base {
 
 		this._buildAndAttachMeshes(plan, gpu);
 		this._pendingPlan = null;
+		this._attachedGeneration = gpu.generation;
 	}
 
 	private _buildAndAttachMeshes(plan: SlugTextRenderPlan, gpu: SlugFontGpuV6): void {
-		this._fillGpu = slugBuildFillGpuV7(this._fill);
+		this._fillGpu = slugBuildFillGpuV6(this._fill);
 
 		// --- Drop shadow pass (always solid color, mode 0) ---
 		if (plan.shadowQuads !== null) {
-			const solidGpu = slugBuildFillGpuV7({
+			const solidGpu = slugBuildFillGpuV6({
 				kind: 'solid',
 				color: [0, 0, 0, 1],
 				rgbProvided: true,
@@ -460,7 +494,7 @@ export class SlugText extends SlugTextV6Base {
 
 		// --- Stroke pass (always solid color, mode 0) ---
 		if (plan.strokeQuads !== null) {
-			const solidGpu = slugBuildFillGpuV7({
+			const solidGpu = slugBuildFillGpuV6({
 				kind: 'solid',
 				color: [0, 0, 0, 1],
 				rgbProvided: true,
@@ -495,7 +529,7 @@ export class SlugText extends SlugTextV6Base {
 
 	/**
 	 * Build the underline/strikethrough/overline Graphics from the
-	 * plan. Texture fills inherit through `slugBuildDecorationFillV7`;
+	 * plan. Texture fills inherit through `slugBuildDecorationFillV6`;
 	 * gradients on v6 decorations fall back to the representative
 	 * solid color (no `FillGradient` in v6 Graphics — see
 	 * decoration/fill.ts for the rationale).
@@ -538,7 +572,7 @@ export class SlugText extends SlugTextV6Base {
 			packed: number
 		): void => {
 			if (inherits) {
-				const texFill = slugBuildDecorationFillV7(
+				const texFill = slugBuildDecorationFillV6(
 					this._fill,
 					fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3],
 					color[3]

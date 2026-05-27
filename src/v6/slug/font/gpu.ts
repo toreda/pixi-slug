@@ -3,8 +3,7 @@ import {BaseTexture, Program, Texture, type Renderer} from '@pixi/core';
 import type {SlugFont, SlugFontEnsureResult} from '../../../shared/slug/font';
 import {SlugFonts} from '../../../shared/slug/fonts';
 
-// v6 shares the v7 vertex shader (same uniform names: projectionMatrix, translationMatrix).
-import vertSource from '../../../v7/shader/slug/vert.glsl';
+import vertSource from '../../shader/slug/vert.glsl';
 import fragSource from '../../../shared/shader/slug/frag.glsl';
 import {slugCompileAndInject} from './compile';
 
@@ -37,6 +36,15 @@ export interface SlugFontGpuV6 {
 	 * compile on first draw".
 	 */
 	programReady?: Promise<boolean>;
+	/**
+	 * Bumped every time `curveTexture` or `bandTexture` is replaced
+	 * (i.e. a buffer grow forced a destroy + recreate). Mirrors
+	 * `SlugFontGpuV8.generation` — see that field for the full rationale.
+	 * Read by every SlugText on every `_render` so stationary SlugTexts
+	 * sharing a font with a just-grown SlugText can rebind their meshes'
+	 * shader samplers to the new texture instances before drawing.
+	 */
+	generation: number;
 	/** Reference to the `Float32Array` currently owned by the curve texture. */
 	_curveBuffer: Float32Array;
 	/** Reference to the band buffer view; compared by `.buffer` identity. */
@@ -101,19 +109,25 @@ export function slugFontGpuV6(
 			cached.curveTexture.destroy(true);
 			cached.curveTexture = makeCurveTexture(font);
 			cached._curveBuffer = font.curveData;
+			cached.generation++;
 			curveChanged = true;
 		}
 		if (cached._bandBuffer.buffer !== bandView.buffer) {
 			cached.bandTexture.destroy(true);
 			cached.bandTexture = makeBandTexture(font, bandView);
 			cached._bandBuffer = bandView;
+			cached.generation++;
 			bandChanged = true;
 		}
 
-		if (!curveChanged && ensureResult?.addedAny) {
+		// Same buffer reference. Mark dirty unconditionally on cache hit
+		// because another SlugText sharing this font may have written
+		// new glyph bytes since the last `_render`. See v8's gpu.ts for
+		// the full rationale.
+		if (!curveChanged) {
 			cached.curveTexture.baseTexture.update();
 		}
-		if (!bandChanged && ensureResult?.addedAny) {
+		if (!bandChanged) {
 			cached.bandTexture.baseTexture.update();
 		}
 
@@ -130,6 +144,7 @@ export function slugFontGpuV6(
 		bandTexture,
 		fallbackWhite: Texture.WHITE,
 		program,
+		generation: 0,
 		_curveBuffer: font.curveData,
 		_bandBuffer: bandView
 	};

@@ -5,7 +5,7 @@ import {isSlugFontErrorMode} from './error';
 import {SlugFontsRegistryEntry} from './registry/entry';
 import {type SlugFontsRegistryOptions} from './registry/options';
 import {type SlugFontsRegistryStat} from './registry/stat';
-import { SlugFontErrorMode } from '../font/error/mode';
+import {SlugFontErrorMode} from '../font/error/mode';
 
 function resolveErrorMode(raw: unknown, fallback: SlugFontErrorMode): SlugFontErrorMode {
 	return isSlugFontErrorMode(raw) ? raw : fallback;
@@ -101,6 +101,19 @@ export class SlugFontsRegistry {
 	 * a `WeakMap<Renderer, Promise<boolean>>`).
 	 */
 	public prewarmHook: ((renderer: unknown) => Promise<boolean>) | null;
+	/**
+	 * Optional version-specific context-prewarm hook. v8 sets this
+	 * alongside {@link prewarmHook} from its entry point; v6/v7 leave
+	 * it null. Drives the **context-first prewarm path**: compile +
+	 * link the Slug shader against a user-supplied
+	 * `WebGL2RenderingContext` before any renderer wraps it, then have
+	 * the renderer-prewarm hook adopt the result when the renderer
+	 * arrives.
+	 *
+	 * Per-context dedup is the hook's responsibility (typically via a
+	 * `WeakMap<WebGL2RenderingContext, Promise<boolean>>`).
+	 */
+	public contextPrewarmHook: ((gl: WebGL2RenderingContext) => Promise<boolean>) | null;
 
 	constructor(options?: Partial<SlugFontsRegistryOptions>) {
 		this.byUrl = new Map<string, SlugFontsRegistryEntry>();
@@ -112,30 +125,36 @@ export class SlugFontsRegistry {
 		this.fallback = null;
 		this.fallbackOverridden = false;
 
-		this.autoDestroyUnused = typeof options?.autoDestroyUnused === 'boolean'
-			? options.autoDestroyUnused
-			: Defaults.Registry.AutoDestroyUnused;
+		this.autoDestroyUnused =
+			typeof options?.autoDestroyUnused === 'boolean'
+				? options.autoDestroyUnused
+				: Defaults.Registry.AutoDestroyUnused;
 
-		const delaySec = typeof options?.autoDestroyDelay === 'number'
-			? options.autoDestroyDelay
-			: Defaults.Registry.AutoDestroyDelay;
+		const delaySec =
+			typeof options?.autoDestroyDelay === 'number'
+				? options.autoDestroyDelay
+				: Defaults.Registry.AutoDestroyDelay;
 		this.autoDestroyDelayMs = Math.max(0, delaySec) * 1000;
-		this.autoAttachTicker = typeof options?.autoAttachTicker === 'boolean'
-			? options.autoAttachTicker
-			: Defaults.Registry.AutoAttachTicker;
-		this.updateRate = Math.max(0, typeof options?.updateRate === 'number'
-			? options.updateRate
-			: Defaults.Registry.UpdateRate);
+		this.autoAttachTicker =
+			typeof options?.autoAttachTicker === 'boolean'
+				? options.autoAttachTicker
+				: Defaults.Registry.AutoAttachTicker;
+		this.updateRate = Math.max(
+			0,
+			typeof options?.updateRate === 'number' ? options.updateRate : Defaults.Registry.UpdateRate
+		);
 		this.lastUpdate = 0;
 		this.reattachPolicy = resolveErrorMode(options?.reattachPolicy, Defaults.Registry.ReattachPolicy);
-		this.parallelShaderCompile = typeof options?.parallelShaderCompile === 'boolean'
-			? options.parallelShaderCompile
-			: Defaults.Registry.ParallelShaderCompile;
+		this.parallelShaderCompile =
+			typeof options?.parallelShaderCompile === 'boolean'
+				? options.parallelShaderCompile
+				: Defaults.Registry.ParallelShaderCompile;
 
 		this.tickerDetach = null;
 		this.tickerSubscribe = null;
 		this.renderer = null;
 		this.prewarmHook = null;
+		this.contextPrewarmHook = null;
 	}
 
 	/**
