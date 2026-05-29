@@ -1,4 +1,22 @@
-import type {MathNode, MathNodeStyle} from './node';
+import type {
+	AccentScales,
+	BigOpScales,
+	BinomScales,
+	BraceScales,
+	CasesScales,
+	FenceScales,
+	FracScales,
+	MathNode,
+	MathNodeStyle,
+	MatrixScales,
+	OverScales,
+	PrescriptScales,
+	PrimeScales,
+	SqrtScales,
+	StackedSubScales,
+	SubsupScales,
+	TensorScales
+} from './node';
 
 /**
  * Argument accepted anywhere a {@link MathNode} is required. Bare
@@ -33,67 +51,114 @@ export interface MathBuilder {
 	space(em: number): MathNode;
 
 	// --- Scripts --------------------------------------------------------
-	sup(base: MathInput, sup: MathInput): MathNode;
-	sub(base: MathInput, sub: MathInput): MathNode;
-	subsup(base: MathInput, sub: MathInput, sup: MathInput): MathNode;
+	sup(base: MathInput, sup: MathInput, opts?: {scales?: SubsupScales}): MathNode;
+	sub(base: MathInput, sub: MathInput, opts?: {scales?: SubsupScales}): MathNode;
+	subsup(
+		base: MathInput,
+		sub: MathInput,
+		sup: MathInput,
+		opts?: {scales?: SubsupScales}
+	): MathNode;
 
 	// --- Fractions and roots --------------------------------------------
-	frac(num: MathInput, den: MathInput): MathNode;
-	sqrt(radicand: MathInput): MathNode;
-	nthroot(index: MathInput, radicand: MathInput): MathNode;
+	frac(num: MathInput, den: MathInput, opts?: {scales?: FracScales}): MathNode;
+	sqrt(radicand: MathInput, opts?: {scales?: SqrtScales}): MathNode;
+	nthroot(index: MathInput, radicand: MathInput, opts?: {scales?: SqrtScales}): MathNode;
 
 	// --- Big operators --------------------------------------------------
-	summation(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
-	product(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
-	integral(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
+	summation(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
+	product(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
+	integral(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
 	bigOp(
 		symbol: string,
 		lower: MathInput | null,
 		upper: MathInput | null,
-		body: MathInput
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
 	): MathNode;
-	contour(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
-	doubleIntegral(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
-	tripleIntegral(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
-	surfaceIntegral(lower: MathInput | null, upper: MathInput | null, body: MathInput): MathNode;
+	contour(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
+	doubleIntegral(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
+	tripleIntegral(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
+	surfaceIntegral(
+		lower: MathInput | null,
+		upper: MathInput | null,
+		body: MathInput,
+		opts?: {scales?: BigOpScales}
+	): MathNode;
 
 	// --- Fences ---------------------------------------------------------
-	paren(inner: MathInput): MathNode;
-	bracket(inner: MathInput): MathNode;
-	brace(inner: MathInput): MathNode;
-	angle(inner: MathInput): MathNode;
-	abs(inner: MathInput): MathNode;
-	norm(inner: MathInput): MathNode;
-	floor(inner: MathInput): MathNode;
-	ceil(inner: MathInput): MathNode;
-	fence(left: string, right: string, inner: MathInput): MathNode;
-	fenceSep(left: string, right: string, children: MathInput[], separator?: string): MathNode;
-	bra(phi: MathInput): MathNode;
-	ket(psi: MathInput): MathNode;
-	braket(phi: MathInput, psi: MathInput): MathNode;
-	bracketOp(phi: MathInput, op: MathInput, psi: MathInput): MathNode;
-	setBuilder(x: MathInput, condition: MathInput): MathNode;
+	paren(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	bracket(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	brace(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	angle(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	abs(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	norm(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	floor(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	ceil(inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	fence(left: string, right: string, inner: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	fenceSep(
+		left: string,
+		right: string,
+		children: MathInput[],
+		separator?: string,
+		opts?: {scales?: FenceScales}
+	): MathNode;
+	bra(phi: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	ket(psi: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	braket(phi: MathInput, psi: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	bracketOp(phi: MathInput, op: MathInput, psi: MathInput, opts?: {scales?: FenceScales}): MathNode;
+	setBuilder(x: MathInput, condition: MathInput, opts?: {scales?: FenceScales}): MathNode;
 
 	// --- Matrices & systems ---------------------------------------------
 	matrix(
 		rows: MathInput[][],
 		fence?: 'paren' | 'bracket' | 'brace' | 'abs' | 'none',
-		options?: {augmentCol?: number | null}
+		options?: {augmentCol?: number | null; scales?: MatrixScales}
 	): MathNode;
-	cases(cases: [MathInput, MathInput][]): MathNode;
+	cases(cases: [MathInput, MathInput][], opts?: {scales?: CasesScales}): MathNode;
 	aligned(rows: MathInput[][], anchor?: number): MathNode;
 
 	// --- Accents / decorations ------------------------------------------
-	vec(base: MathInput): MathNode;
-	hat(base: MathInput): MathNode;
-	bar(base: MathInput): MathNode;
-	dot(base: MathInput): MathNode;
-	ddot(base: MathInput): MathNode;
-	tilde(base: MathInput): MathNode;
-	overline(inner: MathInput): MathNode;
-	underline(inner: MathInput): MathNode;
-	overbrace(inner: MathInput, label?: MathInput | null): MathNode;
-	underbrace(inner: MathInput, label?: MathInput | null): MathNode;
+	vec(base: MathInput, opts?: {scales?: AccentScales}): MathNode;
+	hat(base: MathInput, opts?: {scales?: AccentScales}): MathNode;
+	bar(base: MathInput, opts?: {scales?: AccentScales}): MathNode;
+	dot(base: MathInput, opts?: {scales?: AccentScales}): MathNode;
+	ddot(base: MathInput, opts?: {scales?: AccentScales}): MathNode;
+	tilde(base: MathInput, opts?: {scales?: AccentScales}): MathNode;
+	overline(inner: MathInput, opts?: {scales?: OverScales}): MathNode;
+	underline(inner: MathInput, opts?: {scales?: OverScales}): MathNode;
+	overbrace(inner: MathInput, label?: MathInput | null, opts?: {scales?: BraceScales}): MathNode;
+	underbrace(inner: MathInput, label?: MathInput | null, opts?: {scales?: BraceScales}): MathNode;
 	lim(var_: MathInput, target: MathInput, body: MathInput): MathNode;
 
 	// --- Grouping & layout ----------------------------------------------
@@ -173,13 +238,23 @@ export interface MathBuilder {
 	degree(): MathNode;
 
 	// --- Survey-driven additional primitives ----------------------------
-	tensor(base: MathInput, upper: MathInput[], lower: MathInput[]): MathNode;
+	tensor(
+		base: MathInput,
+		upper: MathInput[],
+		lower: MathInput[],
+		opts?: {scales?: TensorScales}
+	): MathNode;
 	map(name: MathInput, from: MathInput, to: MathInput, mapsTo?: MathInput | null): MathNode;
 	stackedSub(base: MathInput, ...lines: MathInput[]): MathNode;
-	prime(base: MathInput, count?: number): MathNode;
-	binom(n: MathInput, k: MathInput): MathNode;
+	prime(base: MathInput, count?: number, opts?: {scales?: PrimeScales}): MathNode;
+	binom(n: MathInput, k: MathInput, opts?: {scales?: BinomScales}): MathNode;
 	ellipsis(style?: 'baseline' | 'center' | 'vertical' | 'diagonal'): MathNode;
-	prescript(base: MathInput, sub?: MathInput | null, sup?: MathInput | null): MathNode;
+	prescript(
+		base: MathInput,
+		sub?: MathInput | null,
+		sup?: MathInput | null,
+		opts?: {scales?: PrescriptScales}
+	): MathNode;
 }
 
 /**
@@ -215,137 +290,224 @@ export const mathBuilder: MathBuilder = {
 	mathText: (s) => ({kind: 'text', text: s, useMathFont: true}),
 	space: (em) => ({kind: 'space', em}),
 
-	sup: (base, sup) => ({kind: 'sup', base: wrap(base), sup: wrap(sup)}),
-	sub: (base, sub) => ({kind: 'sub', base: wrap(base), sub: wrap(sub)}),
-	subsup: (base, sub, sup) => ({
+	sup: (base, sup, opts) => ({kind: 'sup', base: wrap(base), sup: wrap(sup), scales: opts?.scales}),
+	sub: (base, sub, opts) => ({kind: 'sub', base: wrap(base), sub: wrap(sub), scales: opts?.scales}),
+	subsup: (base, sub, sup, opts) => ({
 		kind: 'subsup',
 		base: wrap(base),
 		sub: wrap(sub),
-		sup: wrap(sup)
+		sup: wrap(sup),
+		scales: opts?.scales
 	}),
 
-	frac: (num, den) => ({kind: 'frac', num: wrap(num), den: wrap(den)}),
-	sqrt: (radicand) => ({kind: 'sqrt', radicand: wrap(radicand)}),
-	nthroot: (index, radicand) => ({
+	frac: (num, den, opts) => ({
+		kind: 'frac',
+		num: wrap(num),
+		den: wrap(den),
+		scales: opts?.scales
+	}),
+	sqrt: (radicand, opts) => ({kind: 'sqrt', radicand: wrap(radicand), scales: opts?.scales}),
+	nthroot: (index, radicand, opts) => ({
 		kind: 'nthroot',
 		index: wrap(index),
-		radicand: wrap(radicand)
+		radicand: wrap(radicand),
+		scales: opts?.scales
 	}),
 
-	summation: (lower, upper, body) => ({
+	summation: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∑',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: false
+		integralStyle: false,
+		scales: opts?.scales
 	}),
-	product: (lower, upper, body) => ({
+	product: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∏',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: false
+		integralStyle: false,
+		scales: opts?.scales
 	}),
-	integral: (lower, upper, body) => ({
+	integral: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∫',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: true
+		integralStyle: true,
+		scales: opts?.scales
 	}),
-	bigOp: (symbol, lower, upper, body) => ({
+	bigOp: (symbol, lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol,
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: false
+		integralStyle: false,
+		scales: opts?.scales
 	}),
-	contour: (lower, upper, body) => ({
+	contour: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∮',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: true
+		integralStyle: true,
+		scales: opts?.scales
 	}),
-	doubleIntegral: (lower, upper, body) => ({
+	doubleIntegral: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∬',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: true
+		integralStyle: true,
+		scales: opts?.scales
 	}),
-	tripleIntegral: (lower, upper, body) => ({
+	tripleIntegral: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∭',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: true
+		integralStyle: true,
+		scales: opts?.scales
 	}),
-	surfaceIntegral: (lower, upper, body) => ({
+	surfaceIntegral: (lower, upper, body, opts) => ({
 		kind: 'bigop',
 		symbol: '∯',
 		lower: wrapMaybe(lower),
 		upper: wrapMaybe(upper),
 		body: wrap(body),
-		integralStyle: true
+		integralStyle: true,
+		scales: opts?.scales
 	}),
 
-	paren: (inner) => ({kind: 'fence', left: '(', right: ')', inner: wrap(inner)}),
-	bracket: (inner) => ({kind: 'fence', left: '[', right: ']', inner: wrap(inner)}),
-	brace: (inner) => ({kind: 'fence', left: '{', right: '}', inner: wrap(inner)}),
-	angle: (inner) => ({kind: 'fence', left: '⟨', right: '⟩', inner: wrap(inner)}),
-	abs: (inner) => ({kind: 'fence', left: '|', right: '|', inner: wrap(inner)}),
-	norm: (inner) => ({kind: 'fence', left: '‖', right: '‖', inner: wrap(inner)}),
-	floor: (inner) => ({kind: 'fence', left: '⌊', right: '⌋', inner: wrap(inner)}),
-	ceil: (inner) => ({kind: 'fence', left: '⌈', right: '⌉', inner: wrap(inner)}),
-	fence: (left, right, inner) => ({kind: 'fence', left, right, inner: wrap(inner)}),
-	fenceSep: (left, right, children, separator = '|') => ({
+	paren: (inner, opts) => ({
+		kind: 'fence',
+		left: '(',
+		right: ')',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	bracket: (inner, opts) => ({
+		kind: 'fence',
+		left: '[',
+		right: ']',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	brace: (inner, opts) => ({
+		kind: 'fence',
+		left: '{',
+		right: '}',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	angle: (inner, opts) => ({
+		kind: 'fence',
+		left: '⟨',
+		right: '⟩',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	abs: (inner, opts) => ({
+		kind: 'fence',
+		left: '|',
+		right: '|',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	norm: (inner, opts) => ({
+		kind: 'fence',
+		left: '‖',
+		right: '‖',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	floor: (inner, opts) => ({
+		kind: 'fence',
+		left: '⌊',
+		right: '⌋',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	ceil: (inner, opts) => ({
+		kind: 'fence',
+		left: '⌈',
+		right: '⌉',
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	fence: (left, right, inner, opts) => ({
+		kind: 'fence',
+		left,
+		right,
+		inner: wrap(inner),
+		scales: opts?.scales
+	}),
+	fenceSep: (left, right, children, separator = '|', opts) => ({
 		kind: 'fenceSep',
 		left,
 		right,
 		children: children.map(wrap),
-		separator
+		separator,
+		scales: opts?.scales
 	}),
-	bra: (phi) => ({kind: 'fence', left: '⟨', right: '|', inner: wrap(phi)}),
-	ket: (psi) => ({kind: 'fence', left: '|', right: '⟩', inner: wrap(psi)}),
-	braket: (phi, psi) => ({
+	bra: (phi, opts) => ({
+		kind: 'fence',
+		left: '⟨',
+		right: '|',
+		inner: wrap(phi),
+		scales: opts?.scales
+	}),
+	ket: (psi, opts) => ({
+		kind: 'fence',
+		left: '|',
+		right: '⟩',
+		inner: wrap(psi),
+		scales: opts?.scales
+	}),
+	braket: (phi, psi, opts) => ({
 		kind: 'fenceSep',
 		left: '⟨',
 		right: '⟩',
 		children: [wrap(phi), wrap(psi)],
-		separator: '|'
+		separator: '|',
+		scales: opts?.scales
 	}),
-	bracketOp: (phi, op, psi) => ({
+	bracketOp: (phi, op, psi, opts) => ({
 		kind: 'fenceSep',
 		left: '⟨',
 		right: '⟩',
 		children: [wrap(phi), wrap(op), wrap(psi)],
-		separator: '|'
+		separator: '|',
+		scales: opts?.scales
 	}),
-	setBuilder: (x, condition) => ({
+	setBuilder: (x, condition, opts) => ({
 		kind: 'fenceSep',
 		left: '{',
 		right: '}',
 		children: [wrap(x), wrap(condition)],
-		separator: '|'
+		separator: '|',
+		scales: opts?.scales
 	}),
 
 	matrix: (rows, fence = 'bracket', options) => ({
 		kind: 'matrix',
 		rows: rows.map((r) => r.map(wrap)),
 		fence,
-		augmentCol: options?.augmentCol ?? null
+		augmentCol: options?.augmentCol ?? null,
+		scales: options?.scales
 	}),
-	cases: (cases) => ({
+	cases: (cases, opts) => ({
 		kind: 'cases',
-		cases: cases.map(([v, c]) => [wrap(v), wrap(c)] as [MathNode, MathNode])
+		cases: cases.map(([v, c]) => [wrap(v), wrap(c)] as [MathNode, MathNode]),
+		scales: opts?.scales
 	}),
 	aligned: (rows, anchor = 1) => ({
 		kind: 'aligned',
@@ -353,25 +515,42 @@ export const mathBuilder: MathBuilder = {
 		anchor
 	}),
 
-	vec: (base) => ({kind: 'accent', base: wrap(base), accent: 'vec'}),
-	hat: (base) => ({kind: 'accent', base: wrap(base), accent: 'hat'}),
-	bar: (base) => ({kind: 'accent', base: wrap(base), accent: 'bar'}),
-	dot: (base) => ({kind: 'accent', base: wrap(base), accent: 'dot'}),
-	ddot: (base) => ({kind: 'accent', base: wrap(base), accent: 'ddot'}),
-	tilde: (base) => ({kind: 'accent', base: wrap(base), accent: 'tilde'}),
-	overline: (inner) => ({kind: 'over', inner: wrap(inner), line: 'overline'}),
-	underline: (inner) => ({kind: 'over', inner: wrap(inner), line: 'underline'}),
-	overbrace: (inner, label) => ({
-		kind: 'brace',
-		inner: wrap(inner),
-		label: wrapMaybe(label),
-		position: 'over'
+	vec: (base, opts) => ({kind: 'accent', base: wrap(base), accent: 'vec', scales: opts?.scales}),
+	hat: (base, opts) => ({kind: 'accent', base: wrap(base), accent: 'hat', scales: opts?.scales}),
+	bar: (base, opts) => ({kind: 'accent', base: wrap(base), accent: 'bar', scales: opts?.scales}),
+	dot: (base, opts) => ({kind: 'accent', base: wrap(base), accent: 'dot', scales: opts?.scales}),
+	ddot: (base, opts) => ({kind: 'accent', base: wrap(base), accent: 'ddot', scales: opts?.scales}),
+	tilde: (base, opts) => ({
+		kind: 'accent',
+		base: wrap(base),
+		accent: 'tilde',
+		scales: opts?.scales
 	}),
-	underbrace: (inner, label) => ({
+	overline: (inner, opts) => ({
+		kind: 'over',
+		inner: wrap(inner),
+		line: 'overline',
+		scales: opts?.scales
+	}),
+	underline: (inner, opts) => ({
+		kind: 'over',
+		inner: wrap(inner),
+		line: 'underline',
+		scales: opts?.scales
+	}),
+	overbrace: (inner, label, opts) => ({
 		kind: 'brace',
 		inner: wrap(inner),
 		label: wrapMaybe(label),
-		position: 'under'
+		position: 'over',
+		scales: opts?.scales
+	}),
+	underbrace: (inner, label, opts) => ({
+		kind: 'brace',
+		inner: wrap(inner),
+		label: wrapMaybe(label),
+		position: 'under',
+		scales: opts?.scales
 	}),
 	lim: (var_, target, body) => ({
 		kind: 'lim',
@@ -453,11 +632,12 @@ export const mathBuilder: MathBuilder = {
 	otimes: () => opNode('⊗', null, null),
 	degree: () => opNode('°', null, null),
 
-	tensor: (base, upper, lower) => ({
+	tensor: (base, upper, lower, opts) => ({
 		kind: 'tensor',
 		base: wrap(base),
 		upper: upper.map(wrap),
-		lower: lower.map(wrap)
+		lower: lower.map(wrap),
+		scales: opts?.scales
 	}),
 	map: (name, from, to, mapsTo) => ({
 		kind: 'map',
@@ -471,13 +651,19 @@ export const mathBuilder: MathBuilder = {
 		base: wrap(base),
 		lines: lines.map(wrap)
 	}),
-	prime: (base, count = 1) => ({kind: 'prime', base: wrap(base), count}),
-	binom: (n, k) => ({kind: 'binom', n: wrap(n), k: wrap(k)}),
+	prime: (base, count = 1, opts) => ({
+		kind: 'prime',
+		base: wrap(base),
+		count,
+		scales: opts?.scales
+	}),
+	binom: (n, k, opts) => ({kind: 'binom', n: wrap(n), k: wrap(k), scales: opts?.scales}),
 	ellipsis: (style = 'baseline') => ({kind: 'ellipsis', style}),
-	prescript: (base, sub, sup) => ({
+	prescript: (base, sub, sup, opts) => ({
 		kind: 'prescript',
 		base: wrap(base),
 		sub: wrapMaybe(sub),
-		sup: wrapMaybe(sup)
+		sup: wrapMaybe(sup),
+		scales: opts?.scales
 	})
 };

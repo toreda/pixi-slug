@@ -14,14 +14,45 @@ function rgbaToHex(rgba: Rgba): number {
 	return (r << 16) | (g << 8) | b;
 }
 
-/** Vertical stack of containers, centered horizontally. */
+/**
+ * Vertical stack of containers. Default horizontal alignment is
+ * `'center'`. `MathText` reuses this container for top-level multi-line
+ * formulas and sets `align` accordingly. When `align === 'anchor'`, each
+ * row is shifted left by its own `anchors[i]` so the anchored x lands at
+ * the column's globally-aligned anchor x — see §5.5 (`align: 'equals'`).
+ *
+ * For rows that have no anchor (e.g. a line with no `=` under `'equals'`
+ * alignment), pass `null` in the corresponding `anchors` slot — the row
+ * falls back to `'left'` alignment for that line only (per spec §5.5).
+ */
+export type ColumnAlign = 'left' | 'center' | 'right' | 'anchor';
+
 export class ColumnContainer extends MathContainer {
 	private _items: MathContainer[] = [];
+	private _align: ColumnAlign = 'center';
+	private _anchors: (number | null)[] | null = null;
+	private _lineSpacing: number | null = null;
 
 	public setItems(items: MathContainer[]): void {
 		for (const c of this._items) this.removeChild(c);
 		this._items = items;
 		for (const c of items) this.addChild(c);
+	}
+
+	/**
+	 * Configure horizontal alignment for the stacked items. `anchors`
+	 * (only used when `mode === 'anchor'`) gives the per-row local-x of
+	 * the anchor point (typically the leftmost `=`); rows with `null` here
+	 * fall back to left-alignment for that single row.
+	 */
+	public setAlign(mode: ColumnAlign, anchors: (number | null)[] | null = null): void {
+		this._align = mode;
+		this._anchors = anchors;
+	}
+
+	/** Override `lineSpacing` for this column. `null` reverts to the default. */
+	public setLineSpacing(em: number | null): void {
+		this._lineSpacing = em;
 	}
 
 	public override layout(): void {
@@ -33,21 +64,62 @@ export class ColumnContainer extends MathContainer {
 			return;
 		}
 		for (const c of items) c.layout();
-		let width = 0;
-		for (const c of items) if (c.mathWidth > width) width = c.mathWidth;
 
-		const lineSpacing = MathRules.DefaultLineSpacing * this.mathFontSize;
+		// Compute the per-row x offset and the column's overall width.
+		const offsets = new Array<number>(items.length);
+		let minX = 0;
+		let maxX = 0;
+		if (this._align === 'anchor' && this._anchors) {
+			// Pin every anchored row so its anchor lands at x = 0; then we
+			// translate the whole column to non-negative space below. Rows
+			// without an anchor (null) fall back to left-aligned at x = 0.
+			for (let i = 0; i < items.length; i++) {
+				const a = this._anchors[i];
+				offsets[i] = a == null ? 0 : -a;
+			}
+		} else {
+			let width = 0;
+			for (const c of items) if (c.mathWidth > width) width = c.mathWidth;
+			for (let i = 0; i < items.length; i++) {
+				const c = items[i];
+				switch (this._align) {
+					case 'left':
+						offsets[i] = 0;
+						break;
+					case 'right':
+						offsets[i] = width - c.mathWidth;
+						break;
+					case 'center':
+					default:
+						offsets[i] = (width - c.mathWidth) / 2;
+						break;
+				}
+			}
+		}
+		// Range of laid-out content so we can shift the whole column to
+		// have its leftmost edge at x = 0.
+		for (let i = 0; i < items.length; i++) {
+			const left = offsets[i];
+			const right = offsets[i] + items[i].mathWidth;
+			if (i === 0 || left < minX) minX = left;
+			if (i === 0 || right > maxX) maxX = right;
+		}
+		const shift = -minX;
+
+		const lineSpacing =
+			(this._lineSpacing != null ? this._lineSpacing : MathRules.DefaultLineSpacing) *
+			this.mathFontSize;
 		let y = 0;
-		let ascent = items[0].mathAscent;
+		const ascent = items[0].mathAscent;
 		let descent = 0;
 		for (let i = 0; i < items.length; i++) {
 			const c = items[i];
-			c.x = (width - c.mathWidth) / 2;
+			c.x = offsets[i] + shift;
 			c.y = y;
 			descent = y + c.mathDescent;
 			if (i < items.length - 1) y += lineSpacing;
 		}
-		this._width = width;
+		this._width = maxX - minX;
 		this._ascent = ascent;
 		this._descent = descent;
 	}
@@ -58,10 +130,26 @@ export class AccentContainer extends MathContainer {
 	private _base: MathContainer | null = null;
 	private _accent: AtomContainer;
 
+	private _baseScale: number = 1.0;
+	private _accentScale: number = 0.8;
+	public get baseScale(): number { return this._baseScale; }
+	public set baseScale(v: number) {
+		if (v === this._baseScale) return;
+		this._baseScale = v;
+		this._recompileSlot?.('base');
+	}
+	public get accentScale(): number { return this._accentScale; }
+	public set accentScale(v: number) {
+		if (v === this._accentScale) return;
+		this._accentScale = v;
+		this._accent.setFontSize(this.mathFontSize * v);
+		this.layout();
+	}
+
 	constructor(glyph: string, mathFont: SlugFont, fontSize: number, fill: Rgba) {
 		super();
 		this.mathFontSize = fontSize;
-		this._accent = new AtomContainer(glyph, mathFont, fontSize * MathSizes.Accent, fill);
+		this._accent = new AtomContainer(glyph, mathFont, fontSize * 0.8, fill);
 		this.addChild(this._accent);
 	}
 
@@ -99,6 +187,14 @@ export class OverlineContainer extends MathContainer {
 	private _line: Graphics;
 	private _fill: Rgba;
 	private _side: 'over' | 'under';
+
+	private _innerScale: number = 1.0;
+	public get innerScale(): number { return this._innerScale; }
+	public set innerScale(v: number) {
+		if (v === this._innerScale) return;
+		this._innerScale = v;
+		this._recompileSlot?.('inner');
+	}
 
 	constructor(position: 'over' | 'under', fill: Rgba) {
 		super();
@@ -155,6 +251,21 @@ export class BraceContainer extends MathContainer {
 	private _label: MathContainer | null = null;
 	private _brace: AtomContainer;
 	private _side: 'over' | 'under';
+
+	private _innerScale: number = 1.0;
+	private _labelScale: number = 0.7;
+	public get innerScale(): number { return this._innerScale; }
+	public set innerScale(v: number) {
+		if (v === this._innerScale) return;
+		this._innerScale = v;
+		this._recompileSlot?.('inner');
+	}
+	public get labelScale(): number { return this._labelScale; }
+	public set labelScale(v: number) {
+		if (v === this._labelScale) return;
+		this._labelScale = v;
+		this._recompileSlot?.('label');
+	}
 
 	constructor(
 		position: 'over' | 'under',
@@ -247,6 +358,21 @@ export class NoRuleFractionContainer extends MathContainer {
 	private _num: MathContainer | null = null;
 	private _den: MathContainer | null = null;
 
+	private _numScale: number = 1.0;
+	private _denScale: number = 1.0;
+	public get numScale(): number { return this._numScale; }
+	public set numScale(v: number) {
+		if (v === this._numScale) return;
+		this._numScale = v;
+		this._recompileSlot?.('num');
+	}
+	public get denScale(): number { return this._denScale; }
+	public set denScale(v: number) {
+		if (v === this._denScale) return;
+		this._denScale = v;
+		this._recompileSlot?.('den');
+	}
+
 	public setNumerator(c: MathContainer): void {
 		if (this._num === c) return;
 		if (this._num) this.removeChild(this._num);
@@ -298,6 +424,14 @@ export class CasesContainer extends MathContainer {
 	private _brace: AtomContainer;
 	private _mathFont: SlugFont;
 	private _fill: Rgba;
+
+	private _caseScale: number = 0.9;
+	public get caseScale(): number { return this._caseScale; }
+	public set caseScale(v: number) {
+		if (v === this._caseScale) return;
+		this._caseScale = v;
+		this._recompileSlot?.('cases');
+	}
 
 	constructor(mathFont: SlugFont, fontSize: number, fill: Rgba) {
 		super();
@@ -461,6 +595,21 @@ export class TensorContainer extends MathContainer {
 	private _upper: MathContainer[] = [];
 	private _lower: MathContainer[] = [];
 
+	private _baseScale: number = 1.0;
+	private _indexScale: number = 0.7;
+	public get baseScale(): number { return this._baseScale; }
+	public set baseScale(v: number) {
+		if (v === this._baseScale) return;
+		this._baseScale = v;
+		this._recompileSlot?.('base');
+	}
+	public get indexScale(): number { return this._indexScale; }
+	public set indexScale(v: number) {
+		if (v === this._indexScale) return;
+		this._indexScale = v;
+		this._recompileSlot?.('indices');
+	}
+
 	public setBase(c: MathContainer): void {
 		if (this._base === c) return;
 		if (this._base) this.removeChild(this._base);
@@ -542,6 +691,28 @@ export class PrescriptContainer extends MathContainer {
 	private _sub: MathContainer | null = null;
 	private _sup: MathContainer | null = null;
 
+	private _baseScale: number = 1.0;
+	private _subScale: number = 0.7;
+	private _supScale: number = 0.7;
+	public get baseScale(): number { return this._baseScale; }
+	public set baseScale(v: number) {
+		if (v === this._baseScale) return;
+		this._baseScale = v;
+		this._recompileSlot?.('base');
+	}
+	public get subScale(): number { return this._subScale; }
+	public set subScale(v: number) {
+		if (v === this._subScale) return;
+		this._subScale = v;
+		this._recompileSlot?.('sub');
+	}
+	public get supScale(): number { return this._supScale; }
+	public set supScale(v: number) {
+		if (v === this._supScale) return;
+		this._supScale = v;
+		this._recompileSlot?.('sup');
+	}
+
 	public setBase(c: MathContainer): void {
 		if (this._base === c) return;
 		if (this._base) this.removeChild(this._base);
@@ -606,6 +777,21 @@ export class StackedSubContainer extends MathContainer {
 	private _base: MathContainer | null = null;
 	private _lines: MathContainer[] = [];
 
+	private _baseScale: number = 1.0;
+	private _lineScale: number = 0.7;
+	public get baseScale(): number { return this._baseScale; }
+	public set baseScale(v: number) {
+		if (v === this._baseScale) return;
+		this._baseScale = v;
+		this._recompileSlot?.('base');
+	}
+	public get lineScale(): number { return this._lineScale; }
+	public set lineScale(v: number) {
+		if (v === this._lineScale) return;
+		this._lineScale = v;
+		this._recompileSlot?.('lines');
+	}
+
 	public setBase(c: MathContainer): void {
 		if (this._base === c) return;
 		if (this._base) this.removeChild(this._base);
@@ -659,11 +845,27 @@ export class PrimeContainer extends MathContainer {
 	private _base: MathContainer | null = null;
 	private _primes: AtomContainer;
 
+	private _baseScale: number = 1.0;
+	private _primeScale: number = 0.7;
+	public get baseScale(): number { return this._baseScale; }
+	public set baseScale(v: number) {
+		if (v === this._baseScale) return;
+		this._baseScale = v;
+		this._recompileSlot?.('base');
+	}
+	public get primeScale(): number { return this._primeScale; }
+	public set primeScale(v: number) {
+		if (v === this._primeScale) return;
+		this._primeScale = v;
+		this._primes.setFontSize(this.mathFontSize * v);
+		this.layout();
+	}
+
 	constructor(count: number, mathFont: SlugFont, fontSize: number, fill: Rgba) {
 		super();
 		this.mathFontSize = fontSize;
 		const text = '′'.repeat(Math.max(1, count));
-		this._primes = new AtomContainer(text, mathFont, fontSize * MathSizes.Prime, fill);
+		this._primes = new AtomContainer(text, mathFont, fontSize * 0.7, fill);
 		this.addChild(this._primes);
 	}
 

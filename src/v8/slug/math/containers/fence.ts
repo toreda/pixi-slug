@@ -25,6 +25,14 @@ export class FenceContainer extends MathContainer {
 	private _mathFont: SlugFont;
 	private _fill: Rgba;
 
+	private _innerScale: number = 1.0;
+	public get innerScale(): number { return this._innerScale; }
+	public set innerScale(v: number) {
+		if (v === this._innerScale) return;
+		this._innerScale = v;
+		this._recompileSlot?.('inner');
+	}
+
 	constructor(
 		left: string,
 		right: string,

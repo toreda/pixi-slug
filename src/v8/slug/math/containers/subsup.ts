@@ -15,6 +15,28 @@ export class SubsupContainer extends MathContainer {
 	private _sub: MathContainer | null = null;
 	private _sup: MathContainer | null = null;
 
+	private _baseScale: number = 1.0;
+	private _subScale: number = 0.7;
+	private _supScale: number = 0.7;
+	public get baseScale(): number { return this._baseScale; }
+	public set baseScale(v: number) {
+		if (v === this._baseScale) return;
+		this._baseScale = v;
+		this._recompileSlot?.('base');
+	}
+	public get subScale(): number { return this._subScale; }
+	public set subScale(v: number) {
+		if (v === this._subScale) return;
+		this._subScale = v;
+		this._recompileSlot?.('sub');
+	}
+	public get supScale(): number { return this._supScale; }
+	public set supScale(v: number) {
+		if (v === this._supScale) return;
+		this._supScale = v;
+		this._recompileSlot?.('sup');
+	}
+
 	public setBase(c: MathContainer): void {
 		if (this._base === c) return;
 		if (this._base) this.removeChild(this._base);

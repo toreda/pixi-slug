@@ -32,6 +32,21 @@ export class FractionContainer extends MathContainer {
 	private _rule: Graphics;
 	private _fill: Rgba;
 
+	private _numScale: number = 1.0;
+	private _denScale: number = 1.0;
+	public get numScale(): number { return this._numScale; }
+	public set numScale(v: number) {
+		if (v === this._numScale) return;
+		this._numScale = v;
+		this._recompileSlot?.('num');
+	}
+	public get denScale(): number { return this._denScale; }
+	public set denScale(v: number) {
+		if (v === this._denScale) return;
+		this._denScale = v;
+		this._recompileSlot?.('den');
+	}
+
 	constructor(fill: Rgba) {
 		super();
 		this._fill = fill;

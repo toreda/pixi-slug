@@ -20,6 +20,14 @@ export class MatrixContainer extends MathContainer {
 	private _mathFont: SlugFont;
 	private _fill: Rgba;
 
+	private _cellScale: number = 1.0;
+	public get cellScale(): number { return this._cellScale; }
+	public set cellScale(v: number) {
+		if (v === this._cellScale) return;
+		this._cellScale = v;
+		this._recompileSlot?.('cells');
+	}
+
 	constructor(
 		fence: 'paren' | 'bracket' | 'brace' | 'abs' | 'none',
 		augmentCol: number | null,

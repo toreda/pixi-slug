@@ -26,6 +26,21 @@ export class SqrtContainer extends MathContainer {
 	private _fill: Rgba;
 	private _mathFont: SlugFont;
 
+	private _radicandScale: number = 1.0;
+	private _indexScale: number = 0.6;
+	public get radicandScale(): number { return this._radicandScale; }
+	public set radicandScale(v: number) {
+		if (v === this._radicandScale) return;
+		this._radicandScale = v;
+		this._recompileSlot?.('radicand');
+	}
+	public get indexScale(): number { return this._indexScale; }
+	public set indexScale(v: number) {
+		if (v === this._indexScale) return;
+		this._indexScale = v;
+		this._recompileSlot?.('index');
+	}
+
 	constructor(mathFont: SlugFont, fontSize: number, fill: Rgba) {
 		super();
 		this.mathFontSize = fontSize;

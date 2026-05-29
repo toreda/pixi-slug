@@ -1,6 +1,21 @@
 import {Container} from 'pixi.js';
 
 /**
+ * Signature for the compiler-supplied callback that re-compiles one of
+ * a container's slots when its scale field changes. The compiler
+ * attaches a closure to each container after construction (capturing
+ * the original `MathNode` for the slot and the `CompileCtx`); the
+ * container's scale setters invoke it. Containers without recompilable
+ * slots leave `_recompileSlot` undefined and their setters become
+ * no-ops past mutating `mathFontSize` on existing children.
+ *
+ * `slot` is the field name on the container (e.g. `'upper'`, `'num'`,
+ * `'sub'`). The callback replaces the slot's child with a freshly
+ * compiled subtree at the new scale, then re-runs `layout()`.
+ */
+export type SlotRecompileFn = (slot: string) => void;
+
+/**
  * Base class for every math-layout container. Each subclass models one
  * `MathNode` kind (fraction, sqrt, bigop, row, …) as a self-contained
  * PIXI `Container` that lays out its own children and decorations in
@@ -64,4 +79,14 @@ export abstract class MathContainer extends Container {
 	 * with the same children/state must produce the same result.
 	 */
 	public abstract layout(): void;
+
+	/**
+	 * Compiler-attached hook invoked by a container's scale setters to
+	 * re-compile the affected slot at the new scale. Left undefined
+	 * when the compiler had no source node to wire up (e.g. containers
+	 * constructed by hand outside the compiler path). When undefined,
+	 * setters fall back to re-applying `mathFontSize` to the existing
+	 * child — visually wrong but doesn't throw.
+	 */
+	public _recompileSlot?: SlotRecompileFn;
 }
