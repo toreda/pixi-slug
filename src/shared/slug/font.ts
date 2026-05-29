@@ -1,6 +1,6 @@
 import opentype, {type Font as OpentypeFont, type Glyph as OpentypeGlyph} from 'opentype.js';
 import {Defaults} from '../../defaults';
-import type {SlugGlyphData} from './glyph/data';
+import type {SlugGlyphCurve, SlugGlyphData} from './glyph/data';
 import {slugGlyphCurves} from './glyph/curves';
 import {slugGlyphBands} from './glyph/bands';
 import {
@@ -26,6 +26,33 @@ import {slugWoff2Decompress} from './woff2/decompress';
 export interface SlugFontEnsureResult {
 	addedAny: boolean;
 	appended: SlugTextureAppendResult | null;
+}
+
+/**
+ * A self-contained outline to register as a synthetic glyph via
+ * {@link SlugFont.registerSynthetic}. Mirrors the renderable subset of
+ * {@link SlugGlyphData}: the caller supplies curves, contour boundaries
+ * and an em-space bounding box; the font computes bands and packs it.
+ */
+export interface SlugSyntheticOutline {
+	curves: SlugGlyphCurve[];
+	/** Contour start indices (same contract as {@link SlugGlyphData.contourStarts}). */
+	contourStarts: number[];
+	bounds: {minX: number; minY: number; maxX: number; maxY: number};
+	/** Advance width in em-space; 0 is fine for decorations positioned by hand. */
+	advanceWidth?: number;
+}
+
+/**
+ * Returned by {@link SlugFont.registerSynthetic}. `id` is the opaque
+ * synthetic-glyph handle to render with; `glyph` is the packed data
+ * (offsets populated); `appended` carries the texel ranges the GPU
+ * layer needs to decide between a tail upload and a full reupload.
+ */
+export interface SlugSyntheticResult {
+	id: number;
+	glyph: SlugGlyphData;
+	appended: SlugTextureAppendResult;
 }
 
 /**
@@ -123,6 +150,30 @@ export class SlugFont {
 	 */
 	private _pack: SlugTexturePackState | null;
 
+	/**
+	 * Synthetic (non-codepoint) glyphs, keyed by an opaque id from
+	 * {@link registerSynthetic}. These are outlines the layout engine
+	 * synthesizes itself — square-root radicals, fraction bars, stretchy
+	 * braces and fences — that must render through the SAME curve/band
+	 * coverage pipeline as font glyphs so they stay resolution-independent
+	 * and scale in lockstep with surrounding text (a PIXI `Graphics`
+	 * decoration bakes its AA at build time and drifts out of register as
+	 * a formula scales). Kept separate from {@link glyphs} so synthetic
+	 * ids never collide with, or leak into, real Unicode lookups, but
+	 * packed into the SAME {@link _pack} so they share the font's
+	 * textures and ride the existing GPU-sync path.
+	 */
+	public readonly syntheticGlyphs: Map<number, SlugGlyphData>;
+
+	/**
+	 * Monotonic id source for synthetic glyphs. Namespaced into the
+	 * Unicode Supplementary Private Use Area-A (starts at 0xF0000) so a
+	 * synthetic id is always > any real codepoint and trivially
+	 * distinguishable in a debugger. Never reused, even across
+	 * {@link loadSync}, so a stale id can never alias a different outline.
+	 */
+	private _nextSyntheticId: number;
+
 	constructor(textureWidth: number = Defaults.TEXTURE_SIZE) {
 		if (textureWidth <= 0 || (textureWidth & (textureWidth - 1)) !== 0) {
 			throw new Error(`textureWidth must be a power of 2, got ${textureWidth}`);
@@ -133,6 +184,8 @@ export class SlugFont {
 		this.bandData = new Uint32Array(0);
 		this.glyphs = new Map();
 		this.advances = new Map();
+		this.syntheticGlyphs = new Map();
+		this._nextSyntheticId = 0xf0000;
 		this.unitsPerEm = 0;
 		this.ascender = 0;
 		this.descender = 0;
@@ -229,6 +282,12 @@ export class SlugFont {
 		// maps are `readonly`, so we clear rather than reassign.
 		this.glyphs.clear();
 		this.advances.clear();
+		// Synthetic glyphs were packed into the old `_pack`; their offsets
+		// are about to become invalid. Clear them so callers re-register
+		// against the new font. Ids are NOT reset (`_nextSyntheticId`
+		// keeps climbing) so a handle captured before a reload can never
+		// silently resolve to a freshly-registered, unrelated outline.
+		this.syntheticGlyphs.clear();
 		// Drop any prior pack state and GPU cache so the next ensureGlyphs
 		// rebuilds against the new font's data.
 		this._pack = null;
@@ -393,6 +452,63 @@ export class SlugFont {
 		this.bandData = pack.bandData;
 
 		return {addedAny: true, appended};
+	}
+
+	/**
+	 * Register a synthesized outline (not tied to any font codepoint) as
+	 * a glyph in this font's shared curve/band textures, returning an
+	 * opaque id to render it with. Used by the math layout engine for
+	 * decorations — square-root radicals, fraction bars, stretchy braces
+	 * — that must travel the SAME coverage pipeline as text so they stay
+	 * resolution-independent and scale in lockstep with surrounding
+	 * glyphs.
+	 *
+	 * The outline is run through the identical bands → pack path as a
+	 * font glyph (see {@link ensureGlyphsForCodepoints}); the only
+	 * difference is keying. Returns `null` when the pack is unavailable
+	 * (no font loaded, or a non-4096 texture width), matching the
+	 * ensureGlyphs contract — callers fall back to not drawing the
+	 * decoration rather than throwing.
+	 *
+	 * NOTE: packing is append-only. Each call consumes new texels; a
+	 * caller that re-synthesizes the same shape every frame (e.g. an
+	 * animating radical) MUST cache ids by shape/size bucket rather than
+	 * re-registering, or the textures grow without bound.
+	 */
+	public registerSynthetic(outline: SlugSyntheticOutline): SlugSyntheticResult | null {
+		const pack = this._pack;
+		if (pack === null || outline.curves.length === 0) {
+			return null;
+		}
+
+		const {minX, minY, maxX, maxY} = outline.bounds;
+		const bandResult = slugGlyphBands(outline.curves, minX, minY, maxX, maxY);
+
+		const id = this._nextSyntheticId++;
+		const glyph: SlugGlyphData = {
+			charCode: id,
+			curves: outline.curves,
+			contourStarts: outline.contourStarts,
+			bounds: {minX, minY, maxX, maxY},
+			advanceWidth: outline.advanceWidth ?? 0,
+			lsb: 0,
+			hBandCount: bandResult.hBandCount,
+			vBandCount: bandResult.vBandCount,
+			hBands: bandResult.hBands,
+			vBands: bandResult.vBands,
+			curveOffset: 0,
+			bandOffset: 0
+		};
+
+		// Insert before packing so a future lookup sees the entry even if
+		// the append throws mid-flight (mirrors the codepoint path).
+		this.syntheticGlyphs.set(id, glyph);
+
+		const appended = slugTextureAppendGlyphs(pack, [glyph]);
+		this.curveData = pack.curveData;
+		this.bandData = pack.bandData;
+
+		return {id, glyph, appended};
 	}
 
 	/**

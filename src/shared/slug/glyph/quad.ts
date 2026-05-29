@@ -387,6 +387,150 @@ export function slugGlyphQuadsMultiline(
 }
 
 /**
+ * Build a single quad for one already-packed glyph (typically a
+ * synthetic glyph from `SlugFont.registerSynthetic`), placed at an
+ * explicit destination rectangle in local pixel space.
+ *
+ * Unlike {@link slugGlyphQuads}, which lays glyphs along a text
+ * baseline at a uniform font scale, this maps the glyph's em-space
+ * bounding box onto an arbitrary `(dstX, dstY, dstW, dstH)` rectangle.
+ * That lets a decoration — e.g. a square-root radical — STRETCH
+ * independently in X and Y to bracket content of any size while still
+ * rendering through the Slug coverage shader (so it stays
+ * resolution-independent and matches surrounding glyphs at every
+ * scale). The per-axis scales feed the inverse Jacobian so dynamic
+ * dilation antialiasing is correct under non-uniform stretch.
+ *
+ * Coordinate convention matches the rest of the v8 math layer: local
+ * pixel space, Y DOWN. `dstY` is the TOP edge of the destination
+ * rectangle; the glyph's em-space `maxY` (top, Y-up) maps to `dstY` and
+ * its `minY` (bottom) maps to `dstY + dstH`.
+ *
+ * @param glyph         Packed glyph data (must have `bandOffset` /
+ *                      `bounds` populated by the texture appender).
+ * @param dstX          Left edge of the destination rectangle (px).
+ * @param dstY          Top edge of the destination rectangle (px).
+ * @param dstW          Destination width (px).
+ * @param dstH          Destination height (px).
+ * @param textureWidth  Curve/band texture width (font.textureWidth).
+ * @param color         Fill color [r,g,b,a] in 0–1.
+ * @param extraExpand   Extra outward expansion in pixels per side (stroke).
+ */
+export function slugSyntheticGlyphQuad(
+	glyph: SlugGlyphData,
+	dstX: number,
+	dstY: number,
+	dstW: number,
+	dstH: number,
+	textureWidth: number,
+	color: Rgba = [1, 1, 1, 1],
+	extraExpand: number = 0
+): SlugGlyphQuads {
+	const {bounds, hBandCount, vBandCount, bandOffset} = glyph;
+	const emW = bounds.maxX - bounds.minX;
+	const emH = bounds.maxY - bounds.minY;
+	if (emW <= 0 || emH <= 0 || dstW <= 0 || dstH <= 0) {
+		return {vertices: new Float32Array(0), indices: new Uint32Array(0), quadCount: 0};
+	}
+
+	// Per-axis pixels-per-em. The radical can be stretched non-uniformly,
+	// so X and Y scales differ in general.
+	const scaleX = dstW / emW;
+	const scaleY = dstH / emH;
+	const invScaleX = 1 / scaleX;
+	const invScaleY = 1 / scaleY;
+
+	// Destination rect corners (px), expanded outward by `extraExpand`.
+	const x0 = dstX - extraExpand;
+	const y0 = dstY - extraExpand;
+	const x1 = dstX + dstW + extraExpand;
+	const y1 = dstY + dstH + extraExpand;
+
+	// Em-space texcoords, expanded to match the pixel expansion per axis.
+	const emExpandX = extraExpand * invScaleX;
+	const emExpandY = extraExpand * invScaleY;
+	const u0 = bounds.minX - emExpandX;
+	const v0 = bounds.minY - emExpandY;
+	const u1 = bounds.maxX + emExpandX;
+	const v1 = bounds.maxY + emExpandY;
+
+	// Band transform (identical math to slugGlyphQuads, float32 round-trip).
+	const maxDim = Math.max(emW, emH);
+	const bandCount = Math.max(hBandCount, vBandCount);
+	_f32[0] = maxDim > 0 ? bandCount / maxDim : 0;
+	const bandScale = _f32[0];
+	_f32[1] = -bounds.minX * bandScale;
+	_f32[2] = -bounds.minY * bandScale;
+	const bandScaleX = bandScale;
+	const bandScaleY = bandScale;
+	const bandOffsetX = _f32[1];
+	const bandOffsetY = _f32[2];
+
+	const glyphLocX = bandOffset % textureWidth;
+	const glyphLocY = Math.floor(bandOffset / textureWidth);
+	const packedLocation = packUint16Pair(glyphLocX, glyphLocY);
+	const packedBands = packBandMax(vBandCount - 1, hBandCount - 1);
+
+	const cr = color[0];
+	const cg = color[1];
+	const cb = color[2];
+	const ca = color[3];
+
+	const vertices = new Float32Array(
+		Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX
+	);
+	const indices = new Uint32Array(Constants.INDICES_PER_QUAD);
+
+	// Jacobian: maps a pixel-space dilation offset back into em-space,
+	// per axis. Y is negated because font Y is up while screen Y is down
+	// (matches the [invScale, 0, 0, -invScale] form in slugGlyphQuads).
+	const jacX = invScaleX;
+	const jacW = -invScaleY;
+
+	// Corner writer: screen top maps to em maxY (v1), screen bottom to
+	// em minY (v0) — same vertical flip as slugGlyphQuads.
+	// Corner 0: top-left = em (minX, maxY)
+	let off = 0;
+	const writeCorner = (px: number, py: number, nx: number, ny: number, u: number, vv: number): void => {
+		vertices[off] = px;
+		vertices[off + 1] = py;
+		vertices[off + 2] = nx;
+		vertices[off + 3] = ny;
+		vertices[off + 4] = u;
+		vertices[off + 5] = vv;
+		vertices[off + 6] = packedLocation;
+		vertices[off + 7] = packedBands;
+		vertices[off + 8] = jacX;
+		vertices[off + 9] = 0;
+		vertices[off + 10] = 0;
+		vertices[off + 11] = jacW;
+		vertices[off + 12] = bandScaleX;
+		vertices[off + 13] = bandScaleY;
+		vertices[off + 14] = bandOffsetX;
+		vertices[off + 15] = bandOffsetY;
+		vertices[off + 16] = cr;
+		vertices[off + 17] = cg;
+		vertices[off + 18] = cb;
+		vertices[off + 19] = ca;
+		off += Constants.FLOATS_PER_VERTEX;
+	};
+
+	writeCorner(x0, y0, -1, -1, u0, v1); // top-left  = (minX, maxY)
+	writeCorner(x1, y0, 1, -1, u1, v1); // top-right = (maxX, maxY)
+	writeCorner(x1, y1, 1, 1, u1, v0); // bottom-right = (maxX, minY)
+	writeCorner(x0, y1, -1, 1, u0, v0); // bottom-left = (minX, minY)
+
+	indices[0] = 0;
+	indices[1] = 1;
+	indices[2] = 2;
+	indices[3] = 0;
+	indices[4] = 2;
+	indices[5] = 3;
+
+	return {vertices, indices, quadCount: 1};
+}
+
+/**
  * Translate every vertex position in `quads` in place by `(dx, dy)`.
  * Position xy lives at float offsets 0 and 1 of each vertex; the other
  * 18 floats (normal, texcoord, jacobian, banding, color) are

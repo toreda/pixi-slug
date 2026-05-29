@@ -1,30 +1,49 @@
-import {Graphics} from 'pixi.js';
 import type {Rgba} from '../../../../rgba';
 import type {SlugFont} from '../../../../shared/slug/font';
+import type {SlugGlyphData} from '../../../../shared/slug/glyph/data';
 import {MathRules} from '../../../../shared/slug/math/layout/sizes';
-import {AtomContainer} from './atom';
+import {slugRadicalOutline} from '../../../../shared/slug/math/radical';
 import {MathContainer} from './base';
+import {RadicalMesh} from './radical-mesh';
 
 /**
  * Square root / n-th root:
  *   - `radicand` slot: the expression under the radical.
  *   - optional `index` slot: the small n in `ⁿ√x`.
- *   - Owned glyphs: a `√` SlugText for the hook, scaled to the
- *     radicand's height.
- *   - Owned `Graphics` for the vinculum (horizontal bar over the
- *     radicand).
+ *   - The radical sign (nib → deep-V valley → diagonal upstroke →
+ *     horizontal vinculum) is a SYNTHESIZED outline rendered through the
+ *     Slug coverage shader — the SAME path as font glyphs — so it stays
+ *     resolution-independent and scales in lockstep with the surrounding
+ *     text. A PIXI `Graphics` decoration would bake its antialiasing at
+ *     build time and drift out of visual register as the formula scales
+ *     or transforms; a synthesized Slug glyph does not. The outline is
+ *     one closed contour, so the upstroke→vinculum corner is a single
+ *     filled region with no seam.
  *
- * The radicand sits in its own coord space. The hook is positioned to
- * its left, scaled so its height brackets the radicand. The vinculum
- * starts at the radicand's left edge and extends to its right.
+ * The radicand sits in its own coord space. The radical's outline is
+ * synthesized to bracket the radicand's height and span its width.
  */
 export class SqrtContainer extends MathContainer {
 	private _radicand: MathContainer | null = null;
 	private _index: MathContainer | null = null;
-	private _hook: AtomContainer;
-	private _vinculum: Graphics;
+	private _radical: RadicalMesh;
 	private _fill: Rgba;
 	private _mathFont: SlugFont;
+
+	/**
+	 * Cache of registered synthetic radical glyphs keyed by a quantized
+	 * geometry signature. Synthetic-glyph registration is append-only in
+	 * the font's curve/band textures, so re-registering a continuously
+	 * animating radical every frame would grow the textures without
+	 * bound. Quantizing the geometry (height/width/thickness bucketed to
+	 * a few px) collapses a smooth resize into a small finite set of
+	 * registered outlines that get reused. The visual cost of the
+	 * quantization is invisible because the Slug shader renders each
+	 * bucket resolution-independently — a slightly-off bucket size is
+	 * stretched to the exact target rect by the mesh, and the stroke
+	 * proportions are regenerated per bucket so they stay correct.
+	 */
+	private _glyphCache: Map<string, SlugGlyphData> = new Map();
 
 	private _radicandScale: number = 1.0;
 	private _indexScale: number = 0.6;
@@ -46,10 +65,8 @@ export class SqrtContainer extends MathContainer {
 		this.mathFontSize = fontSize;
 		this._fill = fill;
 		this._mathFont = mathFont;
-		this._hook = new AtomContainer('√', mathFont, fontSize, fill);
-		this._vinculum = new Graphics();
-		this.addChild(this._hook);
-		this.addChild(this._vinculum);
+		this._radical = new RadicalMesh(mathFont, fill);
+		this.addChild(this._radical);
 	}
 
 	public setRadicand(c: MathContainer): void {
@@ -66,13 +83,56 @@ export class SqrtContainer extends MathContainer {
 		if (c) this.addChild(c);
 	}
 
+	/**
+	 * Get (or register and cache) a synthetic radical glyph for the given
+	 * pixel geometry. The outline is generated in pixel units mapped 1:1
+	 * to em-space so the X/Y stretch applied by the mesh is uniform and
+	 * the stroke weight stays consistent. Quantizes the inputs to bound
+	 * how many distinct outlines get packed into the shared textures.
+	 */
+	private _getRadicalGlyph(
+		height: number,
+		hookWidth: number,
+		barRight: number,
+		thickness: number
+	): SlugGlyphData | null {
+		// Quantize to a small grid so a smooth resize reuses buckets.
+		// 4px height/width buckets are finer than the eye can distinguish
+		// once the shader stretches the bucket to the exact target.
+		const qHeight = Math.max(1, Math.round(height / 4) * 4);
+		const qHook = Math.max(1, Math.round(hookWidth / 2) * 2);
+		const qBar = Math.max(qHook + 1, Math.round(barRight / 8) * 8);
+		const qThick = Math.max(0.5, Math.round(thickness * 2) / 2);
+		const key = `${qHeight}:${qHook}:${qBar}:${qThick}`;
+
+		const cached = this._glyphCache.get(key);
+		if (cached) return cached;
+
+		const outline = slugRadicalOutline({
+			height: qHeight,
+			hookWidth: qHook,
+			barRight: qBar,
+			thickness: qThick
+		});
+		const result = this._mathFont.registerSynthetic({
+			curves: outline.curves,
+			contourStarts: outline.contourStarts,
+			bounds: outline.bounds
+		});
+		if (result === null) {
+			return null;
+		}
+		this._glyphCache.set(key, result.glyph);
+		return result.glyph;
+	}
+
 	public override layout(): void {
 		const rad = this._radicand;
 		if (!rad) {
 			this._width = 0;
 			this._ascent = 0;
 			this._descent = 0;
-			this._vinculum.clear();
+			this._radical.setGlyph(null, 0, 0, 0, 0);
 			return;
 		}
 		rad.layout();
@@ -81,63 +141,74 @@ export class SqrtContainer extends MathContainer {
 		const pad = MathRules.FencePadEm * fontSize;
 		const ruleThickness = MathRules.SqrtRuleEm * fontSize;
 
-		// Scale the hook to bracket the radicand. The hook glyph at its
-		// natural fontSize spans the font's full vertical metric; scale
-		// it up so its height matches `radAscent + radDescent`.
-		const radTotal = rad.mathAscent + rad.mathDescent;
-		const hookScale = Math.max(1, radTotal / fontSize);
-		this._hook.setFontSize(fontSize * hookScale);
-		this._hook.layout();
+		const radAscent = rad.mathAscent;
+		const radDescent = rad.mathDescent;
 
-		// Optional index hangs above the hook's notch.
+		// Breathing room between the vinculum and the radicand top.
+		const gap = ruleThickness;
+
+		// Vertical span the radical must cover, in local pixels: from the
+		// top of the bar down to the bottom of the radicand.
+		const topY = -radAscent - gap; // bar top (local px, Y down)
+		const bottomY = radDescent; // valley floor
+		const totalHeight = bottomY - topY;
+
+		// Hook proportions scale with the bracketed height so the check
+		// mark keeps its shape at any size.
+		const hookWidth = Math.max(fontSize * 0.5, totalHeight * 0.42);
+
+		// Index hangs above the hook's left shoulder and shifts the whole
+		// figure right when present.
 		const idx = this._index;
 		let indexOffsetX = 0;
 		if (idx) {
 			idx.layout();
-			indexOffsetX = Math.max(0, idx.mathWidth - this._hook.mathWidth * 0.4);
+			indexOffsetX = Math.max(0, idx.mathWidth - hookWidth * 0.5);
 		}
 
-		const hookX = indexOffsetX;
-		const radX = hookX + this._hook.mathWidth + pad;
+		const hookLeftX = indexOffsetX;
+		// Radicand starts just right of where the upstroke reaches the bar.
+		const radX = hookLeftX + hookWidth + pad;
+		// The vinculum spans the radicand plus a little overshoot on each end.
+		const barRightLocal = radX + rad.mathWidth + pad; // absolute local x
+		const barRightInGlyph = barRightLocal - hookLeftX; // x within the outline
 
-		this._hook.x = hookX;
-		this._hook.y = 0;
+		// Register / fetch the synthetic outline for this geometry. The
+		// outline is generated in pixel-unit coordinates and normalized so
+		// its bounding box starts at the origin.
+		const glyph = this._getRadicalGlyph(
+			totalHeight,
+			hookWidth,
+			barRightInGlyph,
+			ruleThickness
+		);
+
+		// Map the glyph's normalized bounds box 1:1 onto local pixel space
+		// so the stroke weight is not distorted by a non-uniform stretch.
+		// The box may be marginally wider/taller than the requested
+		// geometry (the inner nib edge offsets the silhouette slightly);
+		// using the glyph's own bounds keeps em→px at unit scale. Y maps
+		// so the bar top lands at `topY`.
+		const boxW = glyph ? glyph.bounds.maxX : barRightInGlyph;
+		const boxH = glyph ? glyph.bounds.maxY : totalHeight;
+		this._radical.setGlyph(glyph, hookLeftX, topY, boxW, boxH);
 
 		// Radicand sits with its baseline at this container's baseline.
 		rad.x = radX;
 		rad.y = 0;
 
-		// Vinculum: horizontal bar at the top of the radicand, extending
-		// from radicand's left edge to its right edge.
-		const vY = -rad.mathAscent - ruleThickness * 0.5;
-		this._vinculum.clear();
-		const color = rgbaToHex(this._fill);
-		const alpha = this._fill[3];
-		this._vinculum
-			.rect(radX, vY - ruleThickness / 2, rad.mathWidth + pad, ruleThickness)
-			.fill({color, alpha});
-
-		// Position index above-left if present.
+		// Position index above-left, hanging over the hook's shoulder.
 		if (idx) {
 			idx.x = 0;
-			idx.y = -rad.mathAscent + idx.mathDescent * 0.5;
+			idx.y = topY + idx.mathDescent;
 		}
 
-		this._width = radX + rad.mathWidth + pad;
-		this._ascent =
-			rad.mathAscent + ruleThickness + (idx ? idx.mathAscent + idx.mathDescent : 0);
-		this._descent = rad.mathDescent;
+		this._width = barRightLocal;
+		this._ascent = radAscent + gap + (idx ? idx.mathAscent + idx.mathDescent : 0);
+		this._descent = radDescent;
 
-		// Suppress unused-var warning: mathFont retained for later (e.g.
-		// detecting whether the font has a √ glyph and falling back to a
-		// pure-graphics radical hook if not).
+		// Suppress unused-var warning: mathFont retained via _radical too,
+		// kept here for symmetry with sibling containers.
 		void this._mathFont;
 	}
-}
-
-function rgbaToHex(rgba: Rgba): number {
-	const r = Math.max(0, Math.min(255, Math.round(rgba[0] * 255)));
-	const g = Math.max(0, Math.min(255, Math.round(rgba[1] * 255)));
-	const b = Math.max(0, Math.min(255, Math.round(rgba[2] * 255)));
-	return (r << 16) | (g << 8) | b;
 }
