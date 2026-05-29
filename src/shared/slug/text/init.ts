@@ -170,6 +170,37 @@ export interface SlugTextStyleOptions {
 	stroke?: SlugStroke | null;
 	/** Drop shadow configuration. Presence enables shadow. */
 	dropShadow?: SlugDropShadow | null;
+	/**
+	 * Trailing subscript string rendered after the main text at a smaller
+	 * size, dropped below the main baseline. Empty string disables it.
+	 * Multi-line content (`\n`) is rendered as a single line — sub/sup do
+	 * not wrap. Inherits only the main fill color; no stroke, shadow, or
+	 * decorations are applied to the script run.
+	 * @default ''
+	 */
+	subscript?: string | null;
+	/**
+	 * Trailing superscript string rendered after the main text at a
+	 * smaller size, raised above the main baseline. Same inheritance and
+	 * line-rendering rules as `subscript`.
+	 * @default ''
+	 */
+	superscript?: string | null;
+	/**
+	 * Override subscript font size in pixels. `null` (default) derives
+	 * the size from `fontSize * Defaults.SlugText.ScriptSizeRatio`. Set
+	 * to `0` to disable the subscript regardless of `subscript` content.
+	 * @default null (derive from fontSize)
+	 */
+	subFontSize?: number | null;
+	/**
+	 * Override superscript font size in pixels. `null` (default) derives
+	 * the size from `fontSize * Defaults.SlugText.ScriptSizeRatio`. Set
+	 * to `0` to disable the superscript regardless of `superscript`
+	 * content.
+	 * @default null (derive from fontSize)
+	 */
+	supFontSize?: number | null;
 }
 
 /**

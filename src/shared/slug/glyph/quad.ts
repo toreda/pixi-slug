@@ -385,3 +385,68 @@ export function slugGlyphQuadsMultiline(
 
 	return {vertices, indices, quadCount: totalQuads};
 }
+
+/**
+ * Translate every vertex position in `quads` in place by `(dx, dy)`.
+ * Position xy lives at float offsets 0 and 1 of each vertex; the other
+ * 18 floats (normal, texcoord, jacobian, banding, color) are
+ * scale-invariant under a rigid translation, so we only touch the two
+ * position floats per vertex.
+ *
+ * Used by the sub/sup buffer-merge path: each script is built at its
+ * own size (different scale → different per-vertex jacobian) and then
+ * translated to its x-anchor and baseline offset relative to the main
+ * text before being concatenated into the fill buffer.
+ */
+export function slugTranslateQuadsXY(quads: SlugGlyphQuads, dx: number, dy: number): void {
+	if (quads.quadCount === 0 || (dx === 0 && dy === 0)) return;
+	const stride = Constants.FLOATS_PER_VERTEX;
+	const v = quads.vertices;
+	const end = quads.quadCount * Constants.VERTICES_PER_QUAD * stride;
+	for (let i = 0; i < end; i += stride) {
+		v[i] += dx;
+		v[i + 1] += dy;
+	}
+}
+
+/**
+ * Concatenate multiple {@link SlugGlyphQuads} into a single buffer.
+ * Indices from every part are renumbered to share one vertex array.
+ * Empty parts and `null` entries are skipped.
+ *
+ * Used by the sub/sup buffer-merge path to glue main + sub + sup
+ * quad runs into a single fill draw call.
+ */
+export function slugMergeQuads(parts: ReadonlyArray<SlugGlyphQuads | null>): SlugGlyphQuads {
+	let totalQuads = 0;
+	for (let i = 0; i < parts.length; i++) {
+		const p = parts[i];
+		if (p) totalQuads += p.quadCount;
+	}
+	if (totalQuads === 0) {
+		return {vertices: new Float32Array(0), indices: new Uint32Array(0), quadCount: 0};
+	}
+
+	const totalVerts = totalQuads * Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX;
+	const totalIdxs = totalQuads * Constants.INDICES_PER_QUAD;
+	const vertices = new Float32Array(totalVerts);
+	const indices = new Uint32Array(totalIdxs);
+
+	let vertOffset = 0;
+	let idxOffset = 0;
+	let baseVertex = 0;
+	for (let i = 0; i < parts.length; i++) {
+		const p = parts[i];
+		if (!p || p.quadCount === 0) continue;
+		vertices.set(p.vertices, vertOffset);
+		const srcIdxs = p.indices;
+		for (let j = 0; j < srcIdxs.length; j++) {
+			indices[idxOffset + j] = srcIdxs[j] + baseVertex;
+		}
+		vertOffset += p.quadCount * Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX;
+		idxOffset += srcIdxs.length;
+		baseVertex += p.quadCount * Constants.VERTICES_PER_QUAD;
+	}
+
+	return {vertices, indices, quadCount: totalQuads};
+}

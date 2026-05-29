@@ -120,6 +120,30 @@ export class Defaults {
 		DropShadowColor: [0, 0, 0, 1] as RgbaReadonly,
 		DropShadowDistance: 5 as const,
 
+		/** Default subscript / superscript content. Empty = none. */
+		Subscript: '' as const,
+		Superscript: '' as const,
+		/**
+		 * Default size ratio for sub/sup relative to the main `fontSize`,
+		 * used when `subFontSize` / `supFontSize` is unset (`null`).
+		 * Explicitly setting either to a number overrides this; setting to
+		 * `0` disables that script.
+		 */
+		ScriptSizeRatio: 0.7 as const,
+		/**
+		 * Vertical baseline offsets for sub/sup expressed as a fraction of
+		 * the main `fontSize`. The sub baseline drops `SubBaselineRatio *
+		 * fontSize` below the main baseline; the sup baseline rises
+		 * `SupBaselineRatio * fontSize` above the main baseline.
+		 */
+		SubBaselineRatio: 0.2 as const,
+		SupBaselineRatio: 0.45 as const,
+		/**
+		 * Horizontal gap between the trailing main-text cursor and the
+		 * start of the sub/sup, as a fraction of the main `fontSize`.
+		 */
+		ScriptGapRatio: 0.05 as const,
+
 		/**
 		 * Per-case error policy for the font resolver. `'throw'` surfaces a
 		 * clear message at the point of failure; `'error'` logs via

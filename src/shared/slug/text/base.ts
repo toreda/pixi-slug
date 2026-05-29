@@ -160,6 +160,17 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		// tuple — never the wider `SlugTextColor` user-input union.
 		_dropShadow!: SlugDropShadowResolved | null;
 
+		// Subscript / superscript content. Empty string disables the
+		// respective script. `_subFontSize` / `_supFontSize` is `null`
+		// when the user has not overridden it — in that case the effective
+		// size is derived from `_fontSize * Defaults.SlugText.ScriptSizeRatio`
+		// at layout time. An explicit `0` disables the script regardless of
+		// content.
+		_subscript!: string;
+		_superscript!: string;
+		_subFontSize!: number | null;
+		_supFontSize!: number | null;
+
 		/**
 		 * Initialize shared fields from a SlugTextInit object.
 		 * Called by the subclass constructor after super().
@@ -240,6 +251,11 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			} else {
 				this._dropShadow = null;
 			}
+
+			this._subscript = typeof init.options?.subscript === 'string' ? init.options.subscript : Defaults.SlugText.Subscript;
+			this._superscript = typeof init.options?.superscript === 'string' ? init.options.superscript : Defaults.SlugText.Superscript;
+			this._subFontSize = typeof init.options?.subFontSize === 'number' ? init.options.subFontSize : null;
+			this._supFontSize = typeof init.options?.supFontSize === 'number' ? init.options.supFontSize : null;
 
 			this._resolveDecorations();
 		}
@@ -861,6 +877,74 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			} else {
 				this._requestRebuild('shadowVisual');
 			}
+		}
+
+		// --- Subscript / superscript ---
+
+		public get subscript(): string {
+			return this._subscript;
+		}
+
+		public set subscript(value: string) {
+			const next = typeof value === 'string' ? value : '';
+			if (this._subscript === next) return;
+			this._subscript = next;
+			this._requestRebuild('full');
+		}
+
+		public get superscript(): string {
+			return this._superscript;
+		}
+
+		public set superscript(value: string) {
+			const next = typeof value === 'string' ? value : '';
+			if (this._superscript === next) return;
+			this._superscript = next;
+			this._requestRebuild('full');
+		}
+
+		/**
+		 * Subscript font size in pixels, or `null` when the size is
+		 * derived from `fontSize * Defaults.SlugText.ScriptSizeRatio`.
+		 * Setting `0` disables the subscript regardless of content.
+		 */
+		public get subFontSize(): number | null {
+			return this._subFontSize;
+		}
+
+		public set subFontSize(value: number | null) {
+			const next = typeof value === 'number' ? value : null;
+			if (this._subFontSize === next) return;
+			this._subFontSize = next;
+			this._requestRebuild('full');
+		}
+
+		public get supFontSize(): number | null {
+			return this._supFontSize;
+		}
+
+		public set supFontSize(value: number | null) {
+			const next = typeof value === 'number' ? value : null;
+			if (this._supFontSize === next) return;
+			this._supFontSize = next;
+			this._requestRebuild('full');
+		}
+
+		/**
+		 * Effective subscript font size in pixels. Resolves `null` to
+		 * `fontSize * ScriptSizeRatio`. Returns 0 when the script is
+		 * disabled (explicit 0 override or empty content).
+		 */
+		public _effectiveSubFontSize(): number {
+			if (this._subscript.length === 0) return 0;
+			if (this._subFontSize === null) return this._fontSize * Defaults.SlugText.ScriptSizeRatio;
+			return this._subFontSize;
+		}
+
+		public _effectiveSupFontSize(): number {
+			if (this._superscript.length === 0) return 0;
+			if (this._supFontSize === null) return this._fontSize * Defaults.SlugText.ScriptSizeRatio;
+			return this._supFontSize;
 		}
 
 		// --- Supersampling ---

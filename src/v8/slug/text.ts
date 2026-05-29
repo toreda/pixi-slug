@@ -10,9 +10,15 @@ import {
 	UniformGroup
 } from 'pixi.js';
 import type {Renderer, WebGLRenderer} from 'pixi.js';
-import {slugGlyphQuads, slugGlyphQuadsMultiline} from '../../shared/slug/glyph/quad';
+import {
+	slugGlyphQuads,
+	slugGlyphQuadsMultiline,
+	slugMergeQuads,
+	slugTranslateQuadsXY
+} from '../../shared/slug/glyph/quad';
 import type {SlugGlyphQuads} from '../../shared/slug/glyph/quad';
 import {slugApplyLineLayoutX} from '../../shared/slug/glyph/shift';
+import {Defaults} from '../../defaults';
 import type {SlugLineLayout} from '../../shared/slug/text/layout/align';
 import {slugComputeLineLayout} from '../../shared/slug/text/layout/align';
 import {slugResolvePhysicalAlign} from '../../shared/slug/text/style/align';
@@ -559,6 +565,51 @@ export class SlugText extends SlugTextV8Base {
 	}
 
 	/**
+	 * Build a sub/sup glyph run at its own font size and translate it so
+	 * its baseline lands at `(anchorX, targetBaselineY)` in the parent
+	 * SlugText's local coordinate space. The script is rendered as a
+	 * single line (no wrap, newlines treated as literal). Returns `null`
+	 * when no glyphs resolved.
+	 *
+	 * Each script gets its own `slugGlyphQuads` call so the per-vertex
+	 * jacobian and band scale reflect the script's smaller size — the
+	 * shader does not assume a global scale, so the quads merge into the
+	 * fill buffer correctly.
+	 */
+	private _buildScriptQuads(
+		font: SlugFont,
+		text: string,
+		fontSize: number,
+		anchorX: number,
+		targetBaselineY: number
+	): SlugGlyphQuads | null {
+		const scriptScale = fontSize / font.unitsPerEm;
+		const quads = slugGlyphQuads(
+			text,
+			font.glyphs,
+			font.advances,
+			font.unitsPerEm,
+			fontSize,
+			font.textureWidth,
+			this._color,
+			0
+		);
+		if (quads.quadCount === 0) return null;
+
+		// The script's internal baseline is `maxGlyphTop_script *
+		// scriptScale`. Translate so the baseline lands at the requested
+		// target — and x by the requested anchor.
+		let maxGlyphTop = 0;
+		for (let i = 0; i < text.length; i++) {
+			const g = font.glyphs.get(text.charCodeAt(i));
+			if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
+		}
+		const scriptInternalBaselineY = maxGlyphTop * scriptScale;
+		slugTranslateQuadsXY(quads, anchorX, targetBaselineY - scriptInternalBaselineY);
+		return quads;
+	}
+
+	/**
 	 * Geometry phase: wraps + measures + lays out the text, builds the
 	 * per-pass `SlugGlyphQuads` arrays, computes the fill bbox, and
 	 * stores the result in {@link _pendingPlan}. **Does not** create
@@ -741,20 +792,34 @@ export class SlugText extends SlugTextV8Base {
 	 */
 	private _buildPlan(kind: SlugTextRebuildKind): SlugTextRenderPlan | null {
 		const font = this._fontRef?.deref();
-		if (!font || this._text.length === 0 || font.unitsPerEm === 0) {
+		if (!font || font.unitsPerEm === 0) {
+			return null;
+		}
+
+		const subSize = this._effectiveSubFontSize();
+		const supSize = this._effectiveSupFontSize();
+		const hasSub = subSize > 0;
+		const hasSup = supSize > 0;
+
+		// Bail when there is no main text and no scripts to render. A
+		// SlugText with only sub/sup set still produces a plan.
+		if (this._text.length === 0 && !hasSub && !hasSup) {
 			return null;
 		}
 
 		// Lazy glyph processing: ensure every codepoint in the current
-		// text has been processed and packed into the font's curve/band
-		// textures before we read offsets from them. Cached glyphs
-		// short-circuit at the cost of one Map.has() per codepoint;
-		// only NEW codepoints trigger outline processing. The result
-		// drives the GPU sync inside `slugFontGpuV8` later — a buffer
-		// grow forces a texture recreate, an in-place append triggers a
-		// reupload, and a no-op return path leaves both textures
-		// untouched.
-		const ensureResult = font.ensureGlyphs(this._text);
+		// text — including sub/sup runs — has been processed and packed
+		// into the font's curve/band textures before we read offsets from
+		// them. Cached glyphs short-circuit at the cost of one Map.has()
+		// per codepoint; only NEW codepoints trigger outline processing.
+		// The result drives the GPU sync inside `slugFontGpuV8` later — a
+		// buffer grow forces a texture recreate, an in-place append
+		// triggers a reupload, and a no-op return path leaves both
+		// textures untouched.
+		let ensureSource = this._text;
+		if (hasSub) ensureSource += this._subscript;
+		if (hasSup) ensureSource += this._superscript;
+		const ensureResult = font.ensureGlyphs(ensureSource);
 
 		// --- Line layout (text-align / text-justify) ---
 		// Wrap once, measure once, resolve alignment once. The resulting
@@ -799,10 +864,69 @@ export class SlugText extends SlugTextV8Base {
 
 		// --- Build fill quads first so we can derive the bbox before the
 		//     shadow / stroke passes need it for the fill UV uniform.
-		const fillQuads = this._makeQuads(font, lines, this._color);
-		if (fillQuads.quadCount > 0 && needsShift) {
-			slugApplyLineLayoutX(fillQuads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
+		const fillMain = this._makeQuads(font, lines, this._color);
+		if (fillMain.quadCount > 0 && needsShift) {
+			slugApplyLineLayoutX(fillMain, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
 		}
+
+		// --- Sub/sup buffer-merge path ---
+		// Build each script as its own quad run (smaller scale → its own
+		// jacobian baked per-vertex), translate to the anchor point at the
+		// trailing edge of the main text's last line, and concatenate onto
+		// the fill buffer. Stroke and shadow do NOT receive scripts.
+		// Scripts inherit only the main fill color via `_color`.
+		const lastLineIndex = lines.length - 1;
+		const lastLine = lines[lastLineIndex];
+		const lastLineHasGlyph = (lineQuadCounts[lastLineIndex] ?? 0) > 0;
+		const scaleMain = scale;
+		const lineHeight = (font.ascender - font.descender) * scaleMain;
+
+		// Main last-line baseline in the merged buffer. Each line's
+		// internal `baselineY` is `maxGlyphTop_line * scaleMain`, and the
+		// line itself is shifted by `lastLineIndex * lineHeight`
+		// (`slugGlyphQuadsMultiline`) — so the baseline of the last line
+		// is the sum of the two. When the main text is empty we still
+		// anchor scripts as if `_fontSize` were used for line metrics, so
+		// the scripts don't collapse onto y=0.
+		let maxGlyphTopMain = 0;
+		if (lastLineHasGlyph) {
+			for (let i = 0; i < lastLine.length; i++) {
+				const g = font.glyphs.get(lastLine.charCodeAt(i));
+				if (g && g.bounds.maxY > maxGlyphTopMain) maxGlyphTopMain = g.bounds.maxY;
+			}
+		} else {
+			// Fall back to the font's ascender so a sub/sup-only SlugText
+			// has a sensible vertical anchor.
+			maxGlyphTopMain = font.ascender;
+		}
+		const mainBaselineY = lastLineIndex * lineHeight + maxGlyphTopMain * scaleMain;
+
+		// Trailing x cursor of the last line, after alignment offset.
+		const mainCursorEndX = layout.lineOffsetX[lastLineIndex] + lineWidths[lastLineIndex];
+		const scriptGap = this._fontSize * Defaults.SlugText.ScriptGapRatio;
+		const scriptAnchorX = mainCursorEndX + scriptGap;
+
+		const subBuilt = hasSub
+			? this._buildScriptQuads(
+					font,
+					this._subscript,
+					subSize,
+					scriptAnchorX,
+					mainBaselineY + this._fontSize * Defaults.SlugText.SubBaselineRatio
+				)
+			: null;
+		const supBuilt = hasSup
+			? this._buildScriptQuads(
+					font,
+					this._superscript,
+					supSize,
+					scriptAnchorX,
+					mainBaselineY - this._fontSize * Defaults.SlugText.SupBaselineRatio
+				)
+			: null;
+
+		const fillQuads =
+			subBuilt || supBuilt ? slugMergeQuads([fillMain, subBuilt, supBuilt]) : fillMain;
 
 		// Compute fill bbox from the fill-pass vertex positions. Shadow
 		// and stroke vertices are dilated outward and would inflate the
