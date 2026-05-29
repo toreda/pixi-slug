@@ -82,12 +82,18 @@ export class AtomContainer extends MathContainer {
 		// before we read them.
 		font.ensureGlyphs(text);
 		let maxY = 0;
+		let minY = 0;
 		let found = false;
 		for (let i = 0; i < text.length; i++) {
 			const g = font.glyphs.get(text.charCodeAt(i));
-			if (g && g.bounds.maxY > maxY) {
+			if (!g) continue;
+			if (!found) {
 				maxY = g.bounds.maxY;
+				minY = g.bounds.minY;
 				found = true;
+			} else {
+				if (g.bounds.maxY > maxY) maxY = g.bounds.maxY;
+				if (g.bounds.minY < minY) minY = g.bounds.minY;
 			}
 		}
 		const runAscent = found ? maxY * scale : font.ascender * scale;
@@ -96,5 +102,12 @@ export class AtomContainer extends MathContainer {
 
 		this._ascent = runAscent;
 		this._descent = -font.descender * scale;
+
+		// INK extent: the run's ACTUAL glyph bounds. A run with no
+		// descenders (e.g. `b²−4ac`) has `minY >= 0`, so its ink descent is
+		// 0 even though the layout-box descent reports the font descender.
+		// Parents that wrap content tightly (the sqrt radical) read these.
+		this._inkAscent = found ? maxY * scale : font.ascender * scale;
+		this._inkDescent = found ? Math.max(0, -minY * scale) : 0;
 	}
 }

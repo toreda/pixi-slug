@@ -54,6 +54,25 @@ export abstract class MathContainer extends Container {
 	protected _descent: number = 0;
 
 	/**
+	 * INK ascent/descent: the actual visible-glyph extent, as opposed to
+	 * the layout box (`_ascent`/`_descent`) which uses the font's natural
+	 * ascender/descender so sibling baselines align consistently.
+	 *
+	 * Default to the layout box (`_ascent`/`_descent`) so a container that
+	 * doesn't override them behaves exactly as before. A container that
+	 * knows its true glyph extent (e.g. {@link AtomContainer}) overrides
+	 * these in `layout()`.
+	 *
+	 * Used by parents that must wrap their content TIGHTLY — e.g. the
+	 * square-root radical bracketing `b²−4ac` should hug the visible glyph
+	 * bottoms, not drop to the font descender line where there is no ink.
+	 * A value of `-Infinity` (the initial sentinel) means "not computed
+	 * yet"; the getters fall back to the layout box in that case.
+	 */
+	protected _inkAscent: number = -Infinity;
+	protected _inkDescent: number = -Infinity;
+
+	/**
 	 * Effective font size of THIS container's level — used to scale
 	 * accents, fence glyphs, fraction rule thickness, etc. Children may
 	 * use different sizes (e.g. scripts shrink); they read their own
@@ -70,6 +89,22 @@ export abstract class MathContainer extends Container {
 	}
 	public get mathDescent(): number {
 		return this._descent;
+	}
+	/**
+	 * Visible-ink ascent: distance from baseline UP to the highest glyph
+	 * pixel. Falls back to the layout-box ascent when a container hasn't
+	 * computed a tighter value. See {@link _inkAscent}.
+	 */
+	public get mathInkAscent(): number {
+		return this._inkAscent === -Infinity ? this._ascent : this._inkAscent;
+	}
+	/**
+	 * Visible-ink descent: distance from baseline DOWN to the lowest glyph
+	 * pixel (0 for a run with no descenders, like `b²−4ac`). Falls back to
+	 * the layout-box descent when not computed. See {@link _inkDescent}.
+	 */
+	public get mathInkDescent(): number {
+		return this._inkDescent === -Infinity ? this._descent : this._inkDescent;
 	}
 
 	/**

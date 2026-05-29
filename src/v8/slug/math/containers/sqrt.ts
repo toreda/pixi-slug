@@ -23,6 +23,10 @@ import {RadicalMesh} from './radical-mesh';
  * The radicand sits in its own coord space. The radical's outline is
  * synthesized to bracket the radicand's height and span its width.
  */
+
+/** Vertical placement of the radicand inside the radical. */
+export type SqrtVAlign = 'bottom' | 'baseline' | 'center';
+
 export class SqrtContainer extends MathContainer {
 	private _radicand: MathContainer | null = null;
 	private _index: MathContainer | null = null;
@@ -44,6 +48,28 @@ export class SqrtContainer extends MathContainer {
 	 * proportions are regenerated per bucket so they stay correct.
 	 */
 	private _glyphCache: Map<string, SlugGlyphData> = new Map();
+
+	/**
+	 * How the radicand is positioned vertically within the radical.
+	 *  - `'bottom'` (default): the radical's valley hugs the radicand's
+	 *    visible INK bottom, so content sits flush at the bottom of the
+	 *    bracket. For a no-descender radicand like `b²−4ac` this removes
+	 *    the empty band the descender-box height would otherwise leave
+	 *    below the glyphs.
+	 *  - `'baseline'`: the radical brackets the radicand's full layout box
+	 *    (down to the font descender line) — the historical behavior,
+	 *    useful when the radical should align with sibling baselines.
+	 *  - `'center'`: center the radicand's ink box vertically within the
+	 *    radical's interior — for short content that would otherwise look
+	 *    like it's resting on the valley floor.
+	 */
+	private _radicandVAlign: SqrtVAlign = 'bottom';
+	public get radicandVAlign(): SqrtVAlign { return this._radicandVAlign; }
+	public set radicandVAlign(v: SqrtVAlign) {
+		if (v === this._radicandVAlign) return;
+		this._radicandVAlign = v;
+		this.layout();
+	}
 
 	private _radicandScale: number = 1.0;
 	private _indexScale: number = 0.6;
@@ -141,16 +167,41 @@ export class SqrtContainer extends MathContainer {
 		const pad = MathRules.FencePadEm * fontSize;
 		const ruleThickness = MathRules.SqrtRuleEm * fontSize;
 
-		const radAscent = rad.mathAscent;
-		const radDescent = rad.mathDescent;
+		// Use the radicand's INK extent (actual visible glyph bounds), not
+		// its layout box, so the radical hugs the content. For `b²−4ac`
+		// the ink descent is 0 (no descenders), whereas the layout-box
+		// descent would be the font descender — bracketing to that leaves
+		// an empty band of radical below the glyphs.
+		const radInkAscent = rad.mathInkAscent;
+		const radInkDescent = rad.mathInkDescent;
 
-		// Breathing room between the vinculum and the radicand top.
+		// Breathing room between the vinculum and the radicand top, and a
+		// small clearance below the content before the valley floor.
 		const gap = ruleThickness;
+		const bottomClearance = ruleThickness;
 
-		// Vertical span the radical must cover, in local pixels: from the
-		// top of the bar down to the bottom of the radicand.
-		const topY = -radAscent - gap; // bar top (local px, Y down)
-		const bottomY = radDescent; // valley floor
+		// The radicand always sits on this container's baseline (y=0) so it
+		// aligns with the rest of the formula. `radicandVAlign` only changes
+		// how far the radical's valley extends BELOW that baseline.
+		const contentTopY = -radInkAscent;
+		const contentBottomY = radInkDescent;
+
+		const topY = contentTopY - gap; // bar top (local px, Y down)
+		let bottomY: number;
+		if (this._radicandVAlign === 'baseline') {
+			// Historical behavior: bracket the full layout box down to the
+			// font descender line, regardless of whether there is ink there.
+			bottomY = rad.mathDescent;
+		} else if (this._radicandVAlign === 'center') {
+			// Symmetric clearance: the valley clears the ink bottom by the
+			// same gap used above the content, centering the ink box in the
+			// interior.
+			bottomY = contentBottomY + gap;
+		} else {
+			// 'bottom' (default): valley just below the visible content, so
+			// content sits flush at the bottom of the bracket.
+			bottomY = contentBottomY + bottomClearance;
+		}
 		const totalHeight = bottomY - topY;
 
 		// Hook proportions scale with the bracketed height so the check
@@ -204,8 +255,18 @@ export class SqrtContainer extends MathContainer {
 		}
 
 		this._width = barRightLocal;
-		this._ascent = radAscent + gap + (idx ? idx.mathAscent + idx.mathDescent : 0);
-		this._descent = radDescent;
+		// Ascent reaches the bar top (`-topY` from baseline) plus any index.
+		this._ascent = -topY + (idx ? idx.mathAscent + idx.mathDescent : 0);
+		// Descent reaches the valley floor, but never less than the
+		// radicand's own layout descent — a descender in the radicand (e.g.
+		// √(y_p)) must not be clipped by a too-tight sibling baseline.
+		this._descent = Math.max(bottomY, rad.mathDescent);
+
+		// Ink extents mirror the layout box here: the radical's drawn
+		// silhouette is the visible content, so ink == box for the parent's
+		// purposes.
+		this._inkAscent = this._ascent;
+		this._inkDescent = this._descent;
 
 		// Suppress unused-var warning: mathFont retained via _radical too,
 		// kept here for symmetry with sibling containers.

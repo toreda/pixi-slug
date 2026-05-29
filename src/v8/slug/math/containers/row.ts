@@ -29,6 +29,8 @@ export class RowContainer extends MathContainer {
 		let x = 0;
 		let ascent = 0;
 		let descent = 0;
+		let inkAscent = 0;
+		let inkDescent = 0;
 		for (let i = 0; i < this._children.length; i++) {
 			const c = this._children[i];
 			c.layout();
@@ -38,9 +40,15 @@ export class RowContainer extends MathContainer {
 			if (i < this._children.length - 1) x += this._gap;
 			if (c.mathAscent > ascent) ascent = c.mathAscent;
 			if (c.mathDescent > descent) descent = c.mathDescent;
+			// Children all share this row's baseline (y=0), so ink extents
+			// combine by max just like the layout box.
+			if (c.mathInkAscent > inkAscent) inkAscent = c.mathInkAscent;
+			if (c.mathInkDescent > inkDescent) inkDescent = c.mathInkDescent;
 		}
 		this._width = x;
 		this._ascent = ascent;
 		this._descent = descent;
+		this._inkAscent = inkAscent;
+		this._inkDescent = inkDescent;
 	}
 }
