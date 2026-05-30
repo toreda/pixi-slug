@@ -157,6 +157,43 @@ describe('mathBuilder per-slot scale overrides', () => {
 		});
 	});
 
+	describe('slug atom (native SlugText sub/superscript)', () => {
+		it('builds a slugScript node with a superscript', () => {
+			const n = m.slug('a', {superscript: '2'});
+			expect(n.kind).toBe('slugScript');
+			if (n.kind !== 'slugScript') throw new Error('unreachable');
+			expect(n.text).toBe('a');
+			expect(n.superscript).toBe('2');
+			expect(n.subscript).toBe('');
+			expect(n.supFontSize).toBeNull();
+			expect(n.subFontSize).toBeNull();
+			expect(n.useMathFont).toBe(false);
+		});
+
+		it('builds a slugScript node with a subscript', () => {
+			const n = m.slug('x', {subscript: 'i'});
+			if (n.kind !== 'slugScript') throw new Error('unreachable');
+			expect(n.subscript).toBe('i');
+			expect(n.superscript).toBe('');
+		});
+
+		it('forwards script font-size overrides and useMathFont', () => {
+			const n = m.slug('c', {superscript: '2', supFontSize: 18, useMathFont: true});
+			if (n.kind !== 'slugScript') throw new Error('unreachable');
+			expect(n.supFontSize).toBe(18);
+			expect(n.useMathFont).toBe(true);
+		});
+
+		it('defaults to empty scripts and null sizes when opts omitted', () => {
+			const n = m.slug('z');
+			if (n.kind !== 'slugScript') throw new Error('unreachable');
+			expect(n.superscript).toBe('');
+			expect(n.subscript).toBe('');
+			expect(n.supFontSize).toBeNull();
+			expect(n.subFontSize).toBeNull();
+		});
+	});
+
 	describe('lower slot treated as a single text node', () => {
 		// The summation lower bound is the entire "k=1" expression as ONE
 		// text run — not split into index/start. The builder must accept

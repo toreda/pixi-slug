@@ -5,7 +5,7 @@ import type {SqrtVAlign} from '../../../../shared/slug/math/node';
 import {MathRules} from '../../../../shared/slug/math/layout/sizes';
 import {slugRadicalOutline} from '../../../../shared/slug/math/radical';
 import {MathContainer} from './base';
-import {RadicalMesh} from './radical-mesh';
+import {SyntheticGlyphMesh} from './synthetic-glyph-mesh';
 
 /**
  * Square root / n-th root:
@@ -28,7 +28,7 @@ import {RadicalMesh} from './radical-mesh';
 export class SqrtContainer extends MathContainer {
 	private _radicand: MathContainer | null = null;
 	private _index: MathContainer | null = null;
-	private _radical: RadicalMesh;
+	private _radical: SyntheticGlyphMesh;
 	private _fill: Rgba;
 	private _mathFont: SlugFont;
 
@@ -89,7 +89,7 @@ export class SqrtContainer extends MathContainer {
 		this.mathFontSize = fontSize;
 		this._fill = fill;
 		this._mathFont = mathFont;
-		this._radical = new RadicalMesh(mathFont, fill);
+		this._radical = new SyntheticGlyphMesh(mathFont, fill, 'radical');
 		this.addChild(this._radical);
 	}
 
@@ -201,7 +201,7 @@ export class SqrtContainer extends MathContainer {
 			topY = -radInkAscent - gap;
 			bottomY = radInkDescent + gap;
 		} else {
-			// 'valley' / 'bottom' (default): the radical sits at its natural
+			// 'bottom' (default): the radical sits at its natural
 			// position (radicand on the baseline) and the valley is at a
 			// small clearance below the visible ink bottom — so the content
 			// rests near the valley floor rather than floating above it.

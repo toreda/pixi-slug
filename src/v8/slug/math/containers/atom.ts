@@ -4,6 +4,21 @@ import type {SlugFont} from '../../../../shared/slug/font';
 import {MathContainer} from './base';
 
 /**
+ * Native SlugText sub/superscript options carried by an
+ * {@link AtomContainer}. Empty strings disable the respective script;
+ * `null` font sizes derive from the base size. Forwarded verbatim to the
+ * wrapped {@link SlugText} so the script glyphs ride on the same run as
+ * the base, using SlugText's built-in trailing-script layout rather than
+ * the math engine's `SubsupContainer`. See `m.slug` / `MathNode.slugScript`.
+ */
+export interface AtomScriptOptions {
+	superscript: string;
+	subscript: string;
+	supFontSize: number | null;
+	subFontSize: number | null;
+}
+
+/**
  * Leaf container: a single text run rendered by one `SlugText`.
  *
  * The wrapped `SlugText` is positioned so its glyph baseline aligns
@@ -19,20 +34,44 @@ import {MathContainer} from './base';
  * actual min-glyph-bottom — using the natural descender lets row
  * neighbours align to a consistent baseline regardless of which run
  * happens to contain descenders).
+ *
+ * When the atom carries native sub/superscript (see {@link AtomScriptOptions}),
+ * the trailing script glyphs are part of the SAME SlugText. Their extra
+ * width and raised/dropped extent are not visible to the advance-width or
+ * main-glyph-bounds math used for a plain run, so in that case the
+ * container measures itself from the SlugText's published bounding box
+ * (which already accounts for the scripts) instead.
  */
 export class AtomContainer extends MathContainer {
 	private _text: SlugText;
 	private _font: SlugFont;
+	/** True when the wrapped SlugText carries a native sub/superscript. */
+	private _hasScripts: boolean;
 
-	constructor(text: string, font: SlugFont, fontSize: number, fill: Rgba) {
+	constructor(
+		text: string,
+		font: SlugFont,
+		fontSize: number,
+		fill: Rgba,
+		scripts?: AtomScriptOptions
+	) {
 		super();
 		this._font = font;
 		this.mathFontSize = fontSize;
+		this._hasScripts =
+			!!scripts && (scripts.superscript.length > 0 || scripts.subscript.length > 0);
 		this._text = new SlugText({
 			text,
 			font,
 			fallbackWhileLoading: false,
-			options: {fontSize, fill}
+			options: {
+				fontSize,
+				fill,
+				superscript: scripts?.superscript,
+				subscript: scripts?.subscript,
+				supFontSize: scripts?.supFontSize,
+				subFontSize: scripts?.subFontSize
+			}
 		});
 		this.addChild(this._text);
 	}
@@ -109,5 +148,33 @@ export class AtomContainer extends MathContainer {
 		// Parents that wrap content tightly (the sqrt radical) read these.
 		this._inkAscent = found ? maxY * scale : font.ascender * scale;
 		this._inkDescent = found ? Math.max(0, -minY * scale) : 0;
+
+		// Native sub/superscript widens the run and raises/drops its ink
+		// beyond what the BASE glyphs (measured above) cover. The SlugText
+		// publishes a bounding box that already includes the script quads,
+		// so fold it in. The bbox is in SlugText-local space, where y=0 is
+		// the top of the tallest MAIN glyph — i.e. `runAscent` above the
+		// container baseline. `_text.y` already shifts that frame down so
+		// the baseline sits at the container's y=0; the bbox edges, offset
+		// by `_text.y`, are therefore directly in container space.
+		if (this._hasScripts) {
+			const bbox = this._text.boundsArea;
+			if (bbox && bbox.width > 0) {
+				// Right edge of the script run from the container's x origin.
+				this._width = Math.max(this._width, bbox.x + bbox.width);
+				const bboxTop = this._text.y + bbox.y; // container space, +y down
+				const bboxBottom = bboxTop + bbox.height;
+				// Ascent grows when the superscript rises above the main
+				// glyph top (bboxTop goes negative). The layout box and the
+				// ink extent both follow the visible bbox here.
+				const inkAscent = Math.max(this._inkAscent, -bboxTop);
+				this._ascent = Math.max(this._ascent, inkAscent);
+				this._inkAscent = inkAscent;
+				// Descent grows when the subscript drops below the baseline.
+				const inkDescent = Math.max(this._inkDescent, bboxBottom);
+				this._descent = Math.max(this._descent, inkDescent);
+				this._inkDescent = inkDescent;
+			}
+		}
 	}
 }

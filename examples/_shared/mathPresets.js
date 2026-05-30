@@ -17,8 +17,10 @@
 				m.op('='),
 				m.frac(
 					m.row(
-						m.op('−'), 'b', m.pm(),
-						m.sqrt(m.row(m.sup('b', '2'), m.op('−'), '4ac'))
+						m.op('−'),
+						'b',
+						m.pm(),
+						m.sqrt(m.row(m.sup('b', '2'), m.op('−'), '4ac'), {vAlign: 'bottom'})
 					),
 					m.text('2a')
 				)
@@ -27,13 +29,7 @@
 
 		// Σ from i=1 to n of x_i / n
 		summation: function (m) {
-			return m.row(
-				m.summation(
-					m.row('i', m.op('='), '1'),
-					'n',
-					m.frac(m.sub('x', 'i'), 'n')
-				)
-			);
+			return m.row(m.summation(m.row('i', m.op('='), '1'), 'n', m.frac(m.sub('x', 'i'), 'n')));
 		},
 
 		// [ a b ; c d ]
@@ -78,14 +74,16 @@
 			);
 		},
 
-		// a² + b² = c²
+		// a² + b² = c² — each squared term is a single SlugText using its
+		// built-in superscript feature (m.slug) rather than the math engine's
+		// own m.sup layout container.
 		pythagorean: function (m) {
 			return m.row(
-				m.sup('a', '2'),
+				m.slug('a', {superscript: '2'}),
 				m.op('+'),
-				m.sup('b', '2'),
+				m.slug('b', {superscript: '2'}),
 				m.op('='),
-				m.sup('c', '2')
+				m.slug('c', {superscript: '2'})
 			);
 		},
 
@@ -94,11 +92,7 @@
 			return m.row(
 				m.braket('φ', 'ψ'),
 				m.op('='),
-				m.integral(
-					null,
-					null,
-					m.row(m.sup('φ', '*'), '(x)', m.text(' '), 'ψ(x)', m.text(' dx'))
-				)
+				m.integral(null, null, m.row(m.sup('φ', '*'), '(x)', m.text(' '), 'ψ(x)', m.text(' dx')))
 			);
 		},
 

@@ -72,6 +72,18 @@ export const MathRules = {
 	MatrixRowGapEm: 0.4,
 	/** Em padding on each side of a fence glyph relative to its inner content. */
 	FencePadEm: 0.05,
+	/**
+	 * Stroke thickness of a SYNTHESIZED stretchy fence (matrix bracket /
+	 * paren / brace / abs), as an em multiplier. Stays constant as the
+	 * fence stretches in height — the whole point of synthesizing the
+	 * outline instead of scaling a font glyph (see fences.ts).
+	 */
+	FenceStrokeEm: 0.06,
+	/**
+	 * Width of a synthesized stretchy fence (left edge to opening), as an
+	 * em multiplier. The bracket serif reach / paren belly depth.
+	 */
+	FenceWidthEm: 0.28,
 	/** Gap between an accent glyph and its base. */
 	AccentGapEm: 0.05,
 	/** Gap between the cases brace and the first column. */

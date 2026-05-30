@@ -51,6 +51,31 @@ export interface MathBuilder {
 	mathText(s: string): MathNode;
 	space(em: number): MathNode;
 
+	/**
+	 * A single text run that renders its sub/superscript using SlugText's
+	 * built-in script feature instead of the math engine's `SubsupContainer`
+	 * layout. `opts.superscript` / `opts.subscript` are trailing strings
+	 * appended to `base` on the same SlugText; `opts.supFontSize` /
+	 * `opts.subFontSize` override the script pixel size (omit to derive from
+	 * the base size). `opts.useMathFont` routes the run through the math
+	 * font (matches `m.mathText`).
+	 *
+	 * Prefer this over `m.sup`/`m.sub` for simple variable-with-exponent
+	 * atoms like `a²` or `xᵢ`; use the `sup`/`sub` family when the script is
+	 * itself a sub-expression (fraction, root, nested script, …) that the
+	 * trailing-string model cannot express.
+	 */
+	slug(
+		base: string,
+		opts?: {
+			superscript?: string;
+			subscript?: string;
+			supFontSize?: number | null;
+			subFontSize?: number | null;
+			useMathFont?: boolean;
+		}
+	): MathNode;
+
 	// --- Scripts --------------------------------------------------------
 	sup(base: MathInput, sup: MathInput, opts?: {scales?: SubsupScales}): MathNode;
 	sub(base: MathInput, sub: MathInput, opts?: {scales?: SubsupScales}): MathNode;
@@ -294,6 +319,16 @@ export const mathBuilder: MathBuilder = {
 	text: (s) => ({kind: 'text', text: s, useMathFont: false}),
 	mathText: (s) => ({kind: 'text', text: s, useMathFont: true}),
 	space: (em) => ({kind: 'space', em}),
+
+	slug: (base, opts) => ({
+		kind: 'slugScript',
+		text: base,
+		useMathFont: opts?.useMathFont ?? false,
+		superscript: opts?.superscript ?? '',
+		subscript: opts?.subscript ?? '',
+		supFontSize: opts?.supFontSize ?? null,
+		subFontSize: opts?.subFontSize ?? null
+	}),
 
 	sup: (base, sup, opts) => ({kind: 'sup', base: wrap(base), sup: wrap(sup), scales: opts?.scales}),
 	sub: (base, sub, opts) => ({kind: 'sub', base: wrap(base), sub: wrap(sub), scales: opts?.scales}),

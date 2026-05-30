@@ -97,6 +97,16 @@ export function compileNode(node: MathNode, ctx: CompileCtx): MathContainer {
 				ctx.fill
 			);
 
+		case 'slugScript':
+			// One SlugText carrying its native sub/superscript — measured from
+			// the SlugText's own bbox inside AtomContainer. No SubsupContainer.
+			return new AtomContainer(node.text, textFont(ctx, node.useMathFont), ctx.fontSize, ctx.fill, {
+				superscript: node.superscript,
+				subscript: node.subscript,
+				supFontSize: node.supFontSize,
+				subFontSize: node.subFontSize
+			});
+
 		case 'space':
 			return new SpaceContainer(node.em, ctx.fontSize);
 
@@ -675,6 +685,28 @@ export function reconcileNode(
 			// handle it without rebuilding the AtomContainer wrapper.
 			const wantFont = textFont(ctx, next.useMathFont);
 			existing.setFont(wantFont);
+			existing.setFontSize(ctx.fontSize);
+			existing.setText(next.text);
+			existing.setFill(ctx.fill);
+			return existing;
+		}
+
+		case 'slugScript': {
+			if (prev.kind !== 'slugScript') return compileNode(next, ctx);
+			if (!(existing instanceof AtomContainer)) return compileNode(next, ctx);
+			// The script strings + sizes are baked into the wrapped SlugText
+			// at construction. When they differ, rebuild; otherwise this is
+			// the cheap base-text/font/size/fill mutation path (same as plain
+			// `text`), which hits SlugText's incremental rebuild.
+			if (
+				prev.superscript !== next.superscript ||
+				prev.subscript !== next.subscript ||
+				prev.supFontSize !== next.supFontSize ||
+				prev.subFontSize !== next.subFontSize
+			) {
+				return compileNode(next, ctx);
+			}
+			existing.setFont(textFont(ctx, next.useMathFont));
 			existing.setFontSize(ctx.fontSize);
 			existing.setText(next.text);
 			existing.setFill(ctx.fill);

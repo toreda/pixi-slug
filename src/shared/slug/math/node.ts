@@ -3,13 +3,13 @@ import type {SlugTextFontInput} from '../text/init';
 
 /**
  * Vertical placement of a square-root radicand inside its radical.
- *  - `'valley'` / `'bottom'`: content rests near the valley floor, tight
- *    to the visible ink (the default).
+ *  - `'bottom'`: content rests near the valley floor, tight to the
+ *    visible ink (the default).
  *  - `'center'`: content centered in the radical interior.
  *  - `'baseline'`: radical brackets the full layout box down to the font
  *    descender line (historical behavior).
  */
-export type SqrtVAlign = 'valley' | 'bottom' | 'center' | 'baseline';
+export type SqrtVAlign = 'bottom' | 'center' | 'baseline';
 
 /**
  * Per-node style override applied via `m.styled(child, style)`. Layered
@@ -113,6 +113,26 @@ export interface PrescriptScales {
  */
 export type MathNode =
 	| {kind: 'text'; text: string; useMathFont: boolean}
+	| {
+			/**
+			 * A single text run rendered by ONE `SlugText` using its built-in
+			 * subscript/superscript feature, rather than the math engine's own
+			 * `SubsupContainer` layout. The script strings ride on the same
+			 * SlugText as the base, dropped/raised by the SlugText's native
+			 * script metrics. Use this for simple, single-base scripts (e.g.
+			 * `a²`, `xᵢ`) where the trailing-script model fits; reach for
+			 * `sup`/`sub`/`subsup` when the script content is itself a complex
+			 * sub-expression. `supFontSize`/`subFontSize` are pixel overrides
+			 * forwarded verbatim to the SlugText (null → derive from base size).
+			 */
+			kind: 'slugScript';
+			text: string;
+			useMathFont: boolean;
+			superscript: string;
+			subscript: string;
+			supFontSize: number | null;
+			subFontSize: number | null;
+	  }
 	| {kind: 'space'; em: number}
 	| {kind: 'sup'; base: MathNode; sup: MathNode; scales?: SubsupScales}
 	| {kind: 'sub'; base: MathNode; sub: MathNode; scales?: SubsupScales}
@@ -203,6 +223,7 @@ export type MathNodeKind = MathNode['kind'];
 export function mathNodeCount(node: MathNode): number {
 	switch (node.kind) {
 		case 'text':
+		case 'slugScript':
 		case 'space':
 		case 'ellipsis':
 			return 1;

@@ -19,8 +19,9 @@ import {slugShader} from '../../shader';
 
 /**
  * Renders ONE synthetic glyph (a math decoration such as a square-root
- * radical) through the Slug coverage shader, so it stays
- * resolution-independent and scales in lockstep with surrounding text.
+ * radical or a stretchy matrix fence) through the Slug coverage shader,
+ * so it stays resolution-independent and scales in lockstep with
+ * surrounding text.
  *
  * This is a deliberately minimal sibling of {@link SlugText}: a single
  * quad, single render pass (solid fill), no stroke/shadow/incremental
@@ -39,7 +40,7 @@ import {slugShader} from '../../shader';
  * PIXI's `aVertexPosition`, so `Mesh.containsPoint` would crash (same
  * reason `SlugText` opts its subtree out).
  */
-export class RadicalMesh extends Container {
+export class SyntheticGlyphMesh extends Container {
 	private _font: SlugFont;
 	private _glyph: SlugGlyphData | null = null;
 	private _dstX = 0;
@@ -47,6 +48,7 @@ export class RadicalMesh extends Container {
 	private _dstW = 0;
 	private _dstH = 0;
 	private _color: Rgba;
+	private readonly _label: string;
 
 	private _mesh: Mesh<Geometry, Shader> | null = null;
 	private _geometry: Geometry | null = null;
@@ -63,10 +65,11 @@ export class RadicalMesh extends Container {
 	private _dirty = false;
 	private _onRenderHandler: (renderer: Renderer) => void;
 
-	constructor(font: SlugFont, color: Rgba) {
+	constructor(font: SlugFont, color: Rgba, label: string = 'synthetic') {
 		super();
 		this._font = font;
 		this._color = color;
+		this._label = label;
 		this._onRenderHandler = (renderer: Renderer): void => this._attach(renderer);
 		this.eventMode = 'none';
 		this.interactiveChildren = false;
@@ -164,13 +167,13 @@ export class RadicalMesh extends Container {
 
 		const vertexBuffer = new Buffer({
 			data: vertices,
-			label: 'slug-radical-vertex-buffer',
+			label: `slug-${this._label}-vertex-buffer`,
 			usage: BufferUsage.VERTEX,
 			shrinkToFit: false
 		});
 		const indexBuffer = new Buffer({
 			data: indices,
-			label: 'slug-radical-index-buffer',
+			label: `slug-${this._label}-index-buffer`,
 			usage: BufferUsage.INDEX,
 			shrinkToFit: false
 		});
