@@ -38,6 +38,62 @@ function wrapMaybe(input: MathInput | null | undefined): MathNode | null {
 }
 
 /**
+ * A plain text atom usable as a SlugText-native script: either a bare
+ * string or a `kind:'text'` node. Returns its `{text, useMathFont}` or
+ * `null` if the input is a sub-expression that can't ride as a trailing
+ * string on a single SlugText run.
+ */
+function asTextAtom(input: MathInput): {text: string; useMathFont: boolean} | null {
+	if (typeof input === 'string') return {text: input, useMathFont: false};
+	if (input.kind === 'text') return {text: input.text, useMathFont: input.useMathFont};
+	return null;
+}
+
+/**
+ * Build a sub/superscript node, preferring SlugText's built-in trailing-
+ * script feature (`slugScript`) when the base AND every present script are
+ * simple text atoms (`xᵢ`, `a²`, `x²ᵢ`). The native path renders the
+ * scripts on the SAME SlugText run as the base — visually correct and the
+ * only fully-working path. When the base or a script is a sub-expression
+ * (fraction, root, nested script, …) the trailing-string model can't
+ * express it, so fall back to the `SubsupContainer` layout (`sub`/`sup`/
+ * `subsup` nodes). The script run inherits the base atom's font flag.
+ */
+function scriptNode(
+	base: MathInput,
+	sub: MathInput | null,
+	sup: MathInput | null,
+	scales: SubsupScales | undefined
+): MathNode {
+	const baseAtom = asTextAtom(base);
+	const subAtom = sub === null ? null : asTextAtom(sub);
+	const supAtom = sup === null ? null : asTextAtom(sup);
+	const subOk = sub === null || subAtom !== null;
+	const supOk = sup === null || supAtom !== null;
+
+	if (baseAtom && subOk && supOk) {
+		return {
+			kind: 'slugScript',
+			text: baseAtom.text,
+			useMathFont: baseAtom.useMathFont,
+			superscript: supAtom?.text ?? '',
+			subscript: subAtom?.text ?? '',
+			supFontSize: null,
+			subFontSize: null
+		};
+	}
+
+	// Fallback: layout path for sub-expression scripts/bases.
+	if (sub !== null && sup !== null) {
+		return {kind: 'subsup', base: wrap(base), sub: wrap(sub), sup: wrap(sup), scales};
+	}
+	if (sub !== null) {
+		return {kind: 'sub', base: wrap(base), sub: wrap(sub), scales};
+	}
+	return {kind: 'sup', base: wrap(base), sup: wrap(sup as MathInput), scales};
+}
+
+/**
  * Construction surface for math formulas. Every method returns an
  * immutable {@link MathNode}; consumers compose subtrees freely.
  *
@@ -60,10 +116,13 @@ export interface MathBuilder {
 	 * the base size). `opts.useMathFont` routes the run through the math
 	 * font (matches `m.mathText`).
 	 *
-	 * Prefer this over `m.sup`/`m.sub` for simple variable-with-exponent
-	 * atoms like `a²` or `xᵢ`; use the `sup`/`sub` family when the script is
-	 * itself a sub-expression (fraction, root, nested script, …) that the
-	 * trailing-string model cannot express.
+	 * `m.sup`/`m.sub`/`m.subsup` now route to this same native path
+	 * automatically when their base and scripts are simple text atoms, so
+	 * `m.sub('x', 'i')` and `m.slug('x', {subscript: 'i'})` are equivalent.
+	 * Reach for `m.slug` directly only when you need the per-script font-
+	 * size overrides (`supFontSize`/`subFontSize`); use the `sup`/`sub`
+	 * family when a script is itself a sub-expression the trailing-string
+	 * model cannot express.
 	 */
 	slug(
 		base: string,
@@ -77,8 +136,30 @@ export interface MathBuilder {
 	): MathNode;
 
 	// --- Scripts --------------------------------------------------------
+	/**
+	 * Superscript `base^sup`. When BOTH `base` and `sup` are simple text
+	 * atoms (a bare string or `m.text`/`m.mathText`) this routes to
+	 * SlugText's built-in trailing-script feature (same as {@link slug}) —
+	 * the scripts ride on the base's SlugText run, which is the visually
+	 * correct, fully-working path. When either side is a sub-expression
+	 * (fraction, root, nested script, …) it falls back to the
+	 * `SubsupContainer` layout. `opts.scales` only applies on the fallback
+	 * path. See {@link sub} / {@link subsup} for the sub/both forms.
+	 */
 	sup(base: MathInput, sup: MathInput, opts?: {scales?: SubsupScales}): MathNode;
+	/**
+	 * Subscript `base_sub` (e.g. `xᵢ`). Routes to SlugText's built-in
+	 * trailing-script feature when `base` and `sub` are simple text atoms,
+	 * else falls back to `SubsupContainer`. See {@link sup} for routing
+	 * details.
+	 */
 	sub(base: MathInput, sub: MathInput, opts?: {scales?: SubsupScales}): MathNode;
+	/**
+	 * Combined sub+superscript `base_sub^sup` (e.g. `x²ᵢ`). Routes to
+	 * SlugText's built-in script feature when `base`, `sub` and `sup` are
+	 * all simple text atoms, else falls back to `SubsupContainer`. See
+	 * {@link sup} for routing details.
+	 */
 	subsup(
 		base: MathInput,
 		sub: MathInput,
@@ -330,15 +411,9 @@ export const mathBuilder: MathBuilder = {
 		subFontSize: opts?.subFontSize ?? null
 	}),
 
-	sup: (base, sup, opts) => ({kind: 'sup', base: wrap(base), sup: wrap(sup), scales: opts?.scales}),
-	sub: (base, sub, opts) => ({kind: 'sub', base: wrap(base), sub: wrap(sub), scales: opts?.scales}),
-	subsup: (base, sub, sup, opts) => ({
-		kind: 'subsup',
-		base: wrap(base),
-		sub: wrap(sub),
-		sup: wrap(sup),
-		scales: opts?.scales
-	}),
+	sup: (base, sup, opts) => scriptNode(base, null, sup, opts?.scales),
+	sub: (base, sub, opts) => scriptNode(base, sub, null, opts?.scales),
+	subsup: (base, sub, sup, opts) => scriptNode(base, sub, sup, opts?.scales),
 
 	frac: (num, den, opts) => ({
 		kind: 'frac',

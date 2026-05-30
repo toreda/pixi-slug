@@ -225,24 +225,37 @@ function buildBrace(geom: SlugFenceGeometry): Pt[] {
 	const w = width;
 	const cy = height / 2;
 	// Beak sits a touch right of the far-left edge so the stroke's outer
-	// side still reaches x≈0. Arm bows pull toward the content (right of
-	// the spine) to give the brace its concave shoulders.
+	// side still reaches x≈0.
 	const beakX = half;
-	const armBowX = w * 0.62;
-
-	// Sample the two arms (each a quadratic) into one centerline polyline:
-	//   top tip (w, h) → [armBow] → beak (beakX, cy)
-	//   beak → [armBow] → bottom tip (w, 0)
 	const topTip: Pt = [w, height];
 	const beak: Pt = [beakX, cy];
 	const botTip: Pt = [w, 0];
-	const upperBow: Pt = [armBowX, height * 0.78];
-	const lowerBow: Pt = [armBowX, height * 0.22];
 
-	const SAMPLES = 10;
+	// Each arm is built from TWO quadratic segments around a quarter-height
+	// shoulder so the arm is S-shaped (convex shoulder near the tip, concave
+	// throat near the beak) — the brace profile. A single quadratic per arm
+	// would be a near-straight diagonal and read as an angle bracket ⟨ ⟩.
+	// The shoulder bulges right (toward the content) at x≈w; the throat
+	// pulls left toward the beak.
+	const upShoulder: Pt = [w * 0.5, height * 0.78];
+	const upThroat: Pt = [w * 0.18, height * 0.6];
+	const upShoulderCtrl: Pt = [w, height * 0.92];
+	const upThroatCtrl: Pt = [beakX, height * 0.66];
+	const loThroat: Pt = [w * 0.18, height * 0.4];
+	const loShoulder: Pt = [w * 0.5, height * 0.22];
+	const loThroatCtrl: Pt = [beakX, height * 0.34];
+	const loShoulderCtrl: Pt = [w, height * 0.08];
+
+	const SAMPLES = 8;
 	const centerline: Pt[] = [];
-	for (let i = 0; i <= SAMPLES; i++) centerline.push(quadAt(topTip, upperBow, beak, i / SAMPLES));
-	for (let i = 1; i <= SAMPLES; i++) centerline.push(quadAt(beak, lowerBow, botTip, i / SAMPLES));
+	// Upper arm: tip → shoulder → throat → beak.
+	for (let i = 0; i <= SAMPLES; i++) centerline.push(quadAt(topTip, upShoulderCtrl, upShoulder, i / SAMPLES));
+	for (let i = 1; i <= SAMPLES; i++) centerline.push(quadAt(upShoulder, upThroatCtrl, upThroat, i / SAMPLES));
+	for (let i = 1; i <= SAMPLES; i++) centerline.push(quadAt(upThroat, [beakX, height * 0.55], beak, i / SAMPLES));
+	// Lower arm: beak → throat → shoulder → tip (mirror of the upper arm).
+	for (let i = 1; i <= SAMPLES; i++) centerline.push(quadAt(beak, [beakX, height * 0.45], loThroat, i / SAMPLES));
+	for (let i = 1; i <= SAMPLES; i++) centerline.push(quadAt(loThroat, loThroatCtrl, loShoulder, i / SAMPLES));
+	for (let i = 1; i <= SAMPLES; i++) centerline.push(quadAt(loShoulder, loShoulderCtrl, botTip, i / SAMPLES));
 
 	return strokeCenterline(centerline, half);
 }

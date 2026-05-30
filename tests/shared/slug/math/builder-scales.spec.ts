@@ -49,16 +49,48 @@ describe('mathBuilder per-slot scale overrides', () => {
 	});
 
 	describe('subsup family', () => {
-		it('records scales for sup/sub/subsup', () => {
-			const sup = m.sup('x', '2', {scales: {sup: 0.6}});
+		// Text-atom base + scripts route to SlugText's native trailing-script
+		// feature (slugScript), not the SubsupContainer layout. Scales don't
+		// apply on the native path, so they're silently dropped there.
+		it('routes simple text atoms to a native slugScript node', () => {
+			const sup = m.sup('x', '2');
+			expect(sup.kind).toBe('slugScript');
+			if (sup.kind !== 'slugScript') throw new Error('unreachable');
+			expect(sup.text).toBe('x');
+			expect(sup.superscript).toBe('2');
+			expect(sup.subscript).toBe('');
+
+			const sub = m.sub('x', 'i');
+			if (sub.kind !== 'slugScript') throw new Error('unreachable');
+			expect(sub.text).toBe('x');
+			expect(sub.subscript).toBe('i');
+			expect(sub.superscript).toBe('');
+
+			const both = m.subsup('x', 'i', 'n');
+			if (both.kind !== 'slugScript') throw new Error('unreachable');
+			expect(both.text).toBe('x');
+			expect(both.subscript).toBe('i');
+			expect(both.superscript).toBe('n');
+		});
+
+		it('inherits the base atom font flag on the native path', () => {
+			const sub = m.sub(m.mathText('x'), 'i');
+			if (sub.kind !== 'slugScript') throw new Error('unreachable');
+			expect(sub.useMathFont).toBe(true);
+		});
+
+		// A sub-expression base or script can't ride as a trailing string, so
+		// it falls back to the SubsupContainer layout where scales DO apply.
+		it('falls back to the layout path (with scales) for sub-expression scripts', () => {
+			const sup = m.sup('x', m.frac('a', 'b'), {scales: {sup: 0.6}});
 			if (sup.kind !== 'sup') throw new Error('unreachable');
 			expect(sup.scales).toEqual({sup: 0.6});
 
-			const sub = m.sub('x', 'i', {scales: {sub: 0.6}});
+			const sub = m.sub(m.frac('a', 'b'), 'i', {scales: {sub: 0.6}});
 			if (sub.kind !== 'sub') throw new Error('unreachable');
 			expect(sub.scales).toEqual({sub: 0.6});
 
-			const both = m.subsup('x', 'i', 'n', {scales: {base: 1.0, sub: 0.6, sup: 0.6}});
+			const both = m.subsup('x', m.sqrt('y'), 'n', {scales: {base: 1.0, sub: 0.6, sup: 0.6}});
 			if (both.kind !== 'subsup') throw new Error('unreachable');
 			expect(both.scales).toEqual({base: 1.0, sub: 0.6, sup: 0.6});
 		});
