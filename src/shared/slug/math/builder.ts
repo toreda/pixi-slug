@@ -13,6 +13,7 @@ import type {
 	PrescriptScales,
 	PrimeScales,
 	SqrtScales,
+	SqrtVAlign,
 	StackedSubScales,
 	SubsupScales,
 	TensorScales
@@ -62,8 +63,12 @@ export interface MathBuilder {
 
 	// --- Fractions and roots --------------------------------------------
 	frac(num: MathInput, den: MathInput, opts?: {scales?: FracScales}): MathNode;
-	sqrt(radicand: MathInput, opts?: {scales?: SqrtScales}): MathNode;
-	nthroot(index: MathInput, radicand: MathInput, opts?: {scales?: SqrtScales}): MathNode;
+	sqrt(radicand: MathInput, opts?: {scales?: SqrtScales; vAlign?: SqrtVAlign}): MathNode;
+	nthroot(
+		index: MathInput,
+		radicand: MathInput,
+		opts?: {scales?: SqrtScales; vAlign?: SqrtVAlign}
+	): MathNode;
 
 	// --- Big operators --------------------------------------------------
 	summation(
@@ -306,12 +311,18 @@ export const mathBuilder: MathBuilder = {
 		den: wrap(den),
 		scales: opts?.scales
 	}),
-	sqrt: (radicand, opts) => ({kind: 'sqrt', radicand: wrap(radicand), scales: opts?.scales}),
+	sqrt: (radicand, opts) => ({
+		kind: 'sqrt',
+		radicand: wrap(radicand),
+		scales: opts?.scales,
+		vAlign: opts?.vAlign
+	}),
 	nthroot: (index, radicand, opts) => ({
 		kind: 'nthroot',
 		index: wrap(index),
 		radicand: wrap(radicand),
-		scales: opts?.scales
+		scales: opts?.scales,
+		vAlign: opts?.vAlign
 	}),
 
 	summation: (lower, upper, body, opts) => ({

@@ -177,6 +177,7 @@ export function compileNode(node: MathNode, ctx: CompileCtx): MathContainer {
 		case 'sqrt': {
 			const c = new SqrtContainer(ctx.mathFont, ctx.fontSize, ctx.fill);
 			c.mathFontSize = ctx.fontSize;
+			if (node.vAlign !== undefined) c.radicandVAlign = node.vAlign;
 			if (node.scales?.radicand !== undefined) c.radicandScale = node.scales.radicand;
 			if (node.scales?.index !== undefined) c.indexScale = node.scales.index;
 			c.setRadicand(compileNode(node.radicand, withSize(ctx, ctx.fontSize * c.radicandScale)));
@@ -191,6 +192,7 @@ export function compileNode(node: MathNode, ctx: CompileCtx): MathContainer {
 		case 'nthroot': {
 			const c = new SqrtContainer(ctx.mathFont, ctx.fontSize, ctx.fill);
 			c.mathFontSize = ctx.fontSize;
+			if (node.vAlign !== undefined) c.radicandVAlign = node.vAlign;
 			if (node.scales?.radicand !== undefined) c.radicandScale = node.scales.radicand;
 			if (node.scales?.index !== undefined) c.indexScale = node.scales.index;
 			c.setRadicand(compileNode(node.radicand, withSize(ctx, ctx.fontSize * c.radicandScale)));

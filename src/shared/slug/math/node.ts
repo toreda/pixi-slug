@@ -2,6 +2,16 @@ import type {Rgba} from '../../../rgba';
 import type {SlugTextFontInput} from '../text/init';
 
 /**
+ * Vertical placement of a square-root radicand inside its radical.
+ *  - `'valley'` / `'bottom'`: content rests near the valley floor, tight
+ *    to the visible ink (the default).
+ *  - `'center'`: content centered in the radical interior.
+ *  - `'baseline'`: radical brackets the full layout box down to the font
+ *    descender line (historical behavior).
+ */
+export type SqrtVAlign = 'valley' | 'bottom' | 'center' | 'baseline';
+
+/**
  * Per-node style override applied via `m.styled(child, style)`. Layered
  * on top of the child's resolved style; fields left undefined inherit.
  * `variant` substitutes the corresponding Unicode-math-alphanumeric code
@@ -108,8 +118,8 @@ export type MathNode =
 	| {kind: 'sub'; base: MathNode; sub: MathNode; scales?: SubsupScales}
 	| {kind: 'subsup'; base: MathNode; sub: MathNode; sup: MathNode; scales?: SubsupScales}
 	| {kind: 'frac'; num: MathNode; den: MathNode; scales?: FracScales}
-	| {kind: 'sqrt'; radicand: MathNode; scales?: SqrtScales}
-	| {kind: 'nthroot'; index: MathNode; radicand: MathNode; scales?: SqrtScales}
+	| {kind: 'sqrt'; radicand: MathNode; scales?: SqrtScales; vAlign?: SqrtVAlign}
+	| {kind: 'nthroot'; index: MathNode; radicand: MathNode; scales?: SqrtScales; vAlign?: SqrtVAlign}
 	| {
 			kind: 'bigop';
 			symbol: string;
