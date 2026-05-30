@@ -320,4 +320,50 @@ describe('v8 SlugText', () => {
 			expect(text.onRender).toBeNull();
 		});
 	});
+
+	// The `text` setter's identical-content guard lives in the shared base
+	// mixin (`src/shared/slug/text/base.ts`): `if (this._text === value)
+	// return;` short-circuits before `_requestRebuild`, so re-assigning the
+	// same string must not trigger a rebuild. `rebuildCount` increments at
+	// the top of every `rebuild()` call (synchronously from the setter), so
+	// it's a direct probe for whether a rebuild ran.
+	describe('text setter identical-content guard', () => {
+		it('does NOT rebuild when assigned identical content', () => {
+			const text = new SlugText({text: 'Hello', font, options: {fontSize: 32}});
+			const baseline = text.rebuildCount;
+
+			text.text = 'Hello';
+
+			expect(text.rebuildCount).toBe(baseline);
+		});
+
+		it('DOES rebuild exactly once when assigned different content (control)', () => {
+			const text = new SlugText({text: 'Hello', font, options: {fontSize: 32}});
+			const baseline = text.rebuildCount;
+
+			text.text = 'World';
+
+			expect(text.rebuildCount).toBe(baseline + 1);
+		});
+
+		it('stays flat across repeated identical assignments', () => {
+			const text = new SlugText({text: 'Hello', font, options: {fontSize: 32}});
+			const baseline = text.rebuildCount;
+
+			for (let i = 0; i < 10; i++) {
+				text.text = 'Hello';
+			}
+
+			expect(text.rebuildCount).toBe(baseline);
+		});
+
+		it('does not rebuild on an identical empty-string assignment', () => {
+			const text = new SlugText({text: '', font, options: {fontSize: 32}});
+			const baseline = text.rebuildCount;
+
+			text.text = '';
+
+			expect(text.rebuildCount).toBe(baseline);
+		});
+	});
 });
