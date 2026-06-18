@@ -24,3 +24,14 @@ export {slugFontsInstallLoaderV8} from './slug/fonts/loader';
 export {SlugApplicationPluginV8} from './slug/plugin';
 export type {Rgba, RgbaReadonly} from '../rgba';
 export type {SlugFontsRemoveResult} from '../shared/slug/fonts/remove';
+export {slugDebugDump} from './slug/debug/dump';
+export type {
+	SlugDebugReport,
+	SlugDebugOptions,
+	SlugSlotReport,
+	SlugResourceState
+} from './slug/debug/dump';
+export {slugAssertGlState} from './slug/debug/glstate';
+export type {SlugGlStateReport, SlugGlStateOptions} from './slug/debug/glstate';
+export {slugAssertPixiSingleton, slugAutoCheckPixiSingleton} from './slug/debug/pixisingleton';
+export type {SlugPixiSingletonReport} from './slug/debug/pixisingleton';

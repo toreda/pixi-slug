@@ -28,6 +28,7 @@ import {slugBuildDecorationFill} from './decoration/fill';
 import {slugBuildFillGpuV8, type SlugFillGpuV8} from './fill/gpu';
 import {slugFontGpuV8, type SlugFontGpuV8} from './font/gpu';
 import {slugShader} from './shader';
+import {slugAutoCheckPixiSingleton} from './debug/pixisingleton';
 import {SlugTextInit} from '../../shared/slug/text/init';
 import {SlugTextMixin} from '../../shared/slug/text/base';
 import type {SlugTextRebuildKind} from '../../shared/slug/text/rebuild/kind';
@@ -302,6 +303,12 @@ export class SlugText extends SlugTextV8Base {
 			gpu.bandTexture,
 			gpu.fallbackWhite
 		);
+
+		// One-time, renderer-free self-check: detect a duplicate pixi.js
+		// load (the slug `Mesh` failing the renderer's instanceof check)
+		// and emit a single actionable console.error. No-op after the first
+		// mesh and silent when only one pixi copy is present.
+		slugAutoCheckPixiSingleton();
 
 		const slot: SlugMeshSlot = {
 			mesh: new Mesh({geometry, shader}),

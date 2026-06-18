@@ -21,6 +21,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 * [Features](#features)
 * [FAQ](#faq)
 * [Examples](#examples)
+* [Troubleshooting](#troubleshooting)
 * [Legal](#legal)
 
 
@@ -548,6 +549,74 @@ When `KHR_parallel_shader_compile` is unavailable, prewarm gracefully falls back
 ### v6 / v7
 
 Prewarm is v8-only. `SlugFonts.prewarmContext` is callable in v6/v7 too but resolves to `false` immediately — safe to leave in code that targets multiple versions.
+
+&nbsp;
+# Troubleshooting
+
+## Console error: `[pixi-slug] DUPLICATE pixi.js DETECTED`
+
+**What it means:** Your app has loaded **two separate copies of `pixi.js`** into the same bundle. `pixi-slug` builds its meshes with the `pixi.js` it imports, but your renderer comes from the *other* copy. PIXI's renderer recognizes drawable objects with an `instanceof` / constructor-identity check, and that check fails across two different copies — so every `SlugText` mesh is **silently skipped**. The result is the confusing symptom this error exists to explain: **text doesn't render even though there are no other errors, the `SlugText` is in the scene, and all of its GPU resources are valid.**
+
+`pixi-slug` runs this check automatically the first time it builds a mesh and logs the error **once**.
+
+**Important:** This error fires **only** on a genuine duplicate (two different `Mesh` constructors in memory). It does **not** fire merely because your installed `pixi.js` version differs from what `pixi-slug` lists in its peer range — a single `pixi.js` copy at any compatible version renders fine and stays silent.
+
+**Cause:** Two copies of `pixi.js` end up in the bundle even when `package.json` lists only one. Common reasons:
+
+- A transitive dependency pulls in its own `pixi.js` at a different version.
+- A non-deduplicated `node_modules` tree (mixed lockfiles, hoisting differences).
+- Importing `pixi-slug` (or another pixi plugin) **from a local source folder** rather than the published package — the bundler resolves *that* package's `pixi.js` import relative to its own directory, which can land on a different physical copy than your app's.
+
+**Fix:** Force every `pixi.js` import to resolve to a single physical copy.
+
+- **webpack** — add an exact-match alias (the `$` matches only the bare `pixi.js` specifier, not subpaths):
+
+  ```js
+  // your app's webpack.config.js
+  const path = require('path');
+
+  module.exports = {
+      resolve: {
+          alias: {
+              'pixi.js$': path.resolve(__dirname, 'node_modules/pixi.js')
+          }
+      }
+  };
+  ```
+
+- **Vite / esbuild / Rollup** — add the equivalent `resolve.alias` entry mapping `pixi.js` to one path.
+- **Package manager** — run `pnpm dedupe` (or add an `overrides` / `resolutions` entry pinning `pixi.js` to one version) so only one copy is installed.
+
+To locate the second copy, run `pnpm why pixi.js` or `npm ls pixi.js`.
+
+> **If you see *any* pixi version-mismatch warning** (from PIXI itself, another pixi plugin, or your package manager) **and your app uses a bundler such as webpack, Vite, or esbuild:** verify that every `pixi.js` import/`require` across your whole bundle resolves to the **same** version and physical path. A bundler can include two different `pixi.js` copies even when your `package.json` lists only one — each `import 'pixi.js'` is resolved relative to the importing file, so a dependency (or a locally-linked package) can pull in its own copy. The same single-copy `resolve.alias` / dedupe fix above resolves it. Note that `pixi-slug` itself does **not** warn on a version mismatch — it only errors on a genuine duplicate — so a version warning you see comes from elsewhere, but the bundler check is the same.
+
+**Confirm the diagnosis programmatically (v8):** call `slugAssertPixiSingleton(slugText, renderer)` for a full report. Pass it a `SlugText` *after* at least one render frame (so its mesh exists) for the decisive constructor-identity check:
+
+```typescript
+const {slugAssertPixiSingleton} = require('pixi-slug');
+
+// after the first render tick
+const report = slugAssertPixiSingleton(text, app.renderer);
+console.log(report.ok, report.problems);
+```
+
+&nbsp;
+## `SlugText` renders nothing, but there is **no** duplicate-pixi error
+
+If the duplicate-pixi check is clean and text still doesn't appear, two read-only diagnostics (v8) help isolate the cause:
+
+- `slugDebugDump(slugText)` — reports each render pass's GPU state: whether the mesh is on the display list, whether the curve/band textures and buffers are valid (vs. destroyed/zero-size), and the resolved fill mode. Catches the case where something released or detached `pixi-slug`'s GPU resources.
+- `slugAssertGlState(renderer)` — reads the live WebGL state and flags conditions that silently suppress a draw (color-write mask off, a no-op blend func, a leftover depth/stencil/scissor test, a collapsed viewport, or a pending GL error). Catches the case where your app's own raw-GL rendering left shared context state in a configuration that discards `pixi-slug`'s draw.
+
+```typescript
+const {slugDebugDump, slugAssertGlState} = require('pixi-slug');
+
+slugDebugDump(text);              // per-pass resource / scene / uniform state
+slugAssertGlState(app.renderer);  // live GL-state leak check
+```
+
+Recommended order when chasing a blank `SlugText`: **`slugAssertPixiSingleton` → `slugDebugDump` → `slugAssertGlState`** — most-likely-and-otherwise-invisible cause first.
 
 &nbsp;
 ## Changelog
