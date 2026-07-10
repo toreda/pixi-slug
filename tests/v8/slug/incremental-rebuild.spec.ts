@@ -288,7 +288,7 @@ describe('v8 SlugText — incremental rebuild allocation behavior', () => {
 	});
 
 	describe('text setter (capacity-grow)', () => {
-		it('replaces only the Buffers on growth, keeps Geometry / Shader / Mesh', () => {
+		it('allocates NO PIXI objects on growth — Buffers are resized in place', () => {
 			const text = new SlugText({text: 'Hi', font, options: {fontSize: 32}});
 			tick(text);
 			resetAllocCounters();
@@ -298,9 +298,11 @@ describe('v8 SlugText — incremental rebuild allocation behavior', () => {
 			text.text = 'AAAAAAAAAAAAAAAAAAAA';
 			tick(text);
 
-			// New vertex + index Buffer allocated for the grow; the old
-			// ones are destroyed. Geometry / Shader / Mesh stay alive.
-			expect(allocCounters.Buffer).toBe(2);
+			// Growth hands the existing Buffers larger arrays via
+			// `setDataWithSize` — the GL buffer reallocates under the same
+			// buffer name, so the Geometry's cached VAO and `buffers` list
+			// stay valid. No Buffer / Geometry / Shader / Mesh allocation.
+			expect(allocCounters.Buffer).toBe(0);
 			expect(allocCounters.Geometry).toBe(0);
 			expect(allocCounters.Shader).toBe(0);
 			expect(allocCounters.Mesh).toBe(0);

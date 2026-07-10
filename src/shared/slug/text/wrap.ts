@@ -12,7 +12,7 @@ export interface SlugTextLines {
  * before breaking to the next line.
  *
  * @param text			The full text string.
- * @param advances		Advance width map (char code → em-space width).
+ * @param advances		Advance width map (code point → em-space width).
  * @param scale			Conversion factor from em-space to pixels (fontSize / unitsPerEm).
  * @param maxWidth		Maximum line width in pixels. Pass 0 (or a negative value)
  *						to disable width-based wrapping; newlines will still
@@ -32,8 +32,13 @@ export function slugTextWrap(
 	let lastBreak = -1;
 	let lineWidth = 0;
 
-	for (let i = 0; i < text.length; i++) {
-		const code = text.charCodeAt(i);
+	// Iterate by code point so astral-plane characters (surrogate pairs)
+	// are treated as one character: a single advance lookup, and never a
+	// break point between the pair's two code units.
+	let charLen = 1;
+	for (let i = 0; i < text.length; i += charLen) {
+		const code = text.codePointAt(i) as number;
+		charLen = code > 0xffff ? 2 : 1;
 
 		// Newline forces a line break
 		if (code === 10) {
@@ -68,10 +73,13 @@ export function slugTextWrap(
 			}
 
 			lastBreak = -1;
-			// Recalculate width from lineStart to current position
+			// Recalculate width from lineStart through the current
+			// character (`i` is the first code unit of the current char).
 			lineWidth = 0;
-			for (let j = lineStart; j <= i; j++) {
-				lineWidth += (advances.get(text.charCodeAt(j)) ?? 0) * scale;
+			for (let j = lineStart; j <= i; ) {
+				const c = text.codePointAt(j) as number;
+				lineWidth += (advances.get(c) ?? 0) * scale;
+				j += c > 0xffff ? 2 : 1;
 			}
 		}
 	}

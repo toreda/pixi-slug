@@ -130,8 +130,12 @@ function fixedPreloadCodepoints(preload: string | string[] | Iterable<number>): 
 	const out: number[] = [];
 
 	const consumeString = (s: string): void => {
-		for (let i = 0; i < s.length; i++) {
-			const code = s.charCodeAt(i);
+		// Iterate by code point so astral-plane characters preload as one
+		// codepoint instead of an unresolvable surrogate pair.
+		let charLen = 1;
+		for (let i = 0; i < s.length; i += charLen) {
+			const code = s.codePointAt(i) as number;
+			charLen = code > 0xffff ? 2 : 1;
 			if (!seen.has(code)) {
 				seen.add(code);
 				out.push(code);

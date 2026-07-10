@@ -86,8 +86,14 @@ export function slugGlyphQuads(
 	// includes extra line-gap space that would produce a visible offset.
 	let quadCount = 0;
 	let maxGlyphTop = 0;
-	for (let i = 0; i < text.length; i++) {
-		const g = glyphs.get(text.charCodeAt(i));
+	// Iterate by code point so astral-plane characters (surrogate pairs)
+	// resolve to one glyph lookup — the glyph map is keyed by full
+	// Unicode code point.
+	let charLen = 1;
+	for (let i = 0; i < text.length; i += charLen) {
+		const code = text.codePointAt(i) as number;
+		charLen = code > 0xffff ? 2 : 1;
+		const g = glyphs.get(code);
 		if (g) {
 			quadCount++;
 			if (g.bounds.maxY > maxGlyphTop) {
@@ -103,8 +109,9 @@ export function slugGlyphQuads(
 	let cursorX = 0;
 	let quadIdx = 0;
 
-	for (let i = 0; i < text.length; i++) {
-		const charCode = text.charCodeAt(i);
+	for (let i = 0; i < text.length; i += charLen) {
+		const charCode = text.codePointAt(i) as number;
+		charLen = charCode > 0xffff ? 2 : 1;
 		const glyph = glyphs.get(charCode);
 		if (!glyph) {
 			// No curves for this char (e.g. space) — advance cursor using advance width

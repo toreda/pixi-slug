@@ -351,10 +351,14 @@ export class SlugFont {
 		// Collect missing codepoints first so the underlying append is
 		// batched — one grow check, one texSubImage2D on the GPU side.
 		// Use a Set to dedupe within the input string (e.g. "Hello" has
-		// two 'l's).
+		// two 'l's). Iterate by code point (not UTF-16 code unit) so
+		// astral-plane characters resolve as one codepoint instead of a
+		// surrogate pair that never matches the font's cmap.
 		let missing: number[] | null = null;
-		for (let i = 0; i < text.length; i++) {
-			const code = text.charCodeAt(i);
+		let charLen = 1;
+		for (let i = 0; i < text.length; i += charLen) {
+			const code = text.codePointAt(i) as number;
+			charLen = code > 0xffff ? 2 : 1;
 			if (this.glyphs.has(code)) {
 				continue;
 			}

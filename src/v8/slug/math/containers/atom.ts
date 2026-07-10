@@ -107,8 +107,11 @@ export class AtomContainer extends MathContainer {
 		// Width = sum of advance widths for the current text run.
 		let width = 0;
 		const text = this._text.text;
-		for (let i = 0; i < text.length; i++) {
-			width += (font.advances.get(text.charCodeAt(i)) ?? 0) * scale;
+		let charLen = 1;
+		for (let i = 0; i < text.length; i += charLen) {
+			const c = text.codePointAt(i) as number;
+			charLen = c > 0xffff ? 2 : 1;
+			width += (font.advances.get(c) ?? 0) * scale;
 		}
 		this._width = width;
 
@@ -123,8 +126,10 @@ export class AtomContainer extends MathContainer {
 		let maxY = 0;
 		let minY = 0;
 		let found = false;
-		for (let i = 0; i < text.length; i++) {
-			const g = font.glyphs.get(text.charCodeAt(i));
+		for (let i = 0; i < text.length; i += charLen) {
+			const c = text.codePointAt(i) as number;
+			charLen = c > 0xffff ? 2 : 1;
+			const g = font.glyphs.get(c);
 			if (!g) continue;
 			if (!found) {
 				maxY = g.bounds.maxY;

@@ -9,7 +9,7 @@ import {
 	RendererType,
 	UniformGroup
 } from 'pixi.js';
-import type {Renderer, WebGLRenderer} from 'pixi.js';
+import type {Renderer, Texture, WebGLRenderer} from 'pixi.js';
 import {
 	slugGlyphQuads,
 	slugGlyphQuadsMultiline,
@@ -334,7 +334,7 @@ export class SlugText extends SlugTextV8Base {
 		indexBuffer.setDataWithSize(indices, quads.indices.length, true);
 
 		this._writePassUniforms(slot, fillGpu, fillBounds, strokeExpand);
-		this._writeFillSamplers(slot, fillGpu);
+		this._writeFillSamplers(slot, fillGpu, gpu.fallbackWhite);
 		return slot;
 	}
 
@@ -348,11 +348,13 @@ export class SlugText extends SlugTextV8Base {
 	 * either way.
 	 *
 	 * Always rewrites uniforms and (for the fill slot) rebinds samplers
-	 * if the fill mode changed.
+	 * if the fill mode changed, and re-syncs the slot to the font's
+	 * current texture generation.
 	 */
 	private _updateSlot(
 		slot: SlugMeshSlot,
 		quads: SlugGlyphQuads,
+		gpu: SlugFontGpuV8,
 		fillGpu: SlugFillGpuV8,
 		fillBounds: [number, number, number, number],
 		strokeExpand: number = 0
@@ -360,10 +362,7 @@ export class SlugText extends SlugTextV8Base {
 		const vertexFloatsNeeded = quads.vertices.length;
 		const indexUintsNeeded = quads.indices.length;
 
-		if (
-			quads.quadCount > slot.vertexCapacityQuads ||
-			quads.quadCount > slot.indexCapacityQuads
-		) {
+		if (quads.quadCount > slot.vertexCapacityQuads || quads.quadCount > slot.indexCapacityQuads) {
 			this._growSlot(slot, quads.quadCount);
 		}
 
@@ -378,79 +377,42 @@ export class SlugText extends SlugTextV8Base {
 		slot.indexBuffer.setDataWithSize(slot.indices, indexUintsNeeded, true);
 
 		this._writePassUniforms(slot, fillGpu, fillBounds, strokeExpand);
-		this._writeFillSamplers(slot, fillGpu);
+		this._writeFillSamplers(slot, fillGpu, gpu.fallbackWhite);
+		this._syncSlotToFontGeneration(slot, gpu);
 	}
 
 	/**
-	 * Replace a slot's vertex and index buffers with larger ones while
-	 * keeping the `Geometry`, `Shader`, and `Mesh` instances. The
-	 * existing `Buffer` instances are destroyed because their underlying
-	 * GL buffers can't be enlarged in place.
+	 * Enlarge a slot's vertex and index storage while keeping every PIXI
+	 * object — `Buffer`, `Geometry`, `Shader`, and `Mesh` — intact.
 	 *
-	 * Why we don't keep the same `Buffer` objects: PIXI's `Buffer.update`
-	 * does reallocate the GL buffer internally when data grows beyond
-	 * capacity (A2 in the spec), but the JS typed-array slot is fixed
-	 * at construction. We need a larger typed array to host the new
-	 * data, which means a new `Buffer` wrapper too.
+	 * The existing `Buffer` wrappers are handed larger typed arrays via
+	 * `setDataWithSize`. On the GL side the next `updateBuffer` sees the
+	 * data outgrow the allocation and reallocates with `gl.bufferData`
+	 * on the SAME GL buffer name (verified A2), so the geometry's cached
+	 * VAO, its `buffers` list, and every attribute record stay valid with
+	 * no rebinding. Replacing the `Buffer` objects instead would strand
+	 * the destroyed buffers inside `Geometry.buffers` (built once at
+	 * construction) and leave the renderer's cached VAO pointing at the
+	 * old GL buffers.
 	 */
 	private _growSlot(slot: SlugMeshSlot, newQuadCount: number): void {
 		const newCapacity = growCapacityQuads(
 			newQuadCount,
 			Math.max(slot.vertexCapacityQuads, slot.indexCapacityQuads)
 		);
-		const stride = Constants.FLOATS_PER_VERTEX * Constants.BYTES_PER_FLOAT;
-		const vec4Bytes = Constants.FLOATS_PER_VEC4 * Constants.BYTES_PER_FLOAT;
 		const vertexFloats = newCapacity * Constants.FLOATS_PER_QUAD;
 		const indexUints = newCapacity * Constants.INDICES_PER_QUAD;
 
-		const oldVertexBuffer = slot.vertexBuffer;
-		const oldIndexBuffer = slot.indexBuffer;
-
 		slot.vertices = new Float32Array(vertexFloats);
 		slot.indices = new Uint32Array(indexUints);
-		slot.vertexBuffer = new Buffer({
-			data: slot.vertices,
-			label: 'slug-vertex-buffer',
-			usage: BufferUsage.VERTEX,
-			shrinkToFit: false
-		});
-		slot.indexBuffer = new Buffer({
-			data: slot.indices,
-			label: 'slug-index-buffer',
-			usage: BufferUsage.INDEX,
-			shrinkToFit: false
-		});
+		// syncGPU false: the caller (`_updateSlot`) copies the live quad
+		// data in and issues the real upload with the live size right
+		// after — this call only swaps the backing array and records the
+		// new capacity on the buffer's descriptor.
+		slot.vertexBuffer.setDataWithSize(slot.vertices, vertexFloats, false);
+		slot.indexBuffer.setDataWithSize(slot.indices, indexUints, false);
 		slot.vertexCapacityQuads = newCapacity;
 		slot.indexCapacityQuads = newCapacity;
-
-		// Re-bind the geometry's attribute buffers to the new vertex
-		// buffer. The attribute records reference the buffer by object
-		// identity, so we have to point them at the replacement before
-		// the next draw.
-		slot.geometry.attributes.aPositionNormal.buffer = slot.vertexBuffer;
-		slot.geometry.attributes.aTexcoord.buffer = slot.vertexBuffer;
-		slot.geometry.attributes.aJacobian.buffer = slot.vertexBuffer;
-		slot.geometry.attributes.aBanding.buffer = slot.vertexBuffer;
-		slot.geometry.attributes.aColor.buffer = slot.vertexBuffer;
-		// `Geometry.indexBuffer` is read by the renderer at draw time
-		// and is a writable field — swap it directly.
-		(slot.geometry as unknown as {indexBuffer: Buffer}).indexBuffer = slot.indexBuffer;
-		// Re-attribute the new attribute offsets (same stride / offsets
-		// as the original allocation — those don't change when capacity
-		// grows).
-		slot.geometry.attributes.aPositionNormal.stride = stride;
-		slot.geometry.attributes.aPositionNormal.offset = 0;
-		slot.geometry.attributes.aTexcoord.stride = stride;
-		slot.geometry.attributes.aTexcoord.offset = vec4Bytes;
-		slot.geometry.attributes.aJacobian.stride = stride;
-		slot.geometry.attributes.aJacobian.offset = vec4Bytes * 2;
-		slot.geometry.attributes.aBanding.stride = stride;
-		slot.geometry.attributes.aBanding.offset = vec4Bytes * 3;
-		slot.geometry.attributes.aColor.stride = stride;
-		slot.geometry.attributes.aColor.offset = vec4Bytes * 4;
-
-		oldVertexBuffer.destroy();
-		oldIndexBuffer.destroy();
 	}
 
 	/**
@@ -501,35 +463,44 @@ export class SlugText extends SlugTextV8Base {
 	 * does NOT trigger a re-link (verified A7); the swapped texture is
 	 * picked up fresh on the next draw (verified A8).
 	 *
-	 * For the fill slot we also dispose the previously-owned
-	 * `SlugFillGpuV8` (gradient LUT texture, wrapped fill texture) if
-	 * the new GPU record is different.
+	 * For the fill slot the previously-owned `SlugFillGpuV8` (gradient
+	 * LUT texture, wrapped fill texture) is disposed on EVERY transition
+	 * — including gradient/texture → solid — and any sampler the new
+	 * fill doesn't provide is pointed back at the font's shared
+	 * `fallbackWhite`, so the shader never keeps a binding to a texture
+	 * source the dispose just destroyed.
 	 */
-	private _writeFillSamplers(slot: SlugMeshSlot, fillGpu: SlugFillGpuV8): void {
-		// Bind whichever fill resource the resolved mode wants. When the
-		// fill is solid both stay on the font's fallbackWhite (already
-		// bound by slugShader at slot construction); otherwise swap in
-		// the gradient LUT or user texture.
-		if (fillGpu.gradient) {
-			(slot.shader.resources as Record<string, unknown>).uFillGradient = fillGpu.gradient.source;
-		}
-		if (fillGpu.texture) {
-			(slot.shader.resources as Record<string, unknown>).uFillTexture = fillGpu.texture.source;
-		}
+	private _writeFillSamplers(slot: SlugMeshSlot, fillGpu: SlugFillGpuV8, fallbackWhite: Texture): void {
+		const resources = slot.shader.resources as Record<string, unknown>;
 
-		// Lifecycle: only the fill slot owns a `fillGpu` record. Shadow
-		// and stroke slots pass synthetic solid `fillGpu` instances that
-		// the caller does not retain — we leave `slot.fillGpu` untouched
-		// for those.
-		if (fillGpu.mode === 0 && !fillGpu.gradient && !fillGpu.texture) {
-			// Synthetic solid (shadow / stroke pass). Don't take
-			// ownership.
-			return;
-		}
+		// Dispose the previously-owned record before rebinding. Shadow /
+		// stroke slots never take ownership (`slot.fillGpu` stays null),
+		// so this only ever fires for the fill slot.
 		if (slot.fillGpu && slot.fillGpu !== fillGpu) {
 			slot.fillGpu.dispose();
+			slot.fillGpu = null;
 		}
-		slot.fillGpu = fillGpu;
+
+		// Bind whichever fill resource the resolved mode wants; anything
+		// the new fill doesn't carry falls back to the shared white
+		// placeholder. Identity guards keep the steady-state incremental
+		// path free of redundant resource writes.
+		const gradientSource = (fillGpu.gradient ?? fallbackWhite).source;
+		const textureSource = (fillGpu.texture ?? fallbackWhite).source;
+		if (resources.uFillGradient !== gradientSource) {
+			resources.uFillGradient = gradientSource;
+		}
+		if (resources.uFillTexture !== textureSource) {
+			resources.uFillTexture = textureSource;
+		}
+
+		// Lifecycle: only records that own GPU resources are retained for
+		// later disposal. Synthetic solids (shadow / stroke passes) and
+		// user solid fills own nothing — their dispose is a no-op — so
+		// there is nothing to take ownership of.
+		if (fillGpu.gradient || fillGpu.texture) {
+			slot.fillGpu = fillGpu;
+		}
 		slot.fillMode = fillGpu.mode;
 	}
 
@@ -607,8 +578,11 @@ export class SlugText extends SlugTextV8Base {
 		// scriptScale`. Translate so the baseline lands at the requested
 		// target — and x by the requested anchor.
 		let maxGlyphTop = 0;
-		for (let i = 0; i < text.length; i++) {
-			const g = font.glyphs.get(text.charCodeAt(i));
+		let charLen = 1;
+		for (let i = 0; i < text.length; i += charLen) {
+			const c = text.codePointAt(i) as number;
+			charLen = c > 0xffff ? 2 : 1;
+			const g = font.glyphs.get(c);
 			if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
 		}
 		const scriptInternalBaselineY = maxGlyphTop * scriptScale;
@@ -683,8 +657,7 @@ export class SlugText extends SlugTextV8Base {
 		// clearing it back to `undefined` correctly disables the override
 		// for empty text — but the public type is non-nullable, hence
 		// the cast.
-		this.boundsArea =
-			plan && plan.bboxRect ? plan.bboxRect : (undefined as unknown as Rectangle);
+		this.boundsArea = plan && plan.bboxRect ? plan.bboxRect : (undefined as unknown as Rectangle);
 
 		// Schedule the GPU-attach phase for the next render tick. If the
 		// plan ended up empty (no font / empty text / unitsPerEm == 0),
@@ -850,9 +823,14 @@ export class SlugText extends SlugTextV8Base {
 			const line = lines[l];
 			lineWidths[l] = slugMeasureText(line, font.advances, scale);
 			if (lineWidths[l] > widestLine) widestLine = lineWidths[l];
+			// Count by code point to match the quad builder's iteration —
+			// an astral-plane glyph is one quad, not two missed lookups.
 			let count = 0;
-			for (let i = 0; i < line.length; i++) {
-				if (font.glyphs.has(line.charCodeAt(i))) count++;
+			let charLen = 1;
+			for (let i = 0; i < line.length; i += charLen) {
+				const c = line.codePointAt(i) as number;
+				charLen = c > 0xffff ? 2 : 1;
+				if (font.glyphs.has(c)) count++;
 			}
 			lineQuadCounts[l] = count;
 		}
@@ -897,8 +875,11 @@ export class SlugText extends SlugTextV8Base {
 		// the scripts don't collapse onto y=0.
 		let maxGlyphTopMain = 0;
 		if (lastLineHasGlyph) {
-			for (let i = 0; i < lastLine.length; i++) {
-				const g = font.glyphs.get(lastLine.charCodeAt(i));
+			let charLen = 1;
+			for (let i = 0; i < lastLine.length; i += charLen) {
+				const c = lastLine.codePointAt(i) as number;
+				charLen = c > 0xffff ? 2 : 1;
+				const g = font.glyphs.get(c);
 				if (g && g.bounds.maxY > maxGlyphTopMain) maxGlyphTopMain = g.bounds.maxY;
 			}
 		} else {
@@ -932,8 +913,7 @@ export class SlugText extends SlugTextV8Base {
 				)
 			: null;
 
-		const fillQuads =
-			subBuilt || supBuilt ? slugMergeQuads([fillMain, subBuilt, supBuilt]) : fillMain;
+		const fillQuads = subBuilt || supBuilt ? slugMergeQuads([fillMain, subBuilt, supBuilt]) : fillMain;
 
 		// Compute fill bbox from the fill-pass vertex positions. Shadow
 		// and stroke vertices are dilated outward and would inflate the
@@ -985,12 +965,7 @@ export class SlugText extends SlugTextV8Base {
 			const quads = this._makeQuads(font, lines, shadowColor, shadowBlur);
 			if (quads.quadCount > 0) {
 				if (needsShift) {
-					slugApplyLineLayoutX(
-						quads,
-						lineQuadCounts,
-						layout.lineOffsetX,
-						layout.perGlyphShiftX
-					);
+					slugApplyLineLayoutX(quads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
 				}
 				shadowQuads = quads;
 			}
@@ -1001,12 +976,7 @@ export class SlugText extends SlugTextV8Base {
 			const quads = this._makeQuads(font, lines, this._strokeColor, this._strokeWidth);
 			if (quads.quadCount > 0) {
 				if (needsShift) {
-					slugApplyLineLayoutX(
-						quads,
-						lineQuadCounts,
-						layout.lineOffsetX,
-						layout.perGlyphShiftX
-					);
+					slugApplyLineLayoutX(quads, lineQuadCounts, layout.lineOffsetX, layout.perGlyphShiftX);
 				}
 				strokeQuads = quads;
 			}
@@ -1151,11 +1121,11 @@ export class SlugText extends SlugTextV8Base {
 				this._updateSlot(
 					this._shadowSlot,
 					plan.shadowQuads,
+					gpu,
 					solidGpu,
 					plan.fillBounds,
 					plan.shadowBlur
 				);
-				this._syncSlotToFontGeneration(this._shadowSlot, gpu);
 			} else {
 				this._shadowSlot = this._allocSlot(
 					plan.shadowQuads,
@@ -1168,8 +1138,14 @@ export class SlugText extends SlugTextV8Base {
 			}
 			if (plan.shadowBlur > 0) {
 				this._shadowSlot.uniforms.uniforms.uStrokeAlphaStart = plan.shadowAlpha;
-				this._shadowSlot.uniforms.uniforms.uStrokeAlphaRate =
-					-plan.shadowAlpha / plan.shadowBlur;
+				this._shadowSlot.uniforms.uniforms.uStrokeAlphaRate = -plan.shadowAlpha / plan.shadowBlur;
+			} else {
+				// A reused slot may carry gradient-alpha values from a
+				// previous rebuild where blur was > 0. The shadow alpha is
+				// already baked into the vertex color, so the pass
+				// multiplier must be neutral or the alpha applies twice.
+				this._shadowSlot.uniforms.uniforms.uStrokeAlphaStart = 1;
+				this._shadowSlot.uniforms.uniforms.uStrokeAlphaRate = 0;
 			}
 			this._shadowSlot.mesh.x = plan.shadowOffsetX;
 			this._shadowSlot.mesh.y = plan.shadowOffsetY;
@@ -1191,11 +1167,11 @@ export class SlugText extends SlugTextV8Base {
 				this._updateSlot(
 					this._strokeSlot,
 					plan.strokeQuads,
+					gpu,
 					solidGpu,
 					plan.fillBounds,
 					this._strokeWidth
 				);
-				this._syncSlotToFontGeneration(this._strokeSlot, gpu);
 			} else {
 				this._strokeSlot = this._allocSlot(
 					plan.strokeQuads,
@@ -1218,8 +1194,7 @@ export class SlugText extends SlugTextV8Base {
 		if (plan.fillQuads !== null) {
 			const fillGpu = slugBuildFillGpuV8(this._fill);
 			if (this._fillSlot) {
-				this._updateSlot(this._fillSlot, plan.fillQuads, fillGpu, plan.fillBounds);
-				this._syncSlotToFontGeneration(this._fillSlot, gpu);
+				this._updateSlot(this._fillSlot, plan.fillQuads, gpu, fillGpu, plan.fillBounds);
 			} else {
 				this._fillSlot = this._allocSlot(plan.fillQuads, gpu, fillGpu, plan.fillBounds);
 				this.addChild(this._fillSlot.mesh);
@@ -1316,11 +1291,7 @@ export class SlugText extends SlugTextV8Base {
 		// Inner offset for a length-restricted decoration within its
 		// line box. `align` here is the decoration's own physical
 		// alignment (already resolved against direction in base.ts).
-		const xForDecoration = (
-			lineW: number,
-			drawW: number,
-			align: 'left' | 'center' | 'right'
-		): number => {
+		const xForDecoration = (lineW: number, drawW: number, align: 'left' | 'center' | 'right'): number => {
 			if (align === 'right') return lineW - drawW;
 			if (align === 'center') return (lineW - drawW) / 2;
 			return 0;
@@ -1335,8 +1306,11 @@ export class SlugText extends SlugTextV8Base {
 			// Per-line baseline matches slugGlyphQuads' own maxGlyphTop scan,
 			// so decorations align with the actual glyph positions on this line.
 			let maxGlyphTop = 0;
-			for (let i = 0; i < line.length; i++) {
-				const g = font.glyphs.get(line.charCodeAt(i));
+			let charLen = 1;
+			for (let i = 0; i < line.length; i += charLen) {
+				const c = line.codePointAt(i) as number;
+				charLen = c > 0xffff ? 2 : 1;
+				const g = font.glyphs.get(c);
 				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
 			}
 			const baselineY = maxGlyphTop * scale;

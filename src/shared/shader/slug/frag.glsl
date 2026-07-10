@@ -676,26 +676,25 @@ void main()
 	float strokePx = uStrokeExpand;
 	bool useGradientAlpha = (strokePx > 0.0 && uStrokeAlphaRate != 0.0);
 
-	// When gradient alpha is active and no supersampling, use SlugRenderEx
-	// to get both coverage and boundary distance in a single pass.
-	if (useGradientAlpha && sampleCount <= 1)
-	{
-		vec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);
-		coverage = result.x;
-
-		// minDist is the distance from the pixel to the nearest original
-		// glyph boundary (before stroke expansion). Pixels at the inner
-		// stroke edge have minDist ≈ 0, outer edge have minDist ≈ strokePx.
-		// The per-pixel alpha is: alphaStart + alphaRate * minDist
-		float dist = clamp(result.y, 0.0, strokePx);
-		float alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);
-		fragColor = slugFillColor() * coverage * alpha;
-		return;
-	}
+	// Distance from this pixel to the nearest original glyph boundary
+	// (before stroke expansion), used by the gradient-alpha path. Pixels
+	// at the inner stroke edge have boundaryDist ≈ 0, outer edge ≈ strokePx.
+	float boundaryDist = 0.0;
 
 	if (sampleCount <= 1)
 	{
-		coverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);
+		if (useGradientAlpha)
+		{
+			// Gradient alpha without supersampling: one SlugRenderEx pass
+			// yields both coverage and boundary distance.
+			vec2 result = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx);
+			coverage = result.x;
+			boundaryDist = result.y;
+		}
+		else
+		{
+			coverage = SlugRender(vTexcoord, vBanding, vGlyph, strokePx);
+		}
 	}
 	else
 	{
@@ -756,9 +755,27 @@ void main()
 			sum += SlugRender(vTexcoord + dx * 0.5 + dy * 0.5, vBanding, vGlyph, strokePx);
 			coverage = sum * 0.0625;
 		}
+
+		if (useGradientAlpha)
+		{
+			// Supersampled gradient alpha: coverage comes from the averaged
+			// samples above; the boundary distance comes from one extra
+			// center evaluation. Distance varies smoothly across the stroke
+			// (it doesn't need per-sample AA), so the center value is enough.
+			// Only gradient-alpha stroke passes pay this extra pass.
+			boundaryDist = SlugRenderEx(vTexcoord, vBanding, vGlyph, strokePx).y;
+		}
 	}
 
-	// Apply stroke alpha (uStrokeAlphaStart). For fill passes (uStrokeExpand == 0)
-	// uStrokeAlphaStart defaults to 1.0, so this is a no-op.
-	fragColor = slugFillColor() * coverage * uStrokeAlphaStart;
+	// Apply stroke alpha. Gradient mode: alphaStart + alphaRate * distance
+	// to the original glyph boundary. Uniform mode: uStrokeAlphaStart alone.
+	// For fill passes (uStrokeExpand == 0) uStrokeAlphaStart defaults to
+	// 1.0 and the rate is 0, so this is a no-op.
+	float alpha = uStrokeAlphaStart;
+	if (useGradientAlpha)
+	{
+		float dist = clamp(boundaryDist, 0.0, strokePx);
+		alpha = clamp(uStrokeAlphaStart + uStrokeAlphaRate * dist, 0.0, 1.0);
+	}
+	fragColor = slugFillColor() * coverage * alpha;
 }

@@ -172,8 +172,10 @@ function countInterWordGaps(line: string): number {
 	let inSpace = false;
 	let sawNonSpace = false;
 	let trailingSpace = false;
-	for (let i = 0; i < line.length; i++) {
-		const c = line.charCodeAt(i);
+	let charLen = 1;
+	for (let i = 0; i < line.length; i += charLen) {
+		const c = line.codePointAt(i) as number;
+		charLen = c > 0xffff ? 2 : 1;
 		if (c === 32) {
 			if (sawNonSpace && !inSpace) {
 				gaps++;
@@ -209,8 +211,13 @@ function distributeInterWordShifts(
 	let pendingGap = false;
 	let writeIdx = outOffset;
 
-	for (let i = 0; i < line.length; i++) {
-		const c = line.charCodeAt(i);
+	// Iterate by code point so an astral-plane glyph consumes one
+	// `glyphsPresent` check (the glyph map is keyed by full code point)
+	// and one output slot — matching the quad builder's iteration.
+	let charLen = 1;
+	for (let i = 0; i < line.length; i += charLen) {
+		const c = line.codePointAt(i) as number;
+		charLen = c > 0xffff ? 2 : 1;
 		if (c === 32) {
 			if (sawNonSpace && !inSpace) {
 				inSpace = true;
@@ -251,8 +258,10 @@ function distributeInterCharacterShifts(
 	let writeIdx = outOffset;
 	let seenAny = false;
 
-	for (let i = 0; i < line.length; i++) {
-		const c = line.charCodeAt(i);
+	let charLen = 1;
+	for (let i = 0; i < line.length; i += charLen) {
+		const c = line.codePointAt(i) as number;
+		charLen = c > 0xffff ? 2 : 1;
 		if (!glyphsPresent(c)) continue;
 		if (seenAny) shift += perGap;
 		out[writeIdx++] = shift;
@@ -266,8 +275,11 @@ function countLineRenderable(
 	glyphsPresent: (charCode: number) => boolean
 ): number {
 	let n = 0;
-	for (let i = 0; i < line.length; i++) {
-		if (glyphsPresent(line.charCodeAt(i))) n++;
+	let charLen = 1;
+	for (let i = 0; i < line.length; i += charLen) {
+		const c = line.codePointAt(i) as number;
+		charLen = c > 0xffff ? 2 : 1;
+		if (glyphsPresent(c)) n++;
 	}
 	return n;
 }
