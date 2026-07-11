@@ -305,9 +305,14 @@ export class SlugText extends SlugTextV6Base {
 			const line = lines[l];
 			lineWidths[l] = slugMeasureText(line, font.advances, scale);
 			if (lineWidths[l] > widestLine) widestLine = lineWidths[l];
+			// Count by code point to match the quad builder's iteration —
+			// an astral-plane glyph is one quad, not two missed lookups.
 			let count = 0;
-			for (let i = 0; i < line.length; i++) {
-				if (font.glyphs.has(line.charCodeAt(i))) count++;
+			let charLen = 1;
+			for (let i = 0; i < line.length; i += charLen) {
+				const c = line.codePointAt(i) as number;
+				charLen = c > 0xffff ? 2 : 1;
+				if (font.glyphs.has(c)) count++;
 			}
 			lineQuadCounts[l] = count;
 		}
@@ -600,8 +605,11 @@ export class SlugText extends SlugTextV6Base {
 			const lineY = l * lineHeight;
 
 			let maxGlyphTop = 0;
-			for (let i = 0; i < line.length; i++) {
-				const g = font.glyphs.get(line.charCodeAt(i));
+			let charLen = 1;
+			for (let i = 0; i < line.length; i += charLen) {
+				const c = line.codePointAt(i) as number;
+				charLen = c > 0xffff ? 2 : 1;
+				const g = font.glyphs.get(c);
 				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
 			}
 			const baselineY = maxGlyphTop * scale;

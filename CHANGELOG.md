@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-07-10
+
+### Fixed 
+* `_growSlot` now properly allocates larger typed arrays which are provided to existing buffers instead of replacing the `Buffer` wrappers each time, which eventually leads to a crash.
+* Shadow alpha is no longer applied twice when blur is `0`.
+* Supersampling no longer silently disables stroke gradient alpha.
+* `_growSlot` VAO no longer becomes stale and causes a crash on internal `Buffer` change. Solved along with another issue above when `Buffers` were replaced instead of updated.
+* Gradient -> texture switches in specific circumstances no longer cause uFillGradient to be bound to a recently destroyed texture which caused either unrenderable text, crashes, weird rendering artifacts, or all of the above.
+
 ## [0.4.0] - 2026-05-13
 
 ### Added
