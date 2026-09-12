@@ -1,6 +1,6 @@
 {
 	"name": "pixi-slug",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"description": "GPU-accelerated vector text for PixiJS v6, v7, and v8. Crisp at any size, rotation, or 3D transform.",
 	"main": "./dist/v8/index.js",
 	"types": "./dist/v8/index.d.ts",
@@ -118,8 +118,8 @@
 		"eslint": "^10.10.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-prettier-config": "^1.0.1",
-		"jest": "^30.4.2",
-		"jest-junit": "^16.0.0",
+		"jest": "^30.5.1",
+		"jest-junit": "^17.0.0",
 		"pixi-v6-constants": "npm:@pixi/constants@^6.5.10",
 		"pixi-v6-core": "npm:@pixi/core@^6.5.10",
 		"pixi-v6-display": "npm:@pixi/display@^6.5.10",

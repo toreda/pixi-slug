@@ -198,6 +198,7 @@ import {readFileSync} from 'fs';
 import {resolve} from 'path';
 import {SlugFont} from '../../../src/shared/slug/font';
 import {SlugText} from '../../../src/v8/slug/text';
+import {Constants} from '../../../src/constants';
 
 function loadFontFixture(filename: string): ArrayBuffer {
 	const buf = readFileSync(resolve(__dirname, '../../../assets/fonts', filename));
@@ -209,6 +210,26 @@ function loadFontFixture(filename: string): ArrayBuffer {
 function tick(text: SlugText): void {
 	const handler = (text as unknown as {onRender: ((r: unknown) => void) | null}).onRender;
 	if (handler) handler({type: 'webgl'});
+}
+
+const INDICES_PER_QUAD = Constants.INDICES_PER_QUAD;
+
+interface FillSlotView {
+	indices: Uint32Array;
+	indexBuffer: {data: Uint32Array};
+}
+
+function fillSlot(text: SlugText): FillSlotView {
+	const slot = (text as unknown as {_fillSlot: FillSlotView | null})._fillSlot;
+	if (!slot) throw new Error('expected a fill slot');
+	return slot;
+}
+
+// What PIXI's `GlGeometrySystem.draw` will pass to `gl.drawElements`:
+// `GlMeshAdaptor` supplies no `size`, so the count falls back to
+// `geometry.indexBuffer.data.length` (spec A4).
+function liveIndexCount(text: SlugText): number {
+	return fillSlot(text).indexBuffer.data.length;
 }
 
 describe('v8 SlugText — incremental rebuild allocation behavior', () => {
@@ -254,6 +275,7 @@ describe('v8 SlugText — incremental rebuild allocation behavior', () => {
 			const text = new SlugText({text: '$10.12', font, options: {fontSize: 32}});
 			tick(text);
 			resetAllocCounters();
+			const before = liveIndexCount(text);
 
 			text.text = '$9.98';
 			tick(text);
@@ -261,6 +283,9 @@ describe('v8 SlugText — incremental rebuild allocation behavior', () => {
 			expect(allocCounters.Geometry).toBe(0);
 			expect(allocCounters.Shader).toBe(0);
 			expect(allocCounters.Mesh).toBe(0);
+			// Zero allocations alone would pass with the stale-tail bug
+			// present — the draw count must also drop with the data.
+			expect(liveIndexCount(text)).toBe(before - INDICES_PER_QUAD);
 		});
 
 		it('does NOT allocate across a chart-axis scroll burst (50 SlugTexts × 5 frames)', () => {
@@ -322,6 +347,76 @@ describe('v8 SlugText — incremental rebuild allocation behavior', () => {
 			expect(allocCounters.Geometry).toBe(0);
 			expect(allocCounters.Shader).toBe(0);
 			expect(allocCounters.Mesh).toBe(0);
+		});
+	});
+
+	describe('draw count is bounded to the live index range (A4 / A5)', () => {
+		// PIXI draws `indexBuffer.data.length` indices every frame. The
+		// slot's `indices` array is capacity-sized, so the buffer's
+		// `data` must be a live-length view over it, or a shrink keeps
+		// drawing the previous string's tail out of the GL buffer.
+
+		it('hands PIXI a live-length view over the capacity array on first build', () => {
+			const text = new SlugText({text: 'Hi', font, options: {fontSize: 32}});
+			tick(text);
+			const slot = fillSlot(text);
+
+			expect(slot.indexBuffer.data.length).toBe(2 * INDICES_PER_QUAD);
+			// Capacity headroom is retained underneath (8-quad minimum).
+			expect(slot.indices.length).toBeGreaterThan(slot.indexBuffer.data.length);
+			// The view aliases the slot array — no copy, `.set()` stays valid.
+			expect(slot.indexBuffer.data.buffer).toBe(slot.indices.buffer);
+		});
+
+		it('shrinks the draw count on STDILLATOR → STD (reported regression)', () => {
+			const text = new SlugText({text: 'STDILLATOR', font, options: {fontSize: 32}});
+			tick(text);
+			expect(liveIndexCount(text)).toBe(10 * INDICES_PER_QUAD);
+			const capacityBefore = fillSlot(text).indices.length;
+			resetAllocCounters();
+
+			text.text = 'STD';
+			tick(text);
+
+			// With the bug, `data.length` stayed at capacity and the GL
+			// buffer's resident "ILLATOR" indices were still drawn.
+			expect(liveIndexCount(text)).toBe(3 * INDICES_PER_QUAD);
+			// Still the incremental path: no PIXI allocation, same
+			// capacity array, `bufferSubData` territory.
+			expect(allocCounters.Buffer).toBe(0);
+			expect(fillSlot(text).indices.length).toBe(capacityBefore);
+			expect(fillSlot(text).indexBuffer.data.buffer).toBe(fillSlot(text).indices.buffer);
+		});
+
+		it('tracks the live count through grow and back down', () => {
+			const text = new SlugText({text: 'Hi', font, options: {fontSize: 32}});
+			tick(text);
+
+			text.text = 'AAAAAAAAAAAAAAAAAAAA'; // 20 quads — forces a capacity grow
+			tick(text);
+			const grown = fillSlot(text);
+			expect(grown.indexBuffer.data.length).toBe(20 * INDICES_PER_QUAD);
+			// The view must be over the NEW capacity array, not the old one.
+			expect(grown.indexBuffer.data.buffer).toBe(grown.indices.buffer);
+			expect(grown.indices.length).toBeGreaterThanOrEqual(20 * INDICES_PER_QUAD);
+
+			text.text = 'Hi';
+			tick(text);
+			expect(liveIndexCount(text)).toBe(2 * INDICES_PER_QUAD);
+			expect(fillSlot(text).indices).toBe(grown.indices); // capacity retained
+		});
+
+		it('reuses the same view object when the live count is unchanged', () => {
+			const text = new SlugText({text: '$0.00', font, options: {fontSize: 32}});
+			tick(text);
+			const view = fillSlot(text).indexBuffer.data;
+
+			text.text = '$1.23';
+			tick(text);
+			// Same length label — the steady-state hot path should not
+			// even allocate a fresh subarray view.
+			expect(fillSlot(text).indexBuffer.data).toBe(view);
+			expect(view.length).toBe(5 * INDICES_PER_QUAD);
 		});
 	});
 

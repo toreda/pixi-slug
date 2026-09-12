@@ -326,16 +326,61 @@ export class SlugText extends SlugTextV8Base {
 			_gpuGeneration: gpu.generation
 		};
 
-		// Tell PIXI the live data size is what `quads` carries, not the
-		// allocated capacity — `gl.drawElements` defaults to the live
-		// index buffer length (verified A4 in
-		// `_specs/features/incremental-mesh-rebuild.md`).
+		// Bound the upload and the draw to the live data, not the
+		// allocated capacity. The vertex buffer keeps the full array as
+		// its `data` — only `_updateSize` feeds `bufferSubData`, and the
+		// array length never reaches a draw count. The index buffer is
+		// different: PIXI's draw count falls back to
+		// `indexBuffer.data.length`, so it must be handed a view whose
+		// length is exactly the live index count (see
+		// `_uploadLiveIndices`).
 		vertexBuffer.setDataWithSize(vertices, quads.vertices.length, true);
-		indexBuffer.setDataWithSize(indices, quads.indices.length, true);
+		this._uploadLiveIndices(slot, quads.indices.length);
 
 		this._writePassUniforms(slot, fillGpu, fillBounds, strokeExpand);
 		this._writeFillSamplers(slot, fillGpu, gpu.fallbackWhite);
 		return slot;
+	}
+
+	/**
+	 * Upload the slot's live index range and hand PIXI a view whose
+	 * `length` is exactly the live index count.
+	 *
+	 * `GlMeshAdaptor` calls `encoder.draw` without a `size`, so
+	 * `GlGeometrySystem.draw` falls back to
+	 * `geometry.indexBuffer.data.length` for the `gl.drawElements`
+	 * count (A4 in `_specs/features/incremental-mesh-rebuild.md`). The
+	 * slot's `indices` array is sized to capacity, so using it directly
+	 * as the buffer's `data` draws capacity-many indices every frame.
+	 * That is harmless right after a grow (the tail is zero-filled and
+	 * degenerate) but wrong after a shrink: the tail still holds the
+	 * previous, longer string's indices resident in the GL buffer, so
+	 * `'STDILLATOR'` → `'STD'` kept rendering `STDILLATOR`.
+	 *
+	 * The view shares the backing store of `slot.indices`, so `.set()`
+	 * into `slot.indices` remains the write path and nothing is copied.
+	 * With `shrinkToFit: false`, a view shorter than the buffer's
+	 * previous `data` takes the `setDataWithSize` shrink branch (A11):
+	 * the GL allocation is kept and the upload stays on `bufferSubData`.
+	 * A longer view that still fits the GL allocation is also
+	 * `bufferSubData`; only a new high-water mark reallocates, and PIXI
+	 * does that with `gl.bufferData` on the same GL buffer name, so the
+	 * geometry's cached VAO stays valid.
+	 *
+	 * The existing view is reused when it already covers exactly the
+	 * live range, which keeps the steady-state path (same-length label
+	 * updates) free of even the small view allocation.
+	 */
+	private _uploadLiveIndices(slot: SlugMeshSlot, liveCount: number): void {
+		const current = slot.indexBuffer.data as Uint32Array | null;
+		const view =
+			current !== null &&
+			current.buffer === slot.indices.buffer &&
+			current.byteOffset === slot.indices.byteOffset &&
+			current.length === liveCount
+				? current
+				: slot.indices.subarray(0, liveCount);
+		slot.indexBuffer.setDataWithSize(view, liveCount, true);
 	}
 
 	/**
@@ -372,9 +417,11 @@ export class SlugText extends SlugTextV8Base {
 		// `setDataWithSize` with `shrinkToFit: false` on the underlying
 		// `Buffer` keeps the GL buffer at its allocated capacity even
 		// when the live data shrinks, so the next upload stays on
-		// `bufferSubData`. Verified A11.
+		// `bufferSubData`. Verified A11. The index buffer additionally
+		// gets a live-length view so the draw count shrinks with the
+		// data — see `_uploadLiveIndices`.
 		slot.vertexBuffer.setDataWithSize(slot.vertices, vertexFloatsNeeded, true);
-		slot.indexBuffer.setDataWithSize(slot.indices, indexUintsNeeded, true);
+		this._uploadLiveIndices(slot, indexUintsNeeded);
 
 		this._writePassUniforms(slot, fillGpu, fillBounds, strokeExpand);
 		this._writeFillSamplers(slot, fillGpu, gpu.fallbackWhite);
@@ -408,7 +455,11 @@ export class SlugText extends SlugTextV8Base {
 		// syncGPU false: the caller (`_updateSlot`) copies the live quad
 		// data in and issues the real upload with the live size right
 		// after — this call only swaps the backing array and records the
-		// new capacity on the buffer's descriptor.
+		// new capacity on the buffer's descriptor. For the index buffer
+		// the full array is only transitional: `_updateSlot` immediately
+		// replaces it with a live-length view over the same backing
+		// store (`_uploadLiveIndices`), so the draw count never sees the
+		// capacity length.
 		slot.vertexBuffer.setDataWithSize(slot.vertices, vertexFloats, false);
 		slot.indexBuffer.setDataWithSize(slot.indices, indexUints, false);
 		slot.vertexCapacityQuads = newCapacity;

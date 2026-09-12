@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-09-12
+### Fixed
+* `gl.drawElements` now receives the correct mesh array length after shrink. It worked correctly after grow, but didn't correctly shrink, then passing the full capacity array to the call expecting the post-shrink size array.  
+
 ## [0.5.0] - 2026-07-10
 
 ### Fixed 

@@ -38,6 +38,13 @@ export interface SlugMeshSlot {
 	 * into these arrays in place, then `setDataWithSize` is called on
 	 * the wrapping `Buffer` with the new live byte size. The arrays are
 	 * sized to `*CapacityQuads`, not to the live quad count.
+	 *
+	 * `vertexBuffer.data` is `vertices` itself. `indexBuffer.data` is
+	 * NOT `indices` — it is a `subarray` view over `indices` whose
+	 * length equals the live index count, because PIXI's
+	 * `gl.drawElements` count falls back to `indexBuffer.data.length`.
+	 * Handing PIXI the capacity-sized array would draw the stale tail
+	 * after a shrink. See `SlugText._uploadLiveIndices`.
 	 */
 	vertices: Float32Array;
 	indices: Uint32Array;
