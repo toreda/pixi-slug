@@ -175,6 +175,16 @@ canvas { border: none; }
 	cursor: pointer;
 }
 #sidebar button:hover { background: #3a3a5e; }
+#sidebar .icon-btn {
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	line-height: 1;
+}
 
 /* Fill-mode-conditional rows: hidden unless the sidebar's
  * `data-fill-mode` attribute matches a class on the row. wire.js
@@ -199,4 +209,161 @@ canvas { border: none; }
 	display: block;
 	width: 100% !important;
 	height: 100% !important;
+}
+
+/* In-sidebar trigger row — appended after the last control group. */
+.code-trigger-group {
+	margin-top: 4px;
+}
+.code-toggle {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 8px 12px !important;
+	border: 1px solid #4a6aae !important;
+	background: #1a2240 !important;
+	color: #eee !important;
+	border-radius: 6px !important;
+	font-size: 13px;
+	font-family: inherit;
+	cursor: pointer;
+}
+.code-toggle:hover {
+	background: #243056 !important;
+	border-color: #6a8ace !important;
+}
+.code-toggle .code-toggle-icon {
+	font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+	font-size: 12px;
+	color: #6a8ace;
+}
+.code-toggle[aria-pressed="true"] {
+	background: #2a3866 !important;
+	border-color: #6a8ace !important;
+}
+
+/* Right side of #main is a vertical stack so #app and #codePanel
+ * can share the same column. The sidebar lives outside this stack
+ * and is unaffected by panel open/close. */
+.main-right {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+.main-right > #app {
+	flex: 1;
+	min-height: 0;
+}
+
+/* Code panel docks at the bottom of the canvas area. Height is driven
+ * by the inline `--code-h` custom property (set by the resize handle
+ * and the persisted pref). Sidebar stays untouched on the left. */
+#main[data-code-open="false"] .code-panel { display: none; }
+.code-panel {
+	position: relative;
+	height: var(--code-h, 280px);
+	min-height: 120px;
+	max-height: 800px;
+	display: flex;
+	flex-direction: column;
+	background: #1a1a2e;
+	border-top: 1px solid #333;
+	overflow: hidden;
+}
+/* Resize handle — narrow drag strip on the TOP edge of the panel.
+ * Dragging up grows the panel (canvas shrinks). */
+.code-resize-handle {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 6px;
+	cursor: row-resize;
+	background: transparent;
+	z-index: 2;
+}
+.code-resize-handle:hover,
+.code-resize-handle:active {
+	background: rgba(74, 106, 174, 0.4);
+}
+.code-header {
+	display: flex;
+	align-items: stretch;
+	gap: 12px;
+	padding: 0 8px 0 0;
+	background: #16213e;
+	border-bottom: 1px solid #333;
+	font-size: 13px;
+	color: #eee;
+}
+.code-tabs {
+	display: flex;
+	gap: 0;
+}
+.code-tab {
+	padding: 10px 16px;
+	border: none;
+	background: transparent;
+	color: #8b949e;
+	font-size: 13px;
+	font-family: inherit;
+	cursor: pointer;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+}
+.code-tab:hover { color: #eee; background: rgba(255, 255, 255, 0.04); }
+.code-tab[aria-selected="true"] {
+	color: #eee;
+	border-bottom-color: #4a6aae;
+	background: #1a1a2e;
+}
+.code-actions {
+	margin-left: auto;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.code-actions button {
+	padding: 4px 10px;
+	border: 1px solid #444;
+	background: #2a2a4e;
+	color: #eee;
+	border-radius: 4px;
+	font-size: 12px;
+	font-family: inherit;
+	cursor: pointer;
+}
+.code-actions button:hover { background: #3a3a5e; }
+.code-actions .code-close {
+	padding: 2px 8px;
+	font-size: 18px;
+	line-height: 1;
+}
+#codeCopy.copied {
+	background: #2d5a3d;
+	border-color: #4ab07a;
+	color: #b8eccc;
+}
+.code-pre {
+	margin: 0;
+	overflow: auto;
+	flex: 1;
+	background: #0d1117;
+	font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+	font-size: 12.5px;
+	line-height: 1.5;
+	tab-size: 4;
+}
+/* highlight.js sets background/colors on the .hljs <code>; keep its
+ * defaults but scope padding so the scroll lives on the <pre>. */
+.code-pre code.hljs {
+	display: block;
+	padding: 14px 16px;
+	background: transparent;
+	color: #c9d1d9;
+	white-space: pre;
 }
