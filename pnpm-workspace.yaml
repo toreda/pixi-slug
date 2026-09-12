@@ -1,0 +1,23 @@
+# pnpm workspace root for pixi-slug.
+#
+# The library itself is the root package; `packages` lists additional members.
+# Add new members here (e.g. "packages/*") as the repo grows.
+packages: []
+
+# Settings below moved from the `pnpm` field in package.json, which pnpm 10.11+
+# no longer reads (see https://pnpm.io/settings).
+
+# Pinned minimum versions for transitive dependencies with known advisories.
+overrides:
+  '@xmldom/xmldom': '>=0.8.13'
+  flatted: '>=3.4.2'
+  lodash: '>=4.17.21'
+  uuid: '>=14.0.0'
+  picomatch@2: 2.3.2
+  picomatch@>=3: '>=4.0.4'
+  tmp: '>=0.2.4'
+  fast-uri: '>=3.1.2'
+
+# Only these packages may run install scripts.
+onlyBuiltDependencies:
+  - '@swc/core'
