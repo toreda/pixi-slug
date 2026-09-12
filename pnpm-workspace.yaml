@@ -9,14 +9,19 @@ packages: []
 
 # Pinned minimum versions for transitive dependencies with known advisories.
 overrides:
-  '@xmldom/xmldom': '>=0.8.13'
+  '@xmldom/xmldom': '>=0.9.12'
   flatted: '>=3.4.2'
   lodash: '>=4.17.21'
   uuid: '>=14.0.0'
   picomatch@2: 2.3.2
   picomatch@>=3: '>=4.0.4'
-  tmp: '>=0.2.4'
+  tmp: '>=0.2.6'
   fast-uri: '>=3.1.2'
+  browserslist: '>=4.28.7'
+  js-yaml: '>=3.15.2'
+  baseline-browser-mapping: '>=2.11.0'
+  '@babel/core': '>=7.29.6'
+  qs: '>=6.15.2'
 
 # Only these packages may run install scripts.
 onlyBuiltDependencies:

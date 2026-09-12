@@ -93,6 +93,9 @@
 	"author": "Toreda, Inc.",
 	"license": "MIT",
 	"packageManager": "pnpm@10.11.1",
+	"engines": {
+		"node": ">=22"
+	},
 	"prettier": "@toreda/prettier-config",
 	"peerDependencies": {
 		"pixi.js": "^6.0.0 || ^7.0.0 || ^8.0.0"
