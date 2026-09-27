@@ -63,9 +63,22 @@ export class SlugFontsRegistry {
 	/**
 	 * How `attachTicker` reacts to a second attach while already bound,
 	 * when the caller did not pass `force: true`. Mutable so callers
-	 * can change behavior at runtime via `SlugFonts.reattachPolicy`.
+	 * can change behavior at runtime via `SlugFonts.setReattachPolicy()`.
 	 */
 	public reattachPolicy: SlugFontErrorMode;
+
+	/**
+	 * Incremented by `SlugFonts.clear()`. In-flight `fromUrl` loads
+	 * capture this at start and discard their result on completion if
+	 * it changed, so a cleared registry is not repopulated.
+	 */
+	public generation: number;
+
+	/**
+	 * API names that already emitted the "prewarm called too late"
+	 * warning. Dedupes the warning per registry.
+	 */
+	public readonly warnedPrewarmTooLate: Set<string>;
 
 	/** Detach handle set by `attachTicker`; null when no ticker is bound. */
 	public tickerDetach: (() => void) | null;
@@ -144,6 +157,8 @@ export class SlugFontsRegistry {
 			typeof options?.updateRate === 'number' ? options.updateRate : Defaults.Registry.UpdateRate
 		);
 		this.lastUpdate = 0;
+		this.generation = 0;
+		this.warnedPrewarmTooLate = new Set();
 		this.reattachPolicy = resolveErrorMode(options?.reattachPolicy, Defaults.Registry.ReattachPolicy);
 		this.parallelShaderCompile =
 			typeof options?.parallelShaderCompile === 'boolean'

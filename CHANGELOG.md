@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-09-27
+
+### Fixed 
+* `fromArrayBuffer` can no longer leak the front (`src/shared/slug/fonts.ts`).
+* `normalizeLoadOptions` no longer spreads in the wrong order (`src/shared/slug/fonts.ts`).
+* In-flight `fromUrl` calls no longer bring fonts back when invoked before a `clear` call, but returning after the `clear`. 
+* `textureWidth` no longer ignored by callers who join an in-flight load.
+* The v8 entry point (`src/v8/index.ts`) now exports every type used by the public API (`SlugTextInit`, `SlugTextStyleOptions`, `SlugFontLoadOptions`, fill/decoration/stroke/shadow types, math `*Scales` types, `SlugShader`, etc.). Also exports the error-policy helpers (`slugFontErrorRaise`, `isSlugFontErrorMode`, `SLUG_FONT_ERROR_MODES`, `SlugFontError*` types), `SlugFontsRegistry`, and `slugWoff2Decompress`, which were previously only exported from the unpublished `src/index.ts`.
+* The v6 (`pixi-slug/v6`) and v7 (`pixi-slug/v7`) entry points now export the same public text, font, fill, decoration, registry, and preload types as v8. v6 also gains `isSlugFontErrorMode` and `SLUG_FONT_ERROR_MODES`, which v7/v8 already exported.
+
 ## [0.5.1] - 2026-09-12
 ### Fixed
 * `gl.drawElements` now receives the correct mesh array length after shrink. It worked correctly after grow, but didn't correctly shrink, then passing the full capacity array to the call expecting the post-shrink size array.  

@@ -42,8 +42,9 @@ function normalizeLoadOptions(opts: number | SlugFontLoadOptions | undefined): S
 		return {textureWidth: opts};
 	}
 
-	return {textureWidth: opts.textureWidth ?? Defaults.TEXTURE_SIZE, ...opts};
+	return {...opts, textureWidth: opts.textureWidth ?? Defaults.TEXTURE_SIZE};
 }
+
 /**
  * Options accepted by `SlugFonts.attachTicker`. `force` bypasses the
  * re-attach policy entirely when truthy — useful for apps that
@@ -149,10 +150,7 @@ export class SlugFonts {
 			// only work we still owe them. Prewarm runs in parallel so a
 			// renderer attached after a manual `from(font)` still
 			// absorbs the compile into the await.
-			await Promise.all([
-				SlugFonts._maybeRunPreload(input, options),
-				SlugFonts._maybePrewarmShader()
-			]);
+			await Promise.all([SlugFonts._maybeRunPreload(input, options), SlugFonts._maybePrewarmShader()]);
 			return input;
 		}
 		if (typeof input === 'string') {
@@ -193,21 +191,22 @@ export class SlugFonts {
 		options?: number | SlugFontLoadOptions
 	): Promise<SlugFont | null> {
 		const opts = normalizeLoadOptions(options);
+		let font: SlugFont;
 		try {
-			const font = new SlugFont(opts.textureWidth);
+			font = new SlugFont(opts.textureWidth);
 			await font.load(data);
-			// Run preload + shader prewarm concurrently so the user's
-			// `await fromArrayBuffer(...)` absorbs both costs into the
-			// time they're already waiting (spec §6.3 trigger #2). Prewarm
-			// is a no-op when no renderer is attached.
-			await Promise.all([
-				SlugFonts._maybeRunPreload(font, opts),
-				SlugFonts._maybePrewarmShader()
-			]);
-			return font;
 		} catch {
 			return null;
 		}
+
+		// Run preload + shader prewarm concurrently so the user's
+		// `await fromArrayBuffer(...)` absorbs both costs into the
+		// time they're already waiting (spec §6.3 trigger #2). Prewarm
+		// is a no-op when no renderer is attached. Kept outside the
+		// parse `try` so preload errors reject, matching `from` and
+		// `fromUrl`.
+		await Promise.all([SlugFonts._maybeRunPreload(font, opts), SlugFonts._maybePrewarmShader()]);
+		return font;
 	}
 
 	/**
@@ -225,6 +224,16 @@ export class SlugFonts {
 	 * different `preload` set still gets that set processed when the
 	 * promise resolves). Callbacks on later concurrent calls fire only
 	 * for that caller's preload, not for any earlier caller's set.
+	 *
+	 * `textureWidth` is honored only by the caller that triggers the
+	 * fetch. Callers that join an in-flight load or hit the URL cache
+	 * receive the font built with the first caller's `textureWidth`,
+	 * regardless of the value they pass — the cache is keyed by URL
+	 * alone.
+	 *
+	 * A load still in flight when {@link clear} runs is discarded on
+	 * completion: its font is not cached, its GPU resources are
+	 * destroyed, and every awaiting caller receives `null`.
 	 */
 	public static async fromUrl(
 		url: string,
@@ -234,7 +243,10 @@ export class SlugFonts {
 		const reg = SlugFonts._reg();
 		const cached = reg.byUrl.get(url);
 		if (cached) {
-			await SlugFonts._maybeRunPreload(cached.font, opts);
+			await Promise.all([
+				SlugFonts._maybeRunPreload(cached.font, opts),
+				SlugFonts._maybePrewarmShader()
+			]);
 			return cached.font;
 		}
 
@@ -244,13 +256,20 @@ export class SlugFonts {
 		// so per-call `preload` selectors and callbacks are honored.
 		let task = reg.inflight.get(url);
 		if (!task) {
-			task = (async () => {
+			const generation = reg.generation;
+			const pending = (async () => {
 				try {
 					const response = await fetch(url);
 					if (!response.ok) return null;
 					const data = await response.arrayBuffer();
 					const font = new SlugFont(opts.textureWidth);
 					await font.load(data);
+					// `clear()` ran while this load was in flight — don't
+					// resurrect a font into the cleared registry.
+					if (reg.generation !== generation) {
+						font.destroyGpu();
+						return null;
+					}
 					const entry = new SlugFontsRegistryEntry(font, data.byteLength);
 					reg.byUrl.set(url, entry);
 					reg.addToAll(entry);
@@ -258,20 +277,27 @@ export class SlugFonts {
 				} catch (e) {
 					console.error(`[SlugFonts.fromUrl] Failed to load "${url}":`, e);
 					return null;
-				} finally {
-					reg.inflight.delete(url);
 				}
 			})();
 
-			reg.inflight.set(url, task);
+			// Register before cleanup is scheduled. A synchronous throw
+			// inside the task (e.g. `fetch` undefined) settles it before
+			// this line runs, so an in-task `finally` would delete first
+			// and leave a permanently-null entry behind. The identity
+			// check keeps a later load for the same URL (started after
+			// `clear()`) from being evicted by this one's cleanup.
+			reg.inflight.set(url, pending);
+			void pending.then(() => {
+				if (reg.inflight.get(url) === pending) {
+					reg.inflight.delete(url);
+				}
+			});
+			task = pending;
 		}
 
 		const font = await task;
 		if (font) {
-			await Promise.all([
-				SlugFonts._maybeRunPreload(font, opts),
-				SlugFonts._maybePrewarmShader()
-			]);
+			await Promise.all([SlugFonts._maybeRunPreload(font, opts), SlugFonts._maybePrewarmShader()]);
 		}
 		return font;
 	}
@@ -457,7 +483,7 @@ export class SlugFonts {
 		options?: SlugFontsAttachTickerOptions
 	): void {
 		const reg = SlugFonts._reg();
-		const forceFlag = options?.force === true ? true : false;
+		const forceFlag = options?.force === true;
 
 		if (reg.tickerDetach) {
 			// Same subscribe reference → no-op, policy does not fire.
@@ -535,8 +561,9 @@ export class SlugFonts {
 	 * Register the renderer the registry should target for shader
 	 * prewarming, and **opt the registry into prewarm mode**. Idempotent
 	 * for the same renderer reference. Re-attach with a different
-	 * renderer detaches the old (programs are not portable across GL
-	 * contexts) before storing the new one.
+	 * renderer replaces the stored one; the old renderer's prewarm cache
+	 * entry lives in the hook's own `WeakMap` and is not reused
+	 * (programs are not portable across GL contexts).
 	 *
 	 * **Call order matters.** This is a prewarm-API entry point: calling
 	 * it constructs the global registry with `parallelShaderCompile:
@@ -563,12 +590,6 @@ export class SlugFonts {
 		if (!renderer) return;
 		const reg = SlugFonts._reg({parallelShaderCompile: true});
 		if (reg.renderer === renderer) return;
-
-		// Different renderer — clear the previous slot first so callers
-		// observing `renderer` mid-swap never see stale state.
-		if (reg.renderer && reg.renderer !== renderer) {
-			reg.renderer = null;
-		}
 		reg.renderer = renderer;
 
 		if (!reg.parallelShaderCompile) {
@@ -596,12 +617,9 @@ export class SlugFonts {
 	 * options are locked — so the warning is the only useful signal.
 	 */
 	private static _warnPrewarmTooLate(apiName: string): void {
-		const reg = SlugFonts._reg();
-		const regWithWarned = reg as unknown as {_warnedPrewarmTooLate?: Set<string>};
-		const warned = regWithWarned._warnedPrewarmTooLate ?? new Set<string>();
+		const warned = SlugFonts._reg().warnedPrewarmTooLate;
 		if (warned.has(apiName)) return;
 		warned.add(apiName);
-		regWithWarned._warnedPrewarmTooLate = warned;
 		console.warn(
 			`[SlugFonts] ${apiName}() was called after the registry was already constructed in non-prewarm mode. ` +
 				`Prewarm-mode opt-in must happen before any other SlugFonts operation; this call cannot retroactively ` +
@@ -714,9 +732,7 @@ export class SlugFonts {
 	 * library-internal setup step, not a consumer signal to opt into
 	 * prewarm mode.
 	 */
-	public static _installPrewarmHook(
-		hook: ((renderer: unknown) => Promise<boolean>) | null
-	): void {
+	public static _installPrewarmHook(hook: ((renderer: unknown) => Promise<boolean>) | null): void {
 		const g = globalThis as Record<string, unknown>;
 		const reg = g[Defaults.GLOBAL_KEY] as SlugFontsRegistry | undefined;
 		if (reg) {
@@ -806,7 +822,7 @@ export class SlugFonts {
 	 */
 	private static _raiseReattachConflict(mode: SlugFontErrorMode): void {
 		const message =
-			'[SlugFonts:reattach] Ticker already attached. Pass {force: true} to replace, call detachTicker() first, or set SlugFonts.reattachPolicy to a non-throw mode.';
+			'[SlugFonts:reattach] Ticker already attached. Pass {force: true} to replace, call detachTicker() first, or call SlugFonts.setReattachPolicy() with a non-throw mode.';
 		if (mode === 'throw') {
 			throw new Error(message);
 		}
@@ -943,7 +959,10 @@ export class SlugFonts {
 	 * and `forbidden-manual` for a manually anchored font (use
 	 * {@link removeManual} instead).
 	 */
-	public static removeRegistered(fontOrKey: SlugFont | string | null, force: boolean = false): SlugFontsRemoveResult {
+	public static removeRegistered(
+		fontOrKey: SlugFont | string | null,
+		force: boolean = false
+	): SlugFontsRemoveResult {
 		if (!fontOrKey) {
 			return {ok: false, reason: 'invalid-input'};
 		}
@@ -1104,6 +1123,9 @@ export class SlugFonts {
 		if (reg.fallback) reg.fallback.destroyGpu();
 		reg.byUrl.clear();
 		reg.byName.clear();
+		// Invalidate in-flight `fromUrl` loads so they don't repopulate
+		// the cache when they complete.
+		reg.generation++;
 		reg.inflight.clear();
 		reg.all.length = 0;
 		reg.marked.length = 0;
