@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.2] - 2026-09-27
 
+### Added
+* ESM builds for all three PIXI versions. `import` now loads a native ES module build and `require()` loads the CommonJS (UMD) build, for `pixi-slug`, `pixi-slug/v7`, and `pixi-slug/v6`. Each format ships its own type declarations, so TypeScript resolves correctly under `node16`/`nodenext`, `bundler`, and legacy `node` module resolution.
+
+### Changed
+* Build output moved from `dist/<version>/` to `dist/<version>/cjs/` and `dist/<version>/esm/`. Package imports are unchanged. Anyone loading the bundle directly (e.g. a `<script>` tag pointing at `dist/v8/index.js`) should use `dist/v8/cjs/index.js`, which is the same UMD bundle as before.
+
 ### Fixed 
 * `fromArrayBuffer` can no longer leak the front (`src/shared/slug/fonts.ts`).
 * `normalizeLoadOptions` no longer spreads in the wrong order (`src/shared/slug/fonts.ts`).

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Flattens tsc's nested declaration output for each version so .d.ts files
-// sit next to the webpack-bundled index.js:
-//   dist/v8/v8/*  -> dist/v8/*
+// sit next to the webpack-bundled ESM index.js:
+//   dist/v8/esm/v8/*  -> dist/v8/esm/*
 // Then strips one leading '../' from imports of '../shared/' and '../defaults'
 // so the relative paths still resolve after the move.
 
@@ -18,7 +18,7 @@ const VERSIONS = ['v6', 'v7', 'v8'];
 const TOP_LEVEL_SRC_FILES = ['defaults', 'rgba', 'constants'];
 
 for (const version of VERSIONS) {
-	const versionDir = path.join(ROOT, 'dist', version);
+	const versionDir = path.join(ROOT, 'dist', version, 'esm');
 	const nestedDir = path.join(versionDir, version);
 	if (!fs.existsSync(nestedDir)) continue;
 

@@ -86,8 +86,10 @@ try {
 		// for a valid publish, so verify them too — running --no-build off a
 		// types-less dist almost certainly means a step was skipped upstream.
 		const required = [
-			'dist/v6/index.js', 'dist/v7/index.js', 'dist/v8/index.js',
-			'dist/v6/index.d.ts', 'dist/v7/index.d.ts', 'dist/v8/index.d.ts'
+			'dist/v6/cjs/index.js', 'dist/v7/cjs/index.js', 'dist/v8/cjs/index.js',
+			'dist/v6/esm/index.js', 'dist/v7/esm/index.js', 'dist/v8/esm/index.js',
+			'dist/v6/cjs/index.d.ts', 'dist/v7/cjs/index.d.ts', 'dist/v8/cjs/index.d.ts',
+			'dist/v6/esm/index.d.ts', 'dist/v7/esm/index.d.ts', 'dist/v8/esm/index.d.ts'
 		];
 		const missing = required.filter((p) => !fs.existsSync(path.join(ROOT, p)));
 		if (missing.length > 0) {
@@ -115,10 +117,12 @@ try {
 	}
 
 	// ----- Copy bundles -----
+	// Pages load the UMD (cjs) bundle via <script>, which exposes the
+	// `pixiSlug` global. The ESM bundle isn't used by the docs site.
 	console.log('Copying bundles...');
-	cp('dist/v6/index.js', 'docs/dist/v6/index.js');
-	cp('dist/v7/index.js', 'docs/dist/v7/index.js');
-	cp('dist/v8/index.js', 'docs/dist/v8/index.js');
+	cp('dist/v6/cjs/index.js', 'docs/dist/v6/index.js');
+	cp('dist/v7/cjs/index.js', 'docs/dist/v7/index.js');
+	cp('dist/v8/cjs/index.js', 'docs/dist/v8/index.js');
 
 	// ----- Copy examples -----
 	console.log('Copying examples...');
@@ -143,11 +147,11 @@ try {
 
 	// ----- Fix paths -----
 	console.log('Fixing paths in docs/...');
-	sedReplace('docs/v6/index.html', '../../dist/v6/index.js', '../dist/v6/index.js');
-	sedReplace('docs/v7/index.html', '../../dist/v7/index.js', '../dist/v7/index.js');
-	sedReplace('docs/v8/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
-	sedReplace('docs/comparison/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
-	sedReplace('docs/benchmark/index.html', '../../dist/v8/index.js', '../dist/v8/index.js');
+	sedReplace('docs/v6/index.html', '../../dist/v6/cjs/index.js', '../dist/v6/index.js');
+	sedReplace('docs/v7/index.html', '../../dist/v7/cjs/index.js', '../dist/v7/index.js');
+	sedReplace('docs/v8/index.html', '../../dist/v8/cjs/index.js', '../dist/v8/index.js');
+	sedReplace('docs/comparison/index.html', '../../dist/v8/cjs/index.js', '../dist/v8/index.js');
+	sedReplace('docs/benchmark/index.html', '../../dist/v8/cjs/index.js', '../dist/v8/index.js');
 
 	// wire.js references the bundled fallback fonts at `/assets/fonts/...`
 	// (absolute) which only resolves when the site is served at the

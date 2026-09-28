@@ -36,11 +36,74 @@ class CleanOutputPlugin {
 	}
 }
 
+/**
+ * Webpack plugin that emits a `package.json` containing only a `type` field
+ * next to the bundle. Makes each output dir self-describing so Node (and
+ * TypeScript's node16/nodenext resolution) treats `index.js` / `index.d.ts`
+ * as the right module system regardless of the root package's `type` field.
+ */
+class ModuleTypeMarkerPlugin {
+	private readonly moduleType: 'commonjs' | 'module';
+
+	constructor(moduleType: 'commonjs' | 'module') {
+		this.moduleType = moduleType;
+	}
+
+	apply(compiler: Compiler): void {
+		compiler.hooks.thisCompilation.tap('ModuleTypeMarkerPlugin', (compilation) => {
+			compilation.hooks.processAssets.tap(
+				{
+					name: 'ModuleTypeMarkerPlugin',
+					stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL
+				},
+				() => {
+					const json = JSON.stringify({ type: this.moduleType }, null, '\t') + '\n';
+					compilation.emitAsset('package.json', new compiler.webpack.sources.RawSource(json));
+				}
+			);
+		});
+	}
+}
+
 type PixiVersion = 'v6' | 'v7' | 'v8';
 type BuildTarget = 'dev' | 'prod';
+type ModuleFormat = 'cjs' | 'esm';
 
 const VERSIONS: PixiVersion[] = ['v6', 'v7', 'v8'];
+const FORMATS: ModuleFormat[] = ['cjs', 'esm'];
 
+/**
+ * Externals for the ESM bundle. Emitted as static `import` statements so the
+ * consumer's bundler (or Node) resolves the same pixi.js copy the app uses.
+ */
+const PIXI_ESM_EXTERNALS: Record<PixiVersion, Record<string, string>> = {
+	v8: {
+		'pixi.js': 'pixi.js'
+	},
+	v7: {
+		'@pixi/constants': '@pixi/constants',
+		'@pixi/core': '@pixi/core',
+		'@pixi/display': '@pixi/display',
+		'@pixi/graphics': '@pixi/graphics',
+		'@pixi/math': '@pixi/math',
+		'@pixi/mesh': '@pixi/mesh',
+		'@pixi/ticker': '@pixi/ticker'
+	},
+	v6: {
+		'@pixi/constants': '@pixi/constants',
+		'@pixi/core': '@pixi/core',
+		'@pixi/display': '@pixi/display',
+		'@pixi/graphics': '@pixi/graphics',
+		'@pixi/math': '@pixi/math',
+		'@pixi/mesh': '@pixi/mesh',
+		'@pixi/ticker': '@pixi/ticker'
+	}
+};
+
+/**
+ * Externals for the CJS (UMD) bundle. `root` keeps the bundle usable from a
+ * plain `<script>` tag alongside a global `PIXI`.
+ */
 const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 	v8: {
 		'pixi.js': {
@@ -126,27 +189,42 @@ const PIXI_EXTERNALS: Record<PixiVersion, Configuration['externals']> = {
 };
 
 /**
- * Build a webpack config for a specific version and environment.
+ * Build a webpack config for a specific version, environment, and module format.
+ * CJS output is a UMD bundle (works with `require()` and `<script>` tags);
+ * ESM output is a native ES module bundle.
  */
-function buildConfig(version: PixiVersion, target: BuildTarget): Configuration {
+function buildConfig(version: PixiVersion, target: BuildTarget, format: ModuleFormat): Configuration {
 	const isProd = target === 'prod';
+	const isEsm = format === 'esm';
+	const outputPath = path.resolve(ROOT, 'dist', version, format);
 
 	return {
-		name: `${version}:${target}`,
+		name: `${version}:${format}:${target}`,
 		mode: isProd ? 'production' : 'development',
 		devtool: isProd ? false : 'source-map',
 		entry: path.resolve(ROOT, 'src', version, 'index.ts'),
-		output: {
-			path: path.resolve(ROOT, 'dist', version),
-			filename: 'index.js',
-			library: {
-				name: 'pixiSlug',
-				type: 'umd'
+		output: isEsm
+			? {
+				path: outputPath,
+				filename: 'index.js',
+				module: true,
+				library: {
+					type: 'module'
+				}
+			}
+			: {
+				path: outputPath,
+				filename: 'index.js',
+				library: {
+					name: 'pixiSlug',
+					type: 'umd'
+				},
+				globalObject: 'this'
 			},
-			globalObject: 'this',
-		},
+		experiments: isEsm ? { outputModule: true } : undefined,
 		plugins: [
-			new CleanOutputPlugin()
+			new CleanOutputPlugin(),
+			new ModuleTypeMarkerPlugin(isEsm ? 'module' : 'commonjs')
 		],
 		resolve: {
 			extensions: ['.ts', '.js', '.glsl']
@@ -174,7 +252,8 @@ function buildConfig(version: PixiVersion, target: BuildTarget): Configuration {
 				}
 			]
 		},
-		externals: PIXI_EXTERNALS[version],
+		externalsType: isEsm ? 'module' : undefined,
+		externals: isEsm ? PIXI_ESM_EXTERNALS[version] : PIXI_EXTERNALS[version],
 		optimization: {
 			minimize: isProd,
 			minimizer: isProd
@@ -197,19 +276,26 @@ function buildConfig(version: PixiVersion, target: BuildTarget): Configuration {
 interface WebpackEnv {
 	version?: string;
 	target?: string;
+	format?: string;
 }
 
 export default (_wpEnv: unknown, argv: { env?: WebpackEnv }): Configuration | Configuration[] => {
 	const version = argv.env?.version;
 	const target: BuildTarget = argv.env?.target === 'prod' ? 'prod' : 'dev';
+	// Optional single-format filter. `examples:watch` builds only cjs (the UMD
+	// bundle the example pages load) since all six version/format configs in
+	// one process exceed Node's default heap.
+	const formats = FORMATS.includes(argv.env?.format as ModuleFormat)
+		? [argv.env?.format as ModuleFormat]
+		: FORMATS;
 
 	if (version === 'all') {
-		return VERSIONS.map((v) => buildConfig(v, target));
+		return VERSIONS.flatMap((v) => formats.map((f) => buildConfig(v, target, f)));
 	}
 
 	if (version && VERSIONS.includes(version as PixiVersion)) {
-		return buildConfig(version as PixiVersion, target);
+		return formats.map((f) => buildConfig(version as PixiVersion, target, f));
 	}
 
-	return buildConfig('v8', 'dev');
+	return formats.map((f) => buildConfig('v8', 'dev', f));
 };

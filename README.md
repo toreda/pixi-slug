@@ -14,6 +14,7 @@ Fast GPU-accelerated vector text for PixiJS. Crisp at any size, rotation, or 3D 
 * Supports TrueType (`.ttf`), OpenType (`.otf`), and WOFF/WOFF2 fonts — including cubic-outline (CFF) fonts.
 * Word wrap, newlines, underline, strikethrough, overline, gradient fill, texture fill.
 * Works with PixiJS `v8`, `v7`, and `v6`.
+* Ships ESM and CommonJS builds for each PixiJS version.
 
 &nbsp;
 
@@ -212,6 +213,18 @@ Re-enabling events directly on the `SlugText` (`text.eventMode = 'static'`) will
 # Examples
 
 `pixi-slug` supports multiple versions by building & bundling a separate package for each of the three supported PIXI version (`v8`, `v7`, `v6`). PIXI's imports and API vary by version. All packages share core functionality but import paths and scaffolding differs by version. 
+
+## ESM and CommonJS
+
+Each version ships both an ES module and a CommonJS build. Node and bundlers pick the right one automatically — `import` loads the ESM build, `require()` loads the CommonJS build. Examples below use `require()`; the `import` form works the same way:
+
+```typescript
+import {SlugText} from 'pixi-slug';      // v8
+import {SlugText} from 'pixi-slug/v7';   // v7
+import {SlugText} from 'pixi-slug/v6';   // v6
+```
+
+Use one module system per app. Loading `pixi-slug` through both `import` and `require()` in the same app creates two copies of the library — fonts registered in one copy won't be visible to the other.
 
 ## Creating a `SlugText`
 
