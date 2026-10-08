@@ -6,32 +6,32 @@ import type { PathCommand } from 'opentype.js';
 // ============================================================
 
 describe('lineToQuadratic', () => {
-	it('should place control point at midpoint of a horizontal line', () => {
+	it('should duplicate the end point as the control point of a horizontal line', () => {
 		const c = lineToQuadratic(0, 0, 10, 0);
 		expect(c.p1x).toBe(0);
 		expect(c.p1y).toBe(0);
-		expect(c.p2x).toBe(5);
+		expect(c.p2x).toBe(10);
 		expect(c.p2y).toBe(0);
 		expect(c.p3x).toBe(10);
 		expect(c.p3y).toBe(0);
 	});
 
-	it('should place control point at midpoint of a vertical line', () => {
+	it('should duplicate the end point as the control point of a vertical line', () => {
 		const c = lineToQuadratic(0, 0, 0, 20);
 		expect(c.p1x).toBe(0);
 		expect(c.p1y).toBe(0);
 		expect(c.p2x).toBe(0);
-		expect(c.p2y).toBe(10);
+		expect(c.p2y).toBe(20);
 		expect(c.p3x).toBe(0);
 		expect(c.p3y).toBe(20);
 	});
 
-	it('should place control point at midpoint of a diagonal line', () => {
+	it('should duplicate the end point as the control point of a diagonal line', () => {
 		const c = lineToQuadratic(2, 3, 8, 15);
 		expect(c.p1x).toBe(2);
 		expect(c.p1y).toBe(3);
-		expect(c.p2x).toBe(5);
-		expect(c.p2y).toBe(9);
+		expect(c.p2x).toBe(8);
+		expect(c.p2y).toBe(15);
 		expect(c.p3x).toBe(8);
 		expect(c.p3y).toBe(15);
 	});
@@ -40,8 +40,8 @@ describe('lineToQuadratic', () => {
 		const c = lineToQuadratic(-10, -20, -4, -8);
 		expect(c.p1x).toBe(-10);
 		expect(c.p1y).toBe(-20);
-		expect(c.p2x).toBe(-7);
-		expect(c.p2y).toBe(-14);
+		expect(c.p2x).toBe(-4);
+		expect(c.p2y).toBe(-8);
 		expect(c.p3x).toBe(-4);
 		expect(c.p3y).toBe(-8);
 	});
@@ -58,14 +58,14 @@ describe('lineToQuadratic', () => {
 
 	it('should handle very large coordinates', () => {
 		const c = lineToQuadratic(0, 0, 1e6, 1e6);
-		expect(c.p2x).toBe(5e5);
-		expect(c.p2y).toBe(5e5);
+		expect(c.p2x).toBe(1e6);
+		expect(c.p2y).toBe(1e6);
 	});
 
 	it('should handle fractional coordinates', () => {
 		const c = lineToQuadratic(0.1, 0.2, 0.3, 0.4);
-		expect(c.p2x).toBeCloseTo(0.2);
-		expect(c.p2y).toBeCloseTo(0.3);
+		expect(c.p2x).toBe(0.3);
+		expect(c.p2y).toBe(0.4);
 	});
 
 	it('should produce a collinear result (control point on the line)', () => {
@@ -107,7 +107,7 @@ describe('slugGlyphCurves', () => {
 	// ---- Line commands ----
 
 	describe('line commands', () => {
-		it('should convert a single line to a degenerate quadratic', () => {
+		it('should convert a single line to a quadratic with a duplicated end point', () => {
 			const commands: PathCommand[] = [
 				{ type: 'M', x: 0, y: 0 },
 				{ type: 'L', x: 10, y: 0 }
@@ -116,7 +116,7 @@ describe('slugGlyphCurves', () => {
 			expect(curves).toHaveLength(1);
 			expect(curves[0].p1x).toBe(0);
 			expect(curves[0].p1y).toBe(0);
-			expect(curves[0].p2x).toBe(5);
+			expect(curves[0].p2x).toBe(10);
 			expect(curves[0].p2y).toBe(0);
 			expect(curves[0].p3x).toBe(10);
 			expect(curves[0].p3y).toBe(0);

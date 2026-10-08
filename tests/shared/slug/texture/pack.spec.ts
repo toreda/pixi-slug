@@ -1,8 +1,19 @@
 import { slugTexturePack } from '../../../../src/shared/slug/texture/pack';
 import type { SlugGlyphData } from '../../../../src/shared/slug/glyph/data';
 import type { SlugGlyphCurve } from '../../../../src/shared/slug/glyph/data';
+import { slugTextureAppendGlyphs, slugTexturePackStateCreate } from '../../../../src/shared/slug/texture/pack';
+import { slugTextureFloat16Decode } from '../../../../src/shared/slug/texture/float16/decode';
 
 const TEX_WIDTH = 4096;
+
+/** Decode one half-float curve component. */
+const cv = (data: Uint16Array, i: number): number => slugTextureFloat16Decode(data[i]);
+/** Band header fields at texel `t`: count in the high half, list offset in the low half. */
+const hdrCount = (data: Uint32Array, t: number): number => data[t] >>> 16;
+const hdrOffset = (data: Uint32Array, t: number): number => data[t] & 0xffff;
+/** Curve reference fields at texel `t`: column in the high half, row in the low half. */
+const refX = (data: Uint32Array, t: number): number => data[t] >>> 16;
+const refY = (data: Uint32Array, t: number): number => data[t] & 0xffff;
 
 function makeCurve(p1x: number, p1y: number, p2x: number, p2y: number, p3x: number, p3y: number): SlugGlyphCurve {
 	return { p1x, p1y, p2x, p2y, p3x, p3y };
@@ -55,15 +66,15 @@ describe('slugTexturePack', () => {
 	describe('empty input', () => {
 		it('should return typed arrays for empty glyph list', () => {
 			const result = slugTexturePack([], TEX_WIDTH);
-			expect(result.curveData).toBeInstanceOf(Float32Array);
+			expect(result.curveData).toBeInstanceOf(Uint16Array);
 			expect(result.bandData).toBeInstanceOf(Uint32Array);
 		});
 
 		it('should return at least one row of data for empty input', () => {
 			const result = slugTexturePack([], TEX_WIDTH);
-			// Minimum 1 row × TEX_WIDTH texels × 4 components
+			// Minimum 1 row: TEX_WIDTH texels × 4 half floats for curves, × 1 uint32 for bands
 			expect(result.curveData.length).toBe(TEX_WIDTH * 4);
-			expect(result.bandData.length).toBe(TEX_WIDTH * 4);
+			expect(result.bandData.length).toBe(TEX_WIDTH);
 		});
 	});
 
@@ -78,16 +89,16 @@ describe('slugTexturePack', () => {
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
 			// Texel 0: [p1x, p1y, p2x, p2y]
-			expect(result.curveData[0]).toBe(1);
-			expect(result.curveData[1]).toBe(2);
-			expect(result.curveData[2]).toBe(3);
-			expect(result.curveData[3]).toBe(4);
+			expect(cv(result.curveData, 0)).toBe(1);
+			expect(cv(result.curveData, 1)).toBe(2);
+			expect(cv(result.curveData, 2)).toBe(3);
+			expect(cv(result.curveData, 3)).toBe(4);
 
 			// Texel 1 (sentinel): [p3x, p3y, 0, 0]
-			expect(result.curveData[4]).toBe(5);
-			expect(result.curveData[5]).toBe(6);
-			expect(result.curveData[6]).toBe(0);
-			expect(result.curveData[7]).toBe(0);
+			expect(cv(result.curveData, 4)).toBe(5);
+			expect(cv(result.curveData, 5)).toBe(6);
+			expect(cv(result.curveData, 6)).toBe(0);
+			expect(cv(result.curveData, 7)).toBe(0);
 		});
 
 		it('should pack contiguous curves with shared endpoints', () => {
@@ -98,21 +109,21 @@ describe('slugTexturePack', () => {
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
 			// Texel 0: c1's p12
-			expect(result.curveData[0]).toBe(10);
-			expect(result.curveData[1]).toBe(20);
-			expect(result.curveData[2]).toBe(30);
-			expect(result.curveData[3]).toBe(40);
+			expect(cv(result.curveData, 0)).toBe(10);
+			expect(cv(result.curveData, 1)).toBe(20);
+			expect(cv(result.curveData, 2)).toBe(30);
+			expect(cv(result.curveData, 3)).toBe(40);
 
 			// Texel 1: c2's p12 (c2.p1x == c1.p3x, c2.p1y == c1.p3y — shared endpoint)
 			// Shader reads curveLoc.x+1 for c1's p3 and gets this texel's .xy = (50,60) ✓
-			expect(result.curveData[4]).toBe(50);
-			expect(result.curveData[5]).toBe(60);
-			expect(result.curveData[6]).toBe(90);
-			expect(result.curveData[7]).toBe(100);
+			expect(cv(result.curveData, 4)).toBe(50);
+			expect(cv(result.curveData, 5)).toBe(60);
+			expect(cv(result.curveData, 6)).toBe(90);
+			expect(cv(result.curveData, 7)).toBe(100);
 
 			// Texel 2 (sentinel): c2's p3
-			expect(result.curveData[8]).toBe(110);
-			expect(result.curveData[9]).toBe(120);
+			expect(cv(result.curveData, 8)).toBe(110);
+			expect(cv(result.curveData, 9)).toBe(120);
 		});
 
 		it('should preserve negative and fractional curve coordinates', () => {
@@ -120,12 +131,12 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, [curve]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			expect(result.curveData[0]).toBeCloseTo(-1.5);
-			expect(result.curveData[1]).toBeCloseTo(2.7);
-			expect(result.curveData[2]).toBeCloseTo(0);
-			expect(result.curveData[3]).toBeCloseTo(-3.14);
-			expect(result.curveData[4]).toBeCloseTo(100.001);
-			expect(result.curveData[5]).toBeCloseTo(0.0001);
+			expect(cv(result.curveData, 0)).toBeCloseTo(-1.5);
+			expect(cv(result.curveData, 1)).toBeCloseTo(2.7);
+			expect(cv(result.curveData, 2)).toBeCloseTo(0);
+			expect(cv(result.curveData, 3)).toBeCloseTo(-3.14);
+			expect(cv(result.curveData, 4)).toBeCloseTo(100.001);
+			expect(cv(result.curveData, 5)).toBeCloseTo(0.0001);
 		});
 
 		it('should set curveOffset on the glyph', () => {
@@ -166,8 +177,8 @@ describe('slugTexturePack', () => {
 
 			// gB's curve data should be at its curveOffset
 			const bOffset = gB.curveOffset * 4;
-			expect(result.curveData[bOffset]).toBe(999);
-			expect(result.curveData[bOffset + 1]).toBe(999);
+			expect(cv(result.curveData, bOffset)).toBe(999);
+			expect(cv(result.curveData, bOffset + 1)).toBe(999);
 		});
 	});
 
@@ -193,11 +204,11 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, curves, [[0, 1, 2], [0]], [[0]]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
+			const hdr = glyph.bandOffset;
 			// First hBand header: 3 curves
-			expect(result.bandData[hdr]).toBe(3);
+			expect(hdrCount(result.bandData, hdr)).toBe(3);
 			// Second hBand header: 1 curve
-			expect(result.bandData[hdr + 4]).toBe(1);
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(1);
 		});
 
 		it('should write correct curve count in vertical band headers', () => {
@@ -208,48 +219,48 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, curves, [[0, 1]], [[0], [1]]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
+			const hdr = glyph.bandOffset;
 			// Headers: [hBand0, vBand0, vBand1]
 			// vBand0 starts at headerStart + hBandCount
-			const vBand0Hdr = hdr + 1 * 4; // offset by 1 hBand header
-			expect(result.bandData[vBand0Hdr]).toBe(1); // 1 curve in vBand0
-			const vBand1Hdr = hdr + 2 * 4;
-			expect(result.bandData[vBand1Hdr]).toBe(1); // 1 curve in vBand1
+			const vBand0Hdr = hdr + 1; // offset by 1 hBand header
+			expect(hdrCount(result.bandData, vBand0Hdr)).toBe(1); // 1 curve in vBand0
+			const vBand1Hdr = hdr + 2;
+			expect(hdrCount(result.bandData, vBand1Hdr)).toBe(1); // 1 curve in vBand1
 		});
 
 		it('should store curve list offsets relative to bandOffset', () => {
 			const glyph = makeGlyph(65, [makeCurve(0, 0, 5, 10, 10, 0)]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
-			const listOffset = result.bandData[hdr + 1]; // second uint in header
+			const hdr = glyph.bandOffset;
+			const listOffset = hdrOffset(result.bandData, hdr); // low half of the header
 			// Offset should be relative to bandOffset, not absolute
 			expect(listOffset).toBeGreaterThan(0);
 			// The absolute texel index of the list is bandOffset + listOffset
 			const absTexel = glyph.bandOffset + listOffset;
-			expect(absTexel).toBeLessThan(result.bandData.length / 4);
+			expect(absTexel).toBeLessThan(result.bandData.length);
 		});
 
 		it('should write curve references as 2D texel coordinates', () => {
 			const glyph = makeGlyph(65, [makeCurve(42, 43, 44, 45, 46, 47)]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
-			const listOffset = result.bandData[hdr + 1];
-			const listTexel = (glyph.bandOffset + listOffset) * 4;
+			const hdr = glyph.bandOffset;
+			const listOffset = hdrOffset(result.bandData, hdr);
+			const listTexel = glyph.bandOffset + listOffset;
 
-			// Curve reference should be [x, y, 0, 0] where x,y are texel coords
-			const refX = result.bandData[listTexel];
-			const refY = result.bandData[listTexel + 1];
+			// Curve reference packs (column << 16) | row
+			const col = refX(result.bandData, listTexel);
+			const row = refY(result.bandData, listTexel);
 
 			// For the first glyph, curve 0 is at texel 0 → coords (0, 0)
-			expect(refX).toBe(0);
-			expect(refY).toBe(0);
+			expect(col).toBe(0);
+			expect(row).toBe(0);
 
 			// Verify the curve data at those coords matches
-			const curveBase = (refY * TEX_WIDTH + refX) * 4;
-			expect(result.curveData[curveBase]).toBe(42);
-			expect(result.curveData[curveBase + 1]).toBe(43);
+			const curveBase = (row * TEX_WIDTH + col) * 4;
+			expect(cv(result.curveData, curveBase)).toBe(42);
+			expect(cv(result.curveData, curveBase + 1)).toBe(43);
 		});
 
 		it('should handle empty bands (zero curve count)', () => {
@@ -258,9 +269,9 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, curves, [[0], []], [[0]]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
+			const hdr = glyph.bandOffset;
 			// Second hBand header (offset 1): 0 curves
-			expect(result.bandData[hdr + 4]).toBe(0);
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(0);
 		});
 	});
 
@@ -313,7 +324,7 @@ describe('slugTexturePack', () => {
 
 			// Verify g2's curve data is at the correct offset
 			const g2Base = g2.curveOffset * 4;
-			expect(result.curveData[g2Base]).toBe(3);
+			expect(cv(result.curveData, g2Base)).toBe(3);
 		});
 
 		it('should not corrupt g1 data when packing g2', () => {
@@ -322,10 +333,10 @@ describe('slugTexturePack', () => {
 			const result = slugTexturePack([g1, g2], TEX_WIDTH);
 
 			// g1 data should still be intact
-			expect(result.curveData[0]).toBe(11);
-			expect(result.curveData[1]).toBe(22);
-			expect(result.curveData[4]).toBe(55);
-			expect(result.curveData[5]).toBe(66);
+			expect(cv(result.curveData, 0)).toBe(11);
+			expect(cv(result.curveData, 1)).toBe(22);
+			expect(cv(result.curveData, 4)).toBe(55);
+			expect(cv(result.curveData, 5)).toBe(66);
 		});
 
 		it('should handle many glyphs without error', () => {
@@ -334,7 +345,7 @@ describe('slugTexturePack', () => {
 				glyphs.push(makeGlyph(i + 65, [makeCurve(i, i, i, i, i, i)]));
 			}
 			const result = slugTexturePack(glyphs, TEX_WIDTH);
-			expect(result.curveData).toBeInstanceOf(Float32Array);
+			expect(result.curveData).toBeInstanceOf(Uint16Array);
 			expect(result.bandData).toBeInstanceOf(Uint32Array);
 
 			// Each glyph should have a unique curveOffset
@@ -362,19 +373,19 @@ describe('slugTexturePack', () => {
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
 			// Total headers = 4 + 4 = 8
-			const hdr = glyph.bandOffset * 4;
+			const hdr = glyph.bandOffset;
 
 			// Verify all hBand counts
-			expect(result.bandData[hdr]).toBe(2);          // hBand 0: 2 curves
-			expect(result.bandData[hdr + 4]).toBe(2);      // hBand 1: 2 curves
-			expect(result.bandData[hdr + 8]).toBe(2);      // hBand 2: 2 curves
-			expect(result.bandData[hdr + 12]).toBe(1);     // hBand 3: 1 curve
+			expect(hdrCount(result.bandData, hdr)).toBe(2);          // hBand 0: 2 curves
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(2);      // hBand 1: 2 curves
+			expect(hdrCount(result.bandData, hdr + 2)).toBe(2);      // hBand 2: 2 curves
+			expect(hdrCount(result.bandData, hdr + 3)).toBe(1);     // hBand 3: 1 curve
 
 			// Verify all vBand counts (offset by 4 hBand headers)
-			expect(result.bandData[hdr + 16]).toBe(1);     // vBand 0
-			expect(result.bandData[hdr + 20]).toBe(1);     // vBand 1
-			expect(result.bandData[hdr + 24]).toBe(1);     // vBand 2
-			expect(result.bandData[hdr + 28]).toBe(1);     // vBand 3
+			expect(hdrCount(result.bandData, hdr + 4)).toBe(1);     // vBand 0
+			expect(hdrCount(result.bandData, hdr + 5)).toBe(1);     // vBand 1
+			expect(hdrCount(result.bandData, hdr + 6)).toBe(1);     // vBand 2
+			expect(hdrCount(result.bandData, hdr + 7)).toBe(1);     // vBand 3
 		});
 
 		it('should handle bands with all curves referenced', () => {
@@ -387,8 +398,8 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, curves, [[0, 1, 2]], [[0, 1, 2]]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
-			expect(result.bandData[hdr]).toBe(3); // 3 curves in hBand 0
+			const hdr = glyph.bandOffset;
+			expect(hdrCount(result.bandData, hdr)).toBe(3); // 3 curves in hBand 0
 		});
 	});
 
@@ -397,9 +408,9 @@ describe('slugTexturePack', () => {
 	// ============================================================
 
 	describe('return value', () => {
-		it('should return curveData as Float32Array', () => {
+		it('should return curveData as Uint16Array (half floats)', () => {
 			const result = slugTexturePack([], TEX_WIDTH);
-			expect(result.curveData).toBeInstanceOf(Float32Array);
+			expect(result.curveData).toBeInstanceOf(Uint16Array);
 		});
 
 		it('should return bandData as Uint32Array', () => {
@@ -411,7 +422,7 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, [makeCurve(0, 0, 5, 10, 10, 0)]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 			expect(result.curveData.length % (TEX_WIDTH * 4)).toBe(0);
-			expect(result.bandData.length % (TEX_WIDTH * 4)).toBe(0);
+			expect(result.bandData.length % TEX_WIDTH).toBe(0);
 		});
 	});
 
@@ -428,28 +439,28 @@ describe('slugTexturePack', () => {
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
 			// Read hBand 0 header
-			const hdr = glyph.bandOffset * 4;
-			const count = result.bandData[hdr];
-			const listOffset = result.bandData[hdr + 1];
+			const hdr = glyph.bandOffset;
+			const count = hdrCount(result.bandData, hdr);
+			const listOffset = hdrOffset(result.bandData, hdr);
 			expect(count).toBe(2);
 
 			// Read each curve reference and verify the curve data matches
 			for (let i = 0; i < count; i++) {
-				const refBase = (glyph.bandOffset + listOffset + i) * 4;
-				const texX = result.bandData[refBase];
-				const texY = result.bandData[refBase + 1];
+				const refBase = glyph.bandOffset + listOffset + i;
+				const texX = refX(result.bandData, refBase);
+				const texY = refY(result.bandData, refBase);
 
 				const curveBase = (texY * TEX_WIDTH + texX) * 4;
 				const expectedCurve = [c0, c1][i];
-				expect(result.curveData[curveBase]).toBe(expectedCurve.p1x);
-				expect(result.curveData[curveBase + 1]).toBe(expectedCurve.p1y);
-				expect(result.curveData[curveBase + 2]).toBe(expectedCurve.p2x);
-				expect(result.curveData[curveBase + 3]).toBe(expectedCurve.p2y);
+				expect(cv(result.curveData, curveBase)).toBe(expectedCurve.p1x);
+				expect(cv(result.curveData, curveBase + 1)).toBe(expectedCurve.p1y);
+				expect(cv(result.curveData, curveBase + 2)).toBe(expectedCurve.p2x);
+				expect(cv(result.curveData, curveBase + 3)).toBe(expectedCurve.p2y);
 
 				// p3 is at texX+1, same row (shared endpoint: next curve's p1, or sentinel)
 				const p3Base = (texY * TEX_WIDTH + texX + 1) * 4;
-				expect(result.curveData[p3Base]).toBe(expectedCurve.p3x);
-				expect(result.curveData[p3Base + 1]).toBe(expectedCurve.p3y);
+				expect(cv(result.curveData, p3Base)).toBe(expectedCurve.p3x);
+				expect(cv(result.curveData, p3Base + 1)).toBe(expectedCurve.p3y);
 			}
 		});
 	});
@@ -480,14 +491,14 @@ describe('slugTexturePack', () => {
 			// which texels have non-zero data (or just check all occupied texels).
 			// Each curve's p12 is at curveOffset + (2*i) or (2*i)+skip.
 			// We verify by reading band refs, which store the actual p12 coords.
-			const hdr = glyph.bandOffset * 4;
-			const listOffset = result.bandData[hdr + 1];
-			const count = result.bandData[hdr];
+			const hdr = glyph.bandOffset;
+			const listOffset = hdrOffset(result.bandData, hdr);
+			const count = hdrCount(result.bandData, hdr);
 
 			for (let i = 0; i < count; i++) {
-				const refBase = (glyph.bandOffset + listOffset + i) * 4;
-				const texX = result.bandData[refBase];
-				const texY = result.bandData[refBase + 1];
+				const refBase = glyph.bandOffset + listOffset + i;
+				const texX = refX(result.bandData, refBase);
+				const texY = refY(result.bandData, refBase);
 				// p12 must not be in last column (shader does curveLoc.x + 1)
 				expect(texX).toBeLessThan(TEX_WIDTH - 1);
 				// p3 must be on the same row
@@ -558,68 +569,15 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, curves, [Array.from({ length: 500 }, (_, i) => i)], [[]]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const hdr = glyph.bandOffset * 4;
-			const listOffset = result.bandData[hdr + 1];
-			const count = result.bandData[hdr];
+			const hdr = glyph.bandOffset;
+			const listOffset = hdrOffset(result.bandData, hdr);
+			const count = hdrCount(result.bandData, hdr);
 			expect(count).toBe(500);
 
 			// All 500 refs must be on the same row
 			const listStartTexel = glyph.bandOffset + listOffset;
 			const listStartCol = listStartTexel % TEX_WIDTH;
 			expect(listStartCol + count).toBeLessThanOrEqual(TEX_WIDTH);
-		});
-	});
-
-	// ============================================================
-	// Spec invariants: band header padding bytes are zero (INV-BAND-7/8)
-	// Header format: [curveCount, listOffset, 0, 0]
-	// ============================================================
-
-	describe('band header reserved fields', () => {
-		it('should set channels 2 and 3 of every band header to zero', () => {
-			const curves = [makeCurve(0, 0, 5, 10, 10, 0), makeCurve(10, 0, 15, 10, 20, 0)];
-			const glyph = makeGlyph(65, curves, [[0, 1], [0]], [[1], [0, 1]]);
-			const result = slugTexturePack([glyph], TEX_WIDTH);
-
-			const headerCount = glyph.hBandCount + glyph.vBandCount;
-			for (let i = 0; i < headerCount; i++) {
-				const base = (glyph.bandOffset + i) * 4;
-				expect(result.bandData[base + 2]).toBe(0);
-				expect(result.bandData[base + 3]).toBe(0);
-			}
-		});
-	});
-
-	// ============================================================
-	// Spec invariants: curve reference padding bytes are zero (INV-BAND-11)
-	// Reference format: [curveTexelX, curveTexelY, 0, 0]
-	// ============================================================
-
-	describe('curve reference reserved fields', () => {
-		it('should set channels 2 and 3 of every curve reference to zero', () => {
-			const curves = [makeCurve(0, 0, 5, 10, 10, 0), makeCurve(10, 0, 15, 10, 20, 0)];
-			const glyph = makeGlyph(65, curves, [[0, 1]], [[0, 1]]);
-			const result = slugTexturePack([glyph], TEX_WIDTH);
-
-			// Check hBand list refs
-			const hdr = glyph.bandOffset * 4;
-			const hListOffset = result.bandData[hdr + 1];
-			const hCount = result.bandData[hdr];
-			for (let i = 0; i < hCount; i++) {
-				const base = (glyph.bandOffset + hListOffset + i) * 4;
-				expect(result.bandData[base + 2]).toBe(0);
-				expect(result.bandData[base + 3]).toBe(0);
-			}
-
-			// Check vBand list refs
-			const vHdr = (glyph.bandOffset + glyph.hBandCount) * 4;
-			const vListOffset = result.bandData[vHdr + 1];
-			const vCount = result.bandData[vHdr];
-			for (let i = 0; i < vCount; i++) {
-				const base = (glyph.bandOffset + vListOffset + i) * 4;
-				expect(result.bandData[base + 2]).toBe(0);
-				expect(result.bandData[base + 3]).toBe(0);
-			}
 		});
 	});
 
@@ -648,30 +606,30 @@ describe('slugTexturePack', () => {
 			const sentinelPositions: number[] = [];
 
 			// Walk band refs to get curve texel positions, then sentinels follow
-			const hdr = glyph.bandOffset * 4;
-			const listOffset = result.bandData[hdr + 1];
+			const hdr = glyph.bandOffset;
+			const listOffset = hdrOffset(result.bandData, hdr);
 
 			// Sentinel for contour 0 is at (last curve of contour 0).texel + 1
 			// Last curve of contour 0 is curve index 1
-			const ref1Base = (glyph.bandOffset + listOffset + 1) * 4;
-			const tex1X = result.bandData[ref1Base];
-			const tex1Y = result.bandData[ref1Base + 1];
+			const ref1Base = glyph.bandOffset + listOffset + 1;
+			const tex1X = refX(result.bandData, ref1Base);
+			const tex1Y = refY(result.bandData, ref1Base);
 			const sent0Base = (tex1Y * TEX_WIDTH + tex1X + 1) * 4;
-			expect(result.curveData[sent0Base]).toBe(11); // c1.p3x
-			expect(result.curveData[sent0Base + 1]).toBe(12); // c1.p3y
-			expect(result.curveData[sent0Base + 2]).toBe(0);
-			expect(result.curveData[sent0Base + 3]).toBe(0);
+			expect(cv(result.curveData, sent0Base)).toBe(11); // c1.p3x
+			expect(cv(result.curveData, sent0Base + 1)).toBe(12); // c1.p3y
+			expect(cv(result.curveData, sent0Base + 2)).toBe(0);
+			expect(cv(result.curveData, sent0Base + 3)).toBe(0);
 
 			// Sentinel for contour 1 is at (last curve of contour 1).texel + 1
 			// Last curve of contour 1 is curve index 2
-			const ref2Base = (glyph.bandOffset + listOffset + 2) * 4;
-			const tex2X = result.bandData[ref2Base];
-			const tex2Y = result.bandData[ref2Base + 1];
+			const ref2Base = glyph.bandOffset + listOffset + 2;
+			const tex2X = refX(result.bandData, ref2Base);
+			const tex2Y = refY(result.bandData, ref2Base);
 			const sent1Base = (tex2Y * TEX_WIDTH + tex2X + 1) * 4;
-			expect(result.curveData[sent1Base]).toBe(24); // c2.p3x
-			expect(result.curveData[sent1Base + 1]).toBe(25); // c2.p3y
-			expect(result.curveData[sent1Base + 2]).toBe(0);
-			expect(result.curveData[sent1Base + 3]).toBe(0);
+			expect(cv(result.curveData, sent1Base)).toBe(24); // c2.p3x
+			expect(cv(result.curveData, sent1Base + 1)).toBe(25); // c2.p3y
+			expect(cv(result.curveData, sent1Base + 2)).toBe(0);
+			expect(cv(result.curveData, sent1Base + 3)).toBe(0);
 		});
 	});
 
@@ -702,8 +660,8 @@ describe('slugTexturePack', () => {
 
 			// Read hBand 0 header at glyphLoc
 			const hdrTexel = glyphLocY * TEX_WIDTH + glyphLocX;
-			const count = result.bandData[hdrTexel * 4];
-			const listRelOffset = result.bandData[hdrTexel * 4 + 1];
+			const count = hdrCount(result.bandData, hdrTexel);
+			const listRelOffset = hdrOffset(result.bandData, hdrTexel);
 			expect(count).toBe(2);
 
 			// Use CalcBandLoc to find the curve list
@@ -712,16 +670,16 @@ describe('slugTexturePack', () => {
 			// Read each curve reference
 			for (let i = 0; i < count; i++) {
 				const refTexel = listY * TEX_WIDTH + listX + i;
-				const curveTexX = result.bandData[refTexel * 4];
-				const curveTexY = result.bandData[refTexel * 4 + 1];
+				const curveTexX = refX(result.bandData, refTexel);
+				const curveTexY = refY(result.bandData, refTexel);
 
 				// Verify the curve data at those coordinates
 				const curveBase = (curveTexY * TEX_WIDTH + curveTexX) * 4;
 				const expected = [c0, c1][i];
-				expect(result.curveData[curveBase]).toBe(expected.p1x);
-				expect(result.curveData[curveBase + 1]).toBe(expected.p1y);
-				expect(result.curveData[curveBase + 2]).toBe(expected.p2x);
-				expect(result.curveData[curveBase + 3]).toBe(expected.p2y);
+				expect(cv(result.curveData, curveBase)).toBe(expected.p1x);
+				expect(cv(result.curveData, curveBase + 1)).toBe(expected.p1y);
+				expect(cv(result.curveData, curveBase + 2)).toBe(expected.p2x);
+				expect(cv(result.curveData, curveBase + 3)).toBe(expected.p2y);
 			}
 		});
 
@@ -737,28 +695,31 @@ describe('slugTexturePack', () => {
 			// Actually in the shader: glyphLoc.x + bandMax.y + 1 + bandIndex.x
 			// bandMax.y = hBandCount - 1, so the offset is hBandCount + bandIndex.x
 			const vHdrTexel = glyphLocY * TEX_WIDTH + glyphLocX + glyph.hBandCount;
-			const count = result.bandData[vHdrTexel * 4];
-			const listRelOffset = result.bandData[vHdrTexel * 4 + 1];
+			const count = hdrCount(result.bandData, vHdrTexel);
+			const listRelOffset = hdrOffset(result.bandData, vHdrTexel);
 			expect(count).toBe(1);
 
 			const [listX, listY] = calcBandLoc(glyphLocX, glyphLocY, listRelOffset);
 			const refTexel = listY * TEX_WIDTH + listX;
-			const curveTexX = result.bandData[refTexel * 4];
-			const curveTexY = result.bandData[refTexel * 4 + 1];
+			const curveTexX = refX(result.bandData, refTexel);
+			const curveTexY = refY(result.bandData, refTexel);
 
 			const curveBase = (curveTexY * TEX_WIDTH + curveTexX) * 4;
-			expect(result.curveData[curveBase]).toBe(10);
-			expect(result.curveData[curveBase + 1]).toBe(20);
+			expect(cv(result.curveData, curveBase)).toBe(10);
+			expect(cv(result.curveData, curveBase + 1)).toBe(20);
 		});
 	});
 
 	// ============================================================
-	// Spec invariants: uint32 values within float32-safe range (INV-UINT32)
-	// All band data values must be < 2^24 for lossless uint→float→uint.
+	// Spec invariants: packed band texels are never NaN bit patterns
+	// (INV-UINT32). The band texture is uploaded as r32float and read back
+	// with floatBitsToUint; a NaN pattern could be canonicalized by the GPU.
+	// The high half holds the small-range field (count or column), so the
+	// float32 exponent bits (23..30) can never all be set.
 	// ============================================================
 
-	describe('band data float32-safe range', () => {
-		it('should produce band data values all below 2^24', () => {
+	describe('band data NaN safety', () => {
+		it('should never produce a texel whose float32 exponent bits are all ones', () => {
 			const curves: SlugGlyphCurve[] = [];
 			for (let i = 0; i < 200; i++) {
 				curves.push(makeCurve(i * 10, i * 10, 0, 0, 0, 0));
@@ -767,31 +728,141 @@ describe('slugTexturePack', () => {
 			const glyph = makeGlyph(65, curves, bands, bands);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			const MAX_SAFE = 1 << 24; // 16777216
 			for (let i = 0; i < result.bandData.length; i++) {
-				expect(result.bandData[i]).toBeLessThan(MAX_SAFE);
+				expect((result.bandData[i] >>> 23) & 0xff).not.toBe(0xff);
+			}
+		});
+
+		it('should keep every packed field within 16 bits', () => {
+			const glyph = makeGlyph(65, [makeCurve(1, 2, 3, 4, 5, 6)]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			const hdr = glyph.bandOffset;
+			expect(hdrCount(result.bandData, hdr)).toBeLessThanOrEqual(0xffff);
+			expect(hdrOffset(result.bandData, hdr)).toBeLessThanOrEqual(0xffff);
+			const ref = hdr + hdrOffset(result.bandData, hdr);
+			expect(refX(result.bandData, ref)).toBeLessThan(TEX_WIDTH);
+			expect(refY(result.bandData, ref)).toBeLessThanOrEqual(0xffff);
+		});
+	});
+
+	// ============================================================
+	// Band list sharing: identical and contiguous-subset bands point at
+	// data already written for the glyph instead of repeating it.
+	// ============================================================
+
+	describe('band list sharing', () => {
+		const fourCurves = () => [
+			makeCurve(0, 0, 5, 10, 10, 0),
+			makeCurve(10, 0, 15, 10, 20, 0),
+			makeCurve(20, 0, 25, 10, 30, 0),
+			makeCurve(30, 0, 35, 10, 40, 0)
+		];
+
+		it('should point identical bands at the same curve list', () => {
+			const glyph = makeGlyph(65, fourCurves(), [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[]]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			const hdr = glyph.bandOffset;
+			const off0 = hdrOffset(result.bandData, hdr);
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(4);
+			expect(hdrOffset(result.bandData, hdr + 1)).toBe(off0);
+			expect(hdrCount(result.bandData, hdr + 2)).toBe(4);
+			expect(hdrOffset(result.bandData, hdr + 2)).toBe(off0);
+			// 4 headers (3 h + 1 v) + one 4-entry list = 8 texels total.
+			const state = slugTexturePackStateCreate(TEX_WIDTH);
+			slugTextureAppendGlyphs(state, [makeGlyph(65, fourCurves(), [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[]])]);
+			expect(state.bandTexelIdx).toBe(4 + 4);
+		});
+
+		it('should point a contiguous-subset band into the larger list', () => {
+			// hBand 1 = [1, 2] is a contiguous run of hBand 0 = [0, 1, 2, 3].
+			const glyph = makeGlyph(65, fourCurves(), [[0, 1, 2, 3], [1, 2]], [[]]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			const hdr = glyph.bandOffset;
+			const off0 = hdrOffset(result.bandData, hdr);
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(2);
+			expect(hdrOffset(result.bandData, hdr + 1)).toBe(off0 + 1);
+			// The subset resolves to the right curves.
+			const sub = hdr + hdrOffset(result.bandData, hdr + 1);
+			const full = hdr + off0;
+			expect(refX(result.bandData, sub)).toBe(refX(result.bandData, full + 1));
+			expect(refX(result.bandData, sub + 1)).toBe(refX(result.bandData, full + 2));
+		});
+
+		it('should share lists between horizontal and vertical bands', () => {
+			const glyph = makeGlyph(65, fourCurves(), [[0, 1, 2, 3]], [[2, 3]]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			const hdr = glyph.bandOffset;
+			const hOff = hdrOffset(result.bandData, hdr);
+			const vOff = hdrOffset(result.bandData, hdr + 1);
+			expect(vOff).toBe(hOff + 2);
+		});
+
+		it('should write a non-contiguous subset as its own list', () => {
+			// [0, 2] is not a contiguous run of [0, 1, 2, 3].
+			const glyph = makeGlyph(65, fourCurves(), [[0, 1, 2, 3], [0, 2]], [[]]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			const hdr = glyph.bandOffset;
+			const off0 = hdrOffset(result.bandData, hdr);
+			const off1 = hdrOffset(result.bandData, hdr + 1);
+			expect(off1).toBeGreaterThanOrEqual(off0 + 4);
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(2);
+		});
+
+		it('should give empty bands a zero count and a zero offset', () => {
+			const glyph = makeGlyph(65, fourCurves(), [[0, 1], []], [[]]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			const hdr = glyph.bandOffset;
+			expect(hdrCount(result.bandData, hdr + 1)).toBe(0);
+			expect(hdrOffset(result.bandData, hdr + 1)).toBe(0);
+		});
+
+		it('should produce identical layouts from the count pass and the write pass', () => {
+			// A larger, repetitive glyph set exercises reuse across many bands.
+			const glyphs: SlugGlyphData[] = [];
+			for (let g = 0; g < 20; g++) {
+				const curves = fourCurves();
+				glyphs.push(makeGlyph(65 + g, curves, [[0, 1, 2, 3], [1, 2, 3], [1, 2], [0, 2], [0, 1, 2, 3]], [[3], [2, 3], [0, 1, 2, 3]]));
+			}
+			const eager = slugTexturePack(glyphs.map((g) => ({...g})), TEX_WIDTH);
+			const state = slugTexturePackStateCreate(TEX_WIDTH);
+			for (const g of glyphs) {
+				slugTextureAppendGlyphs(state, [g]);
+			}
+			for (let i = 0; i < eager.bandData.length; i++) {
+				expect(state.bandData[i]).toBe(eager.bandData[i]);
 			}
 		});
 	});
 
 	// ============================================================
-	// Spec invariants: curve texture stores float32 values (INV-FLOAT32)
-	// Verify float64→float32 truncation is applied via Float32Array.
+	// Spec invariants: curve texture stores half floats (INV-FLOAT16)
+	// Coordinates are rounded to IEEE 754 binary16 at pack time; the GPU
+	// reads the identical values from the rgba16float texture.
 	// ============================================================
 
-	describe('curve data float32 storage', () => {
-		it('should store curve coordinates as float32 (truncated from float64)', () => {
-			// Use a value that differs between float64 and float32
-			const preciseValue = 1.0000001192092896; // has more precision than float32
-			const f32 = new Float32Array([preciseValue]);
-			const expected = f32[0]; // what float32 truncation produces
-
-			const curve = makeCurve(preciseValue, 0, 0, 0, 0, 0);
+	describe('curve data half-float storage', () => {
+		it('should store curve coordinates rounded to half precision', () => {
+			// 2049 is not representable in half (step is 2 above 2048) and
+			// rounds to even → 2048.
+			const curve = makeCurve(2049, 1.1, 0, 0, 0, 0);
 			const glyph = makeGlyph(65, [curve]);
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
-			// curveData is Float32Array, so the value is truncated
-			expect(result.curveData[0]).toBe(expected);
+			expect(cv(result.curveData, 0)).toBe(2048);
+			// 1.1 → nearest half value 1.099609375
+			expect(cv(result.curveData, 1)).toBe(1.099609375);
+		});
+
+		it('should store every integer coordinate up to 2048 exactly', () => {
+			const curve = makeCurve(-2048, 2048, 1234, -1, 17, 0);
+			const glyph = makeGlyph(65, [curve]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+			expect(cv(result.curveData, 0)).toBe(-2048);
+			expect(cv(result.curveData, 1)).toBe(2048);
+			expect(cv(result.curveData, 2)).toBe(1234);
+			expect(cv(result.curveData, 3)).toBe(-1);
+			expect(cv(result.curveData, 4)).toBe(17);
+			expect(cv(result.curveData, 5)).toBe(0);
 		});
 	});
 
@@ -807,16 +878,16 @@ describe('slugTexturePack', () => {
 			const result = slugTexturePack([glyph], TEX_WIDTH);
 
 			// 3 hBands + 2 vBands = 5 consecutive headers
-			const hdr = glyph.bandOffset * 4;
+			const hdr = glyph.bandOffset;
 
 			// hBand headers at offsets 0, 1, 2
 			for (let i = 0; i < 3; i++) {
-				expect(result.bandData[hdr + i * 4]).toBe(1); // each has 1 curve
+				expect(hdrCount(result.bandData, hdr + i)).toBe(1); // each has 1 curve
 			}
 
 			// vBand headers at offsets 3, 4 (immediately after hBands)
 			for (let i = 0; i < 2; i++) {
-				expect(result.bandData[hdr + (3 + i) * 4]).toBe(1);
+				expect(hdrCount(result.bandData, hdr + (3 + i))).toBe(1);
 			}
 		});
 	});

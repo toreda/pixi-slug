@@ -92,9 +92,9 @@ describe('SlugFontGpuV8.generation', () => {
 		const startGen = cache.generation;
 
 		// Simulate `ensureGlyphs` having reallocated the curve buffer:
-		// new `Float32Array` instance, distinct from the one the cache
+		// new `Uint16Array` instance, distinct from the one the cache
 		// is currently holding.
-		font.curveData = new Float32Array(font.curveData.length + 4096);
+		font.curveData = new Uint16Array(font.curveData.length + 4096);
 
 		const after = slugFontGpuV8(font);
 		expect(after.generation).toBe(startGen + 1);
@@ -116,7 +116,7 @@ describe('SlugFontGpuV8.generation', () => {
 		const cache = slugFontGpuV8(font);
 		const startGen = cache.generation;
 
-		font.curveData = new Float32Array(font.curveData.length + 4096);
+		font.curveData = new Uint16Array(font.curveData.length + 4096);
 		font.bandData = new Uint32Array(font.bandData.length + 4096);
 
 		const after = slugFontGpuV8(font);
@@ -148,7 +148,7 @@ describe('SlugFontGpuV8.generation', () => {
 		expect(cacheB.generation).toBe(0);
 
 		// Grow A only; B's counter must stay at 0.
-		fontA.curveData = new Float32Array(fontA.curveData.length + 4096);
+		fontA.curveData = new Uint16Array(fontA.curveData.length + 4096);
 		const afterA = slugFontGpuV8(fontA);
 		const stillB = slugFontGpuV8(fontB);
 		expect(afterA.generation).toBe(1);

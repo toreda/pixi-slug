@@ -112,6 +112,7 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		_wordWrap!: boolean;
 		_wordWrapWidth!: number;
 		_breakWords!: boolean;
+		_snapBaseline!: boolean;
 		_direction!: SlugTextDirection;
 		_align!: SlugTextStyleAlign;
 		_textJustify!: SlugTextJustify;
@@ -216,6 +217,10 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 			this._wordWrap = typeof init.options?.wordWrap === 'boolean' ? init.options.wordWrap : Defaults.SlugText.WordWrap;
 			this._wordWrapWidth = typeof init.options?.wordWrapWidth === 'number' ? init.options.wordWrapWidth : Defaults.SlugText.WordWrapWidth;
 			this._breakWords = typeof init.options?.breakWords === 'boolean' ? init.options.breakWords : Defaults.SlugText.BreakWords;
+			this._snapBaseline =
+				typeof init.options?.snapBaseline === 'boolean'
+					? init.options.snapBaseline
+					: Defaults.SlugText.SnapBaseline;
 			this._direction = init.options?.direction === 'rtl' ? 'rtl' : Defaults.SlugText.Direction;
 			this._align = resolveAlignInput(init.options?.align);
 			this._textJustify = resolveTextJustifyInput(init.options?.textJustify);
@@ -568,6 +573,22 @@ export function SlugTextMixin<TBase extends Constructor>(Base: TBase) {
 		public set wordWrapWidth(value: number) {
 			if (this._wordWrapWidth === value) return;
 			this._wordWrapWidth = value;
+			this._requestRebuild('full');
+		}
+
+		/**
+		 * Round the baseline (and multiline line pitch) to whole local
+		 * pixels. Pair with `SlugFont.snapFontSize` so the cap height is
+		 * also a whole number of pixels. See `SlugTextStyleOptions.snapBaseline`.
+		 */
+		public get snapBaseline(): boolean {
+			return this._snapBaseline;
+		}
+
+		public set snapBaseline(value: boolean) {
+			if (this._snapBaseline === value) return;
+			this._snapBaseline = value;
+			// Moves every vertex vertically → full rebuild.
 			this._requestRebuild('full');
 		}
 

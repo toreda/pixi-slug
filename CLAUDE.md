@@ -29,6 +29,9 @@ This file serves as a quick reference to project knowledge and documentation. Fo
 - **[_docs/artifact_investigation_a_z.md](_docs/artifact_investigation_a_z.md)** - Uppercase A/Z large-size artifact (OPEN, pre-existing, not a lazy-load regression)
   *Bottom-left horizontal stripes on uppercase A and Z above ~100pt for Roboto. Confirmed not introduced by lazy-load refactor (byte-equivalence test passes). Likely band-boundary float32 precision; candidate fixes listed.*
 
+- **[_docs/slug_tips_adoption.md](_docs/slug_tips_adoption.md)** - Reference Slug repo tips adopted 2026-10-08
+  *Half-float curve texture, packed r32float band texture, 1/1024 em band overlap replacing the ±1 band margin, axis-parallel line exclusion, band list reuse, `{p1,p2,p2}` line encoding, cap-height snapping. Measured band stats before/after on Roboto and STIX.*
+
 - **[_docs/port_risks.md](_docs/port_risks.md)** - Port risks: HLSL→GLSL and C++→JavaScript
   *21 risks across two sections. "Port from HLSL to GLSL" (14 risks): matrix order, negative zero sign bit, div-by-zero undefined, RGBA16→32 format change, missing usampler2D, saturate(), flat provoking vertex, dFdx/dFdy spec, texelFetch OOB, integer precision, #version, precision qualifiers, ternary logic, loop limits. "Port to JavaScript" (7 risks): band float64/float32 mismatch, uint32-as-float32, NaN packing, cubic approximation, alpha premultiply, WebGL2, mobile derivatives.*
 

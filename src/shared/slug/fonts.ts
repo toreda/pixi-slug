@@ -120,9 +120,7 @@ export class SlugFonts {
 
 	/** Same shape as {@link _pendingPrewarmHook} for the context-prewarm hook. */
 	private static _pendingContextPrewarmHook:
-		| ((gl: WebGL2RenderingContext) => Promise<boolean>)
-		| null
-		| undefined = undefined;
+		((gl: WebGL2RenderingContext) => Promise<boolean>) | null | undefined = undefined;
 
 	/**
 	 * Resolve any supported font input to a loaded `SlugFont`.

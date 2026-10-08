@@ -16,6 +16,20 @@ export class Defaults {
 	public static readonly TEXTURE_SIZE = 4096 as const;
 	/** Default number of horizontal/vertical bands per glyph for spatial indexing. */
 	public static readonly BAND_COUNT = 32 as const;
+	/**
+	 * Overlap added to every band boundary when assigning curves to bands,
+	 * in em. Curves whose extent comes within this distance of a band are
+	 * included in it. Covers the float32 disagreement between the CPU band
+	 * assignment and the shader's band-index arithmetic. Matches the value
+	 * recommended by the reference Slug implementation (1/1024 em).
+	 */
+	public static readonly BAND_EPSILON_EM = 1 / 1024;
+	/**
+	 * Units-per-em assumed by the band builder when a caller does not pass
+	 * the font's real value (tests and ad-hoc outlines). Real fonts always
+	 * pass their own `unitsPerEm`.
+	 */
+	public static readonly BAND_EPSILON_UNITS_PER_EM = 2048 as const;
 
 	public static readonly FONT_SIZE = 24 as const;
 
@@ -100,6 +114,15 @@ export class Defaults {
 		FallbackWhileLoading: true as const,
 		/** Whether supersampling is enabled. */
 		Supersampling: false as const,
+		/**
+		 * Round the text baseline (and multiline line pitch) to whole local
+		 * pixels. Combined with a font size from `SlugFont.snapFontSize`,
+		 * this lands the cap height and baseline of each line on the pixel
+		 * grid so horizontal stems render crisp. Off by default because it
+		 * shifts glyph positions by up to half a pixel relative to the
+		 * unsnapped layout.
+		 */
+		SnapBaseline: false as const,
 		/** Default number of supersamples when supersampling is enabled. */
 		SupersampleCount: 4 as const,
 

@@ -76,7 +76,7 @@ Output: Array of SlugGlyphCurve { p1x, p1y, p2x, p2y, p3x, p3y }
 | Source Command | Conversion | Notes |
 |---------------|------------|-------|
 | `Q` (quadratic) | Direct use | Already quadratic: p1 = start, p2 = control, p3 = end |
-| `L` (line) | Degenerate quadratic | p2 = midpoint of p1 and p3 (produces a straight-line Bézier) |
+| `L` (line) | Quadratic with duplicated end point | p2 = p3 (`{p1, p2, p2}`, as the reference Slug repo recommends). The control point rounds identically to the end point under half-float quantization, so the segment stays exactly straight, and `p1 - 2·p2 + p3 = p1 - p3` is non-zero for any line not parallel to the ray, keeping lines out of the solver's degenerate branch. |
 | `C` (cubic) | Split into 2 quadratics | Use de Casteljau subdivision at t=0.5, then approximate each half as a quadratic |
 | `M` (moveTo) | Track contour start | Sets current position, no curve emitted |
 | `Z` (closePath) | Close contour | If current position ≠ contour start, emit a closing line-to-quadratic |
@@ -142,16 +142,24 @@ Same for y-axis.
 For each curve, determine which bands its bounding box overlaps:
 
 ```
-For horizontal bands (used with horizontal rays):
-  hStart = floor(curveMinY * hBandScale + hBandOffset)
-  hEnd   = floor(curveMaxY * hBandScale + hBandOffset)
+epsilon = unitsPerEm × Defaults.BAND_EPSILON_EM   (1/1024 em, per the reference implementation)
+
+For horizontal bands (used with horizontal rays), unless the curve is a straight horizontal line:
+  hStart = floor((curveMinY - epsilon) * hBandScale + hBandOffset)
+  hEnd   = floor((curveMaxY + epsilon) * hBandScale + hBandOffset)
   → Assign curve to hBands[hStart..hEnd]
 
-For vertical bands (used with vertical rays):
-  vStart = floor(curveMinX * vBandScale + vBandOffset)
-  vEnd   = floor(curveMaxX * vBandScale + vBandOffset)
+For vertical bands (used with vertical rays), unless the curve is a straight vertical line:
+  vStart = floor((curveMinX - epsilon) * vBandScale + vBandOffset)
+  vEnd   = floor((curveMaxX + epsilon) * vBandScale + vBandOffset)
   → Assign curve to vBands[vStart..vEnd]
 ```
+
+**Band overlap (2026-10-08)**: the epsilon replaces the earlier "±1 band on each side" safety margin. It is orders of magnitude larger than the float32 disagreement between CPU and GPU band-index arithmetic (the only thing the margin has to absorb) while adding far fewer curves per band — on the Roboto subset the average worst-case band shrank from 16.8 to 12.0 curves.
+
+**Axis-parallel lines**: a straight horizontal line can never cross a horizontal ray, and a straight vertical line can never cross a vertical ray (all three control points share the same coordinate, so the winding-number code is always 0). They are excluded from the band for the axis they are parallel to and still appear in the other axis's bands. Fonts are roughly half straight lines, so this drops the average worst-case band further, from 12.0 to 8.9 on Roboto.
+
+**Curve bounds** are computed from control points rounded to half precision (`slugTextureFloat16Round`), matching the `rgba16float` curve texture the GPU reads.
 
 **Critical: Float32 precision matching**. Band scale/offset values must be computed through a Float32 round-trip to match the GPU's float32 arithmetic exactly. If the CPU uses float64 to compute band indices, curves will be assigned to bands the shader never selects, causing missing-curve artifacts.
 

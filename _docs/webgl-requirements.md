@@ -109,32 +109,34 @@ Every CPU→GPU data transfer in the pipeline, with the JS typed array used and 
 
 ### 3.1 Curve Texture
 
+> **Updated 2026-10-08** — the curve texture moved from `rgba32float` to `rgba16float` (reference-implementation tip 1).
+
 | Property | Value |
 |----------|-------|
-| JS typed array | `Float32Array` |
-| GPU upload format | `rgba32float` |
+| JS typed array | `Uint16Array` of IEEE 754 binary16 bit patterns |
+| GPU upload format | `rgba16float` (`HALF_FLOAT` type in v6/v7) |
 | Shader reads as | `float` via `texelFetch(uCurveTexture, ...)` |
 | Data stored | Bézier control point coordinates (p1x, p1y, p2x, p2y, p3x, p3y) |
 | Source values | `number` (float64) from opentype.js glyph data |
-| Truncation point | When written to `Float32Array` in `pack.ts:120–131` |
+| Rounding point | `slugTextureFloat16Encode` in `pack.ts` (round-to-nearest-even, subnormals flushed to zero) |
 
-**Precision path**: `opentype.js (float64)` → `SlugGlyphCurve.p1x (float64)` → `curveData[i] = value (float64→float32 truncation)` → GPU `texelFetch` (float32)
+**Precision path**: `opentype.js (float64)` → `SlugGlyphCurve.p1x (float64)` → `curveData[i] = float16 bits` → GPU `texelFetch` promotes to float32
 
-**Verdict**: **Safe**. Font coordinates are small integers or simple fractions (typically 0–2048 range for 1000 or 2048 unitsPerEm fonts). Float32 has 24 bits of mantissa, which represents integers up to 2^24 = 16,777,216 exactly. All TrueType coordinates fit within this range. The truncation from float64→float32 loses at most ~1e-7 relative precision, which is irrelevant for glyph coordinates.
+**Verdict**: **Safe**. Half floats hold every integer up to 2048 exactly and have 11 significant bits (0.05% relative error) beyond that — the same relative precision the reference implementation gets with em-normalised coordinates. Band assignment (`bands.ts`) rounds every control point through `slugTextureFloat16Round` before computing bounds, so the CPU and GPU see identical coordinates. Line segments are stored as `{p1, p2, p2}` so they stay exactly straight after rounding.
 
 ### 3.2 Band Texture
 
+> **Updated 2026-10-08** — the band texture moved from `rgba32float` (two channels used, two wasted) to a single-channel `r32float` holding a packed uint16 pair per texel.
+
 | Property | Value |
 |----------|-------|
-| JS typed array | `Uint32Array` |
-| GPU upload format | `rgba32float` (after manual conversion!) |
-| Shader reads as | `float`, then cast to `uint` via `uint(raw.x)` |
-| Data stored | Curve counts, offsets, texel coordinates |
-| Source values | Integer indices (0–4095 range for texture coordinates) |
+| JS typed array | `Uint32Array`, one element per texel: `(hi << 16) \| lo` |
+| GPU upload format | `r32float` via a `Float32Array` view on the same buffer (bit-pattern reinterpretation) |
+| Shader reads as | `floatBitsToUint(texelFetch(...).x)`, then `>> 16` / `& 0xFFFF` |
+| Data stored | Headers: hi = curve count, lo = list offset. References: hi = column, lo = row |
+| Source values | Integer indices (count ≤ 512, column < 4096, row / offset < 65536) |
 
-**Precision path**: `Uint32Array[i] = intValue` → manually copied to `Float32Array` as `f[i] = bandData[i]` (integer→float64→float32) → GPU `texelFetch` returns `float` → shader does `uint(raw.x)` cast
-
-**THIS IS THE MOST DANGEROUS PATH IN THE ENTIRE PIPELINE.** See Section 5.
+**Precision path**: bit-exact. No value conversion takes place; the only assumption is that `texelFetch` on a float32 texture returns subnormal bit patterns unchanged (count/column values below 128 produce subnormals), which the previous layout already relied on. The small-range field is in the high half so the exponent bits can never all be set — no packed texel is a NaN pattern. Section 5 below describes the original value-conversion design and is kept for history.
 
 ### 3.3 Vertex Buffer
 
@@ -431,9 +433,9 @@ If future data ranges could produce `high16 >= 0x7F80` (i.e., band texture row >
 
 | Requirement | Value |
 |-------------|-------|
-| WebGL internal format | `RGBA32F` |
-| PixiJS format string | `'rgba32float'` |
-| WebGL extension needed | `EXT_color_buffer_float` (for rendering to; not needed for read-only textures) |
+| WebGL internal format | `RGBA16F` (since 2026-10-08; was `RGBA32F`) |
+| PixiJS format string | `'rgba16float'` (v8); `FORMATS.RGBA` + `TYPES.HALF_FLOAT` (v6/v7) |
+| WebGL extension needed | None for read-only `texelFetch` in WebGL2 |
 | `texelFetch` support | WebGL2 required |
 | Filter mode | `NEAREST` (no interpolation — texel-exact fetch) |
 | Mipmaps | None |
@@ -442,9 +444,9 @@ If future data ranges could produce `high16 >= 0x7F80` (i.e., band texture row >
 
 | Requirement | Value |
 |-------------|-------|
-| WebGL internal format | `RGBA32F` (current — stores uint-as-float) |
-| Ideal internal format | `RGBA32UI` (if PixiJS supports it) |
-| PixiJS format string | `'rgba32float'` (current) |
+| WebGL internal format | `R32F` (since 2026-10-08; was `RGBA32F`) — one packed uint32 per texel as float bits |
+| Ideal internal format | `RG16UI` with `usampler2D`. Not usable: PixiJS v8 8.17.1 maps every `*uint` format to the non-integer GL format (`rg16uint` → `gl.RG`), so the upload fails with `GL_INVALID_OPERATION`. `R32F` with bit reinterpretation has the same 4-byte footprint. |
+| PixiJS format string | `'r32float'` (v8); `FORMATS.RED` + `TYPES.FLOAT` (v6/v7) |
 | Filter mode | `NEAREST` (critical — any filtering would corrupt integer data) |
 | Mipmaps | None |
 
@@ -538,6 +540,8 @@ Both shaders must be compiled as a pair. The `#version 300 es` directive must be
 
 **Recommendation**: Either (a) compute `curveBounds()` from float32-truncated coordinates, or (b) extend each curve's band assignment by ±1 band as a safety margin. Option (b) is simpler but increases the number of curves per band slightly.
 
+**Resolution (2026-10-08)**: `curveBounds()` works on control points rounded to the half-float precision of the curve texture (`slugTextureFloat16Round`), and the ±1 band margin was replaced by the reference implementation's 1/1024 em overlap epsilon (`Defaults.BAND_EPSILON_EM`), which covers the float32 index disagreement with a small fraction of the extra curves the whole-band margin added.
+
 ### Risk 2: Band Texture Integer Fidelity (Severity: MEDIUM)
 
 **What**: Uint32 band data converted to float32 for upload. Values > 2^24 would be corrupted.
@@ -584,8 +588,8 @@ These invariants must hold for correct rendering. Violating any one will produce
 
 ### Data Integrity
 
-- [ ] **INV-1**: All curve texture values are float32 (written via `Float32Array`). No float64 intermediaries reach the GPU.
-- [ ] **INV-2**: All band texture integer values are < 2^24 (16,777,216), ensuring exact float32 representation.
+- [ ] **INV-1**: All curve texture values are half floats (written via `slugTextureFloat16Encode` into a `Uint16Array`). No float64 intermediaries reach the GPU.
+- [ ] **INV-2**: Every packed band texel keeps count/column in the high 16 bits and offset/row in the low 16 bits, so no texel is a NaN bit pattern and every field fits 16 bits (`pack.ts` throws when a glyph's relative list offset exceeds 0xFFFF).
 - [ ] **INV-3**: Packed uint16 pairs in vertex attributes produce non-NaN float32 bit patterns (high16 < 0x7F80).
 - [ ] **INV-4**: Textures are uploaded with `scaleMode: 'nearest'` and `alphaMode: 'no-premultiply-alpha'`.
 - [ ] **INV-5**: Texture width = 4096, matching `kLogBandTextureWidth = 12` in `frag.glsl`.
@@ -597,7 +601,7 @@ These invariants must hold for correct rendering. Violating any one will produce
 
 - [ ] **INV-9**: Band scale/offset values in vertex attributes are computed through a Float32Array round-trip.
 - [ ] **INV-10**: Band assignment on CPU uses the same float32 scale/offset values the GPU will use.
-- [ ] **INV-11**: Curve bounding boxes used for band assignment are computed from float32-truncated coordinates (currently NOT guaranteed — see Risk 1).
+- [ ] **INV-11**: Curve bounding boxes used for band assignment are computed from half-float-rounded coordinates (`slugTextureFloat16Round` in `bands.ts`), matching the curve texture exactly.
 
 ### Shader Requirements
 

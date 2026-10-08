@@ -26,6 +26,11 @@ export {SlugFontsRegistryEntry} from '../shared/slug/fonts/registry/entry';
 export type {SlugFontsRegistryOptions} from '../shared/slug/fonts/registry/options';
 export type {SlugFontsRegistryStat} from '../shared/slug/fonts/registry/stat';
 export {slugWoff2Decompress} from '../shared/slug/woff2/decompress';
+export {slugFontSnap} from '../shared/slug/font/snap';
+export {slugFontCapHeight} from '../shared/slug/font/cap/height';
+export {slugTextureFloat16Encode} from '../shared/slug/texture/float16/encode';
+export {slugTextureFloat16Decode} from '../shared/slug/texture/float16/decode';
+export {slugTextureFloat16Round} from '../shared/slug/texture/float16/round';
 export type {
 	SlugTextInit,
 	SlugTextFontInput,

@@ -66,8 +66,8 @@ describe('SlugFont', () => {
 				font = new SlugFont();
 			});
 
-			it('should initialize curveData to an empty Float32Array', () => {
-				expect(font.curveData).toBeInstanceOf(Float32Array);
+			it('should initialize curveData to an empty Uint16Array', () => {
+				expect(font.curveData).toBeInstanceOf(Uint16Array);
 				expect(font.curveData.length).toBe(0);
 			});
 
@@ -258,8 +258,8 @@ describe('SlugFont', () => {
 		describe('memoryBytes', () => {
 			it('should return at least one row per texture for an empty font', () => {
 				const font = new SlugFont(4096);
-				// Empty font: ceil(0/4/4096)||1 = 1 row each → 2 rows × 4096 × 16 bytes
-				expect(font.memoryBytes()).toBe(2 * 4096 * 16);
+				// Empty font: 1 curve row (8 B/texel) + 1 band row (4 B/texel) → 12 × 4096 bytes
+				expect(font.memoryBytes()).toBe((8 + 4) * 4096);
 			});
 
 			it('should return a positive number for any valid texture width', () => {
@@ -276,23 +276,23 @@ describe('SlugFont', () => {
 
 			it('should round curve rows up to the next full row', () => {
 				const font = new SlugFont(4);
-				// 5 floats → ceil(5/4/4)=1 curve row, 0 band → 1 band row → 2 × 4 × 16 = 128
-				font.curveData = new Float32Array(5);
-				expect(font.memoryBytes()).toBe(2 * 4 * 16);
+				// 5 half floats → ceil(5/4/4)=1 curve row (8 B/texel), 0 band → 1 band row (4 B/texel)
+				font.curveData = new Uint16Array(5);
+				expect(font.memoryBytes()).toBe((1 * 8 + 1 * 4) * 4);
 			});
 
 			it('should round band rows up to the next full row', () => {
 				const font = new SlugFont(4);
-				font.bandData = new Uint32Array(17); // ceil(17/4/4)=2 band rows
-				// 1 (default empty curve row) + 2 (band rows) = 3 rows
-				expect(font.memoryBytes()).toBe(3 * 4 * 16);
+				font.bandData = new Uint32Array(17); // ceil(17/4)=5 band rows
+				// 1 (default empty curve row × 8 B) + 5 band rows × 4 B, × 4 texels wide
+				expect(font.memoryBytes()).toBe((1 * 8 + 5 * 4) * 4);
 			});
 
-			it('should return a multiple of textureWidth × 16 (one full row)', () => {
+			it('should return a multiple of textureWidth × 4 (one full band row)', () => {
 				const font = new SlugFont(64);
-				font.curveData = new Float32Array(123);
+				font.curveData = new Uint16Array(123);
 				font.bandData = new Uint32Array(7);
-				expect(font.memoryBytes() % (64 * 16)).toBe(0);
+				expect(font.memoryBytes() % (64 * 4)).toBe(0);
 			});
 
 			it('should not mutate curveData, bandData, or any other public property', () => {
@@ -465,11 +465,11 @@ describe('SlugFont', () => {
 				expect(font.curveData.length % 4).toBe(0);
 			});
 
-			it('should produce bandData sized to a multiple of 4 RGBA channels', () => {
+			it('should produce bandData sized to whole texture rows', () => {
 				const font = new SlugFont();
 				font.loadSync(loadFontFixture('roboto-fallback.ttf'));
 				font.ensureGlyphs('A');
-				expect(font.bandData.length % 4).toBe(0);
+				expect(font.bandData.length % font.textureWidth).toBe(0);
 			});
 
 			it('should throw when textureWidth does not match the shader-required size', () => {

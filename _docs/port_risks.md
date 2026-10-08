@@ -567,6 +567,8 @@ _f[4] = curve.p3x; _f[5] = curve.p3y;
 **Severity**: MEDIUM
 **Status**: Safe for current data, no guard in place
 
+> **Update 2026-10-08.** The band texture is now a single-channel `r32float` holding one packed uint32 per texel (`(hi << 16) | lo`; headers = count/offset, references = column/row), uploaded by bit-pattern reinterpretation and read back with `floatBitsToUint` — the "alternative long-term" option below. The 2^24 ceiling no longer applies. The small-range field (count ≤ 512, column < 4096) lives in the high half so the float32 exponent bits can never all be set, which rules out NaN patterns; see `tests/shared/slug/texture/pack.spec.ts` "band data NaN safety". The remaining assumption is that `texelFetch` on a 32-bit float texture returns subnormal bit patterns unchanged, which the previous layout already relied on. The rest of this section describes the original design.
+
 ### Root Cause
 
 WebGL2 supports `RGBA32UI` integer textures natively, but PixiJS `BufferImageSource` does not expose this format. The workaround is to convert `Uint32Array` integer values to `Float32Array` float values and upload as `rgba32float`. The fragment shader casts the float back to uint: `uint(raw.x)`.

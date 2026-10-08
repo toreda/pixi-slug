@@ -1,5 +1,6 @@
-import { Defaults } from '../../../defaults';
-import type { SlugGlyphCurve } from './data';
+import {Defaults} from '../../../defaults';
+import {slugTextureFloat16Round} from '../texture/float16/round';
+import type {SlugGlyphCurve} from './data';
 
 /**
  * Result of band computation for a single glyph.
@@ -14,26 +15,37 @@ export interface SlugGlyphBands {
 }
 
 /**
+ * Control points of one curve after rounding to the precision stored in
+ * the curve texture (float16). Reused across calls to avoid allocation.
+ */
+const _q = {p1x: 0, p1y: 0, p2x: 0, p2y: 0, p3x: 0, p3y: 0};
+
+function quantize(curve: SlugGlyphCurve): void {
+	_q.p1x = slugTextureFloat16Round(curve.p1x);
+	_q.p1y = slugTextureFloat16Round(curve.p1y);
+	_q.p2x = slugTextureFloat16Round(curve.p2x);
+	_q.p2y = slugTextureFloat16Round(curve.p2y);
+	_q.p3x = slugTextureFloat16Round(curve.p3x);
+	_q.p3y = slugTextureFloat16Round(curve.p3y);
+}
+
+/**
  * Compute the axis-aligned bounding box of a quadratic Bezier curve.
  * Returns [minX, minY, maxX, maxY].
  *
- * Uses float32-truncated coordinates to match what the GPU sees in the curve
- * texture (see port_risks.md JS-1). Without this, a curve whose float64 bounds
- * barely reach into band N might not reach it in float32, causing the shader
- * to miss the curve at that band boundary → horizontal/vertical line artifacts.
+ * Uses the float16-rounded coordinates in `_q` (populated by `quantize`)
+ * so the bounds match what the GPU sees in the curve texture (see
+ * port_risks.md JS-1). Without this, a curve whose float64 bounds barely
+ * reach into band N might not reach it after quantization, causing the
+ * shader to miss the curve at that band boundary.
  */
-const _boundsF32 = new Float32Array(6);
-function curveBounds(curve: SlugGlyphCurve): [number, number, number, number] {
-	// Truncate to float32 to match the precision stored in the curve texture.
-	_boundsF32[0] = curve.p1x;
-	_boundsF32[1] = curve.p1y;
-	_boundsF32[2] = curve.p2x;
-	_boundsF32[3] = curve.p2y;
-	_boundsF32[4] = curve.p3x;
-	_boundsF32[5] = curve.p3y;
-	const p1x = _boundsF32[0], p1y = _boundsF32[1];
-	const p2x = _boundsF32[2], p2y = _boundsF32[3];
-	const p3x = _boundsF32[4], p3y = _boundsF32[5];
+function curveBounds(): [number, number, number, number] {
+	const p1x = _q.p1x,
+		p1y = _q.p1y;
+	const p2x = _q.p2x,
+		p2y = _q.p2y;
+	const p3x = _q.p3x,
+		p3y = _q.p3y;
 
 	// For a quadratic Bezier B(t) = (1-t)^2*p1 + 2(1-t)t*p2 + t^2*p3,
 	// the extrema occur at t = (p1 - p2) / (p1 - 2*p2 + p3) for each axis.
@@ -74,6 +86,28 @@ function curveBounds(curve: SlugGlyphCurve): [number, number, number, number] {
  * The glyph's bounding box is divided into a grid of bands.
  * Each band records which curves overlap it, so the fragment shader
  * only tests the relevant subset of curves per pixel.
+ *
+ * Two rules from the reference Slug implementation keep the per-pixel
+ * curve loop short:
+ *
+ *  - Bands overlap by a small epsilon (`Defaults.BAND_EPSILON_EM`,
+ *    expressed in em and scaled by `unitsPerEm`) instead of a whole
+ *    neighbouring band on each side. The epsilon is orders of magnitude
+ *    larger than the float32 disagreement between the CPU band
+ *    assignment and the shader's band-index arithmetic, which is the
+ *    only thing the overlap has to absorb.
+ *  - A straight horizontal line can never cross a horizontal ray, and a
+ *    straight vertical line can never cross a vertical ray, so those
+ *    curves are left out of the band for the axis they are parallel to.
+ *    They still appear in the other axis's bands.
+ *
+ * @param curves		Quadratic curves in font units.
+ * @param boundsMinX	Glyph bounding box in font units.
+ * @param boundsMinY	Glyph bounding box in font units.
+ * @param boundsMaxX	Glyph bounding box in font units.
+ * @param boundsMaxY	Glyph bounding box in font units.
+ * @param bandCount		Maximum bands per axis.
+ * @param unitsPerEm	Font units per em; scales the band overlap epsilon.
  */
 export function slugGlyphBands(
 	curves: SlugGlyphCurve[],
@@ -81,7 +115,8 @@ export function slugGlyphBands(
 	boundsMinY: number,
 	boundsMaxX: number,
 	boundsMaxY: number,
-	bandCount: number = Defaults.BAND_COUNT
+	bandCount: number = Defaults.BAND_COUNT,
+	unitsPerEm: number = Defaults.BAND_EPSILON_UNITS_PER_EM
 ): SlugGlyphBands {
 	const width = boundsMaxX - boundsMinX;
 	const height = boundsMaxY - boundsMinY;
@@ -121,34 +156,45 @@ export function slugGlyphBands(
 	const maxDim = Math.max(width, height);
 	const clampedBandCount = Math.max(hBandCount, vBandCount); // always equal, but be explicit
 	const _f32 = new Float32Array(4);
-	_f32[0] = clampedBandCount / maxDim;  // shared bandScale (float32)
+	_f32[0] = clampedBandCount / maxDim; // shared bandScale (float32)
 	const bandScale = _f32[0];
-	_f32[1] = -boundsMinY * bandScale;   // hBandOffset
-	_f32[2] = -boundsMinX * bandScale;   // vBandOffset
-	const hBandScale  = bandScale;
+	_f32[1] = -boundsMinY * bandScale; // hBandOffset
+	_f32[2] = -boundsMinX * bandScale; // vBandOffset
+	const hBandScale = bandScale;
 	const hBandOffset = _f32[1];
-	const vBandScale  = bandScale;
+	const vBandScale = bandScale;
 	const vBandOffset = _f32[2];
 
-	for (let i = 0; i < curves.length; i++) {
-		const [cMinX, cMinY, cMaxX, cMaxY] = curveBounds(curves[i]);
+	// Band overlap in font units.
+	const epsilon = unitsPerEm * Defaults.BAND_EPSILON_EM;
 
-		// Compute band range using the same float32 arithmetic the shader uses.
-		// Extend by 1 band on each side as a safety margin: the shader's float32
-		// band-index calculation may round differently than the CPU's, placing a
-		// pixel in an adjacent band. Without this margin, curves at band boundaries
-		// are missing from one side, producing horizontal/vertical line artifacts
-		// that shift with the text's screen position.
-		const hStart = Math.max(0, Math.floor(cMinY * hBandScale + hBandOffset) - 1);
-		const hEnd = Math.min(hBandCount - 1, Math.floor(cMaxY * hBandScale + hBandOffset) + 1);
-		for (let b = hStart; b <= hEnd; b++) {
-			hBands[b].push(i);
+	// Per-curve max coordinates (quantized) for the descending sort below.
+	const maxXs = new Float64Array(curves.length);
+	const maxYs = new Float64Array(curves.length);
+
+	for (let i = 0; i < curves.length; i++) {
+		quantize(curves[i]);
+		const [cMinX, cMinY, cMaxX, cMaxY] = curveBounds();
+		maxXs[i] = Math.max(_q.p1x, _q.p2x, _q.p3x);
+		maxYs[i] = Math.max(_q.p1y, _q.p2y, _q.p3y);
+
+		const horizontalLine = _q.p1y === _q.p2y && _q.p2y === _q.p3y;
+		const verticalLine = _q.p1x === _q.p2x && _q.p2x === _q.p3x;
+
+		if (!horizontalLine) {
+			const hStart = Math.max(0, Math.floor((cMinY - epsilon) * hBandScale + hBandOffset));
+			const hEnd = Math.min(hBandCount - 1, Math.floor((cMaxY + epsilon) * hBandScale + hBandOffset));
+			for (let b = hStart; b <= hEnd; b++) {
+				hBands[b].push(i);
+			}
 		}
 
-		const vStart = Math.max(0, Math.floor(cMinX * vBandScale + vBandOffset) - 1);
-		const vEnd = Math.min(vBandCount - 1, Math.floor(cMaxX * vBandScale + vBandOffset) + 1);
-		for (let b = vStart; b <= vEnd; b++) {
-			vBands[b].push(i);
+		if (!verticalLine) {
+			const vStart = Math.max(0, Math.floor((cMinX - epsilon) * vBandScale + vBandOffset));
+			const vEnd = Math.min(vBandCount - 1, Math.floor((cMaxX + epsilon) * vBandScale + vBandOffset));
+			for (let b = vStart; b <= vEnd; b++) {
+				vBands[b].push(i);
+			}
 		}
 	}
 
@@ -156,20 +202,12 @@ export function slugGlyphBands(
 	// frag.glsl breaks early once max coord drops below the pixel threshold,
 	// so the sort order must be descending for the early-exit to be correct.
 	for (let b = 0; b < hBandCount; b++) {
-		hBands[b].sort((a, b) => {
-			const maxXa = Math.max(curves[a].p1x, curves[a].p2x, curves[a].p3x);
-			const maxXb = Math.max(curves[b].p1x, curves[b].p2x, curves[b].p3x);
-			return maxXb - maxXa;
-		});
+		hBands[b].sort((a, c) => maxXs[c] - maxXs[a]);
 	}
 
 	for (let b = 0; b < vBandCount; b++) {
-		vBands[b].sort((a, b) => {
-			const maxYa = Math.max(curves[a].p1y, curves[a].p2y, curves[a].p3y);
-			const maxYb = Math.max(curves[b].p1y, curves[b].p2y, curves[b].p3y);
-			return maxYb - maxYa;
-		});
+		vBands[b].sort((a, c) => maxYs[c] - maxYs[a]);
 	}
 
-	return { hBandCount, vBandCount, hBands, vBands };
+	return {hBandCount, vBandCount, hBands, vBands};
 }

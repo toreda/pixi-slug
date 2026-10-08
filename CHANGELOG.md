@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+* `SlugFont.capHeight` (OS/2 `sCapHeight`, falling back to the height of `H`) and `SlugFont.snapFontSize(fontSize, resolution)`, which returns the nearest size whose cap height is a whole number of device pixels.
+* `snapBaseline` option / property on `SlugText`. Rounds the baseline and the multiline line pitch to whole local pixels so that, together with `snapFontSize`, cap tops and baselines sit on the pixel grid and horizontal stems render crisp. Off by default.
+* Half-float helpers `slugTextureFloat16Encode` / `slugTextureFloat16Decode` / `slugTextureFloat16Round` and the `slugFontSnap` / `slugFontCapHeight` functions are exported from all three entry points.
+
+### Changed
+* Band assignment follows the reference Slug implementation: bands overlap by `1/1024` em (`Defaults.BAND_EPSILON_EM`) instead of a whole neighbouring band on each side, and straight horizontal lines are left out of horizontal bands (vertical lines out of vertical bands) because they cannot cross a ray parallel to them. On the bundled Roboto subset this cuts the average worst-case curve count per band from 16.8 to 8.9, roughly halving the fragment shader's per-pixel curve loop, and halves the number of band references.
+* Band curve lists are shared: a band whose list is identical to, or a contiguous run of, another band's list in the same glyph points at the existing data instead of repeating it. Roughly 24% fewer band texels on Roboto, no shader change.
+* The band texture is now a single-channel `r32float` texture holding one packed uint32 per texel (`(hi << 16) | lo`) instead of `rgba32float` with two channels unused. Four times less band texture memory. `SlugFont.bandData` is still a `Uint32Array`, but has one element per texel.
+* The curve texture is now `rgba16float`. `SlugFont.curveData` is a `Uint16Array` of IEEE 754 half-float bit patterns (use `slugTextureFloat16Decode` to read it). Halves curve texture memory. Band assignment quantizes control points through the same half-float rounding so the CPU and GPU agree exactly.
+* Straight line segments are encoded as `{p1, p2, p2}` (control point duplicated at the end point) instead of a midpoint control point, as the reference implementation recommends. The encoding survives half-float quantization exactly and keeps non-axis-aligned lines out of the solver's degenerate branch.
+* `slugGlyphBands` takes the font's `unitsPerEm` (7th argument) to scale the band overlap epsilon.
+* `SlugFont.memoryBytes()` reflects the new per-texel sizes (8 bytes per curve texel, 4 bytes per band texel).
+
 ## [0.5.2] - 2026-09-27
 
 ### Added

@@ -578,7 +578,8 @@ export class SlugText extends SlugTextV8Base {
 				font.textureWidth,
 				lineHeight,
 				color,
-				extraExpand
+				extraExpand,
+				this._snapBaseline
 			);
 		}
 		return slugGlyphQuads(
@@ -589,7 +590,8 @@ export class SlugText extends SlugTextV8Base {
 			this._fontSize,
 			font.textureWidth,
 			color,
-			extraExpand
+			extraExpand,
+			this._snapBaseline
 		);
 	}
 
@@ -938,7 +940,12 @@ export class SlugText extends SlugTextV8Base {
 			// has a sensible vertical anchor.
 			maxGlyphTopMain = font.ascender;
 		}
-		const mainBaselineY = lastLineIndex * lineHeight + maxGlyphTopMain * scaleMain;
+		// Mirror the rounding `slugGlyphQuads` / `slugGlyphQuadsMultiline`
+		// apply when `snapBaseline` is on, so scripts anchor to the same
+		// baseline the main glyphs were placed on.
+		const mainBaselineY = this._snapBaseline
+			? lastLineIndex * Math.round(lineHeight) + Math.round(maxGlyphTopMain * scaleMain)
+			: lastLineIndex * lineHeight + maxGlyphTopMain * scaleMain;
 
 		// Trailing x cursor of the last line, after alignment offset.
 		const mainCursorEndX = layout.lineOffsetX[lastLineIndex] + lineWidths[lastLineIndex];
@@ -1300,7 +1307,9 @@ export class SlugText extends SlugTextV8Base {
 		}
 
 		const {font, lines, scale, layout, fillBounds} = plan;
-		const lineHeight = (font.ascender - font.descender) * scale;
+		const rawLineHeight = (font.ascender - font.descender) * scale;
+		// Match the line pitch the glyph quads were built with.
+		const lineHeight = this._snapBaseline ? Math.round(rawLineHeight) : rawLineHeight;
 
 		const packColor = (rgba: Rgba): number =>
 			(((rgba[0] * 255) & 0xff) << 16) | (((rgba[1] * 255) & 0xff) << 8) | ((rgba[2] * 255) & 0xff);
@@ -1364,7 +1373,7 @@ export class SlugText extends SlugTextV8Base {
 				const g = font.glyphs.get(c);
 				if (g && g.bounds.maxY > maxGlyphTop) maxGlyphTop = g.bounds.maxY;
 			}
-			const baselineY = maxGlyphTop * scale;
+			const baselineY = this._snapBaseline ? Math.round(maxGlyphTop * scale) : maxGlyphTop * scale;
 
 			if (ul.enabled && ul.length > 0) {
 				const drawW = effLineW * ul.length;

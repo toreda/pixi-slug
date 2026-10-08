@@ -10,6 +10,7 @@ import {resolve} from 'path';
 import opentype from 'opentype.js';
 import {SlugFont} from '../../../src/shared/slug/font';
 import {slugGlyphCurves} from '../../../src/shared/slug/glyph/curves';
+import {Defaults} from '../../../src/defaults';
 import {slugGlyphBands} from '../../../src/shared/slug/glyph/bands';
 import {slugTexturePack} from '../../../src/shared/slug/texture/pack';
 import type {SlugGlyphData} from '../../../src/shared/slug/glyph/data';
@@ -34,7 +35,7 @@ function processOneEager(buf: ArrayBuffer, codepoint: number): SlugGlyphData | n
 	const {curves, contourStarts} = slugGlyphCurves(ot.path.commands);
 	if (curves.length === 0) return null;
 	const bounds = ot.getBoundingBox();
-	const bands = slugGlyphBands(curves, bounds.x1, bounds.y1, bounds.x2, bounds.y2);
+	const bands = slugGlyphBands(curves, bounds.x1, bounds.y1, bounds.x2, bounds.y2, Defaults.BAND_COUNT, font.unitsPerEm);
 
 	return {
 		charCode: codepoint,
@@ -99,7 +100,7 @@ describe('lazy vs eager byte-equivalence (regression: A/Z artifact)', () => {
 			const {curves, contourStarts} = slugGlyphCurves(g.path.commands);
 			if (curves.length === 0) continue;
 			const bounds = g.getBoundingBox();
-			const bands = slugGlyphBands(curves, bounds.x1, bounds.y1, bounds.x2, bounds.y2);
+			const bands = slugGlyphBands(curves, bounds.x1, bounds.y1, bounds.x2, bounds.y2, Defaults.BAND_COUNT, otFont.unitsPerEm);
 			eagerGlyphs.push({
 				charCode: code,
 				curves,

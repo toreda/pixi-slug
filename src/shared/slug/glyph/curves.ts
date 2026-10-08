@@ -66,16 +66,26 @@ function cubicToQuadratics(
 }
 
 /**
- * Convert a line segment to a degenerate quadratic Bezier curve.
- * The control point is placed at the midpoint so the curve evaluates
- * as a straight line.
+ * Convert a line segment to a quadratic Bezier curve by duplicating the
+ * end point as the control point: {p1, p2, p2}. This is the encoding the
+ * reference Slug implementation recommends over a midpoint control point:
+ *
+ *  - The control point and end point are the same value, so they round
+ *    identically when quantized to the half-float curve texture and the
+ *    segment stays exactly straight. A midpoint can round differently
+ *    from its end points and turn the line into a slightly bent curve
+ *    with a tiny quadratic coefficient — the regime that is hardest on
+ *    the ray solver.
+ *  - The quadratic coefficient `p1 - 2·p2 + p3 = p1 - p3` is non-zero
+ *    for any line not parallel to the ray, so lines take the ordinary
+ *    solver path instead of the degenerate branch.
  */
 export function lineToQuadratic(x0: number, y0: number, x1: number, y1: number): SlugGlyphCurve {
 	return {
 		p1x: x0,
 		p1y: y0,
-		p2x: (x0 + x1) * 0.5,
-		p2y: (y0 + y1) * 0.5,
+		p2x: x1,
+		p2y: y1,
 		p3x: x1,
 		p3y: y1
 	};

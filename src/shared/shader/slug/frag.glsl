@@ -100,12 +100,13 @@ uniform vec2 uFillTextureScale;
 // origin.
 uniform vec2 uFillTextureOffset;
 
-// Band texture stores uint32 data as float32 bit patterns (ArrayBuffer reinterpretation).
-// floatBitsToUint recovers the exact uint32 values losslessly — no rounding needed.
+// Band texture is a single-channel r32float whose bit pattern packs two uint16
+// fields: (hi << 16) | lo. floatBitsToUint recovers the exact uint32 losslessly.
+// Headers: hi = curve count, lo = list offset. References: hi = column, lo = row.
 uvec2 fetchBand(ivec2 coord)
 {
-	vec2 raw = texelFetch(uBandTexture, coord, 0).xy;
-	return uvec2(floatBitsToUint(raw.x), floatBitsToUint(raw.y));
+	uint packed = floatBitsToUint(texelFetch(uBandTexture, coord, 0).x);
+	return uvec2(packed >> 16, packed & 0xFFFFu);
 }
 
 ivec2 CalcBandLoc(ivec2 glyphLoc, uint offset)

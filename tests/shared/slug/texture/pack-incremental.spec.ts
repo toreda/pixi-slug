@@ -4,6 +4,7 @@ import {
 	slugTexturePackStateCreate
 } from '../../../../src/shared/slug/texture/pack';
 import type {SlugGlyphCurve, SlugGlyphData} from '../../../../src/shared/slug/glyph/data';
+import {slugTextureFloat16Decode} from '../../../../src/shared/slug/texture/float16/decode';
 
 const TEX_WIDTH = 4096;
 
@@ -167,12 +168,12 @@ describe('slugTextureAppendGlyphs', () => {
 			slugTextureAppendGlyphs(state, [g2]);
 
 			// g1's data must still be at its original location.
-			expect(state.curveData[0]).toBe(11);
-			expect(state.curveData[1]).toBe(22);
-			expect(state.curveData[2]).toBe(33);
-			expect(state.curveData[3]).toBe(44);
-			expect(state.curveData[4]).toBe(55);
-			expect(state.curveData[5]).toBe(66);
+			expect(slugTextureFloat16Decode(state.curveData[0])).toBe(11);
+			expect(slugTextureFloat16Decode(state.curveData[1])).toBe(22);
+			expect(slugTextureFloat16Decode(state.curveData[2])).toBe(33);
+			expect(slugTextureFloat16Decode(state.curveData[3])).toBe(44);
+			expect(slugTextureFloat16Decode(state.curveData[4])).toBe(55);
+			expect(slugTextureFloat16Decode(state.curveData[5])).toBe(66);
 		});
 
 		it('keeps the buffer length aligned to whole rows after a grow', () => {
@@ -186,7 +187,7 @@ describe('slugTextureAppendGlyphs', () => {
 			slugTextureAppendGlyphs(state, [glyph]);
 
 			expect(state.curveData.length % (TEX_WIDTH * 4)).toBe(0);
-			expect(state.bandData.length % (TEX_WIDTH * 4)).toBe(0);
+			expect(state.bandData.length % TEX_WIDTH).toBe(0);
 		});
 	});
 

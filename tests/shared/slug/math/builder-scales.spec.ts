@@ -129,7 +129,14 @@ describe('mathBuilder per-slot scale overrides', () => {
 
 	describe('matrix and cases', () => {
 		it('records cell scale on matrix', () => {
-			const mat = m.matrix([['a', 'b'], ['c', 'd']], 'bracket', {scales: {cell: 0.9}});
+			const mat = m.matrix(
+				[
+					['a', 'b'],
+					['c', 'd']
+				],
+				'bracket',
+				{scales: {cell: 0.9}}
+			);
 			if (mat.kind !== 'matrix') throw new Error('unreachable');
 			expect(mat.scales).toEqual({cell: 0.9});
 		});

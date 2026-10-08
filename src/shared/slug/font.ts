@@ -3,6 +3,8 @@ import {Defaults} from '../../defaults';
 import type {SlugGlyphCurve, SlugGlyphData} from './glyph/data';
 import {slugGlyphCurves} from './glyph/curves';
 import {slugGlyphBands} from './glyph/bands';
+import {slugFontSnap} from './font/snap';
+import {slugFontCapHeight} from './font/cap/height';
 import {
 	slugTextureAppendGlyphs,
 	slugTexturePackStateCreate,
@@ -69,7 +71,8 @@ export interface SlugSyntheticResult {
  */
 export class SlugFont {
 	/**
-	 * Curve texture data: quadratic Bezier control points (float RGBA).
+	 * Curve texture data: quadratic Bezier control points as IEEE 754
+	 * half-float bit patterns, 4 per texel (uploaded as `rgba16float`).
 	 *
 	 * @remarks
 	 * Tracks the internal pack state's curve buffer. Replaced (not
@@ -81,14 +84,16 @@ export class SlugFont {
 	 * value can be uploaded as a whole-row texture without truncation
 	 * or padding logic in the GPU layer.
 	 */
-	public curveData: Float32Array;
+	public curveData: Uint16Array;
 	/**
-	 * Band texture data: hierarchical band index (uint RGBA, uploaded
-	 * as rgba32uint or via uint→float bit reinterpretation depending on
-	 * the version-specific GPU layer).
+	 * Band texture data: one packed uint32 per texel holding two uint16
+	 * fields (`(hi << 16) | lo`). Uploaded as `r32float` via bit
+	 * reinterpretation; the shader unpacks with `floatBitsToUint`. See
+	 * `SlugTexturePackState` for the field meanings.
 	 *
-	 * Same lifecycle as {@link curveData} — replaced on grow, not
-	 * mutated in place.
+	 * Length is rounded up to a multiple of `textureWidth`. Same
+	 * lifecycle as {@link curveData} — replaced on grow, not mutated in
+	 * place.
 	 */
 	public bandData: Uint32Array;
 	/** Texture width (must be power of 2). Smaller fonts can use smaller textures to save memory. */
@@ -116,6 +121,12 @@ export class SlugFont {
 	public ascender: number;
 	/** Typographic descender in font units (negative, below baseline). */
 	public descender: number;
+	/**
+	 * Cap height in font units (OS/2 `sCapHeight`, or the height of `H`
+	 * when the table does not carry one). 0 when unknown. Used by
+	 * {@link snapFontSize}.
+	 */
+	public capHeight: number;
 	/** Underline position in font units (negative = below baseline). */
 	public underlinePosition: number;
 	/** Underline thickness in font units. */
@@ -180,7 +191,7 @@ export class SlugFont {
 		}
 
 		this.textureWidth = textureWidth;
-		this.curveData = new Float32Array(0);
+		this.curveData = new Uint16Array(0);
 		this.bandData = new Uint32Array(0);
 		this.glyphs = new Map();
 		this.advances = new Map();
@@ -188,6 +199,7 @@ export class SlugFont {
 		this._nextSyntheticId = 0xf0000;
 		this.unitsPerEm = 0;
 		this.ascender = 0;
+		this.capHeight = 0;
 		this.descender = 0;
 		this.underlinePosition = 0;
 		this.underlineThickness = 0;
@@ -228,16 +240,33 @@ export class SlugFont {
 
 	/**
 	 * GPU memory consumed by this font's curve and band textures, in bytes.
-	 * Both textures use rgba32float (4 channels × 4 bytes per texel).
-	 * Band data is uint32 reinterpreted as float32 bit patterns on upload.
-	 * This is shared across all SlugText instances that use this font.
+	 * The curve texture is rgba16float (4 channels × 2 bytes per texel);
+	 * the band texture is r32float (1 channel × 4 bytes per texel, uint32
+	 * bit patterns). This is shared across all SlugText instances that
+	 * use this font.
 	 */
 	public memoryBytes(): number {
-		const bytesPerTexel = 4 * 4; // rgba32float
+		const curveBytesPerTexel = 4 * 2; // rgba16float
+		const bandBytesPerTexel = 4; // r32float
 		const textureWidth = this.textureWidth;
 		const curveRows = Math.ceil(this.curveData.length / 4 / textureWidth) || 1;
-		const bandRows = Math.ceil(this.bandData.length / 4 / textureWidth) || 1;
-		return (curveRows + bandRows) * textureWidth * bytesPerTexel;
+		const bandRows = Math.ceil(this.bandData.length / textureWidth) || 1;
+		return (curveRows * curveBytesPerTexel + bandRows * bandBytesPerTexel) * textureWidth;
+	}
+
+	/**
+	 * Return the font size nearest to `fontSize` whose cap height is a
+	 * whole number of device pixels, so the tops of capital letters sit
+	 * on the pixel grid. Pair with `SlugText`'s `snapBaseline` option so
+	 * the baseline is pixel-aligned too; together they keep horizontal
+	 * stems crisp without hinting. Returns `fontSize` unchanged when the
+	 * font is not loaded or has no usable cap height.
+	 *
+	 * @param fontSize		Requested size in CSS pixels.
+	 * @param resolution	Device pixels per CSS pixel (e.g. `renderer.resolution`).
+	 */
+	public snapFontSize(fontSize: number, resolution: number = 1): number {
+		return slugFontSnap(fontSize, this.capHeight, this.unitsPerEm, resolution);
 	}
 
 	public async load(fontData: ArrayBuffer): Promise<void> {
@@ -291,7 +320,7 @@ export class SlugFont {
 		// Drop any prior pack state and GPU cache so the next ensureGlyphs
 		// rebuilds against the new font's data.
 		this._pack = null;
-		this.curveData = new Float32Array(0);
+		this.curveData = new Uint16Array(0);
 		this.bandData = new Uint32Array(0);
 		this.destroyGpu();
 
@@ -299,6 +328,10 @@ export class SlugFont {
 		this.unitsPerEm = font.unitsPerEm;
 		this.ascender = font.ascender;
 		this.descender = font.descender;
+
+		// Cap height: prefer the OS/2 table (version >= 2 carries sCapHeight);
+		// fall back to measuring the H glyph, then to 0 (unknown).
+		this.capHeight = slugFontCapHeight(font);
 
 		// OS/2 table metrics for underline and strikethrough
 		const post = (font as any).tables?.post;
@@ -486,7 +519,15 @@ export class SlugFont {
 		}
 
 		const {minX, minY, maxX, maxY} = outline.bounds;
-		const bandResult = slugGlyphBands(outline.curves, minX, minY, maxX, maxY);
+		const bandResult = slugGlyphBands(
+			outline.curves,
+			minX,
+			minY,
+			maxX,
+			maxY,
+			Defaults.BAND_COUNT,
+			this.unitsPerEm
+		);
 
 		const id = this._nextSyntheticId++;
 		const glyph: SlugGlyphData = {
@@ -536,7 +577,15 @@ export class SlugFont {
 		}
 
 		const bounds = glyph.getBoundingBox();
-		const bandResult = slugGlyphBands(curves, bounds.x1, bounds.y1, bounds.x2, bounds.y2);
+		const bandResult = slugGlyphBands(
+			curves,
+			bounds.x1,
+			bounds.y1,
+			bounds.x2,
+			bounds.y2,
+			Defaults.BAND_COUNT,
+			this.unitsPerEm
+		);
 
 		return {
 			charCode,

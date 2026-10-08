@@ -1,6 +1,9 @@
 import {slugRadicalOutline} from '../../../../src/shared/slug/math/radical';
 
-/** A degenerate quadratic encodes a straight segment: p2 is the midpoint of p1..p3. */
+/**
+ * A straight segment is encoded as {p1, p2, p2}: the control point is a
+ * duplicate of the end point (see `lineToQuadratic`).
+ */
 function isStraightSegment(c: {
 	p1x: number;
 	p1y: number;
@@ -9,9 +12,7 @@ function isStraightSegment(c: {
 	p3x: number;
 	p3y: number;
 }): boolean {
-	const midX = (c.p1x + c.p3x) / 2;
-	const midY = (c.p1y + c.p3y) / 2;
-	return Math.abs(c.p2x - midX) < 1e-9 && Math.abs(c.p2y - midY) < 1e-9;
+	return Math.abs(c.p2x - c.p3x) < 1e-9 && Math.abs(c.p2y - c.p3y) < 1e-9;
 }
 
 describe('slugRadicalOutline', () => {
@@ -28,7 +29,7 @@ describe('slugRadicalOutline', () => {
 		expect(last.p3y).toBeCloseTo(first.p1y, 6);
 	});
 
-	it('emits only straight segments (degenerate quadratics with midpoint control points)', () => {
+	it('emits only straight segments (quadratics with the control point duplicated at the end point)', () => {
 		const out = slugRadicalOutline(geom);
 		for (const c of out.curves) {
 			expect(isStraightSegment(c)).toBe(true);

@@ -60,7 +60,7 @@ export interface SlugFontGpuV7 {
 	 * the buffer was reallocated by an `ensureGlyphs` grow and the
 	 * curve texture must be recreated.
 	 */
-	_curveBuffer: Float32Array;
+	_curveBuffer: Uint16Array;
 	/** Reference to the band buffer view. Compared by `.buffer` identity. */
 	_bandBuffer: Float32Array;
 }
@@ -74,16 +74,16 @@ function makeCurveTexture(font: SlugFont): Texture {
 	const curveRows = Math.ceil(font.curveData.length / 4 / textureWidth) || 1;
 	const base = BaseTexture.fromBuffer(font.curveData, textureWidth, curveRows, {
 		format: FORMATS.RGBA,
-		type: TYPES.FLOAT
+		type: TYPES.HALF_FLOAT
 	});
 	return new Texture(base);
 }
 
 function makeBandTexture(font: SlugFont, bandView: Float32Array): Texture {
 	const textureWidth = font.textureWidth;
-	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
+	const bandRows = Math.ceil(font.bandData.length / textureWidth) || 1;
 	const base = BaseTexture.fromBuffer(bandView, textureWidth, bandRows, {
-		format: FORMATS.RGBA,
+		format: FORMATS.RED,
 		type: TYPES.FLOAT
 	});
 	return new Texture(base);

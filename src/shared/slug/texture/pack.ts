@@ -1,4 +1,5 @@
 import type {SlugGlyphData} from '../glyph/data';
+import {slugTextureFloat16Encode} from './float16/encode';
 
 /**
  * Result of packing all glyph data into GPU-ready textures.
@@ -9,9 +10,9 @@ import type {SlugGlyphData} from '../glyph/data';
  * eager preload paths and backward compatibility.
  */
 export interface SlugTexturePack {
-	/** Float32 RGBA curve texture data (4 components per texel). */
-	curveData: Float32Array;
-	/** Uint32 RGBA band texture data (4 components per texel). */
+	/** Half-float RGBA curve texture data (4 components per texel, IEEE 754 binary16 bit patterns). */
+	curveData: Uint16Array;
+	/** Packed uint32 band texture data (1 component per texel, two uint16 fields). */
 	bandData: Uint32Array;
 }
 
@@ -22,10 +23,25 @@ export interface SlugTexturePack {
  * the text class encounters new codepoints.
  *
  * The `*TexelIdx` fields are the next free texel slot. The `*Data`
- * buffers may be larger than `*TexelIdx * 4` — the trailing area is
+ * buffers may be larger than the texel count — the trailing area is
  * pre-allocated headroom that future appends consume in place. When an
  * append would overflow the headroom, the buffer is reallocated to a
  * larger size and the `*Data` reference is replaced.
+ *
+ * Texture layouts:
+ *
+ *  - **Curve texture** — `rgba16float`, 4 half floats per texel
+ *    (`CURVE_COMPONENTS`). Texel k holds `[p1x, p1y, p2x, p2y]` of one
+ *    curve; its `p3` is the first two channels of texel k+1 (the next
+ *    curve's `p1` within a contour, or a sentinel after the last curve).
+ *  - **Band texture** — `r32float`, one 32-bit value per texel whose bit
+ *    pattern packs two uint16 fields: `(hi << 16) | lo`. The shader
+ *    recovers them with `floatBitsToUint`. Band headers store
+ *    `hi = curve count`, `lo = curve-list offset relative to the glyph's
+ *    band origin`. Curve references store `hi = curve texel column`,
+ *    `lo = curve texel row`. Keeping the small-range field in the high
+ *    half guarantees the float32 exponent bits are never all ones, so no
+ *    packed value can be a NaN that the GPU might canonicalize.
  */
 export interface SlugTexturePackState {
 	/**
@@ -34,9 +50,9 @@ export interface SlugTexturePackState {
 	 * `kLogBandTextureWidth` arithmetic stays valid.
 	 */
 	textureWidth: number;
-	/** Float32 RGBA curve texture data. May be larger than `curveTexelIdx` worth of texels. */
-	curveData: Float32Array;
-	/** Uint32 RGBA band texture data. May be larger than `bandTexelIdx` worth of texels. */
+	/** Half-float RGBA curve texture data. May be larger than `curveTexelIdx` worth of texels. */
+	curveData: Uint16Array;
+	/** Packed uint32 band texture data. May be larger than `bandTexelIdx` worth of texels. */
 	bandData: Uint32Array;
 	/** Next free texel index in `curveData`. */
 	curveTexelIdx: number;
@@ -77,12 +93,23 @@ export interface SlugTextureAppendResult {
  */
 const BAND_TEXTURE_WIDTH = 1 << 12; // 4096
 
+/** Components (half floats) per curve texel. */
+const CURVE_COMPONENTS = 4;
+
+/** Largest value either uint16 field of a packed band texel can hold. */
+const BAND_FIELD_MAX = 0xffff;
+
 /**
  * Initial number of texel rows allocated in each buffer when a state is
  * created with no preloaded glyphs. Sized to cover ~one row of headroom
  * so the very first glyph append does not trigger a grow.
  */
 const INITIAL_ROWS = 1;
+
+/** Pack two uint16 fields into one uint32 band texel: `(hi << 16) | lo`. */
+function packBandTexel(hi: number, lo: number): number {
+	return ((hi << 16) | lo) >>> 0;
+}
 
 /**
  * Compute the number of curve texels needed per contour using the
@@ -109,45 +136,6 @@ function countContourTexels(contourSize: number, startIdx: number, textureWidth:
 }
 
 /**
- * Compute the number of band texels a single glyph will consume. Mirrors
- * the row-alignment logic in {@link slugTextureAppendGlyphs} so callers
- * can pre-size buffers when they know the full glyph set up-front.
- */
-function countGlyphBandTexels(glyph: SlugGlyphData, startIdx: number, textureWidth: number): number {
-	const widthMask = textureWidth - 1;
-	let idx = startIdx;
-
-	const headerCount = glyph.hBandCount + glyph.vBandCount;
-	const headerCol = idx & widthMask;
-	if (headerCol + headerCount > textureWidth) {
-		idx += textureWidth - headerCol;
-	}
-	idx += headerCount;
-
-	for (const band of glyph.hBands) {
-		if (band.length > 0) {
-			const col = idx & widthMask;
-			if (col + band.length > textureWidth) {
-				idx += textureWidth - col;
-			}
-		}
-		idx += band.length;
-	}
-
-	for (const band of glyph.vBands) {
-		if (band.length > 0) {
-			const col = idx & widthMask;
-			if (col + band.length > textureWidth) {
-				idx += textureWidth - col;
-			}
-		}
-		idx += band.length;
-	}
-
-	return idx - startIdx;
-}
-
-/**
  * Compute the number of curve texels a single glyph will consume.
  */
 function countGlyphCurveTexels(glyph: SlugGlyphData, startIdx: number, textureWidth: number): number {
@@ -169,38 +157,165 @@ function countGlyphCurveTexels(glyph: SlugGlyphData, startIdx: number, textureWi
 }
 
 /**
- * Reallocate `data` to hold at least `requiredTexels * 4` floats (or
- * uint32s), rounded up to a whole row. Doubles the current capacity at
+ * Find `needle` as a contiguous run inside `haystack`. Returns the start
+ * index of the first occurrence, or -1. Both are curve-index lists sorted
+ * by the same comparator, so an identical or subset band shows up as an
+ * exact contiguous match.
+ */
+function findContiguousRun(haystack: number[], needle: number[]): number {
+	const n = needle.length;
+	const last = haystack.length - n;
+	const first = needle[0];
+	outer: for (let i = 0; i <= last; i++) {
+		if (haystack[i] !== first) continue;
+		for (let j = 1; j < n; j++) {
+			if (haystack[i + j] !== needle[j]) continue outer;
+		}
+		return i;
+	}
+	return -1;
+}
+
+/** A band curve list already written for the current glyph. */
+interface WrittenBand {
+	list: number[];
+	/** Texel offset of the list, relative to the glyph's band origin. */
+	rel: number;
+}
+
+/**
+ * Lay out (and optionally write) the band data for one glyph starting at
+ * `startIdx`. Returns the texel index one past the glyph's band data.
+ *
+ * When `bandData` is null this is a pure count pass — the same code path
+ * is used for both so the pre-size and the write can never disagree.
+ *
+ * Layout per glyph: `hBandCount + vBandCount` header texels (kept within
+ * one row so the shader's `glyphLoc.x + bandIndex` addressing is valid),
+ * followed by curve-reference lists. A list is kept within one row for
+ * the same reason (`hbandLoc.x + curveIndex`). Two reference-sharing
+ * rules from the reference implementation shrink the data:
+ *
+ *  - A band whose list is identical to one already written points at the
+ *    existing list.
+ *  - A band whose list is a contiguous run inside an already-written list
+ *    points into that list. Lists are sorted by descending max
+ *    coordinate, so a band covering a subset of a neighbour's curves is
+ *    usually a contiguous run of the neighbour's list.
+ *
+ * Sets `glyph.bandOffset` when writing.
+ */
+function layoutGlyphBands(
+	glyph: SlugGlyphData,
+	startIdx: number,
+	textureWidth: number,
+	bandData: Uint32Array | null,
+	curveTexels: Uint32Array | null
+): number {
+	const widthMask = textureWidth - 1;
+	let idx = startIdx;
+
+	const headerCount = glyph.hBandCount + glyph.vBandCount;
+	const headerCol = idx & widthMask;
+	if (headerCol + headerCount > textureWidth) {
+		idx += textureWidth - headerCol;
+	}
+
+	const bandOrigin = idx;
+	const headerStart = idx;
+	idx += headerCount;
+
+	if (bandData !== null) {
+		glyph.bandOffset = bandOrigin;
+	}
+
+	const written: WrittenBand[] = [];
+	const writing = bandData !== null && curveTexels !== null;
+
+	for (let b = 0; b < headerCount; b++) {
+		const band = b < glyph.hBandCount ? glyph.hBands[b] : glyph.vBands[b - glyph.hBandCount];
+		const len = band.length;
+		let rel = 0;
+
+		if (len > 0) {
+			let reused = false;
+			for (let w = 0; w < written.length; w++) {
+				const prior = written[w];
+				if (prior.list.length < len) continue;
+				const at = findContiguousRun(prior.list, band);
+				if (at >= 0) {
+					rel = prior.rel + at;
+					reused = true;
+					break;
+				}
+			}
+
+			if (!reused) {
+				const col = idx & widthMask;
+				if (col + len > textureWidth) {
+					idx += textureWidth - col;
+				}
+				rel = idx - bandOrigin;
+				if (rel > BAND_FIELD_MAX) {
+					throw new Error(
+						`Band data for glyph ${glyph.charCode} exceeds the 16-bit relative offset range (${rel} texels)`
+					);
+				}
+
+				if (writing) {
+					for (let k = 0; k < len; k++) {
+						const absCurveTexel = (curveTexels as Uint32Array)[band[k]];
+						(bandData as Uint32Array)[idx + k] = packBandTexel(
+							absCurveTexel & widthMask,
+							absCurveTexel >>> 12
+						);
+					}
+				}
+
+				written.push({list: band, rel});
+				idx += len;
+			}
+		}
+
+		if (writing) {
+			(bandData as Uint32Array)[headerStart + b] = packBandTexel(len, rel);
+		}
+	}
+
+	return idx;
+}
+
+/**
+ * Reallocate `data` to hold at least `requiredTexels * CURVE_COMPONENTS`
+ * half floats, rounded up to a whole row. Doubles the current capacity at
  * minimum so the amortized cost of repeated grows stays O(N).
  */
-function growFloat32(data: Float32Array, requiredTexels: number, textureWidth: number): Float32Array {
-	const requiredFloats = requiredTexels * 4;
-	if (data.length >= requiredFloats) {
+function growCurveBuffer(data: Uint16Array, requiredTexels: number, textureWidth: number): Uint16Array {
+	const required = requiredTexels * CURVE_COMPONENTS;
+	if (data.length >= required) {
 		return data;
 	}
 
-	const currentFloats = data.length;
-	const doubledFloats = currentFloats * 2;
-	const targetFloats = Math.max(doubledFloats, requiredFloats);
-	const targetTexels = Math.ceil(targetFloats / 4);
+	const target = Math.max(data.length * 2, required);
+	const targetTexels = Math.ceil(target / CURVE_COMPONENTS);
 	const targetRows = Math.ceil(targetTexels / textureWidth);
-	const next = new Float32Array(targetRows * textureWidth * 4);
+	const next = new Uint16Array(targetRows * textureWidth * CURVE_COMPONENTS);
 	next.set(data);
 	return next;
 }
 
-function growUint32(data: Uint32Array, requiredTexels: number, textureWidth: number): Uint32Array {
-	const requiredU32s = requiredTexels * 4;
-	if (data.length >= requiredU32s) {
+/**
+ * Reallocate `data` to hold at least `requiredTexels` packed band values,
+ * rounded up to a whole row.
+ */
+function growBandBuffer(data: Uint32Array, requiredTexels: number, textureWidth: number): Uint32Array {
+	if (data.length >= requiredTexels) {
 		return data;
 	}
 
-	const currentU32s = data.length;
-	const doubledU32s = currentU32s * 2;
-	const targetU32s = Math.max(doubledU32s, requiredU32s);
-	const targetTexels = Math.ceil(targetU32s / 4);
-	const targetRows = Math.ceil(targetTexels / textureWidth);
-	const next = new Uint32Array(targetRows * textureWidth * 4);
+	const target = Math.max(data.length * 2, requiredTexels);
+	const targetRows = Math.ceil(target / textureWidth);
+	const next = new Uint32Array(targetRows * textureWidth);
 	next.set(data);
 	return next;
 }
@@ -219,8 +334,8 @@ export function slugTexturePackStateCreate(textureWidth: number): SlugTexturePac
 
 	return {
 		textureWidth,
-		curveData: new Float32Array(INITIAL_ROWS * textureWidth * 4),
-		bandData: new Uint32Array(INITIAL_ROWS * textureWidth * 4),
+		curveData: new Uint16Array(INITIAL_ROWS * textureWidth * CURVE_COMPONENTS),
+		bandData: new Uint32Array(INITIAL_ROWS * textureWidth),
 		curveTexelIdx: 0,
 		bandTexelIdx: 0
 	};
@@ -251,29 +366,28 @@ export function slugTextureAppendGlyphs(
 	const bandTexelStart = state.bandTexelIdx;
 
 	// Pre-pass: compute the final texel cursors so we can grow the
-	// buffers exactly once per append. Mirrors the row-alignment logic
-	// in the write pass — must stay in lock-step.
+	// buffers exactly once per append. Uses the same layout code as the
+	// write pass so the two can never drift apart.
 	let curveCursor = state.curveTexelIdx;
 	let bandCursor = state.bandTexelIdx;
 
 	for (const glyph of glyphs) {
 		curveCursor += countGlyphCurveTexels(glyph, curveCursor, textureWidth);
-		bandCursor += countGlyphBandTexels(glyph, bandCursor, textureWidth);
+		bandCursor = layoutGlyphBands(glyph, bandCursor, textureWidth, null, null);
 	}
 
 	const prevCurveLength = state.curveData.length;
 	const prevBandLength = state.bandData.length;
-	state.curveData = growFloat32(state.curveData, curveCursor, textureWidth);
-	state.bandData = growUint32(state.bandData, bandCursor, textureWidth);
+	state.curveData = growCurveBuffer(state.curveData, curveCursor, textureWidth);
+	state.bandData = growBandBuffer(state.bandData, bandCursor, textureWidth);
 	const curveBufferGrew = state.curveData.length !== prevCurveLength;
 	const bandBufferGrew = state.bandData.length !== prevBandLength;
 
 	const curveData = state.curveData;
 	const bandData = state.bandData;
 
-	// Write pass: identical layout to the eager `slugTexturePack`. Run
-	// glyph-by-glyph so prior glyphs already packed in the buffer are
-	// untouched and their assigned offsets remain valid.
+	// Write pass. Run glyph-by-glyph so prior glyphs already packed in
+	// the buffer are untouched and their assigned offsets remain valid.
 	let curveTexelIdx = state.curveTexelIdx;
 	let bandTexelIdx = state.bandTexelIdx;
 
@@ -297,78 +411,24 @@ export function slugTextureAppendGlyphs(
 				curveTexels[i] = curveTexelIdx;
 				const curve = glyph.curves[i];
 
-				const base = curveTexelIdx * 4;
-				curveData[base] = curve.p1x;
-				curveData[base + 1] = curve.p1y;
-				curveData[base + 2] = curve.p2x;
-				curveData[base + 3] = curve.p2y;
+				const base = curveTexelIdx * CURVE_COMPONENTS;
+				curveData[base] = slugTextureFloat16Encode(curve.p1x);
+				curveData[base + 1] = slugTextureFloat16Encode(curve.p1y);
+				curveData[base + 2] = slugTextureFloat16Encode(curve.p2x);
+				curveData[base + 3] = slugTextureFloat16Encode(curve.p2y);
 				curveTexelIdx++;
 			}
 
 			const lastCurve = glyph.curves[contourEnd - 1];
-			const sentBase = curveTexelIdx * 4;
-			curveData[sentBase] = lastCurve.p3x;
-			curveData[sentBase + 1] = lastCurve.p3y;
+			const sentBase = curveTexelIdx * CURVE_COMPONENTS;
+			curveData[sentBase] = slugTextureFloat16Encode(lastCurve.p3x);
+			curveData[sentBase + 1] = slugTextureFloat16Encode(lastCurve.p3y);
+			curveData[sentBase + 2] = 0;
+			curveData[sentBase + 3] = 0;
 			curveTexelIdx++;
 		}
 
-		// --- Band texture packing ---
-		const headerCount = glyph.hBandCount + glyph.vBandCount;
-		const headerCol = bandTexelIdx & widthMask;
-		if (headerCol + headerCount > textureWidth) {
-			bandTexelIdx += textureWidth - headerCol;
-		}
-
-		glyph.bandOffset = bandTexelIdx;
-
-		const headerStart = bandTexelIdx;
-		bandTexelIdx += headerCount;
-
-		for (let b = 0; b < glyph.hBandCount; b++) {
-			const band = glyph.hBands[b];
-			const headerBase = (headerStart + b) * 4;
-
-			if (band.length > 0) {
-				const col = bandTexelIdx & widthMask;
-				if (col + band.length > textureWidth) {
-					bandTexelIdx += textureWidth - col;
-				}
-			}
-
-			bandData[headerBase] = band.length;
-			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
-
-			for (const curveIdx of band) {
-				const refBase = bandTexelIdx * 4;
-				const absCurveTexel = curveTexels[curveIdx];
-				bandData[refBase] = absCurveTexel & widthMask;
-				bandData[refBase + 1] = absCurveTexel >>> 12;
-				bandTexelIdx++;
-			}
-		}
-
-		for (let b = 0; b < glyph.vBandCount; b++) {
-			const band = glyph.vBands[b];
-			const headerBase = (headerStart + glyph.hBandCount + b) * 4;
-
-			if (band.length > 0) {
-				const col = bandTexelIdx & widthMask;
-				if (col + band.length > textureWidth) {
-					bandTexelIdx += textureWidth - col;
-				}
-			}
-
-			bandData[headerBase] = band.length;
-			bandData[headerBase + 1] = bandTexelIdx - glyph.bandOffset;
-
-			for (const curveIdx of band) {
-				const refBase = bandTexelIdx * 4;
-				const absCurveTexel = curveTexels[curveIdx];
-				bandData[refBase] = absCurveTexel & widthMask;
-				bandData[refBase + 1] = absCurveTexel >>> 12;
-				bandTexelIdx++;
-			}
-		}
+		bandTexelIdx = layoutGlyphBands(glyph, bandTexelIdx, textureWidth, bandData, curveTexels);
 	}
 
 	state.curveTexelIdx = curveTexelIdx;
@@ -404,8 +464,8 @@ export function slugTexturePack(glyphs: SlugGlyphData[], textureWidth: number): 
 	// would break the GPU upload's row-pitch assumptions.
 	const curveRows = Math.ceil(state.curveTexelIdx / textureWidth) || 1;
 	const bandRows = Math.ceil(state.bandTexelIdx / textureWidth) || 1;
-	const curveLength = curveRows * textureWidth * 4;
-	const bandLength = bandRows * textureWidth * 4;
+	const curveLength = curveRows * textureWidth * CURVE_COMPONENTS;
+	const bandLength = bandRows * textureWidth;
 
 	const curveData =
 		state.curveData.length === curveLength

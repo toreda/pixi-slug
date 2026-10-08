@@ -126,6 +126,14 @@ export interface SlugTextStyleOptions {
 	fill?: SlugTextFill | null;
 	wordWrap?: boolean | null;
 	wordWrapWidth?: number | null;
+	/**
+	 * Round the baseline (and multiline line pitch) to whole local pixels.
+	 * Use together with `SlugFont.snapFontSize` so cap tops and baseline
+	 * both land on the pixel grid for crisp horizontal stems. Requires the
+	 * SlugText itself to sit at an integer position with unit scale.
+	 * @default Defaults.SlugText.SnapBaseline (false)
+	 */
+	snapBaseline?: boolean | null;
 	align?: SlugTextStyleAlign;
 	/**
 	 * Justify strategy used when `align === 'justify'`. Mirrors CSS

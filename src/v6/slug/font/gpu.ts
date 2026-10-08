@@ -45,8 +45,8 @@ export interface SlugFontGpuV6 {
 	 * shader samplers to the new texture instances before drawing.
 	 */
 	generation: number;
-	/** Reference to the `Float32Array` currently owned by the curve texture. */
-	_curveBuffer: Float32Array;
+	/** Reference to the `Uint16Array` currently owned by the curve texture. */
+	_curveBuffer: Uint16Array;
 	/** Reference to the band buffer view; compared by `.buffer` identity. */
 	_bandBuffer: Float32Array;
 }
@@ -58,18 +58,18 @@ function bandViewAsFloat(bandData: Uint32Array): Float32Array {
 function makeCurveTexture(font: SlugFont): Texture {
 	const textureWidth = font.textureWidth;
 	const curveRows = Math.ceil(font.curveData.length / 4 / textureWidth) || 1;
-	const base = BaseTexture.fromBuffer(font.curveData, textureWidth, curveRows, {
+	const base = BaseTexture.fromBuffer(font.curveData as unknown as Float32Array, textureWidth, curveRows, {
 		format: FORMATS.RGBA,
-		type: TYPES.FLOAT
+		type: TYPES.HALF_FLOAT
 	});
 	return new Texture(base);
 }
 
 function makeBandTexture(font: SlugFont, bandView: Float32Array): Texture {
 	const textureWidth = font.textureWidth;
-	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
+	const bandRows = Math.ceil(font.bandData.length / textureWidth) || 1;
 	const base = BaseTexture.fromBuffer(bandView, textureWidth, bandRows, {
-		format: FORMATS.RGBA,
+		format: FORMATS.RED,
 		type: TYPES.FLOAT
 	});
 	return new Texture(base);

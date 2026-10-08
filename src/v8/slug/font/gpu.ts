@@ -72,18 +72,18 @@ export interface SlugFontGpuV8 {
 	 * curve texture must be recreated. When it still matches but new
 	 * data was appended, a `source.update()` reuploads the same buffer.
 	 */
-	_curveBuffer: Float32Array;
+	_curveBuffer: Uint16Array;
 	/** Reference to the `Float32Array` view onto `font.bandData` currently owned by the band texture. */
 	_bandBuffer: Float32Array;
 }
 
 /**
  * Reinterpret a Uint32 band buffer as a Float32 view sharing the same
- * memory. PixiJS v8's `mapFormatToGlFormat` mismaps `rgba32uint` to
- * `gl.RGBA` instead of `gl.RGBA_INTEGER`, causing GL_INVALID_OPERATION
- * on upload. Uploading as `rgba32float` with bit-pattern reinterpretation
- * sidesteps the bug; the shader recovers the original uint32 values via
- * `floatBitsToUint`.
+ * memory. PixiJS v8's `mapFormatToGlFormat` mismaps every integer format
+ * (`rgba32uint`, `rg16uint`, ...) to the non-integer GL format, causing
+ * GL_INVALID_OPERATION on upload. Uploading as `r32float` with
+ * bit-pattern reinterpretation sidesteps the bug; the shader recovers the
+ * packed uint16 pair via `floatBitsToUint`.
  */
 function bandViewAsFloat(bandData: Uint32Array): Float32Array {
 	return new Float32Array(bandData.buffer, bandData.byteOffset, bandData.length);
@@ -103,7 +103,7 @@ function makeCurveTexture(font: SlugFont): Texture {
 			resource: font.curveData,
 			width: textureWidth,
 			height: curveRows,
-			format: 'rgba32float',
+			format: 'rgba16float',
 			autoGenerateMipmaps: false,
 			scaleMode: 'nearest',
 			alphaMode: 'no-premultiply-alpha'
@@ -113,13 +113,13 @@ function makeCurveTexture(font: SlugFont): Texture {
 
 function makeBandTexture(font: SlugFont, bandView: Float32Array): Texture {
 	const textureWidth = font.textureWidth;
-	const bandRows = Math.ceil(font.bandData.length / 4 / textureWidth) || 1;
+	const bandRows = Math.ceil(font.bandData.length / textureWidth) || 1;
 	return new Texture({
 		source: new BufferImageSource({
 			resource: bandView,
 			width: textureWidth,
 			height: bandRows,
-			format: 'rgba32float',
+			format: 'r32float',
 			autoGenerateMipmaps: false,
 			scaleMode: 'nearest',
 			alphaMode: 'no-premultiply-alpha'

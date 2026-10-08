@@ -60,6 +60,9 @@ export function packBandMax(low16_vBandMax: number, high16_hBandMax: number): nu
  * @param textureWidth	Width of the curve/band textures (must match font).
  * @param color			Text color as [r, g, b, a] in 0-1 range.
  * @param extraExpand	Extra outward expansion in pixels per side (e.g. stroke width). Default 0.
+ * @param snapBaseline	Round the baseline to a whole local pixel so that, with a
+ *						cap-height-snapped font size, cap tops and the baseline
+ *						both sit on the pixel grid. Default false.
  */
 export function slugGlyphQuads(
 	text: string,
@@ -69,7 +72,8 @@ export function slugGlyphQuads(
 	fontSize: number,
 	textureWidth: number,
 	color: Rgba = [1, 1, 1, 1],
-	extraExpand: number = 0
+	extraExpand: number = 0,
+	snapBaseline: boolean = false
 ): SlugGlyphQuads {
 	const scale = fontSize / unitsPerEm;
 	const invScale = 1 / scale;
@@ -101,7 +105,10 @@ export function slugGlyphQuads(
 			}
 		}
 	}
-	const baselineY = maxGlyphTop * scale;
+	// With snapBaseline the baseline lands on a whole pixel; glyph tops then
+	// sit at (baseline - height), which is also whole when the font size was
+	// chosen via SlugFont.snapFontSize.
+	const baselineY = snapBaseline ? Math.round(maxGlyphTop * scale) : maxGlyphTop * scale;
 
 	const vertices = new Float32Array(quadCount * Constants.VERTICES_PER_QUAD * Constants.FLOATS_PER_VERTEX);
 	const indices = new Uint32Array(quadCount * Constants.INDICES_PER_QUAD);
@@ -301,6 +308,8 @@ export function slugGlyphQuads(
  * @param lineHeight	Vertical distance between lines in pixels.
  * @param color			Text color as [r, g, b, a] in 0-1 range.
  * @param extraExpand	Extra outward expansion in pixels per side.
+ * @param snapBaseline	Round each line's baseline and the line pitch to whole
+ *						local pixels. See {@link slugGlyphQuads}.
  */
 export function slugGlyphQuadsMultiline(
 	lines: string[],
@@ -311,7 +320,8 @@ export function slugGlyphQuadsMultiline(
 	textureWidth: number,
 	lineHeight: number,
 	color: Rgba = [1, 1, 1, 1],
-	extraExpand: number = 0
+	extraExpand: number = 0,
+	snapBaseline: boolean = false
 ): SlugGlyphQuads {
 	if (lines.length <= 1) {
 		return slugGlyphQuads(
@@ -322,9 +332,14 @@ export function slugGlyphQuadsMultiline(
 			fontSize,
 			textureWidth,
 			color,
-			extraExpand
+			extraExpand,
+			snapBaseline
 		);
 	}
+
+	// A whole-pixel line pitch keeps every line's baseline on the grid once
+	// the first one is.
+	const pitch = snapBaseline ? Math.round(lineHeight) : lineHeight;
 
 	// Build quads per line, then merge into a single buffer.
 	const perLine: SlugGlyphQuads[] = [];
@@ -339,7 +354,8 @@ export function slugGlyphQuadsMultiline(
 			fontSize,
 			textureWidth,
 			color,
-			extraExpand
+			extraExpand,
+			snapBaseline
 		);
 		perLine.push(q);
 		totalQuads += q.quadCount;
@@ -362,7 +378,7 @@ export function slugGlyphQuadsMultiline(
 		const q = perLine[l];
 		if (q.quadCount === 0) continue;
 
-		const yShift = l * lineHeight;
+		const yShift = l * pitch;
 		const srcVerts = q.vertices;
 		const srcIdxs = q.indices;
 

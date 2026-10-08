@@ -104,9 +104,9 @@ function norm(v: Pt): Pt {
 
 /**
  * Build the filled outline of a square-root radical sign as a closed
- * contour of degenerate-quadratic curves (straight segments with the
- * control point at the midpoint, matching how font line segments are
- * stored — see {@link lineToQuadratic}).
+ * contour of quadratic curves encoding straight segments with the
+ * control point duplicated at the end point, matching how font line
+ * segments are stored — see {@link lineToQuadratic}.
  *
  * Coordinate space is em-space, Y-up. The valley floor sits at `y = 0`;
  * the top of the vinculum sits at `y = height`. Positive X runs
