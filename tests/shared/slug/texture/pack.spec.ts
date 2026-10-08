@@ -180,6 +180,50 @@ describe('slugTexturePack', () => {
 			expect(cv(result.curveData, bOffset)).toBe(999);
 			expect(cv(result.curveData, bOffset + 1)).toBe(999);
 		});
+
+		it('should fill the skipped last-column texel with the preceding curve p3', () => {
+			// A contour long enough to cross a row boundary. The curve that
+			// would land on the last column is moved to the next row, so the
+			// curve before it reads its p3 from the skipped texel — that
+			// texel must hold the shared endpoint, not stay zeroed.
+			const n = 4200;
+			const pt = (i: number): number => (i % 1000) + 1;
+			const curves: SlugGlyphCurve[] = [];
+			for (let i = 0; i < n; i++) {
+				curves.push(makeCurve(pt(i), pt(i), pt(i), pt(i), pt(i + 1), pt(i + 1)));
+			}
+			const bands = [Array.from({ length: n }, (_, i) => i)];
+			const glyph = makeGlyph(65, curves, bands, [[]]);
+			const result = slugTexturePack([glyph], TEX_WIDTH);
+
+			const listOffset = hdrOffset(result.bandData, glyph.bandOffset);
+			for (let i = 0; i < n; i++) {
+				const refBase = glyph.bandOffset + listOffset + i;
+				const k = refY(result.bandData, refBase) * TEX_WIDTH + refX(result.bandData, refBase);
+				// Same fetch the shader does for p3: texel (curveLoc.x + 1, curveLoc.y).
+				expect(cv(result.curveData, (k + 1) * 4)).toBe(curves[i].p3x);
+				expect(cv(result.curveData, (k + 1) * 4 + 1)).toBe(curves[i].p3y);
+			}
+		});
+
+		it('should let a sentinel occupy the last column without growing the buffer', () => {
+			// The sentinel is only ever read as the +1 neighbour of the
+			// preceding curve, so it may sit on the last column. A contour of
+			// TEX_WIDTH - 1 curves puts its sentinel there and fills exactly
+			// one row, so the sizing pre-pass must not ask for a second row.
+			const n = TEX_WIDTH - 1;
+			const curves: SlugGlyphCurve[] = [];
+			for (let i = 0; i < n; i++) {
+				curves.push(makeCurve(1, 1, 1, 1, 1, 1));
+			}
+			const glyph = makeGlyph(65, curves, [[0]], [[]]);
+			const state = slugTexturePackStateCreate(TEX_WIDTH);
+			const result = slugTextureAppendGlyphs(state, [glyph]);
+
+			expect(state.curveTexelIdx).toBe(TEX_WIDTH);
+			expect(result.curveBufferGrew).toBe(false);
+			expect(state.curveData.length).toBe(TEX_WIDTH * 4);
+		});
 	});
 
 	// ============================================================

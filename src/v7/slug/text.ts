@@ -160,13 +160,26 @@ export class SlugText extends SlugTextV7Base {
 			const scale = this._fontSize / font.unitsPerEm;
 			const lineHeight = (font.ascender - font.descender) * scale;
 			return slugGlyphQuadsMultiline(
-				lines, font.glyphs, font.advances, font.unitsPerEm,
-				this._fontSize, font.textureWidth, lineHeight, color, extraExpand
+				lines,
+				font.glyphs,
+				font.advances,
+				font.unitsPerEm,
+				this._fontSize,
+				font.textureWidth,
+				lineHeight,
+				color,
+				extraExpand
 			);
 		}
 		return slugGlyphQuads(
-			lines[0] || '', font.glyphs, font.advances, font.unitsPerEm,
-			this._fontSize, font.textureWidth, color, extraExpand
+			lines[0] || '',
+			font.glyphs,
+			font.advances,
+			font.unitsPerEm,
+			this._fontSize,
+			font.textureWidth,
+			color,
+			extraExpand
 		);
 	}
 
@@ -211,7 +224,13 @@ export class SlugText extends SlugTextV7Base {
 		}
 		geometry.addIndex(indices16 as any);
 
-		const shader = slugShader(gpu.program, gpu.curveTexture, gpu.bandTexture, gpu.fallbackWhite, [800, 400]);
+		const shader = slugShader(
+			gpu.program,
+			gpu.curveTexture,
+			gpu.bandTexture,
+			gpu.fallbackWhite,
+			[800, 400]
+		);
 		shader.uniforms.uSupersampleCount = this._supersampling ? this._supersampleCount : 0;
 		shader.uniforms.uStrokeExpand = strokeExpand;
 		shader.uniforms.uFillMode = fillGpu.mode;
@@ -341,9 +360,7 @@ export class SlugText extends SlugTextV7Base {
 			this._textJustify,
 			(c) => font.glyphs.has(c)
 		);
-		const needsShift =
-			layout.perGlyphShiftX !== null ||
-			layout.lineOffsetX.some((x) => x !== 0);
+		const needsShift = layout.perGlyphShiftX !== null || layout.lineOffsetX.some((x) => x !== 0);
 
 		// --- Build fill quads first so we can derive the bbox before the
 		//     shadow / stroke passes need it for the fill UV uniform.
@@ -357,7 +374,10 @@ export class SlugText extends SlugTextV7Base {
 		// gradient/texture sample area, so we use the fill pass — that
 		// matches the user's intent of the gradient covering the visible
 		// glyphs.
-		let bboxMinX = 0, bboxMinY = 0, bboxMaxX = 0, bboxMaxY = 0;
+		let bboxMinX = 0,
+			bboxMinY = 0,
+			bboxMaxX = 0,
+			bboxMaxY = 0;
 		if (fillQuads.quadCount > 0) {
 			bboxMinX = Infinity;
 			bboxMinY = Infinity;
@@ -513,7 +533,13 @@ export class SlugText extends SlugTextV7Base {
 				rgbProvided: true,
 				alphaProvided: true
 			});
-			const {mesh, shader} = this._buildMesh(plan.shadowQuads, gpu, solidGpu, plan.fillBounds, plan.shadowBlur);
+			const {mesh, shader} = this._buildMesh(
+				plan.shadowQuads,
+				gpu,
+				solidGpu,
+				plan.fillBounds,
+				plan.shadowBlur
+			);
 			if (plan.shadowBlur > 0) {
 				shader.uniforms.uStrokeAlphaStart = plan.shadowAlpha;
 				shader.uniforms.uStrokeAlphaRate = -plan.shadowAlpha / plan.shadowBlur;
@@ -573,15 +599,19 @@ export class SlugText extends SlugTextV7Base {
 	 * solid color — see decoration/fill.ts for why.
 	 */
 	private _buildDecorations(plan: SlugTextRenderPlan): void {
-		const ul = this._underlineDraw, st = this._strikethroughDraw, ol = this._overlineDraw;
+		const ul = this._underlineDraw,
+			st = this._strikethroughDraw,
+			ol = this._overlineDraw;
 		if (!(ul.enabled || st.enabled || ol.enabled)) return;
 
 		const {font, lines, scale, layout, fillBounds} = plan;
 		const lineHeight = (font.ascender - font.descender) * scale;
 
 		const packColor = (rgba: Rgba): number =>
-			((rgba[0] * 255) & 0xff) << 16 | ((rgba[1] * 255) & 0xff) << 8 | ((rgba[2] * 255) & 0xff);
-		const ulPacked = packColor(ul.color), stPacked = packColor(st.color), olPacked = packColor(ol.color);
+			(((rgba[0] * 255) & 0xff) << 16) | (((rgba[1] * 255) & 0xff) << 8) | ((rgba[2] * 255) & 0xff);
+		const ulPacked = packColor(ul.color),
+			stPacked = packColor(st.color),
+			olPacked = packColor(ol.color);
 
 		const fillIsTexture = this._fill.kind === 'texture';
 		const ulInheritsFill = fillIsTexture && this._underline.colorRgb === null;
@@ -590,11 +620,7 @@ export class SlugText extends SlugTextV7Base {
 
 		const gfx = new Graphics();
 
-		const xForDecoration = (
-			lineW: number,
-			drawW: number,
-			align: 'left' | 'center' | 'right'
-		): number => {
+		const xForDecoration = (lineW: number, drawW: number, align: 'left' | 'center' | 'right'): number => {
 			if (align === 'right') return lineW - drawW;
 			if (align === 'center') return (lineW - drawW) / 2;
 			return 0;
@@ -612,7 +638,10 @@ export class SlugText extends SlugTextV7Base {
 			if (inherits) {
 				const texFill = slugBuildDecorationFillV7(
 					this._fill,
-					fillBounds[0], fillBounds[1], fillBounds[2], fillBounds[3],
+					fillBounds[0],
+					fillBounds[1],
+					fillBounds[2],
+					fillBounds[3],
 					color[3]
 				);
 				if (texFill) {

@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `slugGlyphBands` takes the font's `unitsPerEm` (7th argument) to scale the band overlap epsilon.
 * `SlugFont.memoryBytes()` reflects the new per-texel sizes (8 bytes per curve texel, 4 bytes per band texel).
 
+### Fixed
+* A glyph contour that crosses a row boundary in the curve texture no longer has one curve end at `(0, 0)`. A curve can't sit in a row's last column, so the packer moves it to the next row, but it left that last-column texel empty, and the curve before it reads its end point from that texel. The texel now holds the shared end point. Only showed up once a font's curve data filled more than one 4096-texel row. Affects v6, v7 and v8 (`src/shared/slug/texture/pack.ts`).
+* The curve texture no longer grows by an unused row when a contour's closing texel lands exactly on a row's last column.
+
 ## [0.5.2] - 2026-09-27
 
 ### Added

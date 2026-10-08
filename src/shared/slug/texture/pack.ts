@@ -120,18 +120,20 @@ function packBandTexel(hi: number, lo: number): number {
  * curve's p3) or the sentinel for the last curve.
  *
  * Row alignment: each curve's texel and the texel at +1 must share
- * a row. If a texel would land on the last column, skip to the next row.
+ * a row. If a curve texel would land on the last column, it moves to the
+ * next row and the last-column texel holds the previous curve's p3. The
+ * sentinel is only read as a +1 neighbor, so it may use the last column.
  */
 function countContourTexels(contourSize: number, startIdx: number, textureWidth: number): number {
 	let idx = startIdx;
-	// N curve texels + 1 sentinel, each needing its +1 neighbor on the same row
-	const totalTexels = contourSize + 1;
-	for (let i = 0; i < totalTexels; i++) {
+	for (let i = 0; i < contourSize; i++) {
 		if ((idx & (textureWidth - 1)) === textureWidth - 1) {
 			idx++; // skip last column to keep pair on same row
 		}
 		idx++;
 	}
+	// Sentinel
+	idx++;
 	return idx - startIdx;
 }
 
@@ -405,7 +407,17 @@ export function slugTextureAppendGlyphs(
 
 			for (let i = contourBegin; i < contourEnd; i++) {
 				if ((curveTexelIdx & widthMask) === widthMask) {
-					curveTexelIdx++; // skip last column
+					// Skip the last column, but fill it with the previous
+					// curve's p3: that curve reads its p3 from this texel.
+					if (i > contourBegin) {
+						const prevCurve = glyph.curves[i - 1];
+						const bridgeBase = curveTexelIdx * CURVE_COMPONENTS;
+						curveData[bridgeBase] = slugTextureFloat16Encode(prevCurve.p3x);
+						curveData[bridgeBase + 1] = slugTextureFloat16Encode(prevCurve.p3y);
+						curveData[bridgeBase + 2] = 0;
+						curveData[bridgeBase + 3] = 0;
+					}
+					curveTexelIdx++;
 				}
 
 				curveTexels[i] = curveTexelIdx;
