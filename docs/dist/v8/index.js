@@ -2091,10 +2091,12 @@ function packBandTexel(hi,lo){return(hi<<16|lo)>>>0}
  * curve's p3) or the sentinel for the last curve.
  *
  * Row alignment: each curve's texel and the texel at +1 must share
- * a row. If a texel would land on the last column, skip to the next row.
- */function countContourTexels(contourSize,startIdx,textureWidth){let idx=startIdx;
-// N curve texels + 1 sentinel, each needing its +1 neighbor on the same row
-const totalTexels=contourSize+1;for(let i=0;i<totalTexels;i++)(idx&textureWidth-1)==textureWidth-1&&idx++,idx++;return idx-startIdx}
+ * a row. If a curve texel would land on the last column, it moves to the
+ * next row and the last-column texel holds the previous curve's p3. The
+ * sentinel is only read as a +1 neighbor, so it may use the last column.
+ */function countContourTexels(contourSize,startIdx,textureWidth){let idx=startIdx;for(let i=0;i<contourSize;i++)(idx&textureWidth-1)==textureWidth-1&&idx++,idx++;
+// Sentinel
+return idx++,idx-startIdx}
 /**
  * Compute the number of curve texels a single glyph will consume.
  */function countGlyphCurveTexels(glyph,startIdx,textureWidth){const starts=glyph.contourStarts;let total=0,idx=startIdx;for(let c=0;c<starts.length;c++){const contourBegin=starts[c],contourSize=(c+1<starts.length?starts[c+1]:glyph.curves.length)-contourBegin;if(0===contourSize)continue;const used=countContourTexels(contourSize,idx,textureWidth);total+=used,idx+=used}return total}
@@ -2161,7 +2163,10 @@ let curveCursor=state.curveTexelIdx,bandCursor=state.bandTexelIdx;for(const glyp
  */(state.curveData,curveCursor,textureWidth),state.bandData=function(data,requiredTexels,textureWidth){if(data.length>=requiredTexels)return data;const target=Math.max(2*data.length,requiredTexels),targetRows=Math.ceil(target/textureWidth),next=new Uint32Array(targetRows*textureWidth);return next.set(data),next}(state.bandData,bandCursor,textureWidth);const curveBufferGrew=state.curveData.length!==prevCurveLength,bandBufferGrew=state.bandData.length!==prevBandLength,curveData=state.curveData,bandData=state.bandData;
 // Write pass. Run glyph-by-glyph so prior glyphs already packed in
 // the buffer are untouched and their assigned offsets remain valid.
-let curveTexelIdx=state.curveTexelIdx,bandTexelIdx=state.bandTexelIdx;for(const glyph of glyphs){glyph.curveOffset=curveTexelIdx;const curveTexels=new Uint32Array(glyph.curves.length),starts=glyph.contourStarts;for(let c=0;c<starts.length;c++){const contourBegin=starts[c],contourEnd=c+1<starts.length?starts[c+1]:glyph.curves.length;if(0===contourEnd-contourBegin)continue;for(let i=contourBegin;i<contourEnd;i++){(curveTexelIdx&widthMask)===widthMask&&curveTexelIdx++,curveTexels[i]=curveTexelIdx;const curve=glyph.curves[i],base=4*curveTexelIdx;curveData[base]=slugTextureFloat16Encode(curve.p1x),curveData[base+1]=slugTextureFloat16Encode(curve.p1y),curveData[base+2]=slugTextureFloat16Encode(curve.p2x),curveData[base+3]=slugTextureFloat16Encode(curve.p2y),curveTexelIdx++}const lastCurve=glyph.curves[contourEnd-1],sentBase=4*curveTexelIdx;curveData[sentBase]=slugTextureFloat16Encode(lastCurve.p3x),curveData[sentBase+1]=slugTextureFloat16Encode(lastCurve.p3y),curveData[sentBase+2]=0,curveData[sentBase+3]=0,curveTexelIdx++}bandTexelIdx=layoutGlyphBands(glyph,bandTexelIdx,textureWidth,bandData,curveTexels)}return state.curveTexelIdx=curveTexelIdx,state.bandTexelIdx=bandTexelIdx,{curveBufferGrew,bandBufferGrew,curveTexelStart,curveTexelEnd:curveTexelIdx,bandTexelStart,bandTexelEnd:bandTexelIdx}}
+let curveTexelIdx=state.curveTexelIdx,bandTexelIdx=state.bandTexelIdx;for(const glyph of glyphs){glyph.curveOffset=curveTexelIdx;const curveTexels=new Uint32Array(glyph.curves.length),starts=glyph.contourStarts;for(let c=0;c<starts.length;c++){const contourBegin=starts[c],contourEnd=c+1<starts.length?starts[c+1]:glyph.curves.length;if(0===contourEnd-contourBegin)continue;for(let i=contourBegin;i<contourEnd;i++){if((curveTexelIdx&widthMask)===widthMask){
+// Skip the last column, but fill it with the previous
+// curve's p3: that curve reads its p3 from this texel.
+if(i>contourBegin){const prevCurve=glyph.curves[i-1],bridgeBase=4*curveTexelIdx;curveData[bridgeBase]=slugTextureFloat16Encode(prevCurve.p3x),curveData[bridgeBase+1]=slugTextureFloat16Encode(prevCurve.p3y),curveData[bridgeBase+2]=0,curveData[bridgeBase+3]=0}curveTexelIdx++}curveTexels[i]=curveTexelIdx;const curve=glyph.curves[i],base=4*curveTexelIdx;curveData[base]=slugTextureFloat16Encode(curve.p1x),curveData[base+1]=slugTextureFloat16Encode(curve.p1y),curveData[base+2]=slugTextureFloat16Encode(curve.p2x),curveData[base+3]=slugTextureFloat16Encode(curve.p2y),curveTexelIdx++}const lastCurve=glyph.curves[contourEnd-1],sentBase=4*curveTexelIdx;curveData[sentBase]=slugTextureFloat16Encode(lastCurve.p3x),curveData[sentBase+1]=slugTextureFloat16Encode(lastCurve.p3y),curveData[sentBase+2]=0,curveData[sentBase+3]=0,curveTexelIdx++}bandTexelIdx=layoutGlyphBands(glyph,bandTexelIdx,textureWidth,bandData,curveTexels)}return state.curveTexelIdx=curveTexelIdx,state.bandTexelIdx=bandTexelIdx,{curveBufferGrew,bandBufferGrew,curveTexelStart,curveTexelEnd:curveTexelIdx,bandTexelStart,bandTexelEnd:bandTexelIdx}}
 /**
  * One-shot pack: takes a complete glyph set, allocates buffers sized
  * exactly to the packed data, and writes everything in a single pass.
